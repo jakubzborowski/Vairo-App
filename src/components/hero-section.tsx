@@ -37,7 +37,7 @@ export function HeroSection() {
 
           <div className="mt-9 flex flex-wrap items-center gap-5">
             <a
-              href="/login"
+              href="/start"
               className="btn-vairo inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-[15px] font-semibold text-white transition"
             >
               Dołącz do alfy

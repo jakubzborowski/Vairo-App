@@ -109,6 +109,12 @@ export function SiteHeader() {
           </button>
           <a
             href="/login"
+            className="inline-flex h-10 items-center justify-center rounded-full px-3 text-[14px] font-medium text-white/70 transition hover:text-white"
+          >
+            Zaloguj się
+          </a>
+          <a
+            href="/start"
             className="btn-vairo inline-flex h-10 items-center justify-center gap-2 rounded-full px-5 text-[14px] font-semibold text-white transition"
           >
             Dołącz do alfy
@@ -161,6 +167,13 @@ export function SiteHeader() {
             </button>
             <a
               href="/login"
+              onClick={() => setOpen(false)}
+              className="inline-flex h-11 items-center justify-center rounded-full px-4 text-[14px] font-medium text-white/70"
+            >
+              Zaloguj się
+            </a>
+            <a
+              href="/start"
               onClick={() => setOpen(false)}
               className="btn-vairo inline-flex h-11 flex-1 items-center justify-center rounded-full text-[15px] font-semibold text-white"
             >

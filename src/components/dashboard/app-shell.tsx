@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -9,16 +12,18 @@ import {
   MessageSquare,
   BarChart3,
   Settings,
+  UserRound,
   LogOut,
 } from "lucide-react";
 import { signOut } from "@/app/app/actions";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/app", active: true },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/app" },
+  { label: "Profil", icon: UserRound, href: "/app/profile" },
   { label: "Projekty", icon: FolderKanban, href: "/app" },
   { label: "Taski", icon: ListChecks, href: "/app" },
-  { label: "Zespół", icon: Users, href: "/app" },
+  { label: "Zespół", icon: Users, href: "/app/profile" },
   { label: "Możliwości", icon: Sparkles, href: "/app" },
   { label: "Wiadomości", icon: MessageSquare, href: "/app" },
   { label: "Analityka", icon: BarChart3, href: "/app" },
@@ -32,6 +37,7 @@ type AppShellProps = {
 };
 
 export function AppShell({ email, displayName, children }: AppShellProps) {
+  const pathname = usePathname();
   const initial = displayName.trim().charAt(0).toUpperCase() || "V";
 
   return (
@@ -51,25 +57,34 @@ export function AppShell({ email, displayName, children }: AppShellProps) {
         </Link>
 
         <nav className="flex flex-1 flex-col gap-0.5">
-          {nav.map(({ label, icon: Icon, href, active }) => (
-            <Link
-              key={label}
-              href={href}
-              className={cn(
-                "inline-flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition",
-                active
-                  ? "bg-vairo/15 text-vairo"
-                  : "text-white/45 hover:bg-white/[0.04] hover:text-white/80"
-              )}
-            >
-              <Icon className="size-4 shrink-0" strokeWidth={1.75} />
-              {label}
-            </Link>
-          ))}
+          {nav.map(({ label, icon: Icon, href }) => {
+            const active =
+              href === "/app"
+                ? pathname === "/app"
+                : pathname === href || pathname.startsWith(`${href}/`);
+            return (
+              <Link
+                key={label}
+                href={href}
+                className={cn(
+                  "inline-flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition",
+                  active
+                    ? "bg-vairo/15 text-vairo"
+                    : "text-white/45 hover:bg-white/[0.04] hover:text-white/80"
+                )}
+              >
+                <Icon className="size-4 shrink-0" strokeWidth={1.75} />
+                {label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="mt-auto border-t border-white/[0.06] pt-4">
-          <div className="mb-3 flex items-center gap-2.5 px-2">
+          <Link
+            href="/app/profile"
+            className="mb-3 flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition hover:bg-white/[0.03]"
+          >
             <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#f9a870] to-[#e8551a] text-[12px] font-semibold">
               {initial}
             </div>
@@ -79,7 +94,7 @@ export function AppShell({ email, displayName, children }: AppShellProps) {
               </p>
               <p className="truncate text-[11px] text-white/40">{email}</p>
             </div>
-          </div>
+          </Link>
           <form action={signOut}>
             <button
               type="submit"
@@ -106,14 +121,22 @@ export function AppShell({ email, displayName, children }: AppShellProps) {
               vairo
             </span>
           </Link>
-          <form action={signOut}>
-            <button
-              type="submit"
+          <div className="flex items-center gap-2">
+            <Link
+              href="/app/profile"
               className="rounded-lg border border-white/12 px-3 py-1.5 text-[12px] text-white/70"
             >
-              Wyloguj
-            </button>
-          </form>
+              Profil
+            </Link>
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="rounded-lg border border-white/12 px-3 py-1.5 text-[12px] text-white/70"
+              >
+                Wyloguj
+              </button>
+            </form>
+          </div>
         </header>
         <main className="flex-1 overflow-auto px-4 py-6 sm:px-6 lg:px-8">
           {children}

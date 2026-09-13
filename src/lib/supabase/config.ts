@@ -67,7 +67,7 @@ export function getTrustedOrigin(requestOrigin?: string | null) {
 
 /**
  * Only allow in-app relative paths (blocks open redirects + auth loops).
- * Allowed: /app, /app/...
+ * Allowed: /app, /app/..., /onboarding, /onboarding/...
  */
 export function safeNextPath(
   next: string | null | undefined,
@@ -86,7 +86,12 @@ export function safeNextPath(
     return fallback;
   }
 
-  if (path === "/app" || path.startsWith("/app/")) {
+  if (
+    path === "/app" ||
+    path.startsWith("/app/") ||
+    path === "/onboarding" ||
+    path.startsWith("/onboarding/")
+  ) {
     return path;
   }
 
@@ -99,12 +104,15 @@ export type AuthErrorCode =
   | "auth_denied"
   | "auth_exchange"
   | "auth_missing_code"
-  | "auth_network";
+  | "auth_network"
+  | "auth_otp_expired";
 
 export function authErrorMessage(code: string | null): string {
   switch (code) {
     case "auth_denied":
       return "Anulowano logowanie. Spróbuj ponownie.";
+    case "auth_otp_expired":
+      return "Link wygasł lub został już użyty. Wyślij nowy magic link.";
     case "auth_missing_code":
       return "Brak kodu autoryzacji. Poproś o nowy link.";
     case "auth_network":

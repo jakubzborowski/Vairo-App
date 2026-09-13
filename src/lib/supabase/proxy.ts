@@ -5,6 +5,8 @@ import {
   getSupabaseEnv,
   safeNextPath,
 } from "@/lib/supabase/config";
+import { getProfileGate, resolvePostAuthPath } from "@/lib/profile";
+import { onboardingPathForStep, type OnboardingStep } from "@/types/profile";
 
 function isPublicAssetPath(path: string) {
   return (
@@ -21,18 +23,21 @@ function hasAuthCookie(request: NextRequest) {
 }
 
 /**
- * Refresh + gate auth on matched requests.
+ * Refresh + gate auth / onboarding on matched requests.
  * Uses getClaims() (local JWT verify via JWKS) so auth checks stay cheap at scale.
  */
 export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  if (isPublicAssetPath(path) || path.startsWith("/auth/callback")) {
+  if (isPublicAssetPath(path) || path.startsWith("/auth/callback") || path === "/start") {
     return NextResponse.next({ request });
   }
 
   const isAuthPage = path === "/login" || path === "/register";
-  const isProtected = path === "/app" || path.startsWith("/app/");
+  const isApp = path === "/app" || path.startsWith("/app/");
+  const isOnboarding =
+    path === "/onboarding" || path.startsWith("/onboarding/");
+  const isProtected = isApp || isOnboarding;
   const needsAuthCheck = isAuthPage || isProtected;
 
   // Public pages with no session cookie: skip Supabase entirely.
@@ -71,7 +76,9 @@ export async function updateSession(request: NextRequest) {
   });
 
   const { data: claimsData } = await supabase.auth.getClaims();
-  const isAuthenticated = Boolean(claimsData?.claims);
+  const claims = claimsData?.claims as Record<string, unknown> | undefined;
+  const userId = typeof claims?.sub === "string" ? claims.sub : null;
+  const isAuthenticated = Boolean(userId);
 
   if (!needsAuthCheck) {
     return supabaseResponse;
@@ -79,20 +86,44 @@ export async function updateSession(request: NextRequest) {
 
   if (!isAuthenticated && isProtected) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
+    // New users create an account first; profile onboarding comes after auth.
+    redirectUrl.pathname = "/register";
     redirectUrl.search = "";
-    redirectUrl.searchParams.set("next", safeNextPath(path));
+    redirectUrl.searchParams.set("next", safeNextPath(path, "/onboarding"));
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (isAuthenticated && isAuthPage) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = safeNextPath(
-      request.nextUrl.searchParams.get("next"),
-      "/app"
+  if (isAuthenticated && userId && (isAuthPage || isProtected)) {
+    const profile = await getProfileGate(supabase, userId);
+    const postAuthPath = resolvePostAuthPath(
+      profile,
+      safeNextPath(request.nextUrl.searchParams.get("next"), "/app")
     );
-    redirectUrl.search = "";
-    return NextResponse.redirect(redirectUrl);
+
+    if (isAuthPage) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = postAuthPath;
+      redirectUrl.search = "";
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    const isComplete = Boolean(profile?.onboarding_completed_at);
+
+    if (isApp && !isComplete) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = onboardingPathForStep(
+        (profile?.onboarding_step as OnboardingStep | undefined) ?? "name"
+      );
+      redirectUrl.search = "";
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    if (isOnboarding && isComplete) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/app";
+      redirectUrl.search = "";
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   return supabaseResponse;

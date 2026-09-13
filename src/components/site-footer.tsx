@@ -20,7 +20,7 @@ export function SiteFooter() {
           </div>
 
           <a
-            href="/login"
+            href="/start"
             className="btn-vairo inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full px-6 text-[14px] font-semibold text-white transition"
           >
             Dołącz do alfy

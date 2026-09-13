@@ -14,10 +14,9 @@ type AuthFormProps = {
 };
 
 function getAuthRedirectTo() {
-  const next = safeNextPath(
-    new URLSearchParams(window.location.search).get("next"),
-    "/app"
-  );
+  const params = new URLSearchParams(window.location.search);
+  // After account creation, continue into mandatory profile onboarding.
+  const next = safeNextPath(params.get("next"), "/onboarding");
   const url = new URL("/auth/callback", window.location.origin);
   url.searchParams.set("next", next);
   return url.toString();
