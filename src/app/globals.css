@@ -39,10 +39,30 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* --- Vairo: marka --- */
   --color-vairo: var(--vairo);
+  --color-vairo-strong: var(--vairo-strong);
   --color-vairo-soft: var(--vairo-soft);
+
+  /* --- Vairo: powierzchnie (głębia przez jasność, nie przez cień) --- */
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+
+  /* --- Vairo: tekst. Nazwa mówi, do czego wolno użyć.
+         `faint` to DEKORACJA — nigdy tekst niosący treść (kontrast < 4.5:1). --- */
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  --color-text-faint: var(--text-faint);
+
+  /* --- Vairo: semantyka --- */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -53,48 +73,67 @@
 }
 
 :root {
-  /* Vairo palette sampled from the Canva mockup PDF */
+  /* Marka */
   --vairo: #ee5f1c;
-  --vairo-soft: #ff7a3d;
-  --background: #030305;
+  --vairo-strong: #d9500f; /* wypełnienia z białym tekstem */
+  --vairo-soft: #ff7a3d; /* hover */
+
+  /* Powierzchnie */
+  --bg: #08090c;
+  --surface: #101116;
+  --surface-2: #181a20;
+  --surface-3: #22242b;
+
+  /* Tekst */
+  --text: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.72);
+  --text-subtle: rgba(255, 255, 255, 0.52); /* podłoga dla treści */
+  --text-faint: rgba(255, 255, 255, 0.34); /* tylko dekoracja */
+
+  /* Semantyka */
+  --success: #3ec07c;
+  --warning: #e0a33a;
+  --danger: #e5484d;
+  --info: #5b8def;
+
+  /* shadcn / baza */
+  --background: #08090c;
   --foreground: #ffffff;
-  --card: #131418;
+  --card: #101116;
   --card-foreground: #ffffff;
-  --popover: #131418;
+  --popover: #181a20;
   --popover-foreground: #ffffff;
   --primary: #ee5f1c;
   --primary-foreground: #ffffff;
-  --secondary: #1b1c21;
+  --secondary: #181a20;
   --secondary-foreground: #ffffff;
-  --muted: #17181d;
-  --muted-foreground: #9b9ca3;
-  --accent: #1b1c21;
+  --muted: #181a20;
+  --muted-foreground: rgba(255, 255, 255, 0.52);
+  --accent: #181a20;
   --accent-foreground: #ffffff;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: #23242b;
-  --input: #23242b;
+  --destructive: #e5484d;
+  --border: #22242b;
+  --input: #22242b;
   --ring: #ee5f1c;
-  --surface: #0c0d11;
-  --surface-2: #16171c;
   --chart-1: #ee5f1c;
-  --chart-2: #9b9ca3;
-  --chart-3: #63646b;
-  --chart-4: #37383f;
-  --chart-5: #17181d;
+  --chart-2: #5b8def;
+  --chart-3: #3ec07c;
+  --chart-4: #e0a33a;
+  --chart-5: #9b9ca3;
   --radius: 0.875rem;
   --sidebar: #0c0d11;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #ee5f1c;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1b1c21;
+  --sidebar-accent: #181a20;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #23242b;
+  --sidebar-border: #22242b;
   --sidebar-ring: #ee5f1c;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
@@ -107,6 +146,19 @@
   h3,
   h4 {
     font-family: var(--font-heading);
+  }
+
+  /* Focus widoczny wszędzie. Bez tego aplikacja jest nieużywalna
+     z klawiatury — a to dziś jedyny stan, którego nigdzie nie było. */
+  :focus-visible {
+    outline: 2px solid var(--vairo);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Liczby nie skaczą przy zmianie wartości */
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 }
 
@@ -141,12 +193,27 @@
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .hero-float {
   animation: float-soft 7s ease-in-out infinite;
 }
 
 .fade-up {
   animation: fade-up 0.7s ease-out both;
+}
+
+/* Wejście ekranu w /app: jedno delikatne fade, bez kaskady opóźnień.
+   Kaskada jest ładna za pierwszym razem i irytująca za dwudziestym. */
+.app-enter {
+  animation: fade-in 0.18s ease-out both;
 }
 
 @keyframes splash-mesh-in {
@@ -192,4 +259,15 @@
 
 .splash-center {
   animation: splash-center-in 0.7s ease-out 0.15s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

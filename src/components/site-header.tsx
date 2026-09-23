@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
@@ -59,7 +59,7 @@ export function SiteHeader() {
     };
   }, []);
 
-  const activate = (href: NavHref) => {
+  const activate = useCallback((href: NavHref) => {
     lockUntil.current = Date.now() + 800;
     setActive(href);
 
@@ -67,7 +67,7 @@ export function SiteHeader() {
       window.scrollTo({ top: 0, behavior: "smooth" });
       history.replaceState(null, "", "#home");
     }
-  };
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-[#060608]/90 backdrop-blur-md">

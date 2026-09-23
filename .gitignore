@@ -52,3 +52,10 @@ public/design-ref.png
 
 # supabase local CLI cache
 supabase/.temp/
+
+# internal planning docs (local only)
+/_plan/
+
+# backupy bazy (dane userow, nie commitujemy)
+backup-*.sql
+*.dump

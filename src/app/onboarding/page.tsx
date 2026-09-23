@@ -24,7 +24,7 @@ export default async function OnboardingIndexPage() {
 
   redirect(
     onboardingPathForStep(
-      (profile?.onboarding_step as OnboardingStep | undefined) ?? "name"
+      (profile?.onboarding_step as OnboardingStep | undefined) ?? "path"
     )
   );
 }

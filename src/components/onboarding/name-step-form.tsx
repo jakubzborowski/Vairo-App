@@ -2,26 +2,38 @@
 
 import { useState, useTransition } from "react";
 import { saveOnboardingName } from "@/app/onboarding/actions";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Field, Input } from "@/components/ui/input";
+import type { OnboardingPath } from "@/types/profile";
 
-type NameStepFormProps = {
-  initialName?: string | null;
+const SUBTITLE: Record<OnboardingPath, string> = {
+  joiner: "Pod tym imieniem zobaczą Cię teamy szukające ludzi.",
+  founder_idea: "Pod tym imieniem zobaczą Cię ludzie, których zaprosisz do teamu.",
+  founder_no_idea: "Pod tym imieniem zobaczą Cię ludzie, których zaprosisz do teamu.",
 };
 
-export function NameStepForm({ initialName }: NameStepFormProps) {
-  const [fullName, setFullName] = useState(initialName ?? "");
+export function NameStepForm({
+  initialName,
+  path,
+}: {
+  initialName?: string | null;
+  path: OnboardingPath;
+}) {
+  const [name, setName] = useState(initialName ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   return (
     <div className="text-center">
-      <h1 className="font-heading text-[1.85rem] font-semibold tracking-tight text-white sm:text-[2.15rem]">
-        First, tell us your name:
+      <h1 className="font-heading text-[1.85rem] font-semibold tracking-tight text-white sm:text-[2.1rem]">
+        Jak masz na imię?
       </h1>
-      <p className="mt-2 text-[14px] text-white/50">Your most important brand.</p>
+      <p className="mt-2.5 text-[15px] text-[var(--text-subtle)]">
+        {SUBTITLE[path]}
+      </p>
 
       <form
-        className="mx-auto mt-10 max-w-[420px] text-left"
+        className="mx-auto mt-9 max-w-[420px] text-left"
         action={(formData) => {
           setError(null);
           startTransition(async () => {
@@ -30,41 +42,31 @@ export function NameStepForm({ initialName }: NameStepFormProps) {
           });
         }}
       >
-        <label className="block text-[13px] font-medium text-white/85">
-          Name and Surname
-          <input
-            name="full_name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            placeholder="Jay Jayson..."
-            autoComplete="name"
-            required
-            minLength={2}
-            maxLength={120}
-            className={cn(
-              "mt-2 h-12 w-full rounded-full border bg-[#0c0d11] px-5 text-[15px] text-white outline-none transition placeholder:italic placeholder:text-white/35",
-              "border-vairo/70 focus:border-vairo focus:ring-2 focus:ring-vairo/25"
-            )}
-          />
-        </label>
-        <p className="mt-2.5 text-[11px] italic leading-relaxed text-white/40">
-          *Use your real name and surname. People with nicknames aren&apos;t as
-          trustworthy in professional spaces.
-        </p>
+        <Field label="Imię i nazwisko" error={error}>
+          {({ id }) => (
+            <Input
+              id={id}
+              name="full_name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="np. Anna Kowalska"
+              autoComplete="name"
+              autoFocus
+              maxLength={120}
+            />
+          )}
+        </Field>
 
-        {error && (
-          <p className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[12px] text-red-300">
-            {error}
-          </p>
-        )}
-
-        <button
+        <Button
           type="submit"
-          disabled={pending || fullName.trim().length < 2}
-          className="btn-vairo mt-8 inline-flex h-11 w-full items-center justify-center rounded-full text-[14px] font-semibold text-white transition disabled:opacity-50"
+          size="lg"
+          block
+          loading={pending}
+          disabled={name.trim().length < 2}
+          className="mt-6"
         >
-          {pending ? "Saving…" : "Continue"}
-        </button>
+          Dalej
+        </Button>
       </form>
     </div>
   );

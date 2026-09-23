@@ -1,3 +1,17 @@
+-- ############################################################################
+-- ##  NIE URUCHAMIAĆ — plik zastąpiony.                                     ##
+-- ##                                                                        ##
+-- ##  Zamiast tego odpal:  supabase/migrations/002_profile_social.sql        ##
+-- ##                                                                        ##
+-- ##  Powody wycofania:                                                     ##
+-- ##  1. Polityki RLS na `teams` i `team_members` odwołują się wzajemnie,    ##
+-- ##     co daje `42P17 infinite recursion detected in policy`.             ##
+-- ##  2. `teams` to w rzeczywistości startup/workspace — wchodzi w 003       ##
+-- ##     pod nazwą `startups` razem z rolami i limitem 3 na konto.          ##
+-- ##                                                                        ##
+-- ##  Zostawiony tylko jako referencja. Do usunięcia po migracji 003.        ##
+-- ############################################################################
+
 -- Profile social extensions: skills, avatar, weekly focus, teams
 -- Run in Supabase SQL Editor after profiles.sql
 

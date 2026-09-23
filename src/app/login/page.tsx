@@ -7,10 +7,17 @@ export const metadata: Metadata = {
   description: "Zaloguj się do Vairo magic linkiem, Google lub Apple.",
 };
 
-export default function LoginPage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function LoginPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const error = typeof params.error === "string" ? params.error : null;
+
   return (
     <AuthShell>
-      <AuthForm mode="login" />
+      <AuthForm mode="login" initialErrorCode={error} />
     </AuthShell>
   );
 }

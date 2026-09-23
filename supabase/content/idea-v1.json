@@ -1,0 +1,2226 @@
+{
+  "key": "idea",
+  "version": 1,
+  "position": 2,
+  "title": "Idea Stage",
+  "subtitle": "Sprawdź, czy pomysł ma sens",
+  "intro": "Na tym etapie sprawdzisz, komu twój pomysł może pomóc, jaki problem dla tych osób rozwiązuje i czy da się na nim zarabiać. Twoim celem jest zmniejszenie najważniejszych niepewności i wykrycie luk we własnym pomyśle.",
+  "finish_label": "Kończę walidację pomysłu",
+  "categories": [
+    {
+      "key": "general",
+      "title": "Ogólna walidacja",
+      "always_active": true,
+      "intro": "Wspólna podstawa dla każdego pomysłu — niezależnie od tego, co budujesz i komu sprzedajesz.",
+      "points": [
+        {
+          "key": "zdefiniuj-problem",
+          "title": "Zdefiniuj problem",
+          "guide": "zdefiniuj-problem",
+          "subpoints": [
+            {
+              "key": "opisz-problem",
+              "title": "Opisz problem i gdzie występuje",
+              "fields": [
+                {
+                  "key": "co-nie-dziala",
+                  "kind": "long_text",
+                  "question": "Co aktualnie nie działa, kogo ten problem dotyczy i dlaczego?",
+                  "help": "Im konkretniej, tym lepiej. „Ludzie tracą czas” jest za szerokie — opisz konkretną osobę i konkretną sytuację.",
+                  "config": {
+                    "min": 40
+                  }
+                },
+                {
+                  "key": "sytuacja",
+                  "kind": "long_text",
+                  "question": "Opisz konkretną sytuację, moment i kontekst, w którym problem występuje.",
+                  "help": "Kiedy dokładnie to się dzieje? Raz w tygodniu, przy każdym zamówieniu, na koniec miesiąca?",
+                  "config": {
+                    "min": 40
+                  }
+                }
+              ]
+            },
+            {
+              "key": "przykladowy-uzytkownik",
+              "title": "Przykładowy użytkownik",
+              "fields": [
+                {
+                  "key": "kto",
+                  "kind": "long_text",
+                  "question": "Opisz osobę lub organizację, której problem dotyczy.",
+                  "help": "Weź pod uwagę rolę, sytuację, branżę i inne cechy, które są kluczowe dla twojego pomysłu. Zamiast „przedsiębiorcy” napisz „właściciele małych sklepów internetowych”.",
+                  "config": {
+                    "min": 30
+                  },
+                  "shared": "idea.profil-uzytkownika"
+                },
+                {
+                  "key": "jak-radzi-sobie-dzis",
+                  "kind": "long_text",
+                  "question": "Jak ta osoba radzi sobie z problemem dzisiaj?",
+                  "help": "Jakie produkty, usługi, procesy, obejścia lub rozwiązania ręczne wykorzystuje? Jeśli nie robi nic — to też jest odpowiedź.",
+                  "config": {
+                    "min": 30
+                  }
+                }
+              ]
+            },
+            {
+              "key": "gdzie-nie-dziala",
+              "title": "Gdzie obecne rozwiązanie nie działa",
+              "fields": [
+                {
+                  "key": "problemy",
+                  "kind": "long_text",
+                  "question": "Wskaż konkretne problemy z obecnym sposobem działania.",
+                  "help": "Strata czasu, koszty, błędy, frustracja, brak wygody. Podawaj liczby, kiedy masz podstawę: „według rozmówcy około godziny tygodniowo”.",
+                  "config": {
+                    "min": 30
+                  }
+                },
+                {
+                  "key": "konsekwencje",
+                  "kind": "long_text",
+                  "question": "Jakie konsekwencje się za tym ciągną?",
+                  "help": "Utracone przychody, ryzyko, zmarnowane zasoby, przepuszczone możliwości. Oddziel samą przeszkodę od jej skutków.",
+                  "config": {
+                    "min": 30
+                  }
+                }
+              ]
+            },
+            {
+              "key": "waznosc-problemu",
+              "title": "Jak ważny jest ten problem",
+              "fields": [
+                {
+                  "key": "waznosc",
+                  "kind": "scale",
+                  "question": "Jak poważny jest ten problem dla osoby, której dotyczy?",
+                  "help": "1 to drobna niedogodność, 3 wyraźne utrudnienie, 5 poważne konsekwencje.",
+                  "config": {
+                    "min": 1,
+                    "max": 5,
+                    "min_label": "Drobna niedogodność",
+                    "max_label": "Poważne konsekwencje"
+                  }
+                },
+                {
+                  "key": "pilnosc",
+                  "kind": "scale",
+                  "question": "Jak pilnie trzeba to rozwiązać?",
+                  "help": "To inne pytanie niż powaga. Kłopot może być dotkliwy, ale pojawiać się dopiero za kilka miesięcy.",
+                  "config": {
+                    "min": 1,
+                    "max": 5,
+                    "min_label": "Można poczekać",
+                    "max_label": "Trzeba rozwiązać natychmiast"
+                  }
+                }
+              ]
+            },
+            {
+              "key": "ostateczna-definicja",
+              "title": "Ostateczna definicja problemu",
+              "description": "Uzupełnij pola, żeby opisać problem jednym zdaniem. Skorzystaj z wcześniejszych odpowiedzi. Skup się na trudności, nie na swoim produkcie.",
+              "fields": [
+                {
+                  "key": "zdanie",
+                  "kind": "sentence_template",
+                  "question": "Złóż opis problemu z pięciu pól.",
+                  "help": "Przeczytaj gotowe zdanie na głos. Jeśli brzmi sztucznie albo zbyt ogólnie — popraw pola, z których powstało.",
+                  "example": "Właściciele małych sklepów internetowych próbują ustalić, co zamówić podczas cotygodniowego uzupełniania zapasów, ale dane są rozrzucone po kilku plikach, przez co tracą godzinę tygodniowo i zamawiają za mało towaru.",
+                  "config": {
+                    "template": "{kto} próbują {co} {kiedy}, ale {przeszkoda}, przez co {skutek}.",
+                    "slots": [
+                      {
+                        "key": "kto",
+                        "label": "Kogo dotyczy problem?",
+                        "size": "md"
+                      },
+                      {
+                        "key": "co",
+                        "label": "Co próbują zrobić?",
+                        "size": "md"
+                      },
+                      {
+                        "key": "kiedy",
+                        "label": "W jakiej sytuacji?",
+                        "size": "md"
+                      },
+                      {
+                        "key": "przeszkoda",
+                        "label": "Co im utrudnia?",
+                        "size": "lg"
+                      },
+                      {
+                        "key": "skutek",
+                        "label": "Jakie są tego konsekwencje?",
+                        "size": "lg"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "hipoteza-rozwiazania",
+          "title": "Zdefiniuj hipotezę rozwiązania",
+          "guide": "zdefiniuj-hipoteze-rozwiazania",
+          "subpoints": [
+            {
+              "key": "opisz-rozwiazanie",
+              "title": "Opisz rozwiązanie i jego główną wartość",
+              "description": "Skup się na głównej wartości, bez rozwijania pełnej listy funkcji.",
+              "fields": [
+                {
+                  "key": "co-robi",
+                  "kind": "short_text",
+                  "question": "Co twoje rozwiązanie robi?",
+                  "help": "Jedno zdanie, zwykłymi słowami. Tak, żeby zrozumiała to osoba spoza branży.",
+                  "config": {
+                    "min": 10,
+                    "max": 300
+                  }
+                },
+                {
+                  "key": "dla-kogo",
+                  "kind": "short_text",
+                  "question": "Dla kogo jest przeznaczone?",
+                  "config": {
+                    "min": 5,
+                    "max": 200
+                  }
+                },
+                {
+                  "key": "jaki-problem",
+                  "kind": "short_text",
+                  "question": "Jaki problem rozwiązuje?",
+                  "config": {
+                    "min": 10,
+                    "max": 300
+                  }
+                },
+                {
+                  "key": "rezultat",
+                  "kind": "short_text",
+                  "question": "Jaki daje rezultat?",
+                  "help": "Co się zmienia po stronie użytkownika — co widzi, czuje albo oszczędza.",
+                  "config": {
+                    "min": 10,
+                    "max": 300
+                  }
+                }
+              ]
+            },
+            {
+              "key": "dostarczenie-wartosci",
+              "title": "Dostarczenie wartości",
+              "fields": [
+                {
+                  "key": "jak-rozwiazuje",
+                  "kind": "long_text",
+                  "question": "Jak twój pomysł rozwiązuje problem opisany w punkcie 1?",
+                  "help": "Opisz krótki ciąg wydarzeń: co użytkownik dostarcza lub robi, co dzieje się dalej i co dostaje na końcu.",
+                  "config": {
+                    "min": 40
+                  }
+                },
+                {
+                  "key": "co-zyska",
+                  "kind": "long_text",
+                  "question": "Co użytkownik zyska dzięki twojemu rozwiązaniu?",
+                  "help": "Funkcja to możliwość zrobienia czegoś. Korzyść to to, co człowiek dzięki temu zyskuje. Opisz korzyść.",
+                  "config": {
+                    "min": 20
+                  }
+                },
+                {
+                  "key": "co-musi-zrobic",
+                  "kind": "short_text",
+                  "question": "Co najważniejszego musi zrobić użytkownik, żeby uzyskać tę korzyść?",
+                  "help": "Jeśli wymaga to dużego wysiłku na starcie, to jest ryzyko, które trzeba sprawdzić.",
+                  "config": {
+                    "min": 10,
+                    "max": 300
+                  }
+                }
+              ]
+            },
+            {
+              "key": "wersja-minimalna",
+              "title": "Wersja minimalna",
+              "fields": [
+                {
+                  "key": "funkcje",
+                  "kind": "list_short",
+                  "question": "Wypisz absolutnie niezbędne funkcje, żeby przetestować produkt, usługę lub proces.",
+                  "help": "Przy każdej zapytaj: „czy bez tego nadal mogę sprawdzić, czy pomagam użytkownikowi?”. Jeśli tak — wyrzuć.",
+                  "example": "Przyjęcie plików · Porównanie informacji · Przygotowanie listy zamówień",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 200
+                  }
+                }
+              ]
+            },
+            {
+              "key": "dlaczego-skorzysta",
+              "title": "Dlaczego ktoś miałby skorzystać",
+              "fields": [
+                {
+                  "key": "zalozenie",
+                  "kind": "sentence_template",
+                  "question": "Zapisz swoje główne założenie.",
+                  "help": "To zdanie będziesz sprawdzać w rozmowach z ludźmi. Im konkretniejsze, tym łatwiej je obalić albo potwierdzić.",
+                  "config": {
+                    "template": "Zakładam, że {kto} skorzysta z {czego}, żeby {po-co}.",
+                    "slots": [
+                      {
+                        "key": "kto",
+                        "label": "Kto?",
+                        "size": "md"
+                      },
+                      {
+                        "key": "czego",
+                        "label": "Z czego?",
+                        "size": "md"
+                      },
+                      {
+                        "key": "po-co",
+                        "label": "Co osiągnąć?",
+                        "size": "lg"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": "warunki",
+                  "kind": "list_short",
+                  "question": "Co musi się sprawdzić, żeby twój pomysł miał szansę zadziałać?",
+                  "help": "Wybierz takie założenia, których niespełnienie zmusi cię do zmiany pomysłu. Reszta nie jest krytyczna.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 8,
+                    "item_max": 250
+                  }
+                }
+              ]
+            },
+            {
+              "key": "zalozenie-do-testow",
+              "title": "Sprawdzane założenie do testów",
+              "fields": [
+                {
+                  "key": "najwazniejsze",
+                  "kind": "short_text",
+                  "question": "Które założenie jest najbardziej ryzykowne i najważniejsze?",
+                  "help": "To jest rzecz, od której zależy wszystko inne. Nią zajmiesz się najpierw.",
+                  "config": {
+                    "min": 10,
+                    "max": 300
+                  }
+                },
+                {
+                  "key": "pozostale",
+                  "kind": "list_short",
+                  "question": "Jakie są pozostałe założenia?",
+                  "is_required": false,
+                  "config": {
+                    "max_items": 10,
+                    "item_max": 250
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "konkurencja",
+          "title": "Sprawdź, jak inni rozwiązują ten problem",
+          "guide": "sprawdz-jak-inni-rozwiazuja-ten-problem",
+          "subpoints": [
+            {
+              "key": "znajdz-rozwiazania",
+              "title": "Znajdź podobne rozwiązania",
+              "fields": [
+                {
+                  "key": "produkty",
+                  "kind": "list_short",
+                  "question": "Wypisz trzy produkty lub usługi, które rozwiązują podobny problem.",
+                  "help": "Nie muszą być identyczne. Chodzi o to, po co dziś sięga twój odbiorca.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 200
+                  }
+                },
+                {
+                  "key": "obejscia",
+                  "kind": "list_short",
+                  "question": "Jakimi jeszcze sposobami ludzie radzą sobie z tym problemem?",
+                  "help": "Robią coś ręcznie, proszą kogoś o pomoc, używają Excela albo po prostu godzą się z niedogodnością. To też jest konkurencja.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 200
+                  }
+                }
+              ]
+            },
+            {
+              "key": "opisz-rozwiazania",
+              "title": "Opisz znalezione rozwiązania",
+              "fields": [
+                {
+                  "key": "dla-kogo",
+                  "kind": "short_text",
+                  "question": "Dla kogo są przeznaczone?",
+                  "config": {
+                    "min": 5,
+                    "max": 300
+                  }
+                },
+                {
+                  "key": "jak-rozwiazuja",
+                  "kind": "long_text",
+                  "question": "Jak rozwiązują problem i co dzięki temu zyskuje użytkownik?",
+                  "config": {
+                    "min": 30
+                  }
+                },
+                {
+                  "key": "cena",
+                  "kind": "short_text",
+                  "question": "Ile kosztują i za co się płaci?",
+                  "help": "Jeśli nie znasz ceny, napisz „nie podają ceny publicznie” — to też jest informacja.",
+                  "config": {
+                    "min": 3,
+                    "max": 300
+                  }
+                },
+                {
+                  "key": "funkcje",
+                  "kind": "list_short",
+                  "question": "Jakie mają najważniejsze funkcje lub cechy?",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 15,
+                    "item_max": 200
+                  }
+                }
+              ]
+            },
+            {
+              "key": "opinie-uzytkownikow",
+              "title": "Sprawdź, co mówią użytkownicy",
+              "fields": [
+                {
+                  "key": "przeczytane",
+                  "kind": "checkmark",
+                  "question": "Przeczytałem opinie, komentarze albo dyskusje o tych rozwiązaniach.",
+                  "help": "Recenzje w sklepach, wątki na forach, komentarze na Reddicie i grupach — tam ludzie mówią prawdę."
+                },
+                {
+                  "key": "chwala",
+                  "kind": "list_short",
+                  "question": "Co użytkownicy chwalą?",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 250
+                  }
+                },
+                {
+                  "key": "narzekaja",
+                  "kind": "list_short",
+                  "question": "Na co narzekają i czego im brakuje?",
+                  "help": "To najcenniejsza część. Luka w cudzym produkcie to twoja szansa.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 250
+                  }
+                },
+                {
+                  "key": "niezaspokojone",
+                  "kind": "short_text",
+                  "question": "Czy jakaś grupa osób ma potrzeby, których te rozwiązania nie zaspokajają? Jakie?",
+                  "is_required": false,
+                  "config": {
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "zrodla",
+                  "kind": "links",
+                  "question": "Linki do znalezionych opinii",
+                  "help": "Przydadzą się później, gdy będziesz wracać do tych wniosków.",
+                  "is_required": false,
+                  "config": {
+                    "max_items": 10
+                  }
+                }
+              ]
+            },
+            {
+              "key": "porownaj",
+              "title": "Porównaj swój pomysł",
+              "fields": [
+                {
+                  "key": "inaczej",
+                  "kind": "short_text",
+                  "question": "Co chcesz robić inaczej niż istniejące rozwiązania?",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "ci-sami-ludzie",
+                  "kind": "short_text",
+                  "question": "Czy chcesz pomagać tym samym osobom? Jeśli nie — komu?",
+                  "config": {
+                    "min": 5,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "cena",
+                  "kind": "short_text",
+                  "question": "Jak twoja planowana cena wypada na ich tle?",
+                  "help": "Jeśli jeszcze jej nie znasz, napisz „do ustalenia” — wrócisz do tego w punkcie 5.",
+                  "config": {
+                    "min": 3,
+                    "max": 300
+                  }
+                },
+                {
+                  "key": "przewagi",
+                  "kind": "long_text",
+                  "question": "W czym twój pomysł może być lepszy, a w czym istniejące rozwiązania mają przewagę?",
+                  "help": "Uczciwa odpowiedź na drugą część jest ważniejsza niż na pierwszą.",
+                  "config": {
+                    "min": 40
+                  }
+                }
+              ]
+            },
+            {
+              "key": "dlaczego-zmiana",
+              "title": "Sprawdź, dlaczego ktoś miałby się przestawić",
+              "fields": [
+                {
+                  "key": "co-przekona",
+                  "kind": "short_text",
+                  "question": "Co skłoniłoby kogoś do wybrania twojego rozwiązania zamiast obecnego sposobu działania?",
+                  "config": {
+                    "min": 15,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "co-utrudnia",
+                  "kind": "list_short",
+                  "question": "Co utrudniałoby tę zmianę?",
+                  "help": "Koszt, przeniesienie danych, nauka obsługi, przyzwyczajenie, zgoda przełożonego.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 8,
+                    "item_max": 250
+                  }
+                }
+              ]
+            },
+            {
+              "key": "brak-konkurencji",
+              "title": "Jeśli nie znajdujesz podobnych rozwiązań",
+              "description": "Wypełnij tylko wtedy, gdy naprawdę nic nie znalazłeś. Brak konkurencji częściej oznacza brak rynku niż wolne pole.",
+              "is_optional": true,
+              "fields": [
+                {
+                  "key": "gdzie-szukales",
+                  "kind": "list_short",
+                  "question": "Gdzie szukałeś?",
+                  "is_required": false,
+                  "config": {
+                    "max_items": 10,
+                    "item_max": 200
+                  }
+                },
+                {
+                  "key": "dlaczego-nie-ma",
+                  "kind": "long_text",
+                  "question": "Dlaczego takie rozwiązania mogą nie istnieć?",
+                  "help": "Rozważ, czy problem jest mało ważny, rozwiązanie trudne do zbudowania albo trudno na nim zarobić. Możliwe też, że nikt jeszcze nie wykorzystał tej szansy.",
+                  "is_required": false
+                },
+                {
+                  "key": "jak-sprawdzisz",
+                  "kind": "short_text",
+                  "question": "Jak sprawdzisz swoje wyjaśnienie?",
+                  "is_required": false,
+                  "config": {
+                    "max": 400
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "rozmowy",
+          "title": "Porozmawiaj z osobami, którym chcesz pomóc",
+          "guide": "porozmawiaj-z-osobami-ktorym-chcesz-pomoc",
+          "subpoints": [
+            {
+              "key": "znajdz-rozmowcow",
+              "title": "Znajdź rozmówców",
+              "fields": [
+                {
+                  "key": "osoby",
+                  "kind": "list_short",
+                  "question": "Znajdź przynajmniej 5 osób, których może dotyczyć wybrany problem.",
+                  "help": "Wpisz imię albo opis, żeby wiedzieć, z kim rozmawiałeś. Nie muszą to być obcy ludzie — zacznij od znajomych z branży.",
+                  "config": {
+                    "min_items": 5,
+                    "max_items": 20,
+                    "item_max": 200
+                  }
+                }
+              ]
+            },
+            {
+              "key": "zapytaj-o-doswiadczenia",
+              "title": "Zapytaj o ich doświadczenia",
+              "description": "Na początku nie przedstawiaj swojego pomysłu. Pytaj o to, co robili, nie o to, co zrobiliby.",
+              "fields": [
+                {
+                  "key": "zapisy",
+                  "kind": "list_long",
+                  "question": "Po każdej rozmowie zapisz, czego się dowiedziałeś.",
+                  "help": "Kiedy ostatnio pojawił się ten problem i jak często się zdarza? Jak ta osoba sobie z nim radzi? Co jest w tym najbardziej uciążliwe i ile kosztuje ją czasu, pieniędzy lub wysiłku?",
+                  "config": {
+                    "min_items": 5,
+                    "max_items": 20
+                  }
+                },
+                {
+                  "key": "materialy",
+                  "kind": "files",
+                  "question": "Nagrania albo notatki z rozmów",
+                  "is_required": false,
+                  "config": {
+                    "max_files": 20,
+                    "max_mb": 20
+                  }
+                }
+              ]
+            },
+            {
+              "key": "podsumuj-rozmowy",
+              "title": "Podsumuj rozmowy",
+              "fields": [
+                {
+                  "key": "powtarzalo",
+                  "kind": "list_short",
+                  "question": "Co powtarzało się w odpowiedziach?",
+                  "help": "Rzecz, którą powiedziały trzy osoby z pięciu, jest ważniejsza niż najciekawsza uwaga jednej.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 300
+                  }
+                },
+                {
+                  "key": "za-i-przeciw",
+                  "kind": "long_text",
+                  "question": "Co wskazuje, że warto rozwiązać ten problem, a co podważa twoje założenia?",
+                  "help": "Zapisz też to, co ci się nie spodobało. Sprzeczny dowód jest wart więcej niż dziesięć potwierdzeń.",
+                  "config": {
+                    "min": 60
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "zainteresowanie-i-cena",
+          "title": "Sprawdź zainteresowanie pomysłem i ceną",
+          "guide": "sprawdz-zainteresowanie-pomyslem-i-cena",
+          "subpoints": [
+            {
+              "key": "propozycja",
+              "title": "Przygotuj krótką propozycję",
+              "fields": [
+                {
+                  "key": "oferta",
+                  "kind": "short_text",
+                  "question": "Co oferujesz i jak to pomoże rozmówcy?",
+                  "help": "Skorzystaj z opisu pomysłu z punktu 2. Maksymalnie dwa zdania.",
+                  "config": {
+                    "min": 20,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "cena",
+                  "kind": "short_text",
+                  "question": "Kto miałby płacić, ile i za co?",
+                  "example": "30 zł miesięcznie za korzystanie z aplikacji, płaci właściciel sklepu.",
+                  "config": {
+                    "min": 10,
+                    "max": 300
+                  }
+                }
+              ]
+            },
+            {
+              "key": "miara-zainteresowania",
+              "title": "Ustal, po czym poznasz zainteresowanie",
+              "description": "Ustal to zanim zaczniesz rozmawiać — inaczej zawsze znajdziesz powód, żeby uznać wynik za dobry.",
+              "fields": [
+                {
+                  "key": "dzialanie",
+                  "kind": "short_text",
+                  "question": "O jakie działanie poprosisz?",
+                  "help": "Coś, co wymaga wysiłku: zapisanie się do testów, umówienie kolejnej rozmowy, podanie maila, wpłata zaliczki.",
+                  "config": {
+                    "min": 10,
+                    "max": 300
+                  }
+                },
+                {
+                  "key": "prog",
+                  "kind": "short_text",
+                  "question": "Ilu osobom przedstawisz propozycję i ile z nich musi wykonać to działanie, żebyś kontynuował?",
+                  "example": "Przedstawię 15 osobom, kontynuuję jeśli co najmniej 4 zapiszą się do testów.",
+                  "config": {
+                    "min": 10,
+                    "max": 300
+                  }
+                }
+              ]
+            },
+            {
+              "key": "przedstaw-pomysl",
+              "title": "Przedstaw pomysł i cenę",
+              "description": "Możesz wrócić do wcześniejszych rozmówców. Jeśli płacić ma ktoś inny niż użytkownik, porozmawiaj również z taką osobą.",
+              "fields": [
+                {
+                  "key": "reakcje",
+                  "kind": "long_text",
+                  "question": "Jak rozmówcy ocenili pomysł i cenę? Co ich przekonało, a co zniechęciło?",
+                  "config": {
+                    "min": 60
+                  }
+                },
+                {
+                  "key": "wynik",
+                  "kind": "short_text",
+                  "question": "Ile osób wykonało proponowane działanie spośród wszystkich, którym przedstawiłeś pomysł?",
+                  "help": "Pochwała pomysłu, zapis do darmowych testów i deklaracja „zapłaciłbym” znaczą co innego. Żadne z nich samo w sobie nie dowodzi, że ktoś kupi.",
+                  "config": {
+                    "min": 1,
+                    "max": 200
+                  }
+                }
+              ]
+            },
+            {
+              "key": "decyzja",
+              "title": "Zdecyduj, co dalej",
+              "fields": [
+                {
+                  "key": "wnioski",
+                  "kind": "long_text",
+                  "question": "Co zostawisz, co zmienisz i co jeszcze musisz sprawdzić?",
+                  "help": "To podsumowanie całego etapu. Za miesiąc wrócisz do niego i sprawdzisz, czy trzymałeś się planu.",
+                  "config": {
+                    "min": 60
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "saas",
+      "title": "SaaS",
+      "intro": "Oprogramowanie w abonamencie musi odpowiadać na potrzebę na tyle regularną, żeby klient odnawiał subskrypcję co miesiąc albo co rok. Sprawdzisz, jak często wraca problem, ile zajmie start, co zatrzyma klienta, a co go zniechęci.",
+      "points": [
+        {
+          "key": "za-co-placi",
+          "title": "Za co klient będzie płacić podczas korzystania",
+          "description": "Skorzystaj z opisu problemu i propozycji ceny z Ogólnej walidacji. Tutaj sprawdzisz, czy sposób naliczania opłat pasuje do tego, jak z programu się korzysta.",
+          "guide": "za-co-klient-bedzie-placic-podczas-korzystania",
+          "subpoints": [
+            {
+              "key": "co-zapewnia-z-czasem",
+              "title": "Określ, co program zapewnia z czasem",
+              "fields": [
+                {
+                  "key": "po-pierwszym-uzyciu",
+                  "kind": "short_text",
+                  "question": "Co klient dostanie już po pierwszym użyciu?",
+                  "help": "Np. obsługę kolejnych zamówień, przechowywanie danych, pracę zespołową albo stałe monitorowanie.",
+                  "config": {
+                    "min": 15,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "rodzaj-dostepu",
+                  "kind": "short_text",
+                  "question": "Czy klient potrzebuje stałego dostępu, korzystania przez określony czas, czy tylko wykonania pojedynczych zadań?",
+                  "help": "Możesz oprzeć odpowiedź na przykładach z rozmów w Ogólnej walidacji. To decyduje, czy abonament w ogóle ma sens.",
+                  "config": {
+                    "min": 15,
+                    "max": 400
+                  }
+                }
+              ]
+            },
+            {
+              "key": "sposob-naliczania",
+              "title": "Dopasuj sposób naliczania opłat",
+              "fields": [
+                {
+                  "key": "za-co",
+                  "kind": "short_text",
+                  "question": "Za co chcesz naliczać opłatę?",
+                  "help": "Np. miesiąc dostępu, liczbę użytkowników albo liczbę wykonanych zadań.",
+                  "config": {
+                    "min": 5,
+                    "max": 300
+                  }
+                },
+                {
+                  "key": "w-cenie",
+                  "kind": "list_short",
+                  "question": "Co klient otrzyma w cenie, którą podałeś w Ogólnej walidacji?",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12,
+                    "item_max": 200
+                  }
+                }
+              ]
+            },
+            {
+              "key": "reakcja-na-rozliczenie",
+              "title": "Sprawdź reakcję na sposób rozliczenia",
+              "description": "Jeśli rozmawiałeś już z ludźmi w Ogólnej walidacji, wróć do tych samych osób — nie musisz szukać nowych.",
+              "fields": [
+                {
+                  "key": "pasuje-przeszkadza",
+                  "kind": "list_short",
+                  "question": "Co zapytanym osobom pasuje, a co przeszkadza w takim naliczaniu opłat?",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 300
+                  }
+                },
+                {
+                  "key": "kiedy-zrezygnuja",
+                  "kind": "list_short",
+                  "question": "W jakim przypadku mogliby przestać potrzebować płatnego dostępu albo ograniczyć korzystanie?",
+                  "help": "To są przyszłe powody rezygnacji. Lepiej poznać je teraz niż po roku.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 300
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "start-korzystania",
+          "title": "Sprawdź, czy klient będzie mógł zacząć korzystać",
+          "description": "Ustal, co musi być dostępne, żeby program komukolwiek pomógł. Na tym etapie wystarczy rozpoznać przeszkody i niewiadome.",
+          "guide": "sprawdz-czy-klient-bedzie-mogl-zaczac-korzystac-z-programu",
+          "subpoints": [
+            {
+              "key": "czego-potrzebuje",
+              "title": "Czego program potrzebuje na początek",
+              "fields": [
+                {
+                  "key": "dane",
+                  "kind": "list_short",
+                  "question": "Jakie dane, pliki, dostępy lub ustawienia są potrzebne przed pierwszym użyciem?",
+                  "help": "Jeśli żadne — wpisz „nic nie jest potrzebne”. To bardzo dobra wiadomość dla twojego produktu.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12,
+                    "item_max": 250
+                  }
+                },
+                {
+                  "key": "skad-je-wezmie",
+                  "kind": "short_text",
+                  "question": "Skąd użytkownik je weźmie i czy może je udostępnić?",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "legalnosc",
+                  "kind": "short_text",
+                  "question": "Czy udostępnienie tych danych jest legalne? Jeśli tak, na jakiej podstawie?",
+                  "help": "Dane osobowe, dane klientów, dane finansowe — tu zaczynają się realne przeszkody, o których łatwo zapomnieć.",
+                  "config": {
+                    "min": 5,
+                    "max": 400
+                  }
+                }
+              ]
+            },
+            {
+              "key": "integracje",
+              "title": "Sprawdź potrzebne połączenia z innymi programami",
+              "fields": [
+                {
+                  "key": "z-czym",
+                  "kind": "list_short",
+                  "question": "Z jakimi programami twoje rozwiązanie musi wymieniać dane, żeby spełnić główną obietnicę?",
+                  "help": "Jeśli z żadnymi — wpisz „z żadnymi”. Każda integracja to tygodnie pracy, więc warto wiedzieć na pewno.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12,
+                    "item_max": 200
+                  }
+                },
+                {
+                  "key": "prostszy-sposob",
+                  "kind": "short_text",
+                  "question": "Czy na początku wystarczy prostszy sposób, np. przesłanie pliku? Czy tamte programy w ogóle na to pozwalają?",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                }
+              ]
+            },
+            {
+              "key": "warunki-startu",
+              "title": "Zapisz warunki rozpoczęcia korzystania",
+              "fields": [
+                {
+                  "key": "co-powstrzyma",
+                  "kind": "list_short",
+                  "question": "Co mogłoby powstrzymać klienta przed użyciem programu online albo przechowywaniem w nim danych?",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 300
+                  }
+                },
+                {
+                  "key": "potwierdzone-vs-domysly",
+                  "kind": "list_short",
+                  "question": "Które z tych przeszkód wskazali rozmówcy, a które dopiero trzeba sprawdzić?",
+                  "help": "Dopisz przy każdej: „powiedział rozmówca” albo „mój domysł”. Domysły są do sprawdzenia, nie do planowania.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 300
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "jeden-program-rozni-klienci",
+          "title": "Sprawdź, czy jeden program może służyć różnym klientom",
+          "description": "Porównaj potrzeby rozmówców. Sprawdź, czy możesz zaoferować im wspólny produkt i jakiej pomocy będą potrzebować.",
+          "guide": "sprawdz-czy-jeden-program-moze-sluzyc-roznym-klientom",
+          "subpoints": [
+            {
+              "key": "wspolne-vs-indywidualne",
+              "title": "Oddziel wspólne potrzeby od indywidualnych życzeń",
+              "fields": [
+                {
+                  "key": "wspolne",
+                  "kind": "list_short",
+                  "question": "Co program ma robić tak samo dla większości pierwszych klientów?",
+                  "help": "To jest twój właściwy produkt. Reszta to opcje.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12,
+                    "item_max": 250
+                  }
+                },
+                {
+                  "key": "indywidualne",
+                  "kind": "list_short",
+                  "question": "Jakich zmian albo dodatków oczekują tylko pojedynczy rozmówcy?",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12,
+                    "item_max": 250
+                  }
+                }
+              ]
+            },
+            {
+              "key": "potrzebna-pomoc",
+              "title": "Określ potrzebną pomoc",
+              "fields": [
+                {
+                  "key": "przygotowanie",
+                  "kind": "list_short",
+                  "question": "Co trzeba będzie przygotować albo ustawić osobno dla każdego klienta?",
+                  "help": "Im dłuższa ta lista, tym trudniej obsłużyć dziesiątego klienta tak samo dobrze jak pierwszego.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 250
+                  }
+                },
+                {
+                  "key": "pozniejsza-pomoc",
+                  "kind": "list_short",
+                  "question": "Jakiej pomocy klient może potrzebować później?",
+                  "help": "Np. przy zmianie ustawień, danych albo sposobu pracy.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 250
+                  }
+                }
+              ]
+            },
+            {
+              "key": "najwieksza-niewiadoma",
+              "title": "Wskaż największą niewiadomą",
+              "fields": [
+                {
+                  "key": "osobna-wersja",
+                  "kind": "short_text",
+                  "question": "Czy któreś oczekiwanie wymaga osobnej wersji programu albo regularnego wykonywania pracy za klienta?",
+                  "help": "Jeśli tak, to nie jest już SaaS, tylko usługa. To nie musi być zła wiadomość — ale warto wiedzieć.",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "do-wyjasnienia",
+                  "kind": "short_text",
+                  "question": "Co musisz wyjaśnić przed rozpoczęciem budowy i z kim to sprawdzisz?",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "b2b",
+      "title": "B2B",
+      "intro": "Sprzedajesz firmom. Pamiętaj, że osoba korzystająca z twojego rozwiązania rzadko decyduje o jego zakupie — pracownik potrzebuje lepszego narzędzia, ale zgodę wydaje szef. Sprawdzisz, komu w firmie pomagasz, kto zatwierdza zakup i co musi się wydarzyć, żeby firma zaczęła korzystać.",
+      "points": [
+        {
+          "key": "decyzja-o-zakupie",
+          "title": "Sprawdź, jak klient podejmuje decyzję o zakupie",
+          "guide": "sprawdz-jak-klient-podejmuje-decyzje-o-zakupie",
+          "subpoints": [
+            {
+              "key": "docelowa-firma",
+              "title": "Opisz docelową firmę i użytkownika",
+              "fields": [
+                {
+                  "key": "profil-firmy",
+                  "kind": "long_text",
+                  "question": "Opisz profil idealnego klienta — firmy.",
+                  "help": "Branża, wielkość, liczba pracowników, sposób pracy, dojrzałość technologiczna. Im węziej, tym łatwiej ją znaleźć.",
+                  "config": {
+                    "min": 40
+                  }
+                },
+                {
+                  "key": "profil-uzytkownika",
+                  "kind": "long_text",
+                  "shared": "idea.profil-uzytkownika",
+                  "question": "Opisz osobę, która będzie korzystać z twojego rozwiązania.",
+                  "help": "Rola, sytuacja, branża i inne cechy kluczowe dla twojego pomysłu. Jeśli odpowiadałeś już na to w Ogólnej walidacji, zobaczysz tu swoją odpowiedź.",
+                  "config": {
+                    "min": 30
+                  }
+                }
+              ]
+            },
+            {
+              "key": "kto-decyduje",
+              "title": "Kto decyduje o zakupie",
+              "fields": [
+                {
+                  "key": "role",
+                  "kind": "list_short",
+                  "question": "Kto ma problem, kto dysponuje budżetem, kto podpisuje umowę, a kto może zablokować zakup?",
+                  "help": "Wypisz jedną rolę na pozycję. Często to cztery różne osoby — i każda potrzebuje innego argumentu.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 8,
+                    "item_max": 250
+                  }
+                }
+              ]
+            },
+            {
+              "key": "wymagane-zgody",
+              "title": "Sprawdź wymagane zgody",
+              "fields": [
+                {
+                  "key": "dzialy",
+                  "kind": "list_short",
+                  "question": "Do jakich działów musisz dotrzeć?",
+                  "help": "Np. IT, prawny, bezpieczeństwo, finanse. Każdy z nich potrafi zatrzymać zakup na tygodnie.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 8,
+                    "item_max": 150
+                  }
+                },
+                {
+                  "key": "dodatkowe-zgody",
+                  "kind": "short_text",
+                  "question": "Czy potrzebna jest zgoda jeszcze od kogoś?",
+                  "config": {
+                    "min": 3,
+                    "max": 400
+                  }
+                }
+              ]
+            },
+            {
+              "key": "sciezka-zakupowa",
+              "title": "Ścieżka zakupowa",
+              "fields": [
+                {
+                  "key": "kroki",
+                  "kind": "list_short",
+                  "question": "Rozpisz proces od pojawienia się problemu aż do decyzji, a potem do użytkowania i odnowienia umowy.",
+                  "help": "Jedna pozycja to jeden krok. Zobaczysz, ile rzeczy musi się wydarzyć, zanim ktoś zapłaci.",
+                  "config": {
+                    "min_items": 3,
+                    "max_items": 15,
+                    "item_max": 250
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "czas-sprzedazy",
+          "title": "Zbadaj czas i warunki procesu sprzedaży",
+          "guide": "zbadaj-czas-i-warunki-procesu-sprzedazy",
+          "subpoints": [
+            {
+              "key": "jak-decyduje",
+              "title": "Sprawdź, jak firma podejmuje decyzję",
+              "fields": [
+                {
+                  "key": "ile-osob",
+                  "kind": "short_text",
+                  "question": "Czy wystarczy decyzja jednej osoby, czy potrzebna jest zgoda kilku?",
+                  "config": {
+                    "min": 5,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "budzet",
+                  "kind": "short_text",
+                  "question": "Czy firma może kupić takie rozwiązanie w dowolnym momencie, czy musi wcześniej zaplanować na nie pieniądze?",
+                  "help": "Zaplanowany budżet oznacza, że sprzedaż może czekać do przyszłego roku.",
+                  "config": {
+                    "min": 5,
+                    "max": 400
+                  }
+                }
+              ]
+            },
+            {
+              "key": "opoznienia",
+              "title": "Zidentyfikuj największe opóźnienia",
+              "fields": [
+                {
+                  "key": "co-opozni",
+                  "kind": "list_short",
+                  "question": "Co może opóźnić proces?",
+                  "help": "Urlopy, audyt bezpieczeństwa, dział prawny, koniec roku obrotowego, zmiana osoby na stanowisku.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 250
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "roi",
+          "title": "Sprawdź, czy klient zarobi więcej, niż zapłaci",
+          "description": "ROI (Return On Investment) to prosta odpowiedź na pytanie: czy to się firmie opłaci. Nie potrzebujesz arkusza — wystarczy uczciwy szacunek.",
+          "guide": "sprawdz-czy-zakup-oplaci-sie-firmie",
+          "subpoints": [
+            {
+              "key": "koszt-problemu",
+              "title": "Ile kosztuje klienta problem",
+              "fields": [
+                {
+                  "key": "czas",
+                  "kind": "short_text",
+                  "question": "Ile czasu kosztuje go problem dzisiaj?",
+                  "example": "Około 6 godzin tygodniowo, dwie osoby.",
+                  "config": {
+                    "min": 3,
+                    "max": 300
+                  }
+                },
+                {
+                  "key": "pieniadze",
+                  "kind": "short_text",
+                  "question": "Ile pieniędzy kosztuje go problem dzisiaj?",
+                  "config": {
+                    "min": 3,
+                    "max": 300
+                  }
+                },
+                {
+                  "key": "bledy",
+                  "kind": "short_text",
+                  "question": "Ile błędów albo strat powoduje ten problem?",
+                  "config": {
+                    "min": 3,
+                    "max": 300
+                  }
+                }
+              ]
+            },
+            {
+              "key": "przelicz-na-pieniadze",
+              "title": "Przelicz korzyści na pieniądze i porównaj z ceną",
+              "fields": [
+                {
+                  "key": "cena",
+                  "kind": "short_text",
+                  "question": "Jaką cenę zapłaci klient za twoje rozwiązanie?",
+                  "config": {
+                    "min": 3,
+                    "max": 300
+                  }
+                },
+                {
+                  "key": "minimalny-wynik",
+                  "kind": "short_text",
+                  "question": "Jaki minimalny wynik i w jakim czasie przekona go do zakupu?",
+                  "help": "„Musi zwrócić się w pół roku” to typowa odpowiedź. Warto ją znać przed rozmową o cenie.",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                }
+              ]
+            },
+            {
+              "key": "korzysci-miekkie",
+              "title": "Uwzględnij korzyści miękkie",
+              "fields": [
+                {
+                  "key": "lista",
+                  "kind": "list_short",
+                  "question": "Zapisz zalety trudniejsze do przeliczenia.",
+                  "help": "Wygoda pracy, mniejszy stres zespołu, niższe ryzyko, lepszy wizerunek. Same nie zamkną sprzedaży, ale często przechylają szalę.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 250
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "po-zakupie",
+          "title": "Sprawdź, czego firma potrzebuje po zakupie",
+          "description": "Sprzedaż to nie koniec. Jeśli po podpisaniu umowy nikt nie zacznie korzystać, umowa się nie odnowi.",
+          "guide": "sprawdz-czego-firma-potrzebuje-po-zakupie",
+          "subpoints": [
+            {
+              "key": "przygotowanie",
+              "title": "Ustal, co firma musi przygotować",
+              "fields": [
+                {
+                  "key": "co-musi-sie-wydarzyc",
+                  "kind": "list_short",
+                  "question": "Co musi się wydarzyć między zakupem a rozpoczęciem korzystania?",
+                  "help": "Np. przygotowanie miejsca, przekazanie materiałów albo zmiana sposobu pracy.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12,
+                    "item_max": 250
+                  }
+                },
+                {
+                  "key": "kto-sie-zajmie",
+                  "kind": "short_text",
+                  "question": "Kto w firmie zajmie się tym przygotowaniem?",
+                  "config": {
+                    "min": 5,
+                    "max": 300
+                  }
+                }
+              ]
+            },
+            {
+              "key": "pomoc-pracownikow",
+              "title": "Sprawdź, jakiej pomocy potrzebują pracownicy",
+              "fields": [
+                {
+                  "key": "czego-sie-naucza",
+                  "kind": "list_short",
+                  "question": "Czego będą musieli się nauczyć, żeby korzystać z rozwiązania?",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 250
+                  }
+                },
+                {
+                  "key": "jaka-pomoc",
+                  "kind": "list_short",
+                  "question": "Jakiej pomocy oczekują od ciebie na początku, a jakiej później?",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 250
+                  }
+                }
+              ]
+            },
+            {
+              "key": "co-utrudni",
+              "title": "Ustal, co może utrudnić korzystanie",
+              "fields": [
+                {
+                  "key": "powroty-do-starego",
+                  "kind": "list_short",
+                  "question": "Co może sprawić, że pracownicy zostaną przy starym sposobie pracy mimo zakupu?",
+                  "help": "Brak czasu na naukę, konieczność robienia tej samej rzeczy dwa razy, przyzwyczajenie, brak wsparcia szefa.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 300
+                  }
+                },
+                {
+                  "key": "poprzednie-zakupy",
+                  "kind": "short_text",
+                  "question": "Czy firma kupiła wcześniej coś podobnego, z czego potem nie korzystano? Jeśli tak, dlaczego?",
+                  "help": "To najcenniejsze pytanie w całym punkcie. Odpowiedź mówi, czego uniknąć.",
+                  "config": {
+                    "min": 5,
+                    "max": 500
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "b2c",
+      "title": "B2C",
+      "intro": "Sprzedajesz osobom prywatnym. Sprawdzisz cztery rzeczy: ile kosztuje zdobycie klienta, czy ludzie naprawdę chcą korzystać, czy są gotowi zapłacić i czy będą polecać dalej. Celem nie jest jeszcze skala, tylko wczesne wykrycie ryzyk.",
+      "points": [
+        {
+          "key": "pozyskanie-klientow",
+          "title": "Jak znaleźć klientów i ile to kosztuje",
+          "guide": "jak-znalezc-klientow-i-sprawdzic-ile-to-kosztuje",
+          "subpoints": [
+            {
+              "key": "gdzie-sa-klienci",
+              "title": "Znajdź miejsca, gdzie są twoi klienci",
+              "fields": [
+                {
+                  "key": "do-kogo",
+                  "kind": "short_text",
+                  "question": "Do kogo dokładnie kierujesz produkt?",
+                  "help": "Im węziej, tym taniej ich znajdziesz. „Wszyscy” to najdroższa grupa docelowa świata.",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "miejsca",
+                  "kind": "list_short",
+                  "question": "Wybierz 3–5 miejsc, gdzie najłatwiej do nich dotrzeć.",
+                  "help": "Np. grupy na Facebooku, reklamy, targi, fora tematyczne, newslettery branżowe.",
+                  "config": {
+                    "min_items": 3,
+                    "max_items": 5,
+                    "item_max": 200
+                  }
+                }
+              ]
+            },
+            {
+              "key": "test-ogloszenia",
+              "title": "Przetestuj proste ogłoszenie",
+              "fields": [
+                {
+                  "key": "wypuszczone",
+                  "kind": "checkmark",
+                  "question": "Wypuściłem krótką informację o produkcie w wybranych miejscach.",
+                  "help": "Nie potrzebujesz produktu — wystarczy opis tego, co zamierzasz zrobić."
+                },
+                {
+                  "key": "kogo-zainteresowalo",
+                  "kind": "long_text",
+                  "question": "Kogo zainteresował twój pomysł?",
+                  "help": "Kto zareagował, o co pytał, czy to byli ci ludzie, których się spodziewałeś?",
+                  "config": {
+                    "min": 30
+                  }
+                },
+                {
+                  "key": "ile-osob",
+                  "kind": "number",
+                  "question": "Ile osób zadeklarowało chęć skorzystania?",
+                  "config": {
+                    "min": 0,
+                    "unit": "osób"
+                  }
+                }
+              ]
+            },
+            {
+              "key": "koszt-klienta",
+              "title": "Policz koszt zdobycia jednego klienta",
+              "fields": [
+                {
+                  "key": "wydane",
+                  "kind": "number",
+                  "question": "Ile pieniędzy wydałeś na dotarcie do tych osób?",
+                  "help": "Reklamy, materiały, wejściówki na targi. Jeśli nic nie wydałeś, wpisz 0.",
+                  "config": {
+                    "min": 0,
+                    "unit": "zł"
+                  }
+                },
+                {
+                  "key": "cac",
+                  "kind": "number",
+                  "question": "Ile kosztowało zdobycie jednej zainteresowanej osoby?",
+                  "help": "Podziel wydane pieniądze przez liczbę osób. To jest CAC — koszt pozyskania klienta.",
+                  "config": {
+                    "min": 0,
+                    "unit": "zł"
+                  }
+                },
+                {
+                  "key": "czy-oplaca",
+                  "kind": "short_text",
+                  "question": "Czy przy takim koszcie to się w ogóle opłaca?",
+                  "help": "Porównaj z ceną, jaką planujesz. Jeśli zdobycie klienta kosztuje więcej, niż on zapłaci — masz problem do rozwiązania teraz, nie później.",
+                  "config": {
+                    "min": 10,
+                    "max": 500
+                  }
+                }
+              ]
+            },
+            {
+              "key": "glowny-kanal",
+              "title": "Wybierz jeden główny sposób docierania",
+              "fields": [
+                {
+                  "key": "glowny",
+                  "kind": "short_text",
+                  "question": "Które miejsce dało najlepsze i najtańsze efekty?",
+                  "config": {
+                    "min": 5,
+                    "max": 300
+                  }
+                },
+                {
+                  "key": "zapasowy",
+                  "kind": "short_text",
+                  "question": "Które zostawiasz jako zapasowe?",
+                  "help": "Jeden kanał to ryzyko. Drugi w odwodzie kosztuje niewiele, a ratuje, gdy pierwszy przestanie działać.",
+                  "config": {
+                    "min": 5,
+                    "max": 300
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "czy-chca-korzystac",
+          "title": "Sprawdź, czy ludzie naprawdę chcą z tego korzystać",
+          "description": "Deklaracja to nie to samo co zachowanie. W tym punkcie patrzysz na to, co ludzie robią, a nie co mówią.",
+          "guide": "jak-sprawdzic-czy-ludzie-chca-z-tego-korzystac",
+          "subpoints": [
+            {
+              "key": "pierwsi-testerzy",
+              "title": "Pokaż pomysł pierwszym testerom",
+              "fields": [
+                {
+                  "key": "co-pokazales",
+                  "kind": "short_text",
+                  "question": "Co im pokazałeś?",
+                  "help": "Zamiast budować gotowy produkt, zrób prosty szkic albo pomóż ludziom „ręcznie”. Na tym etapie to wystarczy.",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "testerzy",
+                  "kind": "list_short",
+                  "question": "Zaproś do testów 5 osób z grupy docelowej i wypisz je tutaj.",
+                  "config": {
+                    "min_items": 5,
+                    "max_items": 15,
+                    "item_max": 200
+                  }
+                }
+              ]
+            },
+            {
+              "key": "bez-pomocy",
+              "title": "Patrz, jak radzą sobie bez twojej pomocy",
+              "fields": [
+                {
+                  "key": "obserwacje",
+                  "kind": "long_text",
+                  "question": "Daj im proste zadanie i obserwuj z boku. Co zobaczyłeś?",
+                  "help": "Nie podpowiadaj. Miejsce, w którym się zacinają, jest ważniejsze niż wszystko, co powiedzą potem.",
+                  "config": {
+                    "min": 60
+                  }
+                }
+              ]
+            },
+            {
+              "key": "czy-wroca",
+              "title": "Zobacz, czy sami z siebie wrócą",
+              "fields": [
+                {
+                  "key": "ilu-wrocilo",
+                  "kind": "number",
+                  "question": "Ilu z nich korzystało dalej po kilku dniach, bez twojego przypominania?",
+                  "config": {
+                    "min": 0,
+                    "unit": "osób"
+                  }
+                },
+                {
+                  "key": "co-powiedzieli",
+                  "kind": "long_text",
+                  "question": "Co powiedzieli ci, którzy przestali?",
+                  "help": "To najcenniejsza informacja w całym punkcie. Powód rezygnacji mówi więcej niż pochwała.",
+                  "config": {
+                    "min": 30
+                  }
+                }
+              ]
+            },
+            {
+              "key": "puste-obietnice",
+              "title": "Oddziel realne sygnały od grzeczności",
+              "fields": [
+                {
+                  "key": "sygnaly",
+                  "kind": "long_text",
+                  "question": "Co było realnym sygnałem zainteresowania, a co zwykłą uprzejmością?",
+                  "help": "„To fajny pomysł” nic nie znaczy. Liczy się to, że ktoś wrócił, zapytał kiedy będzie gotowe albo zaproponował zapłatę.",
+                  "config": {
+                    "min": 40
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "gotowosc-do-zaplaty",
+          "title": "Oceń gotowość do zapłaty",
+          "guide": "ocena-gotowosci-do-zaplaty",
+          "subpoints": [
+            {
+              "key": "platnik-vs-uzytkownik",
+              "title": "Rozdziel płatnika od użytkownika",
+              "fields": [
+                {
+                  "key": "kto-placi",
+                  "kind": "short_text",
+                  "question": "Czy płaci ta sama osoba, która korzysta?",
+                  "help": "Prezent, zakup dla dziecka, zakup dla rodzica — wtedy przekonujesz kogoś innego niż użytkownika.",
+                  "config": {
+                    "min": 5,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "wydatki-na-alternatywy",
+                  "kind": "short_text",
+                  "question": "Ile klient wydaje dziś na podobne rozwiązania?",
+                  "help": "To twój punkt odniesienia dla ceny. Jeśli dziś nie wydaje nic, przekonanie go będzie znacznie trudniejsze.",
+                  "config": {
+                    "min": 3,
+                    "max": 400
+                  }
+                }
+              ]
+            },
+            {
+              "key": "obiekcje",
+              "title": "Zbierz obiekcje i pogrupuj je",
+              "fields": [
+                {
+                  "key": "lista",
+                  "kind": "list_short",
+                  "question": "Co powstrzymuje ludzi przed zakupem?",
+                  "help": "Przy każdej dopisz, z czego wynika: brak zaufania do marki, brak pilnej potrzeby, czy porównanie z łatwo dostępną alternatywą.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12,
+                    "item_max": 300
+                  }
+                }
+              ]
+            },
+            {
+              "key": "ltv-vs-cac",
+              "title": "Oszacuj wartość klienta i zestaw ją z kosztem",
+              "fields": [
+                {
+                  "key": "ltv",
+                  "kind": "number",
+                  "question": "Ile klient zapłaci ci łącznie przez cały czas korzystania?",
+                  "help": "To LTV. Policz prosto: średnia wartość zamówienia × liczba zamówień w roku × liczba lat.",
+                  "config": {
+                    "min": 0,
+                    "unit": "zł"
+                  }
+                },
+                {
+                  "key": "wniosek",
+                  "kind": "short_text",
+                  "question": "Jak LTV wypada przy koszcie pozyskania z punktu 1?",
+                  "help": "Przyjęta reguła mówi, że LTV powinno być kilkukrotnie wyższe od CAC. Jeśli jest odwrotnie, biznes traci na każdym kliencie.",
+                  "config": {
+                    "min": 10,
+                    "max": 500
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "potencjal-polecen",
+          "title": "Zweryfikuj potencjał poleceń",
+          "description": "Polecenia to najtańszy sposób wzrostu w B2C. Sprawdzasz, czy w ogóle się zdarzają — nie czy ludzie deklarują, że poleciliby.",
+          "guide": "weryfikacja-potencjalu-polecen",
+          "subpoints": [
+            {
+              "key": "powod-i-moment",
+              "title": "Zdefiniuj powód i moment polecenia",
+              "fields": [
+                {
+                  "key": "powod",
+                  "kind": "short_text",
+                  "question": "Co skłania użytkownika do polecenia?",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "moment",
+                  "kind": "short_text",
+                  "question": "W którym momencie najchętniej się tym dzielą?",
+                  "help": "Zwykle tuż po pierwszym sukcesie z produktem, nie po miesiącu korzystania.",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                }
+              ]
+            },
+            {
+              "key": "rzeczywiste-polecenia",
+              "title": "Przetestuj rzeczywiste polecenia",
+              "fields": [
+                {
+                  "key": "ile-poproszonych",
+                  "kind": "number",
+                  "question": "Ilu testerów poprosiłeś o polecenie konkretnej osobie?",
+                  "help": "Poproś o realne polecenie, nie o deklarację „tak, polecę”.",
+                  "config": {
+                    "min": 0,
+                    "unit": "osób"
+                  }
+                },
+                {
+                  "key": "ile-polecilo",
+                  "kind": "number",
+                  "question": "Ilu z nich faktycznie kogoś poleciło?",
+                  "config": {
+                    "min": 0,
+                    "unit": "osób"
+                  }
+                },
+                {
+                  "key": "ile-podjelo-dzialanie",
+                  "kind": "number",
+                  "question": "Ile poleconych osób podjęło kolejne działanie?",
+                  "config": {
+                    "min": 0,
+                    "unit": "osób"
+                  }
+                }
+              ]
+            },
+            {
+              "key": "komunikacja",
+              "title": "Zbadaj, jak o tym mówią",
+              "fields": [
+                {
+                  "key": "jak-opisuja",
+                  "kind": "long_text",
+                  "question": "Jak użytkownicy opisują produkt, polecając go?",
+                  "help": "Ich słowa są lepsze od twoich. To gotowy materiał na stronę i reklamy.",
+                  "config": {
+                    "min": 40
+                  }
+                },
+                {
+                  "key": "organiczne-vs-motywowane",
+                  "kind": "short_text",
+                  "question": "Czy polecenia z nagrodą działały lepiej niż te bez?",
+                  "help": "Jeśli działają tylko z nagrodą, to nie jest jeszcze prawdziwe polecenie — to kupowanie ruchu.",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                }
+              ]
+            },
+            {
+              "key": "mechanizm",
+              "title": "Zidentyfikuj, co napędza polecenia",
+              "fields": [
+                {
+                  "key": "co-decyduje",
+                  "kind": "select",
+                  "question": "Co najsilniej wpływa na decyzję o poleceniu?",
+                  "config": {
+                    "options": [
+                      {
+                        "value": "usefulness",
+                        "label": "Użyteczność — produkt po prostu działa"
+                      },
+                      {
+                        "value": "altruism",
+                        "label": "Korzyść dla drugiej osoby"
+                      },
+                      {
+                        "value": "social",
+                        "label": "Relacja społeczna i dobre wrażenie"
+                      },
+                      {
+                        "value": "reward",
+                        "label": "Nagroda albo rabat"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": "wskaznik",
+                  "kind": "short_text",
+                  "question": "Jaki wyszedł stosunek udanych poleceń do proszonych i czy to istotne źródło wzrostu?",
+                  "config": {
+                    "min": 10,
+                    "max": 500
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "hardware",
+      "title": "Hardware",
+      "intro": "Sprawdzasz, czy fizyczny produkt da się zbudować, wyprodukować i wprowadzić na rynek w sposób technicznie i ekonomicznie uzasadniony. Celem nie jest gotowe urządzenie, tylko wczesne wykrycie ryzyk: wykonalności, kosztów, czasu wejścia na rynek, popytu i wymogów zgodności.",
+      "points": [
+        {
+          "key": "problem-i-potrzeba-fizyczna",
+          "title": "Potwierdź problem i potrzebę fizycznego urządzenia",
+          "subpoints": [
+            {
+              "key": "problem-i-alternatywy",
+              "title": "Zbadaj problem i obecne alternatywy",
+              "fields": [
+                {
+                  "key": "wnioski",
+                  "kind": "long_text",
+                  "question": "Co wynika z rozmów z potencjalnymi użytkownikami?",
+                  "help": "Upewnij się, że problem jest realny — nie że brzmi realnie.",
+                  "config": {
+                    "min": 60
+                  }
+                },
+                {
+                  "key": "alternatywy",
+                  "kind": "list_short",
+                  "question": "Jak klienci radzą sobie z tym dzisiaj?",
+                  "help": "Produkty konkurencyjne, rozwiązania zastępcze, obejścia domowej roboty.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12,
+                    "item_max": 250
+                  }
+                }
+              ]
+            },
+            {
+              "key": "dlaczego-sprzet",
+              "title": "Uzasadnij konieczność stworzenia sprzętu",
+              "fields": [
+                {
+                  "key": "uzasadnienie",
+                  "kind": "long_text",
+                  "question": "Dlaczego twoje rozwiązanie wymaga fizycznego urządzenia?",
+                  "help": "Upewnij się, że problemu nie da się rozwiązać prościej — samą aplikacją, usługą albo oprogramowaniem. Sprzęt jest o rząd wielkości droższy i wolniejszy.",
+                  "config": {
+                    "min": 60
+                  }
+                }
+              ]
+            },
+            {
+              "key": "koncepcja-formy",
+              "title": "Stwórz koncepcję formy",
+              "fields": [
+                {
+                  "key": "opis-formy",
+                  "kind": "short_text",
+                  "question": "Jaki ma być planowany rozmiar, forma i sposób interakcji z produktem?",
+                  "config": {
+                    "min": 20,
+                    "max": 500
+                  }
+                },
+                {
+                  "key": "makieta",
+                  "kind": "files",
+                  "question": "Szkice, wizualizacja 3D albo zdjęcia makiety",
+                  "help": "Kartonowa makieta albo wydruk 3D w zupełności wystarczą. Chodzi o to, żeby dało się to wziąć do ręki.",
+                  "config": {
+                    "max_files": 10,
+                    "max_mb": 20
+                  }
+                }
+              ]
+            },
+            {
+              "key": "opinia-o-koncepcji",
+              "title": "Zbierz opinię o koncepcji",
+              "fields": [
+                {
+                  "key": "reakcje",
+                  "kind": "long_text",
+                  "question": "Czy potencjalni klienci rozumieją działanie urządzenia i potwierdzają chęć używania?",
+                  "help": "Pokaż makietę bez tłumaczenia. Jeśli musisz wyjaśniać, jak to działa — forma wymaga poprawy.",
+                  "config": {
+                    "min": 60
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wykonalnosc-techniczna",
+          "title": "Sprawdź wstępną wykonalność techniczną",
+          "subpoints": [
+            {
+              "key": "technologie",
+              "title": "Zidentyfikuj kluczowe technologie i komponenty",
+              "fields": [
+                {
+                  "key": "lista",
+                  "kind": "list_short",
+                  "question": "Wypisz główne elementy niezbędne do działania produktu.",
+                  "help": "Np. czujniki, mikrokontrolery, baterie, silniki, ekrany.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 20,
+                    "item_max": 200
+                  }
+                }
+              ]
+            },
+            {
+              "key": "dostepnosc",
+              "title": "Zweryfikuj rynkową dostępność technologii",
+              "fields": [
+                {
+                  "key": "sprawdzone",
+                  "kind": "checkmark",
+                  "question": "Przejrzałem karty katalogowe i potwierdziłem, że komponenty o potrzebnych parametrach istnieją.",
+                  "help": "Chodzi o parametry i gabaryty, nie tylko o samą kategorię elementu."
+                },
+                {
+                  "key": "linki",
+                  "kind": "links",
+                  "question": "Linki do kart katalogowych",
+                  "is_required": false,
+                  "config": {
+                    "max_items": 15
+                  }
+                },
+                {
+                  "key": "watpliwosci",
+                  "kind": "short_text",
+                  "question": "Czy któregoś komponentu nie udało się znaleźć w potrzebnej wersji?",
+                  "config": {
+                    "min": 3,
+                    "max": 500
+                  }
+                }
+              ]
+            },
+            {
+              "key": "konsultacja",
+              "title": "Skonsultuj koncept z inżynierem",
+              "fields": [
+                {
+                  "key": "rozmowa",
+                  "kind": "checkmark",
+                  "question": "Rozmawiałem ze specjalistą (elektronikiem albo mechanikiem).",
+                  "help": "Godzina rozmowy potrafi oszczędzić pół roku pracy nad czymś, co nie zadziała."
+                },
+                {
+                  "key": "wnioski",
+                  "kind": "long_text",
+                  "question": "Co powiedział o połączeniu tych komponentów w zakładanej obudowie?",
+                  "config": {
+                    "min": 40
+                  }
+                }
+              ]
+            },
+            {
+              "key": "ryzyko-technologiczne",
+              "title": "Wskaż największe ryzyko technologiczne",
+              "fields": [
+                {
+                  "key": "ryzyko",
+                  "kind": "short_text",
+                  "question": "Co do której funkcji jest najwięcej niepewności?",
+                  "help": "Np. czas pracy na baterii, precyzja czujnika, odprowadzanie ciepła. Tym zajmiesz się w pierwszej kolejności.",
+                  "config": {
+                    "min": 10,
+                    "max": 500
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "koszty-jednostkowe",
+          "title": "Oszacuj koszty jednostkowe",
+          "description": "BOM (Bill of Materials) to lista części z cenami. Na tym etapie wystarczy szacunek z hurtowni.",
+          "subpoints": [
+            {
+              "key": "bom",
+              "title": "Zbuduj wstępną listę części",
+              "fields": [
+                {
+                  "key": "czesci",
+                  "kind": "list_short",
+                  "question": "Wypisz znane komponenty wraz z cenami detalicznymi.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 30,
+                    "item_max": 200
+                  }
+                },
+                {
+                  "key": "arkusz",
+                  "kind": "files",
+                  "question": "Arkusz z rozpiską kosztów",
+                  "is_required": false,
+                  "config": {
+                    "max_files": 5,
+                    "max_mb": 20
+                  }
+                }
+              ]
+            },
+            {
+              "key": "koszt-jednostkowy",
+              "title": "Oszacuj koszt jednostkowy",
+              "fields": [
+                {
+                  "key": "komponenty",
+                  "kind": "number",
+                  "question": "Ile kosztują same komponenty?",
+                  "config": {
+                    "min": 0,
+                    "unit": "zł"
+                  }
+                },
+                {
+                  "key": "szacunek",
+                  "kind": "number",
+                  "question": "Ile wyjdzie koszt jednostkowy po uwzględnieniu obudowy, montażu, opakowania i strat?",
+                  "help": "Pomnóż wartość komponentów przez 2 albo 3. To przybliżenie, ale lepsze niż nic.",
+                  "config": {
+                    "min": 0,
+                    "unit": "zł"
+                  }
+                }
+              ]
+            },
+            {
+              "key": "ryzyko-kosztowe",
+              "title": "Zidentyfikuj największe ryzyko kosztowe",
+              "fields": [
+                {
+                  "key": "element",
+                  "kind": "short_text",
+                  "question": "Wzrost ceny którego komponentu najbardziej zagrozi opłacalności?",
+                  "help": "Np. niestandardowy wyświetlacz, droga bateria, obudowa wymagająca formy wtryskowej.",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                }
+              ]
+            },
+            {
+              "key": "koszt-vs-cena",
+              "title": "Zderz koszt z potencjalną ceną",
+              "fields": [
+                {
+                  "key": "cena",
+                  "kind": "number",
+                  "question": "Jaką cenę sprzedaży zakładasz?",
+                  "config": {
+                    "min": 0,
+                    "unit": "zł"
+                  }
+                },
+                {
+                  "key": "marza",
+                  "kind": "short_text",
+                  "question": "Czy zakładana marża pozwala na opłacalny rozwój projektu?",
+                  "help": "W sprzęcie trzeba z niej pokryć produkcję, magazyn, wysyłkę, zwroty, serwis i dystrybucję.",
+                  "config": {
+                    "min": 10,
+                    "max": 500
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "zamiar-zakupu",
+          "title": "Zbadaj zamiar zakupu",
+          "subpoints": [
+            {
+              "key": "akceptacja-cenowa",
+              "title": "Zweryfikuj akceptację cenową",
+              "fields": [
+                {
+                  "key": "zakres",
+                  "kind": "short_text",
+                  "question": "Jaki zakres cenowy podają potencjalni użytkownicy?",
+                  "help": "Zapytaj przy makiecie albo szkicu, nie w oderwaniu od produktu.",
+                  "config": {
+                    "min": 5,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "reakcje",
+                  "kind": "long_text",
+                  "question": "Jak reagowali na cenę, którą zakładasz?",
+                  "config": {
+                    "min": 40
+                  }
+                }
+              ]
+            },
+            {
+              "key": "testy-zaangazowania",
+              "title": "Zrób testy zaangażowania",
+              "fields": [
+                {
+                  "key": "forma",
+                  "kind": "short_text",
+                  "question": "W jakiej formie sprawdziłeś gotowość rynku?",
+                  "help": "Zapis na listę oczekujących, deklaracja zakupu na stronie, formularz przedsprzedażowy.",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                },
+                {
+                  "key": "ile-osob",
+                  "kind": "number",
+                  "question": "Ile osób podjęło to działanie?",
+                  "config": {
+                    "min": 0,
+                    "unit": "osób"
+                  }
+                }
+              ]
+            },
+            {
+              "key": "early-adopters",
+              "title": "Wybierz wczesny segment odbiorców",
+              "fields": [
+                {
+                  "key": "segment",
+                  "kind": "long_text",
+                  "question": "Kto odczuwa problem najmocniej i komu wystarczy pierwsza wersja urządzenia?",
+                  "help": "Wąska grupa, która wybaczy niedoskonałości, bo bardzo potrzebuje rozwiązania.",
+                  "config": {
+                    "min": 40
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "regulacje",
+          "title": "Określ zarys regulacyjny i ryzyka wdrożeniowe",
+          "subpoints": [
+            {
+              "key": "kategoryzacja",
+              "title": "Zidentyfikuj kategorię produktu",
+              "fields": [
+                {
+                  "key": "kategoria",
+                  "kind": "select",
+                  "question": "Do jakiej grupy należy urządzenie?",
+                  "help": "Od tego zależy, ile certyfikacji będziesz potrzebować i ile to potrwa.",
+                  "config": {
+                    "options": [
+                      {
+                        "value": "consumer",
+                        "label": "Zwykła elektronika użytkowa"
+                      },
+                      {
+                        "value": "medical",
+                        "label": "Produkt medyczny"
+                      },
+                      {
+                        "value": "food",
+                        "label": "Kontakt z żywnością"
+                      },
+                      {
+                        "value": "high-voltage",
+                        "label": "Praca pod wysokim napięciem"
+                      },
+                      {
+                        "value": "other",
+                        "label": "Inna kategoria"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": "uzasadnienie",
+                  "kind": "short_text",
+                  "question": "Na jakiej podstawie tak to zakwalifikowałeś?",
+                  "config": {
+                    "min": 10,
+                    "max": 400
+                  }
+                }
+              ]
+            },
+            {
+              "key": "certyfikaty",
+              "title": "Wskaż kluczowe certyfikaty i normy",
+              "fields": [
+                {
+                  "key": "lista",
+                  "kind": "list_short",
+                  "question": "Jakie obowiązkowe oznaczenia obowiązują na twoich rynkach docelowych?",
+                  "help": "Np. CE, FCC, RoHS. Wystarczy wstępny przegląd.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12,
+                    "item_max": 150
+                  }
+                },
+                {
+                  "key": "ograniczenia",
+                  "kind": "long_text",
+                  "question": "Jakie krytyczne ograniczenia nakładają na produkt?",
+                  "config": {
+                    "min": 30
+                  }
+                }
+              ]
+            },
+            {
+              "key": "decyzja",
+              "title": "Podejmij decyzję o przejściu dalej",
+              "fields": [
+                {
+                  "key": "podsumowanie",
+                  "kind": "long_text",
+                  "question": "Zestaw zebrany popyt, opinię inżyniera i szacunki kosztowe. Czy projekt uzasadnia przejście do szczegółowej specyfikacji?",
+                  "help": "To jest moment na uczciwą odpowiedź. Sprzęt wybacza mniej niż oprogramowanie — błąd na tym etapie kosztuje miesiące i pieniądze.",
+                  "config": {
+                    "min": 80
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
