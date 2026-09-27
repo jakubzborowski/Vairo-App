@@ -1,0 +1,378 @@
+{
+  "key": "preparation",
+  "version": 1,
+  "position": 3,
+  "title": "Preparation",
+  "subtitle": "Przygotuj się do budowy",
+  "intro": "Masz pomysł i pierwsze wnioski z rozmów. Teraz rozpisz, co trzeba zrobić do pierwszej wersji, zdobądź pomoc, jeśli jej potrzebujesz, zbierz pliki i rzeczy na start. Osoba pracująca sama może przejść ten etap bez zespołu.",
+  "finish_label": "Zaczynam budowę",
+  "categories": [
+    {
+      "key": "general",
+      "title": "Ogólne",
+      "always_active": true,
+      "intro": "Ta część dotyczy każdego startupu. Kategorie SaaS, Hardware, B2B i B2C dołożą własne punkty, gdy ich treść będzie zatwierdzona.",
+      "points": [
+        {
+          "key": "scope",
+          "title": "Co możemy zrobić sami? A co nie?",
+          "duration_hint": "Około 15 minut",
+          "guide_body": "Wypisz prace prowadzące do pierwszej wersji, z której ktoś może skorzystać. Zapisuj konkretny wynik, na przykład „przygotować formularz zgłoszeń”, a nie hasło „technologia”. Przy każdym zadaniu wskaż, czy zrobisz je sam, musisz się nauczyć, czy szukasz kogoś. Co-foundera szukaj przy długotrwałej odpowiedzialności za ważny obszar. Do jednorazowej pracy wystarczy wykonawca. Udziały traktuj jako wstępną propozycję do rozmowy, nie jako zapłatę za jedno zadanie.",
+          "guide_sources": [
+            "Michael Seibel, How to Plan an MVP (Startup School, 2019)",
+            "Michael Seibel, One Order of Operations for Starting a Startup (2018)",
+            "Y Combinator, 10 Questions to Discuss with a Potential Co-founder (2023)"
+          ],
+          "subpoints": [
+            {
+              "key": "tasks",
+              "title": "Rozpisz zadania do pierwszej wersji",
+              "fields": [
+                {
+                  "key": "mvp_tasks",
+                  "kind": "list_long",
+                  "question": "Lista rzeczy, które muszą zostać zrobione do pierwszej wersji.",
+                  "help": "Wybierz zadania prowadzące do głównej korzyści. Dodatki możesz dopisać później.",
+                  "example": "Przygotować instrukcję korzystania.\nUruchomić prosty formularz.\nWykonać model obudowy.",
+                  "config": { "min_items": 1, "max_items": 30 }
+                }
+              ]
+            },
+            {
+              "key": "split",
+              "title": "Podziel te zadania",
+              "fields": [
+                {
+                  "key": "alone",
+                  "kind": "list_long",
+                  "question": "Które z tych rzeczy możesz zrobić sam?",
+                  "help": "Jeśli nie ma takich zadań, wpisz „brak”.",
+                  "example": "Przygotować instrukcję korzystania.",
+                  "config": { "min_items": 1, "max_items": 20 }
+                },
+                {
+                  "key": "learn",
+                  "kind": "list_long",
+                  "question": "Których możesz się nauczyć?",
+                  "help": "Wybieraj umiejętność przy konkretnym zadaniu. Jeśli nauka mocno odsunęłaby start, przenieś zadanie do pomocy innych osób.",
+                  "example": "Uruchomić prosty formularz w wybranym narzędziu.",
+                  "config": { "min_items": 1, "max_items": 20 }
+                },
+                {
+                  "key": "others",
+                  "kind": "list_long",
+                  "question": "Do których potrzebujesz innych osób?",
+                  "help": "Jeśli dasz radę sam, wpisz „brak”.",
+                  "example": "Wykonać model obudowy.",
+                  "config": { "min_items": 1, "max_items": 20 }
+                }
+              ]
+            },
+            {
+              "key": "mode",
+              "title": "Czy szukasz ludzi?",
+              "fields": [
+                {
+                  "key": "choice",
+                  "kind": "select",
+                  "question": "Jak chcesz przejść ten etap?",
+                  "help": "Wybór „Dam radę sam” pomija szukanie ludzi, wspólną próbę i zasady współpracy. Pliki i lista braków zostają.",
+                  "config": {
+                    "options": [
+                      { "value": "alone", "label": "Dam radę sam" },
+                      { "value": "cofounder", "label": "Szukam co-foundera" },
+                      { "value": "helpers", "label": "Szukam wykonawców, nie co-foundera" },
+                      { "value": "both", "label": "Szukam co-foundera i wykonawców" }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "key": "cofounder",
+              "title": "Profil co-foundera",
+              "skip_when": {
+                "answer_key": "preparation.scope.mode.choice",
+                "one_of": ["alone", "helpers"]
+              },
+              "fields": [
+                {
+                  "key": "profile",
+                  "kind": "records",
+                  "question": "Opisz, kogo szukasz jako co-foundera.",
+                  "help": "Jedna pozycja to jedna rola. Możesz dopisać własne pole, jeśli brakuje czegoś w profilu.",
+                  "example": "Odpowiedzialność: pierwsza wersja programu i jej rozwój po testach. Udziały: 15–25% do rozmowy.",
+                  "config": {
+                    "add_label": "Dodaj kolejną rolę",
+                    "allow_custom_columns": true,
+                    "max_items": 5,
+                    "columns": [
+                      { "key": "responsibility", "label": "Odpowiedzialność", "placeholder": "Za co ta osoba odpowiada" },
+                      { "key": "equity", "label": "Zakres udziałów do rozmowy", "placeholder": "Np. 10–20%" },
+                      { "key": "experience", "label": "Wymagane doświadczenie", "placeholder": "Co powinna umieć pokazać" },
+                      { "key": "approach", "label": "Podejście", "placeholder": "Jakiej współpracy oczekujesz" },
+                      { "key": "hours", "label": "Wolne godziny i zaangażowanie", "placeholder": "Ile czasu może poświęcić" }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "key": "helpers",
+              "title": "Osoby potrzebne do konkretnej pracy",
+              "skip_when": {
+                "answer_key": "preparation.scope.mode.choice",
+                "one_of": ["alone", "cofounder"]
+              },
+              "fields": [
+                {
+                  "key": "roles",
+                  "kind": "records",
+                  "question": "Zadania, które są za małe na co-foundera, ale nie zrobisz ich sam.",
+                  "help": "Przy każdej pozycji napisz umiejętność i czy możesz za tę pracę zapłacić.",
+                  "example": "Projekt opakowania gotowego do drukarni. Szukam kogoś, kto przygotowywał takie pliki. Budżet: 800 zł.",
+                  "config": {
+                    "add_label": "Dodaj osobę",
+                    "max_items": 12,
+                    "columns": [
+                      { "key": "task", "label": "Zadanie", "placeholder": "Co ma powstać" },
+                      { "key": "skill", "label": "Umiejętność i doświadczenie", "placeholder": "Czego szukasz" },
+                      { "key": "pay", "label": "Czy możesz zapłacić i ile", "placeholder": "Np. 800 zł albo brak budżetu" }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "find-help",
+          "title": "Zdobądź pomoc i pierwsze kontakty",
+          "duration_hint": "Około 20 minut",
+          "guide_body": "Użyj tego, co zapisałeś w poprzednim punkcie. Profil w Social ma mówić, co tworzysz, na jakim jesteś etapie i w czym ktoś może pomóc. Szukaj osób, których umiejętności pasują do zadań. Po odpowiedzi zapisz w tabeli, czy odpisali, co umieją i czy będziecie współpracować. Do startupu dodajesz tylko osoby, które potwierdziły chęć udziału.",
+          "guide_sources": [
+            "Michael Seibel, One Order of Operations for Starting a Startup (2018)"
+          ],
+          "subpoints": [
+            {
+              "key": "social",
+              "title": "Użyj warstwy Social",
+              "skip_when": {
+                "answer_key": "preparation.scope.mode.choice",
+                "one_of": ["alone"]
+              },
+              "fields": [
+                {
+                  "key": "opened",
+                  "kind": "action",
+                  "question": "Uzupełnij profil swój i startupu, a potem szukaj ludzi w sieci Vairo.",
+                  "help": "Ten krok otwiera Social. Zaznacz go, gdy profil jest gotowy i wiesz, kogo szukasz.",
+                  "config": {
+                    "href": "/app/social/me",
+                    "label": "Otwórz Social",
+                    "confirm_label": "Profil jest gotowy"
+                  }
+                }
+              ]
+            },
+            {
+              "key": "outreach",
+              "title": "Zapisz, kogo pytałeś",
+              "skip_when": {
+                "answer_key": "preparation.scope.mode.choice",
+                "one_of": ["alone"]
+              },
+              "fields": [
+                {
+                  "key": "contacts",
+                  "kind": "records",
+                  "question": "Kontakty: osoba albo firma, czy odpowiedziała, jakie ma umiejętności i czy będziecie współpracować.",
+                  "help": "Jedna pozycja to jedna rozmowa. Gdy ktoś jeszcze nie odpisał, wpisz „czeka”.",
+                  "example": "Ola Kowalska. Odpowiedziała. Robiła modele podobnych części. Ustalamy wspólną próbę.",
+                  "config": {
+                    "add_label": "Dodaj kontakt",
+                    "max_items": 20,
+                    "columns": [
+                      { "key": "who", "label": "Imię i nazwisko albo firma" },
+                      { "key": "reply", "label": "Czy odpowiedziała" },
+                      { "key": "skills", "label": "Umiejętności" },
+                      { "key": "together", "label": "Czy będziecie współpracować" }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "key": "pick",
+              "title": "Wybierz osoby z platformy",
+              "skip_when": {
+                "answer_key": "preparation.scope.mode.choice",
+                "one_of": ["alone"]
+              },
+              "fields": [
+                {
+                  "key": "people",
+                  "kind": "people",
+                  "question": "Zaznacz osoby, z którymi chcesz iść dalej.",
+                  "help": "To prawdziwe profile z Vairo. Zaproszenie do startupu wysyłasz z karty osoby w Social. Samo zaznaczenie nie tworzy członkostwa. Jeśli nikogo nie wybierasz, zapisz pustą listę.",
+                  "config": { "empty_ok": true }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "trial",
+          "title": "Sprawdźcie, czy potraficie razem pracować",
+          "duration_hint": "Kilka dni",
+          "guide_body": "Wybierzcie z listy zadań pracę, której wynik przyda się w projekcie i którą da się skończyć w kilka dni. Przed startem ustalcie, co ma być gotowe, kto robi którą część i kiedy to łączycie. Po próbie zapiszcie, co powstało. Jedna udana próba nie zamyka wszystkich spraw, ale mówi, czy chcecie kontynuować w tym składzie.",
+          "guide_sources": [
+            "Y Combinator, 10 Questions to Discuss with a Potential Co-founder (2023)"
+          ],
+          "subpoints": [
+            {
+              "key": "task",
+              "title": "Wybierzcie wspólne zadanie",
+              "skip_when": {
+                "answer_key": "preparation.scope.mode.choice",
+                "one_of": ["alone"]
+              },
+              "fields": [
+                {
+                  "key": "which",
+                  "kind": "short_text",
+                  "question": "Które niewielkie zadanie z listy bierzecie na próbę?",
+                  "help": "Ma wykorzystać różne umiejętności i zająć najwyżej kilka dni.",
+                  "example": "Model mocowania uchwytu rowerowego.",
+                  "config": { "max": 300 }
+                },
+                {
+                  "key": "plan",
+                  "kind": "short_text",
+                  "question": "Co ma powstać, kto robi którą część i kiedy kończycie?",
+                  "help": "Wystarczy jedno zdanie na osobę.",
+                  "example": "Ola przygotuje model, ja dostarczę wymiary. W piątek oglądamy wynik.",
+                  "config": { "max": 500 }
+                }
+              ]
+            },
+            {
+              "key": "result",
+              "title": "Zapiszcie wynik próby",
+              "skip_when": {
+                "answer_key": "preparation.scope.mode.choice",
+                "one_of": ["alone"]
+              },
+              "fields": [
+                {
+                  "key": "outcome",
+                  "kind": "long_text",
+                  "question": "Co powstało i do czego możecie tego użyć?",
+                  "help": "Krótki opis albo link. Wynik zostaje zwykłą odpowiedzią w tym etapie.",
+                  "example": "Powstał model mocowania. Pasuje do koszyka, ale zaczep wymaga poprawki. Link: …",
+                  "config": { "max": 2000 }
+                },
+                {
+                  "key": "decision",
+                  "kind": "long_text",
+                  "question": "Co dalej z tym składem?",
+                  "help": "Jeśli niczego nie zmieniacie, wystarczy „Kontynuujemy w tym składzie”. Inaczej zapiszcie tylko potrzebną zmianę.",
+                  "example": "Kontynuujemy. Przed kolejnym modelem najpierw przekazuję komplet wymiarów.",
+                  "config": { "max": 2000 }
+                },
+                {
+                  "key": "ready",
+                  "kind": "checkmark",
+                  "question": "Team jest gotowy do dalszej pracy.",
+                  "help": "Zaznacz, gdy macie uzgodniony skład. Jedna próba nie musi rozwiązać wszystkiego.",
+                  "config": { "confirm_label": "Team gotowy" }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "workspace",
+          "title": "Uruchom miejsce do pracy",
+          "duration_hint": "Około 10 minut",
+          "guide_body": "Zbierz w Plikach materiały, do których zespół będzie wracał: opis pomysłu, wnioski z rozmów, wyniki dotychczasowych zadań. Nazwij je tak, żeby było wiadomo, co zawierają. Zasady współpracy zapisujcie po jednej: dostępność, kontakt, decyzje, warunki udziału. Jeśli działasz sam, zasady pomijasz.",
+          "guide_sources": [
+            "Y Combinator, 10 Questions to Discuss with a Potential Co-founder (2023)"
+          ],
+          "subpoints": [
+            {
+              "key": "files",
+              "title": "Zbierz materiały w Plikach",
+              "fields": [
+                {
+                  "key": "collected",
+                  "kind": "action",
+                  "question": "Wrzuć aktualne materiały projektu do sekcji Pliki i udostępnij je osobom, które będą z nich korzystać.",
+                  "help": "Zaznacz, gdy dokumenty są w jednym miejscu i da się je otworzyć.",
+                  "config": {
+                    "href": "/app/files",
+                    "label": "Przejdź do Plików",
+                    "confirm_label": "Materiały są zebrane"
+                  }
+                }
+              ]
+            },
+            {
+              "key": "rules",
+              "title": "Ustalcie zasady współpracy",
+              "skip_when": {
+                "answer_key": "preparation.scope.mode.choice",
+                "one_of": ["alone"]
+              },
+              "fields": [
+                {
+                  "key": "agreements",
+                  "kind": "list_long",
+                  "question": "Zaakceptowane ustalenia, po jednym w każdym wpisie.",
+                  "help": "Dostępność, sposób kontaktu, podejmowanie decyzji i warunki udziału. Nieuzgodnioną sprawę oznacz jako otwartą.",
+                  "example": "Każde z nas przeznacza na projekt około pięciu godzin tygodniowo.\nWydatki zatwierdzamy razem.",
+                  "config": { "min_items": 1, "max_items": 12 }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "supplies",
+          "title": "Zbierz rzeczy potrzebne na start",
+          "duration_hint": "Około 10 minut",
+          "guide_body": "Dopisz tylko to, czego brakuje do pierwszych zadań. Możesz to kupić, pożyczyć albo dostać bezpłatnie. Przy koszcie wystarczy orientacyjna kwota: jednorazowo, miesięcznie albo za użycie. Nieznaną cenę wpisz jako „do sprawdzenia”, a nie jako zero. Jeśli masz już wszystko, zostaw listę pustą i zapisz.",
+          "guide_sources": [
+            "Dominika Blackappl, Practical Design: MVP Spec (2016)",
+            "Michael Seibel, How to Plan an MVP (Startup School, 2019)"
+          ],
+          "subpoints": [
+            {
+              "key": "missing",
+              "title": "Czego brakuje, żeby zacząć?",
+              "fields": [
+                {
+                  "key": "items",
+                  "kind": "records",
+                  "question": "Dodaj tylko brakujące rzeczy.",
+                  "help": "Nazwa, skąd ją weźmiesz i orientacyjny koszt. Pusta lista znaczy, że możesz zacząć tym, co już masz.",
+                  "example": "Wydruk pierwszego modelu. Uczelniana pracownia. Około 60 zł za materiał.",
+                  "config": {
+                    "empty_ok": true,
+                    "add_label": "Dodaj rzecz",
+                    "max_items": 20,
+                    "columns": [
+                      { "key": "thing", "label": "Potrzebna rzecz", "placeholder": "Nazwa, możesz dopisać link" },
+                      { "key": "source", "label": "Skąd ją weźmiesz", "placeholder": "Kupię, pożyczę, mam w zespole" },
+                      { "key": "cost", "label": "Koszt", "placeholder": "Np. 200 zł jednorazowo albo bezpłatnie" }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

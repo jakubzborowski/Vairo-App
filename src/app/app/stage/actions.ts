@@ -12,7 +12,7 @@ import {
   stageWriteError,
 } from "@/lib/permissions";
 import { translateDbError } from "@/lib/db-errors";
-import { hasAnswer, type StageDecision } from "@/types/stage";
+import { fieldAnswered, hasAnswer, type FieldConfig, type FieldKind, type StageDecision } from "@/types/stage";
 import { VALIDATION_CATEGORIES, type ValidationCategory } from "@/types/startup";
 
 type Result = { error: string | null };
@@ -59,9 +59,31 @@ export async function saveSubpointAnswers(input: {
   const denied = await guardStageWrite(supabase, input.startupStageId, user.id);
   if (denied) return { error: denied };
 
+  const { data: fieldRows } = await supabase
+    .from("stage_fields")
+    .select("answer_key, kind, config")
+    .eq("subpoint_id", input.subpointId);
+
+  const byKey = new Map(
+    (fieldRows ?? []).map((row) => [
+      row.answer_key as string,
+      {
+        kind: row.kind as FieldKind,
+        config: (row.config ?? {}) as FieldConfig,
+      },
+    ])
+  );
+
+  const isFilled = (key: string, value: unknown) => {
+    const field = byKey.get(key);
+    return field ? fieldAnswered(field, value) : hasAnswer(value);
+  };
+
   const entries = Object.entries(input.answers);
-  const toUpsert = entries.filter(([, value]) => hasAnswer(value));
-  const toDelete = entries.filter(([, value]) => !hasAnswer(value)).map(([key]) => key);
+  const toUpsert = entries.filter(([key, value]) => isFilled(key, value));
+  const toDelete = entries
+    .filter(([key, value]) => !isFilled(key, value))
+    .map(([key]) => key);
 
   if (toUpsert.length > 0) {
     const { error } = await supabase.from("stage_answers").upsert(

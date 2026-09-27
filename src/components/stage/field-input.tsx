@@ -18,6 +18,9 @@ import {
 } from "./field-inputs";
 import { SentenceField } from "./sentence-field";
 import { StageFilesInput } from "./files-field";
+import { RecordsInput } from "./records-field";
+import { ActionInput } from "./action-field";
+import { PeopleInput } from "./people-field";
 import { cn } from "@/lib/utils";
 import type { StageField } from "@/types/stage";
 
@@ -148,6 +151,12 @@ function Control(props: FieldInputProps & { startupStageId: string }) {
       return <StageFilesInput {...props} />;
     case "sentence_template":
       return <SentenceField {...props} />;
+    case "records":
+      return <RecordsInput {...props} />;
+    case "action":
+      return <ActionInput {...props} />;
+    case "people":
+      return <PeopleInput {...props} />;
     default:
       // `summary` renderuje się osobno, poza listą pól — patrz summary-field.tsx
       return (

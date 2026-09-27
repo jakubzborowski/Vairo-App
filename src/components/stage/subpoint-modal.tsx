@@ -5,7 +5,7 @@ import { AlertCircle, Check, Lock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { emptyValueFor, hasAnswer, type StageSubpoint, type StageTree } from "@/types/stage";
+import { emptyValueFor, fieldAnswered, type StageSubpoint, type StageTree } from "@/types/stage";
 import { AnswerView } from "./answer-view";
 import { FieldInput } from "./field-input";
 import { validateField } from "./field-inputs";
@@ -72,13 +72,13 @@ export function SubpointModal({
   );
 
   const missing = subpoint.fields.filter(
-    (f) => f.isRequired && !hasAnswer(draft[f.answerKey])
+    (f) => f.isRequired && !fieldAnswered(f, draft[f.answerKey])
   );
 
   // Odpowiedzi krótsze niż sugerowane minimum. To wskazówka, nie blokada —
   // pokazujemy ją dopiero po kliknięciu „Zapisz" i nigdy nie zamykamy drogi.
   const tooShort = subpoint.fields.filter(
-    (f) => hasAnswer(draft[f.answerKey]) && validateField(f, draft[f.answerKey])
+    (f) => fieldAnswered(f, draft[f.answerKey]) && validateField(f, draft[f.answerKey])
   );
 
   // Focus tylko przy otwarciu. Wcześniej ten efekt zależał od `dirty`,

@@ -438,7 +438,9 @@ export function StageScreen({
               key={item.key}
               title={item.title}
               subtitle={
-                item.isComplete
+                item.skipped
+                  ? "Pominięte"
+                  : item.isComplete
                   ? "Uzupełnione"
                   : readOnly
                     ? "Jeszcze nieuzupełnione"
