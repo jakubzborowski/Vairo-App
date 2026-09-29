@@ -38,7 +38,12 @@ export function FieldInput({
   disabled,
   startupStageId,
   showErrors,
-}: FieldInputProps & { startupStageId: string; showErrors?: boolean }) {
+  returnTo,
+}: FieldInputProps & {
+  startupStageId: string;
+  showErrors?: boolean;
+  returnTo?: string;
+}) {
   const [showExample, setShowExample] = useState(false);
   // Nic nie podpowiadamy w trakcie pisania — człowiek dopiero zaczyna zdanie,
   // a aplikacja już zgłasza problem. Ostrzeżenie pokazuje modal po „Zapisz".
@@ -89,6 +94,7 @@ export function FieldInput({
           onChange={onChange}
           disabled={disabled}
           startupStageId={startupStageId}
+          returnTo={returnTo}
         />
       </div>
 
@@ -121,7 +127,7 @@ export function FieldInput({
   );
 }
 
-function Control(props: FieldInputProps & { startupStageId: string }) {
+function Control(props: FieldInputProps & { startupStageId: string; returnTo?: string }) {
   const { field } = props;
 
   switch (field.kind) {

@@ -3,15 +3,23 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { withStageReturn } from "@/lib/stage-return";
 import type { FieldInputProps } from "./field-inputs";
 
 /**
  * Wyjście z modala do istniejącego miejsca w aplikacji.
  * Samo kliknięcie linku nie zalicza podpunktu — zalicza je potwierdzenie.
  */
-export function ActionInput({ field, value, onChange, disabled }: FieldInputProps) {
+export function ActionInput({
+  field,
+  value,
+  onChange,
+  disabled,
+  returnTo,
+}: FieldInputProps & { returnTo?: string }) {
   const checked = value === true;
-  const href = field.config.href ?? "/app";
+  const rawHref = field.config.href ?? "/app";
+  const href = returnTo ? withStageReturn(rawHref, returnTo) : rawHref;
   const label = field.config.label ?? "Otwórz";
 
   return (

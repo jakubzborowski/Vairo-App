@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { canManageTeam } from "@/types/startup";
+import { StageReturnBar } from "@/components/stage/stage-return-bar";
 import { FileLibrary, type LibraryFile } from "./library";
 
 export const metadata = { title: "Pliki — Vairo" };
@@ -23,7 +24,12 @@ function filesIn(value: unknown): StoredFile[] {
   return [];
 }
 
-export default async function FilesPage() {
+export default async function FilesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ back?: string }>;
+}) {
+  const { back } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -88,6 +94,7 @@ export default async function FilesPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
+      <StageReturnBar back={back} />
       <h1 className="font-heading text-[1.6rem] font-semibold text-white">Pliki</h1>
       <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-[var(--text-muted)]">
         Materiały tego startupu. Pliki dodane przy odpowiedziach w etapie też

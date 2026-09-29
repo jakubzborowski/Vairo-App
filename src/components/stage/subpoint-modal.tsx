@@ -71,6 +71,17 @@ export function SubpointModal({
     [draft, initial]
   );
 
+  // Pusta lista przy `empty_ok` jest odpowiedzią („niczego nie brakuje”),
+  // ale wygląda identycznie jak brak zapisu. Bez tego „Zapisz” zostaje
+  // wyłączone i podpunktu nie da się domknąć.
+  const canConfirmEmpty = subpoint.fields.some(
+    (field) =>
+      field.config.empty_ok &&
+      field.isRequired &&
+      !fieldAnswered(field, answers[field.answerKey]) &&
+      fieldAnswered(field, draft[field.answerKey])
+  );
+
   const missing = subpoint.fields.filter(
     (f) => f.isRequired && !fieldAnswered(f, draft[f.answerKey])
   );
@@ -191,6 +202,7 @@ export function SubpointModal({
                 disabled={saving}
                 startupStageId={tree.startupStageId}
                 showErrors={attemptedSave}
+                returnTo={`/app/stage?stage=${tree.templateKey}&subpoint=${subpoint.id}`}
               />
             )
           )}
@@ -239,7 +251,7 @@ export function SubpointModal({
             <Button variant="ghost" onClick={tryClose} disabled={saving}>
               Anuluj
             </Button>
-            <Button onClick={trySave} loading={saving} disabled={!dirty}>
+            <Button onClick={trySave} loading={saving} disabled={!dirty && !canConfirmEmpty}>
               {showSoftHints ? "Zapisz mimo to" : "Zapisz"}
             </Button>
           </div>

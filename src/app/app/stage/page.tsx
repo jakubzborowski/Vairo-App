@@ -26,9 +26,9 @@ export const dynamic = "force-dynamic";
 export default async function StagePage({
   searchParams,
 }: {
-  searchParams: Promise<{ stage?: string }>;
+  searchParams: Promise<{ stage?: string; subpoint?: string }>;
 }) {
-  const { stage: requestedStage } = await searchParams;
+  const { stage: requestedStage, subpoint } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -224,6 +224,7 @@ export default async function StagePage({
       role={active.role}
       isCurrent={current?.key === entry.key}
       currentTitle={current?.title ?? null}
+      initialSubpointId={subpoint ?? null}
     />
   );
 }

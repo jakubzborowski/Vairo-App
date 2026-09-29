@@ -46,7 +46,22 @@ type Props = {
   isCurrent?: boolean;
   /** Tytuł bieżącego etapu — do powrotu, gdy oglądamy inny. */
   currentTitle?: string | null;
+  /** Podpunkt do otwarcia od razu, np. po powrocie z Plików. */
+  initialSubpointId?: string | null;
 };
+
+function locateSubpoint(tree: StageTree, subpointId?: string | null) {
+  if (!subpointId) return null;
+  for (const category of tree.categories) {
+    for (const point of category.points) {
+      const subpoint = point.subpoints.find((item) => item.id === subpointId);
+      if (subpoint) {
+        return { categoryKey: category.key, pointKey: point.key, subpoint };
+      }
+    }
+  }
+  return null;
+}
 
 /**
  * Ekran etapu.
@@ -63,19 +78,31 @@ export function StageScreen({
   role,
   isCurrent = true,
   currentTitle,
+  initialSubpointId,
 }: Props) {
   const router = useRouter();
+  const located = locateSubpoint(tree, initialSubpointId);
   const [categoryKey, setCategoryKey] = useState(
-    () => tree.categories.find((c) => !c.isComplete)?.key ?? tree.categories[0]?.key ?? ""
+    () =>
+      located?.categoryKey ??
+      tree.categories.find((c) => !c.isComplete)?.key ??
+      tree.categories[0]?.key ??
+      ""
   );
   const category = tree.categories.find((c) => c.key === categoryKey) ?? tree.categories[0];
 
   const [pointKey, setPointKey] = useState(
-    () => category?.points.find((p) => !p.isComplete)?.key ?? category?.points[0]?.key ?? ""
+    () =>
+      located?.pointKey ??
+      category?.points.find((p) => !p.isComplete)?.key ??
+      category?.points[0]?.key ??
+      ""
   );
   const point = category?.points.find((p) => p.key === pointKey) ?? category?.points[0];
 
-  const [openSubpoint, setOpenSubpoint] = useState<StageSubpoint | null>(null);
+  const [openSubpoint, setOpenSubpoint] = useState<StageSubpoint | null>(
+    () => located?.subpoint ?? null
+  );
   const [guideOpen, setGuideOpen] = useState(true);
   const [closing, setClosing] = useState(false);
   const [error, setError] = useState<string | null>(null);

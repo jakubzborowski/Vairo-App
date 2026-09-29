@@ -27,7 +27,8 @@ function slug(label: string) {
 export function RecordsInput({ field, value, onChange, disabled }: FieldInputProps) {
   const current = asRecords(value);
   const columns = columnsOf(field, current);
-  const rows = current.rows.length > 0 ? current.rows : [{}];
+  const showBlankRow = current.rows.length === 0 && !field.config.empty_ok;
+  const rows = current.rows.length > 0 ? current.rows : showBlankRow ? [{}] : [];
   const max = field.config.max_items ?? 20;
   const [columnName, setColumnName] = useState("");
 
@@ -71,7 +72,7 @@ export function RecordsInput({ field, value, onChange, disabled }: FieldInputPro
             <p className="text-[12px] font-medium text-[var(--text-faint)]">
               Pozycja {index + 1}
             </p>
-            {rows.length > 1 ? (
+            {rows.length > 1 || field.config.empty_ok ? (
               <button
                 type="button"
                 onClick={() => removeRow(index)}
