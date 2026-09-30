@@ -59,7 +59,7 @@ export default async function StageSummaryPage({
 
   if (!tree) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="page">
         <EmptyState
           icon={FileText}
           title="Nie ma jeszcze czego podsumować"
@@ -98,7 +98,7 @@ export default async function StageSummaryPage({
   const goesToCategories = next === "categories";
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div className="page">
       <Link
         href="/app/stage"
         className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white"
@@ -113,7 +113,7 @@ export default async function StageSummaryPage({
         </p>
         <h1 className="mt-1.5 font-heading text-[1.5rem] font-semibold tracking-tight text-white">
           {goesToCategories
-            ? "Oto, co właśnie ustaliłeś"
+            ? "Oto, co właśnie zostało ustalone"
             : `${tree.title} — wszystko, co ustaliliście`}
         </h1>
         <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-[var(--text-muted)]">
@@ -189,19 +189,20 @@ export default async function StageSummaryPage({
         <p className="min-w-0 text-[13px] text-[var(--text-subtle)]">
           {goesToCategories
             ? "Następny krok: powiemy Vairo, co budujesz i komu to sprzedajesz."
-            : "Te odpowiedzi możesz zmieniać w każdej chwili — wróć do etapu."}
+            : "Te odpowiedzi możesz zmieniać w każdej chwili."}
         </p>
 
+        {/* Przycisk tylko tam, gdzie jest DALSZY krok. Przy zwykłym podglądzie
+            „Wróć do etapu" stało tu jako czwarte wystąpienie tej samej akcji
+            na jednym ekranie: link u góry, akcja w pustym stanie, zdanie
+            w stopce i ten przycisk. Powtórzone wyjście nie jest ułatwieniem,
+            tylko pytaniem, czym te cztery drogi się różnią. */}
         {goesToCategories ? (
           <Button href="/app/stage/categories" size="lg">
             Dalej
             <ArrowRight className="size-4" />
           </Button>
-        ) : (
-          <Button href="/app/stage" variant="secondary">
-            Wróć do etapu
-          </Button>
-        )}
+        ) : null}
       </footer>
     </div>
   );

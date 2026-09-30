@@ -20,7 +20,7 @@ const SIGNAL_COLUMNS =
   "id, sender_id, recipient_id, status, message, created_at, context_startup_id, " +
   "sender:profiles!contact_signals_sender_id_fkey(full_name, avatar_url, headline), " +
   "recipient:profiles!contact_signals_recipient_id_fkey(full_name, avatar_url, headline), " +
-  "startups(name)";
+  "startups(name, logo_url, public_tagline)";
 
 type SignalRow = {
   id: string;
@@ -32,8 +32,53 @@ type SignalRow = {
   context_startup_id: string | null;
   sender: { full_name: string | null; avatar_url: string | null; headline: string | null } | null;
   recipient: { full_name: string | null; avatar_url: string | null; headline: string | null } | null;
-  startups: { name: string } | null;
+  startups: {
+    name: string;
+    logo_url: string | null;
+    public_tagline: string | null;
+  } | null;
 };
+
+type PartnerCard = {
+  full_name: string | null;
+  avatar_url: string | null;
+  headline: string | null;
+};
+
+/**
+ * Wizytówki osób z drugiej strony rozmowy.
+ *
+ * Polityka RLS na `profiles` wpuszcza do pełnego wiersza wyłącznie siebie,
+ * kolegów z teamu i kandydatów do własnego teamu — bo w tym wierszu jest
+ * e-mail. Cała warstwa Social działa POZA teamem, więc przy rozmowie z kimś
+ * poznanym w Odkrywaj embed `profiles(...)` zwracał NULL i czat pokazywał
+ * „Bez imienia" mimo że obie osoby miały uzupełnione profile.
+ *
+ * Widok `contact_profiles` (migracja 019) wystawia cztery kolumny i tylko tym,
+ * z którymi łączy Cię zaczepka albo rozmowa. Braku migracji nie traktujemy
+ * jak błędu: wtedy zostaje to, co dał embed, czyli dotychczasowe zachowanie.
+ */
+async function loadPartnerCards(
+  supabase: SupabaseClient,
+  ids: string[]
+): Promise<Map<string, PartnerCard>> {
+  const unique = [...new Set(ids.filter(Boolean))];
+  if (unique.length === 0) return new Map();
+
+  const { data, error } = await supabase
+    .from("contact_profiles")
+    .select("id, full_name, avatar_url, headline")
+    .in("id", unique);
+
+  if (error) return new Map();
+
+  return new Map(
+    ((data ?? []) as unknown as ({ id: string } & PartnerCard)[]).map((row) => [
+      row.id,
+      { full_name: row.full_name, avatar_url: row.avatar_url, headline: row.headline },
+    ])
+  );
+}
 
 export async function loadContactSignals(
   supabase: SupabaseClient,
@@ -47,9 +92,16 @@ export async function loadContactSignals(
 
   if (error) return { signals: [], error: describeMissing(error.message) };
 
-  const signals = (data as unknown as SignalRow[]).map((row) => {
+  const rows = data as unknown as SignalRow[];
+  const cards = await loadPartnerCards(
+    supabase,
+    rows.map((row) => (row.recipient_id === userId ? row.sender_id : row.recipient_id))
+  );
+
+  const signals = rows.map((row) => {
     const incoming = row.recipient_id === userId;
-    const other = incoming ? row.sender : row.recipient;
+    const otherId = incoming ? row.sender_id : row.recipient_id;
+    const other = (incoming ? row.sender : row.recipient) ?? cards.get(otherId) ?? null;
 
     return {
       id: row.id,
@@ -60,7 +112,9 @@ export async function loadContactSignals(
       createdAt: row.created_at,
       contextStartupId: row.context_startup_id,
       contextStartupName: row.startups?.name ?? null,
-      otherId: incoming ? row.sender_id : row.recipient_id,
+      contextStartupLogoUrl: row.startups?.logo_url ?? null,
+      contextStartupTagline: row.startups?.public_tagline ?? null,
+      otherId,
       otherName: other?.full_name ?? null,
       otherAvatarUrl: other?.avatar_url ?? null,
       otherHeadline: other?.headline ?? null,
@@ -130,6 +184,13 @@ export async function loadConversations(
     otherByConversation.set(row.conversation_id, row);
   }
 
+  // Rozmówca spoza teamu nie przechodzi przez RLS na `profiles`, więc embed
+  // wyżej zwraca dla niego NULL. Wizytówkę dobieramy z `contact_profiles`.
+  const cards = await loadPartnerCards(
+    supabase,
+    [...otherByConversation.values()].map((row) => row.profile_id)
+  );
+
   const startupNames = new Map<string, string>();
   for (const row of startups ?? []) {
     startupNames.set(row.id as string, row.name as string);
@@ -137,12 +198,13 @@ export async function loadConversations(
 
   const conversations = rows.map((row) => {
     const other = otherByConversation.get(row.conversation_id);
+    const card = other ? (other.profiles ?? cards.get(other.profile_id) ?? null) : null;
 
     return {
       id: row.conversation_id,
       otherId: other?.profile_id ?? "",
-      otherName: other?.profiles?.full_name ?? null,
-      otherAvatarUrl: other?.profiles?.avatar_url ?? null,
+      otherName: card?.full_name ?? null,
+      otherAvatarUrl: card?.avatar_url ?? null,
       contextStartupName: row.context_startup_id
         ? (startupNames.get(row.context_startup_id) ?? null)
         : null,
@@ -195,6 +257,10 @@ export async function loadConversation(
     (row) => row.profile_id !== userId
   );
 
+  const card =
+    other?.profiles ??
+    (other ? ((await loadPartnerCards(supabase, [other.profile_id])).get(other.profile_id) ?? null) : null);
+
   const messages: ChatMessage[] = (messageRows ?? []).map((row) => ({
     id: row.id as string,
     senderId: row.sender_id as string,
@@ -208,9 +274,9 @@ export async function loadConversation(
       (conversation.startups as unknown as { name: string } | null)?.name ?? null,
     other: {
       id: other?.profile_id ?? "",
-      name: other?.profiles?.full_name ?? null,
-      avatarUrl: other?.profiles?.avatar_url ?? null,
-      headline: other?.profiles?.headline ?? null,
+      name: card?.full_name ?? null,
+      avatarUrl: card?.avatar_url ?? null,
+      headline: card?.headline ?? null,
     },
     messages,
   };

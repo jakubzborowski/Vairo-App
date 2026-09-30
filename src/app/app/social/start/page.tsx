@@ -58,7 +58,7 @@ export default async function SocialStartPage() {
   const profile = profileRow as unknown as ProfileRow | null;
 
   return (
-    <div className="mx-auto w-full max-w-2xl py-4">
+    <div className="page py-4">
       <SocialProfileWizard
         profileId={user.id}
         skills={(skillRows ?? []).map((row) => ({

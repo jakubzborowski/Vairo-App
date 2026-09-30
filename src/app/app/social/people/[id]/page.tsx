@@ -16,6 +16,25 @@ import { MAX_STARTUPS, canManageTeam } from "@/types/startup";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Tytuł karty przeglądarki.
+ *
+ * Bez tego wszystkie strony dynamiczne dziedziczyły tytuł z layoutu głównego,
+ * czyli „Vairo — Zbuduj swój startup od podstaw". Przy kilku otwartych
+ * zakładkach z różnymi profilami nie dało się ich odróżnić, a wysłany komuś
+ * link zapowiadał landing page zamiast konkretnej osoby.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const profile = await getPublicProfile(supabase, id);
+  return { title: profile?.full_name ? `${profile.full_name} — Vairo` : "Profil — Vairo" };
+}
+
 export default async function PublicProfilePage({
   params,
 }: {
@@ -71,9 +90,9 @@ export default async function PublicProfilePage({
   const skills = person.skills ?? [];
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div className="page">
       <Link
-        href="/app/social/discover?tab=people"
+        href="/app/social/people"
         className="mb-5 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white"
       >
         <ArrowLeft className="size-4" />
@@ -173,7 +192,7 @@ export default async function PublicProfilePage({
       {person.weekly_focus ? (
         <Card className="mt-4">
           <CardBody className="pt-5">
-            <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-faint)]">
+            <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
               Nad czym teraz pracuje
             </p>
             <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-[var(--text-muted)]">
@@ -195,7 +214,7 @@ export default async function PublicProfilePage({
 
       <Card className="mt-4">
         <CardBody className="pt-5">
-          <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-faint)]">
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
             Umiejętności
           </p>
           {skills.length > 0 ? (

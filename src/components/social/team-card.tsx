@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { MapPin, Target, UserPlus, Users } from "lucide-react";
+import { MapPin, Sparkles, Target, UserPlus, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Pill } from "@/components/ui/pill";
 import { CATEGORY_LABELS, type ValidationCategory } from "@/types/startup";
 import type { PublicStartup } from "@/types/social";
 import { TeamLogo } from "./team-logo";
+import type { MatchReason } from "@/lib/match";
+import { plural } from "@/lib/utils";
 
 /**
  * Karta teamu w Discover.
@@ -16,9 +18,12 @@ import { TeamLogo } from "./team-logo";
 export function TeamCard({
   team,
   action,
+  highlight,
 }: {
   team: PublicStartup;
   action?: React.ReactNode;
+  /** Jedno zdanie o pokryciu ich otwartych ról z moimi umiejętnościami. */
+  highlight?: MatchReason | null;
 }) {
   const openRoles = team.open_roles ?? [];
   const categories = (team.categories ?? []) as ValidationCategory[];
@@ -47,8 +52,7 @@ export function TeamCard({
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[var(--text-subtle)]">
             <span className="inline-flex items-center gap-1">
               <Users className="size-3.5 shrink-0" />
-              {team.member_count}{" "}
-              {team.member_count === 1 ? "osoba" : "osób"}
+              {team.member_count} {plural(team.member_count, "osoba", "osoby", "osób")}
             </span>
             {team.stage_label ? (
               <span className="inline-flex items-center gap-1">
@@ -65,6 +69,16 @@ export function TeamCard({
           </div>
         </div>
       </div>
+
+      {highlight ? (
+        <p className="mt-3 flex items-start gap-2 rounded-xl border border-[var(--vairo)]/18 bg-[var(--vairo)]/[0.06] px-3.5 py-2 text-[12.5px] leading-relaxed text-[var(--text-muted)]">
+          <Sparkles className="mt-[3px] size-3.5 shrink-0 text-[var(--vairo)]" aria-hidden="true" />
+          <span>
+            <span className="sr-only">Dlaczego to widzisz: </span>
+            {highlight.text}
+          </span>
+        </p>
+      ) : null}
 
       {openRoles.length > 0 ? (
         <div className="mt-3.5 rounded-xl border border-[var(--vairo)]/20 bg-[var(--vairo)]/6 px-3.5 py-3">

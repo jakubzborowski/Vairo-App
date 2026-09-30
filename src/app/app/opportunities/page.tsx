@@ -6,8 +6,8 @@ export default function Page() {
   return (
     <ComingSoon
       title="Możliwości"
-      description="Programy akceleracyjne, konkursy i nabory dobierane do etapu, na którym jest Twój startup."
-      step={10}
+      description="Programy, konkursy i nabory dobrane do tego, na jakim etapie jest Twój startup."
+      unlocksAt="po domknięciu MVP Stage"
     />
   );
 }

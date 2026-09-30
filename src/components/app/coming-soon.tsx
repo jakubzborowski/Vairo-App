@@ -6,7 +6,12 @@ type ComingSoonProps = {
   title: string;
   /** Po co ten moduł istnieje — nie „w budowie", tylko co tu będzie. */
   description: string;
-  step?: number;
+  /**
+   * Kiedy moduł się pojawi — w kategoriach programu użytkownika, nie naszej
+   * rozpiski. „Krok 10 roadmapy" nie znaczy nic dla kogoś, kto tej rozpiski
+   * nie widział; „po domknięciu Idea Stage" znaczy.
+   */
+  unlocksAt?: string;
 };
 
 /**
@@ -15,7 +20,7 @@ type ComingSoonProps = {
  * Istnieje po to, żeby żadna pozycja nawigacji nie prowadziła donikąd i żeby
  * nikt nie wypełniał luki zmyślonymi danymi „na razie".
  */
-export function ComingSoon({ title, description, step }: ComingSoonProps) {
+export function ComingSoon({ title, description, unlocksAt }: ComingSoonProps) {
   return (
     <div className="mx-auto w-full max-w-3xl">
       <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
@@ -26,9 +31,7 @@ export function ComingSoon({ title, description, step }: ComingSoonProps) {
           icon={Construction}
           title="Ten moduł jeszcze nie powstał"
           description={
-            step
-              ? `${description} Zaplanowane na krok ${step} roadmapy.`
-              : description
+            unlocksAt ? `${description} Odblokuje się ${unlocksAt}.` : description
           }
           action={
             <Button href="/app" variant="secondary">

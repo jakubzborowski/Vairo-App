@@ -8,6 +8,8 @@ import { Avatar } from "@/components/ui/avatar";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = { title: "Rozmowa — Vairo" };
+
 export default async function ConversationPage({
   params,
 }: {
@@ -29,16 +31,18 @@ export default async function ConversationPage({
   const otherName = conversation.other.name?.trim().split(/\s+/)[0] ?? "tej osoby";
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="w-full">
+      {/* Powrót do listy tylko na telefonie — na szerokim ekranie lista stoi
+          po lewej i link do niej byłby linkiem do tego, co widać. */}
       <Link
         href="/app/social/messages"
-        className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white"
+        className="mb-3 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white md:hidden"
       >
         <ArrowLeft className="size-4" />
         Wszystkie rozmowy
       </Link>
 
-      <header className="mb-4 flex items-start gap-3.5">
+      <header className="mb-4 flex items-start gap-3.5 rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-4 py-3.5">
         <Avatar
           src={conversation.other.avatarUrl}
           name={conversation.other.name}
@@ -70,6 +74,8 @@ export default async function ConversationPage({
         viewerId={user.id}
         messages={conversation.messages}
         otherName={otherName}
+        otherFullName={conversation.other.name}
+        otherAvatarUrl={conversation.other.avatarUrl}
       />
     </div>
   );

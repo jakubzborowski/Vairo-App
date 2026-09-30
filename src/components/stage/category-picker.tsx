@@ -33,7 +33,7 @@ export function CategoryPicker({
     <div className="grid gap-5 sm:grid-cols-2">
       {groups.map((group) => (
         <section key={group.label}>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-faint)]">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
             {group.label}
           </p>
           <div className="flex flex-col gap-2">

@@ -6,8 +6,8 @@ export default function Page() {
   return (
     <ComingSoon
       title="Cele"
-      description="Cele definiowane przez Ciebie. Osobne od Validation Milestones i nieblokujące przejścia do kolejnego etapu."
-      step={10}
+      description="Cele, które wyznaczasz sobie sam — na przykład „pierwszy płacący klient”. To coś innego niż program Vairo: własny cel nie blokuje przejścia do kolejnego etapu."
+      unlocksAt="razem z trackerem w Execution Stage"
     />
   );
 }

@@ -24,7 +24,7 @@ export default async function NotificationsPage() {
   const unread = notifications.filter((item) => !item.isRead).length;
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="page">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
@@ -60,19 +60,31 @@ export default async function NotificationsPage() {
         </div>
       ) : null}
 
+      {/* Ta sama lista co w Zaproszeniach: jeden kontener, wiersze oddzielone
+          kreską. Osobne karty z odstępem robiły ze skrzynki stos — a skrzynkę
+          się przebiega wzrokiem, nie czyta kartka po kartce.
+
+          Nieprzeczytane poznaje się po KRESCE przy lewej krawędzi, nie po
+          pomarańczowym tle całego wiersza. Przy pięciu nowych zdarzeniach pół
+          ekranu świeciło na pomarańczowo i nic już nie było wyróżnione. */}
       {notifications.length > 0 ? (
-        <ul className="mt-5 flex flex-col gap-2">
+        <ul className="mt-5 divide-y divide-white/[0.06] overflow-hidden rounded-xl border border-white/[0.07] bg-[var(--surface)]">
           {notifications.map((item) => (
             <li key={item.id}>
               <Link
                 href={item.href}
                 className={cn(
-                  "flex items-start gap-3.5 rounded-2xl border px-4 py-3.5 transition-colors",
-                  item.isRead
-                    ? "border-white/[0.07] bg-[var(--surface)] hover:border-white/15"
-                    : "border-[var(--vairo)]/30 bg-[var(--vairo)]/6"
+                  "relative flex items-start gap-3 py-3 pl-5 pr-4 transition-colors hover:bg-white/[0.025]",
+                  !item.isRead && "bg-white/[0.015]"
                 )}
               >
+                {!item.isRead ? (
+                  <span
+                    aria-label="Nieprzeczytane"
+                    className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-[var(--vairo)]"
+                  />
+                ) : null}
+
                 <Avatar
                   src={item.actorAvatarUrl}
                   name={item.actorName}
@@ -84,7 +96,7 @@ export default async function NotificationsPage() {
                   <div className="flex items-baseline justify-between gap-3">
                     <p
                       className={cn(
-                        "min-w-0 text-[14px]",
+                        "min-w-0 text-[13.5px]",
                         item.isRead
                           ? "text-[var(--text-muted)]"
                           : "font-medium text-white"
@@ -98,28 +110,17 @@ export default async function NotificationsPage() {
                   </div>
 
                   {item.preview ? (
-                    <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-[var(--text-subtle)]">
+                    <p className="mt-0.5 line-clamp-1 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
                       {item.preview}
                     </p>
                   ) : null}
                 </div>
-
-                {!item.isRead ? (
-                  <span
-                    className="mt-2 size-2 shrink-0 rounded-full bg-[var(--vairo)]"
-                    aria-label="Nieprzeczytane"
-                  />
-                ) : null}
               </Link>
             </li>
           ))}
         </ul>
       ) : null}
 
-      <p className="mt-6 text-[12px] text-[var(--text-faint)]">
-        Powiadomienia nie przychodzą mailem. Kolejne wiadomości w tej samej
-        rozmowie podmieniają jeden wpis, zamiast zapychać listę.
-      </p>
     </div>
   );
 }

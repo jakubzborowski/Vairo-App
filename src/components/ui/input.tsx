@@ -52,7 +52,7 @@ export function Field({
                 "tabular text-[12px]",
                 counter.value > counter.max
                   ? "text-[var(--danger)]"
-                  : "text-[var(--text-faint)]"
+                  : "text-[var(--text-subtle)]"
               )}
             >
               {counter.value}/{counter.max}

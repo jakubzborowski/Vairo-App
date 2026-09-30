@@ -199,7 +199,7 @@ export async function loadNextActions(
         key: "find-people",
         title: "Znajdź kogoś do zespołu",
         why: "Dodanie otwartej roli sprawia, że team pojawia się wśród rekrutujących.",
-        href: "/app/social/discover?tab=people",
+        href: "/app/social/people",
         tone: "neutral",
       });
     }

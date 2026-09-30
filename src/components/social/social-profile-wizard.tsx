@@ -124,12 +124,13 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
       title: "Zacznijmy od zdjęcia",
       description:
         "To pierwsza rzecz, którą widzą inni. Nie musi być profesjonalne — ma pokazywać, że jesteś prawdziwą osobą.",
-      // Zdjęcie jest opcjonalne technicznie, ale mówimy wprost, co się stanie,
-      // gdy go nie będzie. Blokada tutaj wypchnęłaby część ludzi z aplikacji.
+      // Zdjęcie jest opcjonalne technicznie i nie blokujemy przejścia dalej —
+      // blokada wypchnęłaby z aplikacji akurat tych, którzy jej najbardziej
+      // potrzebują. Konsekwencję braku widać zresztą na podglądzie karty obok:
+      // stoją tam inicjały. Dopisywanie tego jeszcze słowami było trzecim
+      // zdaniem o zdjęciu na jednym ekranie, obok opisu kroku i stopki
+      // kreatora.
       optional: true,
-      help: avatarUrl
-        ? undefined
-        : "Bez zdjęcia Twoja karta pokaże same inicjały. Możesz je dodać teraz albo wrócić do tego później.",
       render: () => (
         <div className="flex flex-col items-center gap-5">
           <div className="w-full max-w-[280px]">

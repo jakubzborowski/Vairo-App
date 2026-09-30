@@ -2,15 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, UserPlus } from "lucide-react";
+import { AlertCircle, Check, UserPlus } from "lucide-react";
 import { inviteToStartup } from "@/app/app/social/actions";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { useToast } from "@/components/ui/toast";
 import { Pill } from "@/components/ui/pill";
 import { cn } from "@/lib/utils";
 import { JOB_TITLE_SUGGESTIONS } from "@/types/social";
-import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/types/startup";
 
 export type InvitableTeam = { id: string; name: string };
 
@@ -25,9 +25,14 @@ type Props = {
   onDone?: () => void;
   variant?: "primary" | "secondary";
   className?: string;
+  /**
+   * Własny wyzwalacz zamiast zwykłego przycisku. Talia w Odkrywaj podaje tu
+   * okrągły `DeckAction`; lista i profil publiczny zostają przy przycisku.
+   * Modal, walidacja i akcja serwerowa są w obu przypadkach te same — bez
+   * tego byłyby dwie kopie tego samego formularza.
+   */
+  trigger?: (open: () => void) => React.ReactNode;
 };
-
-const ROLE_CHOICES = ["member", "admin"] as const;
 
 /**
  * Zaproszenie osoby do teamu.
@@ -37,11 +42,15 @@ const ROLE_CHOICES = ["member", "admin"] as const;
  * Opis pod każdą rolą mówi wprost, co ona daje — bez tego ludzie nadają
  * Admina wszystkim, bo brzmi poważniej.
  */
+/** Poniżej tylu znaków zaproszenie nie niesie żadnej informacji. */
+const THIN_MESSAGE = 40;
+
 export function InviteButton({
   profileId,
   profileName,
   teams,
   blockedReason,
+  trigger,
   size = "md",
   onDone,
   variant = "secondary",
@@ -50,17 +59,33 @@ export function InviteButton({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [teamId, setTeamId] = useState(teams[0]?.id ?? "");
-  const [role, setRole] = useState<"member" | "admin">("member");
   const [jobTitle, setJobTitle] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [attempted, setAttempted] = useState(false);
   const [sending, startSending] = useTransition();
+  const { toast } = useToast();
 
   if (teams.length === 0 || blockedReason) {
     return blockedReason ? (
       <span className="text-[12px] text-[var(--text-faint)]">{blockedReason}</span>
     ) : null;
   }
+
+  const trimmed = message.trim();
+  const thin = trimmed.length < THIN_MESSAGE;
+  const showConsequence = attempted && thin;
+
+  // Zaproszenie bez słowa wyjaśnienia dla odbiorcy wygląda jak spam. Nie
+  // blokujemy go — pierwsze kliknięcie mówi, jak to zostanie odebrane, drugie
+  // wysyła mimo to. Ten sam mechanizm co przy zgłoszeniu i w etapach.
+  const trySubmit = () => {
+    if (thin && !attempted) {
+      setAttempted(true);
+      return;
+    }
+    submit();
+  };
 
   const submit = () => {
     setError(null);
@@ -72,7 +97,6 @@ export function InviteButton({
       const result = await inviteToStartup({
         startupId: teamId,
         profileId,
-        proposedRole: role,
         jobTitle,
         message,
       });
@@ -80,6 +104,10 @@ export function InviteButton({
         setError(result.error);
         return;
       }
+      toast({
+        title: "Zaproszenie wysłane",
+        description: `${profileName} dołączy do zespołu po przyjęciu zaproszenia.`,
+      });
       setOpen(false);
       setMessage("");
       setJobTitle("");
@@ -90,10 +118,14 @@ export function InviteButton({
 
   return (
     <>
-      <Button variant={variant} size={size} className={className} onClick={() => setOpen(true)}>
-        <UserPlus className="size-4" />
-        Zaproś do teamu
-      </Button>
+      {trigger ? (
+        trigger(() => setOpen(true))
+      ) : (
+        <Button variant={variant} size={size} className={className} onClick={() => setOpen(true)}>
+          <UserPlus className="size-4" />
+          Zaproś do teamu
+        </Button>
+      )}
 
       {open ? (
         <Modal
@@ -105,8 +137,8 @@ export function InviteButton({
               <Button variant="ghost" onClick={() => setOpen(false)} disabled={sending}>
                 Anuluj
               </Button>
-              <Button onClick={submit} loading={sending}>
-                Wyślij zaproszenie
+              <Button onClick={trySubmit} loading={sending}>
+                {showConsequence ? "Wyślij mimo to" : "Wyślij zaproszenie"}
               </Button>
             </>
           }
@@ -129,23 +161,17 @@ export function InviteButton({
             </div>
           ) : null}
 
-          <div>
-            <p className="mb-2 text-[13px] font-medium text-[var(--text-muted)]">
-              Jakie uprawnienia?
-            </p>
-            <div className="flex flex-col gap-1.5">
-              {ROLE_CHOICES.map((choice) => (
-                <Choice
-                  key={choice}
-                  selected={role === choice}
-                  onSelect={() => setRole(choice)}
-                  title={ROLE_LABELS[choice]}
-                  description={ROLE_DESCRIPTIONS[choice]}
-                />
-              ))}
-            </div>
-          </div>
+          {/* Wyboru uprawnień tu nie ma i nie powinno być.
+              Guidelines, sekcja 4: „Dopiero zaakceptowanie zaproszenia tworzy
+              membership. Użytkownik otrzymuje dostęp jako Member. Nie
+              otrzymuje automatycznie uprawnień administracyjnych. Role
+              i permisje ustawia Founder albo Admin."
 
+              Wcześniej dało się tu zaznaczyć „Admin", a jedno kliknięcie
+              „Przyjmij" po drugiej stronie nadawało prawa do zarządzania
+              zespołem, zamykania etapów i usuwania ludzi. Nadanie uprawnień
+              jest czynnością teamu, nie zapraszanego — i dzieje się teraz po
+              dołączeniu, jednym ruchem w menu przy członku. */}
           <Field
             label="Stanowisko"
             hint="Wizytówka w składzie teamu. Nie ma wpływu na uprawnienia."
@@ -194,6 +220,18 @@ export function InviteButton({
               />
             )}
           </Field>
+
+          {showConsequence ? (
+            <p className="flex items-start gap-2 rounded-lg border border-[var(--warning)]/30 bg-[var(--warning)]/8 px-3.5 py-3 text-[13px] leading-relaxed text-[var(--warning)]">
+              <AlertCircle className="mt-[2px] size-4 shrink-0" />
+              <span>
+                {trimmed.length === 0
+                  ? `${profileName} zobaczy samą nazwę teamu i nic poza tym — ani czemu akurat ta osoba, ani czym mielibyście się zajmować.`
+                  : "To bardzo krótkie zaproszenie. Jedno zdanie o tym, czemu akurat ta osoba, zmienia je z rozesłanego w skierowane."}{" "}
+                Możesz je rozwinąć albo wysłać tak, jak jest.
+              </span>
+            </p>
+          ) : null}
 
           {error ? (
             <p className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-3 py-2 text-[13px] text-[var(--danger)]">

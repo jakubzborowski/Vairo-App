@@ -9,6 +9,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CONTACT_STATUS_LABELS, type ContactSignal } from "@/types/social";
+import { TeamLogo } from "./team-logo";
 
 /**
  * Jedna zaczepka. Ta sama karta dla odebranych i wysłanych — różni się tylko
@@ -98,6 +99,30 @@ export function ContactCard({
         <p className="mt-3.5 whitespace-pre-line rounded-xl bg-white/[0.03] px-4 py-3 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
           {signal.message}
         </p>
+      ) : null}
+
+      {/* Kontakt w imieniu teamu musi pokazywać ten team, a nie tylko jego
+          nazwę w etykiecie. Odbiorca decyduje o rozmowie z ZESPOŁEM — ma
+          prawo zobaczyć, z jakim, zanim odpowie. */}
+      {signal.contextStartupId ? (
+        <Link
+          href={`/app/social/teams/${signal.contextStartupId}`}
+          className="lift-hover mt-3 flex items-center gap-3 rounded-xl border border-[var(--vairo)]/20 bg-[var(--vairo)]/6 px-4 py-3"
+        >
+          <TeamLogo
+            src={signal.contextStartupLogoUrl}
+            name={signal.contextStartupName}
+            size="sm"
+          />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13.5px] font-medium text-white">
+              {signal.contextStartupName}
+            </span>
+            <span className="block truncate text-[12px] text-[var(--text-subtle)]">
+              {signal.contextStartupTagline ?? "Zobacz publiczną stronę teamu"}
+            </span>
+          </span>
+        </Link>
       ) : null}
 
       {error ? (

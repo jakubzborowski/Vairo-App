@@ -314,7 +314,10 @@ export async function chooseCategoriesAfterAmbition(
 
   revalidatePath("/app/stage");
   revalidatePath("/app");
-  return { error: null };
+
+  // Bez tego formularz dostawał „zapisane" i nic się nie działo — user zostawał
+  // na ekranie kategorii, bo jedyną informacją zwrotną był brak błędu.
+  redirect("/app/stage");
 }
 
 /**

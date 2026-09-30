@@ -23,8 +23,21 @@ import {
   MAX_STARTUPS,
   type ValidationCategory,
 } from "@/types/startup";
+import { plural } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+/** Tytuł karty przeglądarki — patrz komentarz przy profilu osoby. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const team = await getPublicStartup(supabase, id);
+  return { title: team?.name ? `${team.name} — Vairo` : "Projekt — Vairo" };
+}
 
 /**
  * Publiczna strona teamu — jedyne miejsce, w którym startup sprzedaje się
@@ -87,9 +100,9 @@ export default async function PublicTeamPage({
   );
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div className="page">
       <Link
-        href="/app/social/discover?tab=teams"
+        href="/app/social/teams"
         className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white"
       >
         <ArrowLeft className="size-4" />
@@ -129,7 +142,7 @@ export default async function PublicTeamPage({
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-[var(--text-subtle)]">
             <span className="inline-flex items-center gap-1.5">
               <Users className="size-4 shrink-0" />
-              {team.member_count} {team.member_count === 1 ? "osoba" : "osób"}
+              {team.member_count} {plural(team.member_count, "osoba", "osoby", "osób")}
               {" w zespole"}
             </span>
             {team.stage_label ? (
@@ -223,7 +236,7 @@ export default async function PublicTeamPage({
       {team.public_description ? (
         <Card className="mt-4">
           <CardBody className="pt-5">
-            <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-faint)]">
+            <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
               O projekcie
             </p>
             <p className="mt-2 whitespace-pre-line text-[14.5px] leading-relaxed text-[var(--text-muted)]">
@@ -235,7 +248,7 @@ export default async function PublicTeamPage({
 
       <Card className="mt-4">
         <CardBody className="pt-5">
-          <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-faint)]">
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
             Kto już jest w zespole
           </p>
 

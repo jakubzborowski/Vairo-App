@@ -78,6 +78,11 @@ export async function createStartup(formData: FormData) {
   }
 
   // Bez opisu pomysłu zaczynamy od Ambition Stage, z opisem — od razu od Idea.
+  // Kto zakłada startup z gotowym pomysłem, ma Ambition z definicji za sobą —
+  // ten etap służy do SZUKANIA pomysłu. Ta sama reguła co w onboardingu.
+  if (idea) {
+    await ensureStartupStage(supabase, startup.id, "ambition", "completed");
+  }
   await ensureStartupStage(supabase, startup.id, idea ? "idea" : "ambition");
 
   // Świeżo założony team staje się aktywny — inaczej user wylądowałby

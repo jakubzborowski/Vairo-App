@@ -6,8 +6,8 @@ export default function Page() {
   return (
     <ComingSoon
       title="Workflow"
-      description="Kroki z właścicielem, deadlinem i warunkiem przejścia dalej. Po ukończeniu kroku system tworzy kolejne zadanie."
-      step={10}
+      description="Rozpiska procesu: bloczki, strzałki i osoba odpowiedzialna za każdy krok. Służy do ułożenia pracy, nie do jej automatycznego uruchamiania."
+      unlocksAt="razem z trackerem w Execution Stage"
     />
   );
 }

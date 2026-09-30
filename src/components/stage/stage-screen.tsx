@@ -234,7 +234,10 @@ export function StageScreen({
               .
             </span>
           </p>
-        ) : tree.intro ? (
+        ) : tree.intro && !isFirstVisit ? (
+          // Przy pierwszym wejściu ten sam akapit jest już w panelu
+          // wprowadzenia niżej. Dwa razy to samo na jednym ekranie czyta się
+          // jak usterka, a nie jak podkreślenie.
           <p className="mt-4 max-w-3xl rounded-xl border border-white/[0.07] bg-[var(--surface)] px-4 py-3 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
             {tree.intro}
           </p>
@@ -263,7 +266,7 @@ export function StageScreen({
           pierwszy, potrzebuje wiedzieć, czym to jest i ile potrwa; ten, który
           wraca po raz dziesiąty, potrzebuje tylko „co dalej". */}
       {isFirstVisit && next ? (
-        <section className="mb-5 rounded-2xl border border-[var(--vairo)]/30 bg-[var(--vairo)]/6 px-5 py-5 sm:px-6">
+        <section className="edge-accent mb-5 overflow-hidden rounded-2xl border border-[var(--vairo)]/30 bg-[var(--vairo)]/6 px-5 py-5 lift-2 sm:px-6">
           <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--vairo)]">
             Zaczynasz nowy etap
           </p>
@@ -318,7 +321,7 @@ export function StageScreen({
         <button
           type="button"
           onClick={openNext}
-          className="mb-4 flex w-full items-center gap-4 rounded-2xl border border-[var(--vairo)]/35 bg-[var(--vairo)]/8 px-5 py-4 text-left transition-colors hover:border-[var(--vairo)]/55 hover:bg-[var(--vairo)]/12"
+          className="lift-hover mb-4 flex w-full items-center gap-4 rounded-2xl border border-[var(--vairo)]/35 bg-[var(--vairo)]/8 px-5 py-4 text-left hover:border-[var(--vairo)]/55 hover:bg-[var(--vairo)]/12"
         >
           <PlayCircle
             className="size-6 shrink-0 text-[var(--vairo)]"
@@ -483,7 +486,7 @@ export function StageScreen({
         ) : null}
       </div>
 
-      <footer className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-5 py-4">
+      <footer className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-5 py-4 lift-1">
         <div className="min-w-0">
           <p className="text-[14px] font-medium text-white">
             {isCompleted
@@ -587,8 +590,11 @@ function Column({
   return (
     <section
       className={cn(
-        "rounded-2xl border bg-[var(--surface)] p-4 transition-colors",
-        active ? "border-[var(--vairo)]/45" : "border-white/[0.07]"
+        "rounded-2xl border bg-[var(--surface)] p-4 lift-1",
+        "transition-colors duration-150",
+        active
+          ? "edge-accent overflow-hidden border-[var(--vairo)]/45"
+          : "border-white/[0.07]"
       )}
     >
       <header className="mb-3 flex items-start justify-between gap-2 px-1">
@@ -605,7 +611,12 @@ function Column({
         </div>
         {meta ? <div className="shrink-0">{meta}</div> : null}
       </header>
-      <ul className="flex max-h-[min(58vh,560px)] flex-col gap-1 overflow-y-auto pr-1">
+      {/* Na telefonie kolumny są jedna pod drugą, więc własny obszar
+          przewijania w każdej z nich tworzył przewijanie w przewijaniu —
+          jeden z najbardziej frustrujących wzorców na dotyku. Tam lista
+          płynie z całą stroną; ograniczenie wysokości wraca dopiero przy
+          układzie kolumnowym. */}
+      <ul className="flex flex-col gap-1 lg:max-h-[min(58vh,560px)] lg:overflow-y-auto lg:pr-1">
         {children}
       </ul>
     </section>
@@ -636,7 +647,8 @@ function ListRow({
         onClick={onClick}
         aria-current={active ? "true" : undefined}
         className={cn(
-          "group flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
+          "group flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left",
+          "transition-colors duration-150",
           active ? "bg-[var(--vairo)]/10" : "hover:bg-white/[0.05]"
         )}
       >
@@ -688,10 +700,30 @@ function ListRow({
   );
 }
 
+/**
+ * Przewodnik — trzecia kolumna ekranu etapu.
+ *
+ * Wyglądał dokładnie tak samo jak dwie listy obok: ta sama powierzchnia,
+ * ta sama ramka, ten sam rozmiar pisma. Skutek był taki, że **proza czytała
+ * się jak trzecia lista** — a to jest jedyne miejsce w całej aplikacji, gdzie
+ * człowiek ma coś PRZECZYTAĆ, a nie odhaczyć.
+ *
+ * Dlatego ta kolumna jest teraz zbudowana jak tekst, nie jak panel:
+ * pasek konturu u góry zamiast zwykłej krawędzi, tytuł w kroju nagłówkowym
+ * z powietrzem wokół, akapit prowadzący większy od reszty, i szerokość linii
+ * pilnowana przez `max-w` — bo przy 90 znakach w wierszu oko gubi początek
+ * następnej linijki.
+ */
 function GuidePanel({ point, onClose }: { point: StagePoint; onClose: () => void }) {
+  const paragraphs = (point.guideBody ?? "").split(/\n+/).filter(Boolean);
+  const [lead, ...rest] = paragraphs;
+
   return (
-    <aside className="rounded-2xl border border-white/[0.07] bg-[var(--surface)] p-5">
-      <header className="mb-4 flex items-start justify-between gap-3">
+    <aside className="overflow-hidden rounded-2xl border border-white/[0.07] bg-[var(--surface)]">
+      {/* Pasek z fakturą warstwic — ten sam znak, co na karcie bohatera
+          dashboardu. Dzięki niemu kolumna od razu mówi „to jest do czytania",
+          zanim ktokolwiek przeczyta słowo „Przewodnik". */}
+      <header className="topo flex items-start justify-between gap-3 border-b border-white/[0.06] bg-[var(--surface-2)]/60 px-5 py-3.5">
         <p className="flex items-center gap-2 text-[13px] font-semibold text-[var(--vairo)]">
           <BookOpen className="size-4 shrink-0" strokeWidth={2} />
           Przewodnik
@@ -713,32 +745,36 @@ function GuidePanel({ point, onClose }: { point: StagePoint; onClose: () => void
         </div>
       </header>
 
-      <div className="max-h-[min(58vh,560px)] overflow-y-auto pr-1">
-        <h3 className="font-heading text-[17px] font-semibold leading-snug text-white">
+      <div className="px-5 py-5 lg:max-h-[min(58vh,560px)] lg:overflow-y-auto">
+        <h3 className="max-w-[46ch] font-heading text-[19px] font-semibold leading-snug text-white">
           {point.title}
         </h3>
 
-        {point.guideBody ? (
-          <div className="mt-3 flex flex-col gap-3 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-            {point.guideBody
-              .split(/\n+/)
-              .filter(Boolean)
-              .map((paragraph, i) => (
-                <p key={i}>{paragraph}</p>
-              ))}
+        {lead ? (
+          <p className="mt-3.5 max-w-[62ch] text-[15px] leading-[1.7] text-[var(--text)]">
+            {lead}
+          </p>
+        ) : null}
+
+        {rest.length > 0 ? (
+          <div className="mt-3.5 flex max-w-[62ch] flex-col gap-3.5 text-[14px] leading-[1.75] text-[var(--text-muted)]">
+            {rest.map((paragraph, i) => (
+              <p key={i}>{paragraph}</p>
+            ))}
           </div>
         ) : null}
 
         {point.guideSources.length > 0 ? (
-          <details className="mt-5 border-t border-white/[0.06] pt-3">
-            <summary className="cursor-pointer text-[12px] text-[var(--text-subtle)] transition-colors hover:text-white">
+          <details className="group mt-6 border-t border-white/[0.06] pt-3.5">
+            <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-[12px] text-[var(--text-subtle)] transition-colors hover:text-white">
+              <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
               Źródła ({point.guideSources.length})
             </summary>
-            <ul className="mt-2.5 flex flex-col gap-2">
+            <ul className="mt-2.5 flex max-w-[62ch] flex-col gap-2">
               {point.guideSources.map((source, i) => (
                 <li
                   key={i}
-                  className="border-l-2 border-white/10 pl-3 text-[12px] leading-relaxed text-[var(--text-subtle)]"
+                  className="border-l-2 border-[var(--vairo)]/25 pl-3 text-[12.5px] leading-relaxed text-[var(--text-subtle)]"
                 >
                   {source}
                 </li>

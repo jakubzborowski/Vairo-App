@@ -55,8 +55,8 @@ export function Modal({
           onClose();
         }}
         className={cn(
-          "relative my-auto w-full max-w-[520px] rounded-2xl border border-white/10 bg-[var(--surface)]",
-          "shadow-[0_24px_80px_rgba(0,0,0,.7)] outline-none",
+          "relative my-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-white/10 bg-[var(--surface)]",
+          "lift-3 edge-accent outline-none",
           className
         )}
       >

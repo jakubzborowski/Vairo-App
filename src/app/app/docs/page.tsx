@@ -6,8 +6,8 @@ export default function Page() {
   return (
     <ComingSoon
       title="Dokumenty"
-      description="Prosty edytor: nagłówki, listy, checklisty, linki i załączniki. Dokument można podpiąć jako dowód do Subpointu."
-      step={10}
+      description="Miejsce na notatki i ustalenia zespołu: nagłówki, listy, linki i pliki. Gotowy dokument można dołączyć jako odpowiedź w etapie."
+      unlocksAt="razem z trackerem w Execution Stage"
     />
   );
 }
