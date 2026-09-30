@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Check, Circle, Minus } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Circle, Minus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
@@ -42,7 +42,7 @@ export default async function ProgramPage() {
   const currentIndex = program.findIndex((item) => item.key === current?.key);
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="page">
       <Link
         href="/app"
         className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white"
@@ -55,16 +55,14 @@ export default async function ProgramPage() {
         <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
           Jak działa Vairo
         </h1>
+        {/* Jedno zdanie zamiast dwóch akapitów. Reszta tego, co tu było —
+            że nie trzeba się znać, że nie ma złych odpowiedzi, że wszystko
+            się zapisuje — jest powiedziana w miejscu, w którym ma znaczenie:
+            na wprowadzeniu do etapu, tuż przed pierwszym pytaniem. Tutaj
+            byłaby obietnicą do zapamiętania na później. */}
         <p className="mt-2 max-w-xl text-[14.5px] leading-relaxed text-[var(--text-muted)]">
-          Vairo prowadzi startup przez pięć etapów — od pierwszego pomysłu do
-          wypuszczenia produktu. Każdy etap to zestaw pytań i podpowiedzi;
-          odpowiadasz własnymi słowami, a Vairo pilnuje kolejności i tego, czego
-          jeszcze brakuje.
-        </p>
-        <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-[var(--text-subtle)]">
-          Nie musisz się na niczym znać przed startem. Nie ma złych odpowiedzi
-          ani punktów za szybkość — wszystko zapisuje się na bieżąco i wszystko
-          da się później poprawić.
+          Pięć etapów od pomysłu do produktu. Odpowiadasz własnymi słowami,
+          a Vairo pilnuje kolejności i tego, czego brakuje.
         </p>
       </header>
 
@@ -151,10 +149,21 @@ export default async function ProgramPage() {
                     {item.subtitle}
                   </p>
                 ) : null}
+                {/* Opis etapu ma po trzy–cztery linijki. Pięć etapów razy
+                    cztery linijki to ekran, przez który trzeba przewijać, żeby
+                    zobaczyć, ile jest etapów — czyli żeby dostać informację,
+                    po którą się tu przyszło. Oś czasu zostaje widoczna, proza
+                    czeka na kliknięcie. */}
                 {item.intro ? (
-                  <p className="mt-2 text-[14px] leading-relaxed text-[var(--text-muted)]">
-                    {item.intro}
-                  </p>
+                  <details className="group mt-2">
+                    <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-[12.5px] text-[var(--text-subtle)] transition-colors hover:text-white">
+                      <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
+                      Co w tym etapie
+                    </summary>
+                    <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-[var(--text-muted)]">
+                      {item.intro}
+                    </p>
+                  </details>
                 ) : null}
 
                 {isCurrent && item.hasContent ? (
@@ -173,9 +182,8 @@ export default async function ProgramPage() {
           Nie musisz robić tego sam
         </h2>
         <p className="mt-1.5 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-          Równolegle do etapów działa warstwa Social: znajdujesz tam ludzi do
-          zespołu albo projekt, do którego chcesz dołączyć. Jedno konto może
-          należeć do trzech teamów naraz.
+          Równolegle do etapów działa Social — znajdujesz tam ludzi do zespołu
+          albo projekt, do którego chcesz dołączyć.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button href="/app/social/discover" variant="secondary" size="sm">
@@ -187,10 +195,6 @@ export default async function ProgramPage() {
         </div>
       </section>
 
-      <p className="mt-5 text-[12.5px] leading-relaxed text-[var(--text-faint)]">
-        Etapy oznaczone „w przygotowaniu” są już w programie, ale nie mają
-        jeszcze wgranych pytań. Nie blokują niczego, co robisz wcześniej.
-      </p>
     </div>
   );
 }

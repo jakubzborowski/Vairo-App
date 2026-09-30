@@ -63,7 +63,7 @@ export function SummaryField({
               )}
             >
               <div className="flex items-start justify-between gap-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-faint)]">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
                   {label}
                 </p>
                 <button

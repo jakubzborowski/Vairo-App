@@ -186,6 +186,7 @@ export async function completeOnboardingWithStartup(formData: FormData) {
       .insert(tagIds.map((tag_id) => ({ startup_id: startupId, tag_id })));
   }
 
+  await ensureStartupStage(supabase, startupId, "ambition", "completed");
   await ensureStartupStage(supabase, startupId, "idea");
 
   const { error } = await supabase
@@ -265,6 +266,13 @@ async function createStartupForUser(
     );
   }
 
+  // Start od Idea Stage oznacza, że Ambition jest z definicji za nami —
+  // ten etap istnieje po to, żeby POMÓC znaleźć pomysł. Zakładamy go jako
+  // domknięty, żeby pasek programu pokazywał prawdę: pierwszy krok zrobiony,
+  // jesteś na drugim z pięciu.
+  if (input.stageKey === "idea") {
+    await ensureStartupStage(supabase, startup.id, "ambition", "completed");
+  }
   await ensureStartupStage(supabase, startup.id, input.stageKey);
   await setActiveStartupId(startup.id);
 

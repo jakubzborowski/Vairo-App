@@ -7,6 +7,7 @@ import { startContact } from "@/app/app/social/actions";
 import { Button } from "@/components/ui/button";
 import { Field, Textarea } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 export type ContactContext = { id: string; name: string };
@@ -24,6 +25,13 @@ type Props = {
   /** Gdy rozmowa już trwa — zamiast zaczepki otwieramy wątek. */
   existingConversationId?: string | null;
   blockedReason?: string | null;
+  /**
+   * Własny wyzwalacz zamiast zwykłego przycisku. Talia w Odkrywaj podaje tu
+   * okrągły `DeckAction`; lista i profil publiczny zostają przy przycisku.
+   * Modal, walidacja i akcja serwerowa są w obu przypadkach te same — bez
+   * tego byłyby dwie kopie tego samego formularza.
+   */
+  trigger?: (open: () => void) => React.ReactNode;
 };
 
 /**
@@ -41,6 +49,7 @@ type Props = {
 export function MessageButton({
   recipientId,
   recipientName,
+  trigger,
   contexts,
   size = "md",
   variant = "primary",
@@ -55,6 +64,7 @@ export function MessageButton({
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, startSending] = useTransition();
+  const { toast } = useToast();
 
   if (blockedReason) {
     return (
@@ -92,6 +102,10 @@ export function MessageButton({
       setOpen(false);
       setMessage("");
       onDone?.();
+      toast({
+        title: "Wiadomość wysłana",
+        description: `${recipientName} zobaczy ją w Zaproszeniach. Rozmowa otworzy się po przyjęciu.`,
+      });
       if (result.conversationId) {
         router.push(`/app/social/messages/${result.conversationId}`);
       }
@@ -101,15 +115,19 @@ export function MessageButton({
 
   return (
     <>
-      <Button
-        variant={variant}
-        size={size}
-        className={className}
-        onClick={() => setOpen(true)}
-      >
-        <MessageSquare className="size-4" />
-        Napisz
-      </Button>
+      {trigger ? (
+        trigger(() => setOpen(true))
+      ) : (
+        <Button
+          variant={variant}
+          size={size}
+          className={className}
+          onClick={() => setOpen(true)}
+        >
+          <MessageSquare className="size-4" />
+          Napisz
+        </Button>
+      )}
 
       {open ? (
         <Modal
@@ -121,10 +139,24 @@ export function MessageButton({
               <Button variant="ghost" onClick={() => setOpen(false)} disabled={sending}>
                 Anuluj
               </Button>
+              {/* Zaczepka bez treści nie ma sensu — to jedyna rzecz, którą
+                  odbiorca dostaje do decyzji. Przycisk jest więc wyłączony,
+                  ale POWÓD stoi obok, bo wyszarzony przycisk bez wyjaśnienia
+                  czyta się jak awaria. */}
+              {message.trim().length === 0 ? (
+                <span className="text-[12.5px] text-[var(--text-subtle)]">
+                  Napisz wiadomość, żeby wysłać
+                </span>
+              ) : null}
               <Button
                 onClick={submit}
                 loading={sending}
                 disabled={message.trim().length === 0}
+                title={
+                  message.trim().length === 0
+                    ? "Wpisz wiadomość — bez niej druga strona nie ma na czym oprzeć decyzji"
+                    : undefined
+                }
               >
                 Wyślij
               </Button>

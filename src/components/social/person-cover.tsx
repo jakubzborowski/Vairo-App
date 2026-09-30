@@ -14,7 +14,19 @@ import { DeckCover } from "./deck-frame";
  * Cię inni" na własnym profilu. Gdyby to były dwa osobne kawałki kodu, podgląd
  * po pierwszej zmianie przestałby mówić prawdę.
  */
-export function PersonCover({ person }: { person: PublicProfile }) {
+export function PersonCover({
+  person,
+  /**
+   * W talii karta ma obok siebie całą prawą kolumnę, więc fakty (lokalizacja,
+   * godziny, liczba teamów) idą tam — na zdjęciu zostaje samo imię i jedno
+   * zdanie. W podglądzie „tak widzą Cię inni" kolumny nie ma, więc wszystko
+   * musi zmieścić się na zdjęciu.
+   */
+  facts = true,
+}: {
+  person: PublicProfile;
+  facts?: boolean;
+}) {
   return (
     <DeckCover
       image={person.avatar_url}
@@ -33,6 +45,7 @@ export function PersonCover({ person }: { person: PublicProfile }) {
         </p>
       ) : null}
 
+      {facts ? (
       <div className="mt-2.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[12.5px] text-white/70">
         {person.location ? (
           <span className="inline-flex items-center gap-1">
@@ -53,8 +66,9 @@ export function PersonCover({ person }: { person: PublicProfile }) {
             : `${person.team_count} z ${MAX_STARTUPS} teamów`}
         </span>
       </div>
+      ) : null}
 
-      {person.looking_for ? (
+      {facts && person.looking_for ? (
         <div className="mt-3">
           <Badge tone={person.looking_for === "not_looking" ? "neutral" : "brand"}>
             {LOOKING_FOR_LABELS[person.looking_for]}

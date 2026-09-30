@@ -129,6 +129,35 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #22242b;
   --sidebar-ring: #ee5f1c;
+
+  /* --- Głębokość ---
+     Na czarnym tle cień sam nie wystarcza — nie ma czego przyciemniać.
+     Dlatego każdy poziom to cień W DÓŁ plus jasny włos NA GÓRZE krawędzi
+     (inset). To ten włos sprawia, że karta wygląda jak przedmiot, a nie
+     jak prostokąt w innym odcieniu. */
+  --lift-1:
+    0 1px 0 0 rgba(255, 255, 255, 0.05) inset,
+    0 1px 2px rgba(0, 0, 0, 0.4);
+  --lift-2:
+    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+    0 4px 16px rgba(0, 0, 0, 0.45);
+  --lift-3:
+    0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
+    0 12px 40px rgba(0, 0, 0, 0.55);
+
+  /* Obwódka marki wokół elementu, który JEST teraz aktywny.
+     Kiedyś było to 32 px rozmycia — czytało się jak smuga, nie jak stan.
+     Rozmyty kolor nie ma krawędzi, więc nie wygląda na decyzję. Teraz: wyraźny
+     pierścień plus krótki refleks, żeby element wyglądał na podświetlony,
+     a nie na poplamiony. */
+  --glow-vairo: 0 0 0 1px rgba(238, 95, 28, 0.32), 0 1px 8px rgba(238, 95, 28, 0.16);
+
+  /* Wspólny rytm animacji. Jedna wartość, żeby cała aplikacja ruszała się
+     w tym samym tempie — różne czasy w różnych komponentach czyta się
+     jako niedbałość. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 150ms;
+  --dur: 220ms;
 }
 
 @layer base {
@@ -140,6 +169,15 @@
   }
   html {
     @apply font-sans scroll-smooth;
+    /* Bariera na poziomy przewijanie: dekoracje (poświata za nagłówkiem)
+       celowo wychodzą poza kontener, a na telefonie każdy piksel w prawo
+       robi pasek przewijania. `clip` zamiast `hidden`, bo nie tworzy
+       kontenera przewijania i nie psuje `position: sticky` w sidebarze. */
+    overflow-x: clip;
+    /* Druga przyczyna skakania treści: pasek przewijania, który pojawia się
+       na długiej stronie i znika na krótkiej, zabiera i oddaje kilkanaście
+       pikseli szerokości. `stable` rezerwuje na niego miejsce zawsze. */
+    scrollbar-gutter: stable;
   }
   h1,
   h2,
@@ -170,6 +208,214 @@
   .btn-vairo:hover {
     background: linear-gradient(180deg, #ff8347 0%, #f2601f 100%);
   }
+
+  /* Trzy poziomy wyniesienia. Karta = 1, panel unoszony = 2, modal = 3. */
+  .lift-1 {
+    box-shadow: var(--lift-1);
+  }
+  .lift-2 {
+    box-shadow: var(--lift-2);
+  }
+  .lift-3 {
+    box-shadow: var(--lift-3);
+  }
+
+  /* Karta, która reaguje na kursor. Unosi się o 1px — tyle wystarczy,
+     żeby poczuć, że jest klikalna, i za mało, żeby rozjechać layout. */
+  .lift-hover {
+    transition:
+      box-shadow var(--dur) var(--ease-out),
+      transform var(--dur) var(--ease-out),
+      border-color var(--dur) var(--ease-out);
+  }
+  .lift-hover:hover {
+    box-shadow: var(--lift-2);
+    transform: translateY(-1px);
+  }
+
+  /* Poświata marki wokół elementu, który jest teraz najważniejszy. */
+  .glow-vairo {
+    box-shadow: var(--glow-vairo);
+  }
+
+  /* Włos gradientu na górnej krawędzi — najtańszy sposób, żeby sekcja
+     wyglądała zaprojektowana, a nie wygenerowana. Nie zajmuje miejsca
+     i nie dodaje ani jednego elementu do drzewa. */
+  .edge-accent {
+    position: relative;
+  }
+  .edge-accent::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(238, 95, 28, 0.55) 18%,
+      rgba(238, 95, 28, 0.55) 52%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  /* --- ZNAK ROZPOZNAWCZY: kontur ---
+     Figury marki Vairo to rysunki warstwicowe — dziesiątki równoległych,
+     falujących linii. To jest w tej identyfikacji rzecz naprawdę nietypowa
+     i jedyna, której nie da się pomylić z żadnym innym ciemnym motywem.
+     Dopóki leżała wyłącznie jako znak wodny w rogu, marka kończyła się na
+     kolorze pomarańczowym — a pomarańcz ma każdy.
+
+     `topo` przenosi tę samą DNA na powierzchnie: kafelek 120x72 px z sześcioma
+     falami, bezszwowy w obu osiach. Krycie wpisane jest w sam rysunek
+     (`stroke-opacity`), nie w element — dzięki temu klasa dokłada się do
+     dowolnego tła z Tailwinda, zamiast je nadpisywać.
+
+     Gdzie wolno: bohater ekranu i powierzchnie puste (fallback zdjęcia, stany
+     bez treści). Nigdy pod dłuższym tekstem — warstwice mają fakturę, a tekst
+     na fakturze czyta się gorzej. Jedna powierzchnia na ekran.
+
+     Była tu jeszcze druga klasa, `ridge` — trzy równoległe kreski na górnej
+     krawędzi karty. Wyleciała i warto zapisać, dlaczego, bo pomyłka jest
+     łatwa do powtórzenia: **kreska o pełnym kryciu położona na krawędzi
+     zaokrąglonej karty zawsze wygląda na przyciętą.** Promień narożnika ucina
+     ją w innym miejscu na każdej wysokości, a oko czyta to jako usterkę,
+     nie jako wzór. Przesunięcie startu za łuk problem tylko przenosi —
+     wtedy kreska zaczyna się „znikąd".
+
+     `edge-accent` działa od początku właśnie dlatego, że **zaczyna się od
+     przezroczystości** i nabiera koloru dopiero na 18% szerokości. Przycięcie
+     na łuku jest wtedy niewidoczne, bo nie ma czego przycinać. To jest reguła
+     na każdy przyszły akcent krawędziowy. */
+  .topo {
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='120'%20height='72'%20viewBox='0%200%20120%2072'%3E%3Cg%20fill='none'%20stroke='%23ffffff'%20stroke-opacity='0.05'%20stroke-width='1'%3E%3Cpath%20d='M0%206%20Q15%200%2030%206%20T60%206%20T90%206%20T120%206'/%3E%3Cpath%20d='M0%2018%20Q15%2012%2030%2018%20T60%2018%20T90%2018%20T120%2018'/%3E%3Cpath%20d='M0%2030%20Q15%2024%2030%2030%20T60%2030%20T90%2030%20T120%2030'/%3E%3Cpath%20d='M0%2042%20Q15%2036%2030%2042%20T60%2042%20T90%2042%20T120%2042'/%3E%3Cpath%20d='M0%2054%20Q15%2048%2030%2054%20T60%2054%20T90%2054%20T120%2054'/%3E%3Cpath%20d='M0%2066%20Q15%2060%2030%2066%20T60%2066%20T90%2066%20T120%2066'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 120px 72px;
+    background-repeat: repeat;
+  }
+
+  /* Wariant markowy — na ciemnych, pustych kadrach, gdzie ma nieść kolor. */
+  .topo-brand {
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='120'%20height='72'%20viewBox='0%200%20120%2072'%3E%3Cg%20fill='none'%20stroke='%23ee5f1c'%20stroke-opacity='0.22'%20stroke-width='1'%3E%3Cpath%20d='M0%206%20Q15%200%2030%206%20T60%206%20T90%206%20T120%206'/%3E%3Cpath%20d='M0%2018%20Q15%2012%2030%2018%20T60%2018%20T90%2018%20T120%2018'/%3E%3Cpath%20d='M0%2030%20Q15%2024%2030%2030%20T60%2030%20T90%2030%20T120%2030'/%3E%3Cpath%20d='M0%2042%20Q15%2036%2030%2042%20T60%2042%20T90%2042%20T120%2042'/%3E%3Cpath%20d='M0%2054%20Q15%2048%2030%2054%20T60%2054%20T90%2054%20T120%2054'/%3E%3Cpath%20d='M0%2066%20Q15%2060%2030%2066%20T60%2066%20T90%2066%20T120%2066'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 120px 72px;
+    background-repeat: repeat;
+  }
+
+  /* --- Szerokość kolumny: DWIE wartości na całą aplikację ---
+     Każdy ekran wybierał ją sobie sam, więc były w użyciu cztery: 2xl, 3xl,
+     4xl i 5xl. Skutek widać było przy przełączaniu zakładek w tym samym
+     miejscu — Ustawienia → Profil miały 3xl, Ustawienia → Konto 2xl, i treść
+     **skakała w bok przy każdym kliknięciu**. To nie jest drobiazg: skok
+     layoutu przy nawigacji czyta się jako niedoróbka, nawet gdy nikt nie
+     potrafi powiedzieć, co dokładnie zobaczył.
+
+     `page` to kolumna do czytania i wypełniania (formularze, listy, treść).
+     `page-wide` dostają tylko ekrany, które NAPRAWDĘ potrzebują szerokości:
+     siatka dashboardu, talia w Odkrywaj, dwupanelowe wiadomości, podgląd
+     własnej karty. Trzeciej wartości nie ma i nie dodajemy. */
+  .page {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 48rem;
+  }
+  .page-wide {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 68rem;
+  }
+
+  /* Ziarno tła: jeden filtr SVG w data URI. Żaden plik, żaden request. */
+  .grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  /* Dryf fal w tle. Dwa cykle o różnej długości i w przeciwne strony —
+     gdyby były równe, oba rogi ruszałyby się zgodnie i od razu byłoby widać,
+     że to animacja. Tu chodzi o coś odwrotnego: ma nie być widać, że coś się
+     dzieje, ma być widać, że ekran nie jest martwy. */
+  .drift-slow {
+    animation: drift-a 34s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+  .drift-slower {
+    animation: drift-b 40s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  /* Wjazd toastu od dołu i od prawej — z tej strony, z której się pojawia.
+     Ruch „skądś", a nie samo pojawienie się, mówi oku, że to nowy element,
+     a nie coś, co przeoczyło. */
+  .toast-in {
+    animation: toast-in 0.28s var(--ease-out) both;
+  }
+
+  /* --- Wejście ekranu ---
+     Trzy warianty jednego pomysłu: rzeczy pojawiają się w tej kolejności,
+     w której trzeba je przeczytać. To nie jest ozdoba — **ruch jest tu
+     informacją o hierarchii**. Statyczny ekran wysypuje wszystko naraz
+     i oko samo musi ustalić, od czego zacząć.
+
+     Wszystkie trzy używają `both`, więc element jest niewidoczny ZANIM
+     animacja ruszy. Bez tego panele mrugają w pełnej krasie przez jedną
+     klatkę i dopiero potem znikają, żeby wjechać. */
+
+  /* Panele dashboardu — wjazd od dołu, co 70 ms. */
+  .panels > * {
+    animation: fade-up 0.5s var(--ease-out) both;
+  }
+  .panels > *:nth-child(1) { animation-delay: 0ms; }
+  .panels > *:nth-child(2) { animation-delay: 70ms; }
+  .panels > *:nth-child(3) { animation-delay: 140ms; }
+  .panels > *:nth-child(4) { animation-delay: 210ms; }
+  .panels > *:nth-child(5) { animation-delay: 280ms; }
+  .panels > *:nth-child(n + 6) { animation-delay: 350ms; }
+
+  /* Pasek etapów — klocki wchodzą OD LEWEJ, jeden po drugim.
+     Kierunek nie jest przypadkowy: to ten sam kierunek, w który pokazuje
+     grot strzałki, więc animacja dosłownie rysuje drogę programu. */
+  .steps > * {
+    animation: slide-in-x 0.42s var(--ease-out) both;
+  }
+  .steps > *:nth-child(1) { animation-delay: 60ms; }
+  .steps > *:nth-child(2) { animation-delay: 130ms; }
+  .steps > *:nth-child(3) { animation-delay: 200ms; }
+  .steps > *:nth-child(4) { animation-delay: 270ms; }
+  .steps > *:nth-child(5) { animation-delay: 340ms; }
+  .steps > *:nth-child(n + 6) { animation-delay: 410ms; }
+
+  /* Przebłysk światła przejeżdżający raz przez element. Używamy go dokładnie
+     w jednym miejscu — na bieżącym etapie — bo efekt, który powtarza się na
+     kilku elementach, przestaje cokolwiek wyróżniać. */
+  .sweep {
+    background: linear-gradient(
+      100deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.22) 50%,
+      transparent 80%
+    );
+    animation: sweep-x 1.3s var(--ease-out) 0.55s both;
+  }
+
+  /* Wypełnienie paska postępu narasta z lewej. Animujemy `transform`,
+     nie `width` — szerokość przelicza layout w każdej klatce. */
+  .grow-bar {
+    transform-origin: left center;
+    animation: grow-x 0.8s var(--ease-out) both;
+    animation-delay: 0.3s;
+  }
+
+  /* Wejście listy: elementy pojawiają się po kolei, po 40 ms.
+     Kolejność jest informacją — mówi, w jakim porządku czytać. */
+  .stagger > * {
+    animation: fade-up 0.32s var(--ease-out) both;
+  }
+  .stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger > *:nth-child(2) { animation-delay: 40ms; }
+  .stagger > *:nth-child(3) { animation-delay: 80ms; }
+  .stagger > *:nth-child(4) { animation-delay: 120ms; }
+  .stagger > *:nth-child(5) { animation-delay: 160ms; }
+  .stagger > *:nth-child(n + 6) { animation-delay: 200ms; }
 }
 
 @keyframes float-soft {
@@ -190,6 +436,64 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate3d(12px, 12px, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes sweep-x {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes drift-a {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(3%, 4%, 0) rotate(2.5deg);
+  }
+}
+
+@keyframes drift-b {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(-4%, -3%, 0) rotate(-2deg);
+  }
+}
+
+@keyframes slide-in-x {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
   }
 }
 
@@ -261,13 +565,23 @@
   animation: splash-center-in 0.7s ease-out 0.15s both;
 }
 
+/* Ktoś, kto wyłączył animacje w systemie, zrobił to z powodu — najczęściej
+   zdrowotnego. Wyłączamy ruch, ZOSTAWIAJĄC widoczność: elementy z animacją
+   wejścia muszą pozostać na ekranie, a nie zniknąć razem z animacją. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    /* Bez tego opóźnienia zostają: panele nadal pojawiałyby się jeden po
+       drugim przez pół sekundy, tylko skokowo. To gorsze niż animacja. */
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .lift-hover:hover {
+    transform: none;
   }
 }

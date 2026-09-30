@@ -48,7 +48,7 @@ export function OnboardingShell({
           ) : null}
           <Link href="/" className="inline-flex items-center gap-2">
             <Image
-              src="/brand/logo-blob.png"
+              src="/brand/logo-mark.png"
               alt=""
               width={28}
               height={28}

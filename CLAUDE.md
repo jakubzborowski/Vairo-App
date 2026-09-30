@@ -3,8 +3,24 @@
 Platforma prowadząca startup przez pięć etapów walidacji i budowy, plus warstwa
 Social do znajdowania ludzi i zespołów.
 
-> Szczegółowe plany, audyty i rozpiski są w `_plan/` (katalog lokalny, w `.gitignore`).
-> Ten plik jest skrótem dla kogoś, kto wchodzi w kod.
+**Ten plik zawiera wyłącznie to, co wiąże przy DOWOLNEJ zmianie w kodzie.**
+Reguły dotyczące jednego obszaru leżą w `docs/` i czyta się je wtedy, gdy
+rusza się ten obszar — **zanim** napisze się kod, nie po zepsuciu czegoś.
+Każda wskazówka niżej mówi, czego dotyczy plik, więc da się poznać, że trzeba
+tam zajrzeć, bez otwierania go.
+
+| Plik | Kiedy jest obowiązkowy |
+|---|---|
+| [docs/design.md](docs/design.md) | zmiana czegokolwiek, co widać: kolory, odstępy, cienie, animacje, tło |
+| [docs/social.md](docs/social.md) | Odkrywaj, zaczepki, rozmowy, zaproszenia, profile publiczne, menu boczne |
+| [docs/dashboard.md](docs/dashboard.md) | ekran `/app`, lista „co teraz", powiadomienia, toasty |
+| [docs/ux.md](docs/ux.md) | dokładanie nowej funkcji — jak prowadzić kogoś, kto się na tym nie zna |
+| [docs/deletion.md](docs/deletion.md) | nowy trigger `DELETE`, nowy bucket, cokolwiek kasującego |
+| [docs/content.md](docs/content.md) | zmiana pytań w etapach, importer treści, `answer_key` |
+| [supabase/README.md](supabase/README.md) | kolejność odpalania migracji na świeżej bazie |
+
+> Plany, audyty i rozpiski są w `_plan/` — katalog lokalny, w `.gitignore`.
+> To nie jest miejsce na reguły: nie przetrwa sklonowania repo.
 
 ---
 
@@ -109,41 +125,15 @@ Podpunkty oznaczone `is_optional` nie liczą się do postępu.
 
 ---
 
-## Treść jako dane, nie kod
+## Treść etapów jest DANYMI, nie kodem
 
-Treść etapów **nigdy** nie trafia do JSX. Źródłem są pliki JSON:
+Pytania nigdy nie trafiają do JSX. Źródłem są pliki JSON w `supabase/content/`,
+a migrację SQL buduje z nich `npm run content:build -- <plik>`.
 
-```
-supabase/content/ambition-v1.json        struktura pytań
-supabase/content/idea-v1.json            struktura pytań
-supabase/content/idea-v1.guides.json     przewodniki (proza z dokumentów)
-```
+Odpowiedzi kluczujemy po `stage_fields.answer_key`, **nie po `field_id`** —
+inaczej ponowny import osierociłby wszystko, co ludzie już wpisali.
 
-Budowanie migracji SQL z treści:
-
-```bash
-npm run content:build -- idea-v1
-```
-
-Skrypt `scripts/build-content.mjs` **waliduje** (nieznane typy pól, duplikaty
-kluczy, `summary` wskazujący na nieistniejące pole), a potem generuje idempotentną
-migrację, która usuwa też elementy usunięte z JSON-a.
-
-**Dlaczego tak:** zmiana pytania to jednolinijkowy diff, nie szukanie w SQL-u;
-nie wymaga deployu ani migracji pisanej ręcznie; treść jest wersjonowana.
-
-### Stabilny `answer_key`
-
-Odpowiedzi kluczujemy po `stage_fields.answer_key`, nie po `field_id`:
-
-```sql
-answer_key text generated always as (coalesce(shared_key, id::text)) stored
-```
-
-Importer nadaje każdemu polu `shared_key` = `<stage>.<punkt>.<podpunkt>.<pole>`,
-więc ponowny import **nie osierocia zapisanych odpowiedzi**. Pola współdzielone
-między kategoriami (oznaczone gwiazdką w dokumentach źródłowych) dostają wspólny
-`shared_key` → jedno pytanie, jedna odpowiedź, niezależnie od kategorii.
+→ [docs/content.md](docs/content.md), zanim dotkniesz treści albo importera.
 
 ---
 
@@ -180,6 +170,18 @@ kogoś CTO nie może po cichu dać mu prawa do zmiany walidacji pomysłu.
 prywatnych danych.** Ukrycie przycisku to nie zabezpieczenie — to tylko uprzejmość
 wobec usera. W bazie pilnują tego polityki RLS oparte na `startup_role()`.
 
+**„Co-founder" nie jest rolą.** Dokument wymienia dokładnie trzy: Founder,
+Admin, Member. Współzałożyciel to `job_title` — wizytówka bez uprawnień. Kto
+ma faktycznie współdecydować, dostaje rolę Admina.
+
+**Przyjęcie zaproszenia tworzy członkostwo ZAWSZE jako Member** (migracja 017).
+Guidelines, sekcja 4: „Użytkownik otrzymuje dostęp jako Member. Nie otrzymuje
+automatycznie uprawnień administracyjnych. Role i permisje ustawia Founder albo
+Admin." Wcześniej `respond_join_request()` brał rolę z `proposed_role`, więc
+jedno kliknięcie „Przyjmij" nadawało prawa do zarządzania zespołem i zamykania
+etapów. Nadanie uprawnień jest czynnością teamu, nie zapraszanego — i dzieje
+się teraz po dołączeniu, osobnym ruchem w menu przy członku.
+
 Reguły twarde:
 - **Jedynego Foundera nie da się usunąć ani zdegradować** bez przekazania roli (trigger).
 - **Limit 3 członkostw na konto** — liczony łącznie, niezależnie od tego, czy user
@@ -187,116 +189,45 @@ Reguły twarde:
 
 ---
 
-## Warstwa Social
+## Warstwa Social — granice, które trzyma schemat
 
 Dwie strony tego samego rynku: joiner szuka projektu, startup szuka ludzi.
+Pętla kontaktu to **zaczepka → przyjęcie → rozmowa**; prośby o dołączenie to
+jedna tabela z kolumną `direction`.
 
-**Odkrywaj to talia, nie tabela.** Domyślny tryb (`?view=deck`) pokazuje
-**jedną osobę albo jeden team na ekran**: duże zdjęcie z najważniejszym
-konkretem wtopionym w dolną krawędź, pod nim dwie akcje, a pod tym resztą
-informacji. Na dużym ekranie zdjęcie idzie po lewej, szczegóły po prawej.
-Siatka została jako `?view=list` dla tych, którzy wolą przejrzeć wszystko naraz.
+Trzy rzeczy z tej warstwy wiążą wszędzie, więc stoją tutaj:
 
-Dlaczego tak: decyzja „czy chcę z tą osobą pracować" nie jest decyzją
-porównawczą. Trzydzieści miniatur naraz zamienia ją w przeglądanie katalogu.
+- **Widoki `public_*` są jedynym wyjściem danych poza team.** Każda nowa
+  kolumna w nich to świadoma decyzja o ujawnieniu. `idea_description`
+  i `profiles.email` nie mają tam czego szukać — nigdy.
+- **Publiczne jest to, co człowiek napisał dla obcych; prywatne jest to, co
+  system o nim policzył.** Wyliczony etap walidacji wychodzi na zewnątrz
+  wyłącznie za zgodą (`show_stage_publicly`, migracja 016).
+- **Nie budujemy algorytmu rekomendacji.** Karta nazywa pokrycie, które i tak
+  jest w danych. Nie liczymy wyniku, nie sortujemy „od najlepszych", nikogo
+  nie ukrywamy — wymyślony powód to fake UI.
 
-**Pominięcie ma być trwałe i prywatne.** `discovery_passes` zapamiętuje, kogo
-user odrzucił, więc przeglądanie ma koniec, a te same twarze nie wracają przy
-następnym wejściu. Druga strona nigdy się o tym nie dowie — polityka RLS
-wpuszcza wyłącznie właściciela wiersza. Decyzja jest odwracalna: „Cofnij"
-(ostatnia) i „Przywróć pominięte" (wszystkie).
-
-Z talii wypadają też **otwarte rozmowy** — komu już wysłano zgłoszenie albo
-zaproszenie. Karta z napisem „już wysłane" zamiast akcji jest tylko przeszkodą
-na drodze do następnej osoby.
-
-**Granice prywatności** (wymuszone schematem, nie regulaminem):
-
-| Dane | Kto widzi |
-|---|---|
-| `startups.idea_description` | wyłącznie team — **nigdy** nie ma go w widoku publicznym |
-| `startups.public_tagline` / `public_description` | wszyscy — to founder napisał świadomie dla obcych |
-| `profiles.email` | wyłącznie osoby z tego samego teamu |
-| profil osoby z `is_discoverable = false` | nie pojawia się w Odkrywaj **ani** na liście członków cudzego teamu |
-| pominięcia | wyłącznie ich autor |
-
-**Pętla kontaktu: zaczepka → przyjęcie → rozmowa.** `contact_signals` to
-pierwszy krok, dostępny **dla każdego** — także dla kogoś bez teamu. Wcześniej
-jedyną akcją było „zgłoś się do teamu", którą widzieli tylko Founder i Admin,
-więc osoba, dla której Social powstał, mogła wyłącznie oglądać karty.
-
-Rozmowa (`conversations`) powstaje **dopiero po przyjęciu** zaczepki, razem
-z przeniesieniem pierwszej wiadomości — w jednej transakcji, w funkcji
-`respond_contact_signal()`. Dzięki temu skrzynka nie zapełnia się monologami,
-na które nikt nie odpowiedział.
-
-**Kontekst kontaktu** (`context_startup_id`) jest wymogiem guidelines: nadawca
-wybiera, czy pisze prywatnie, czy w imieniu konkretnego teamu, a odbiorca
-zawsze widzi który. Bez tego „cześć, fajny profil" od nieznajomego nic nie
-znaczy. Trigger pilnuje, że w imieniu teamu pisze tylko jego członek.
-
-**Kompletność profilu jest częścią produktu, nie ozdobą.** `scoreProfile()`
-w [profile-completeness.ts](src/lib/profile-completeness.ts) liczy, na ile
-karta nadaje się do pokazania obcym, i **nazywa każdy brak razem z powodem**.
-Zdjęcie waży najwięcej (25), bo w tej warstwie decyduje o kliknięciu.
-Nie blokujemy wejścia do Odkrywaj poniżej progu — blokada wypchnęłaby z
-aplikacji tych, którzy najbardziej jej potrzebują. Zamiast tego pasek nad
-talią mówi wprost, co jest puste.
-
-Joiner po rejestracji idzie **prosto do kreatora profilu** (`/app/social/start`),
-nie na pusty dashboard.
-
-**Prośby o dołączenie to jedna tabela** (`startup_join_requests`) z kolumną
-`direction`: `application` (człowiek → team) i `invite` (team → człowiek).
-Mechanika jest identyczna, więc dwie tabele znaczyłyby dwa razy te same
-polityki i dwa razy ten sam błąd. Odpowiada zawsze **druga strona rozmowy**;
-całą tę regułę trzyma funkcja `respond_join_request()` — wpis do
-`startup_members` powstaje w tej samej transakcji co zmiana statusu, więc nie
-ma stanu „zaakceptowane, ale nie dodane do teamu".
+→ [docs/social.md](docs/social.md): talia, skrzynka, czat, nawigacja, pełna
+tabela prywatności i to, czego karta świadomie nie pokazuje.
 
 ---
 
-## Dashboard — pięć pytań
+## Dashboard i powiadomienia
 
-Guidelines: dashboard ma odpowiadać na pytania **gdzie jestem · co robić teraz ·
-co blokuje · kto za co odpowiada · po czym poznam koniec etapu**.
+Dashboard odpowiada na pięć pytań: **gdzie jestem · co robić teraz · co
+blokuje · kto za co odpowiada · po czym poznam koniec etapu.** Układ jest
+**STAŁY przez wszystkie etapy** — sekcje się nie przenoszą i nie znikają.
 
-**Lista „co teraz"** (`loadNextActions()` w [next-actions.ts](src/lib/next-actions.ts))
-składa maksymalnie pięć pozycji z rzeczy, które naprawdę są w bazie: sprawy,
-na które czeka drugi człowiek → konkretne nieukończone podpunkty etapu → braki
-we własnym profilu. Każda pozycja ma **powód** pod spodem i prowadzi do
-konkretnego miejsca. Bez powodu lista brzmi jak polecenia z systemu.
+Dwie reguły stąd obowiązują w całej aplikacji:
 
-**Przeszkodę pokazujemy tylko wtedy, gdy wynika z danych** — startup
-wstrzymany, etap bez treści, rola bez prawa zapisu. Pełny model blockerów
-(zgłaszanych ręcznie i wynikających z zależności) przychodzi razem z Execution
-Stage. Do tego czasu komunikat o przeszkodzie bez konkretu byłby gorszy od jego
-braku.
+- **Każda liczba pochodzi z zapytania do bazy.** Panel z wymyśloną metryką
+  („wynik gotowości: 72") wyglądałby mądrze i nie znaczyłby nic.
+- **Każda akcja kończy się potwierdzeniem** (toast w prawym dolnym rogu).
+  Brak potwierdzenia nie jest neutralny — czyta się jak niepewność. Błędy
+  zostają **inline, przy polu**; toast niesie potwierdzenia.
 
-**Bieżący etap to NAJDALSZY rozpoczęty, nie najwcześniejszy otwarty.**
-Do wcześniejszego etapu wolno wrócić (pominięty Ambition, ponownie otwarta
-Idea) i to nie znaczy, że program się cofnął. Przy regule „pierwszy
-`in_progress`" wejście w stary etap odbierało użytkownikowi bieżący i kazało
-zaczynać od nowa. Tę samą regułę stosują `currentProgramEntry()`
-i `getUserStartups()` — muszą dawać ten sam wynik, bo inaczej dashboard
-i ekran etapu pokazują co innego.
-
-**Otwarcie etapu jest decyzją, nie skutkiem ubocznym oglądania.** Wejście
-w pominięty etap pokazuje ekran z wyjaśnieniem i osobnym przyciskiem
-„Uzupełnij mimo to"; instancja powstaje dopiero po tym kliknięciu. Wcześniej
-samo kliknięcie w pasek zakładało etap i program cofał się do niego.
-
-**Pasek etapów ma pięć stanów:** domknięty, bieżący, **otwarty** (ktoś do
-niego wrócił, ale program jest dalej), **pominięty** i zablokowany. Pominięty
-dostaje kreskę, nie kłódkę — kłódka PRZED bieżącym etapem czyta się jak
-awaria. Wszystkie poza zablokowanym są klikalne.
-
-**Powiadomienia** (migracja 013) powstają wyłącznie z triggerów, więc nikt nie
-wyśle powiadomienia w cudzym imieniu — tabela nie ma polityki INSERT. Treść
-komunikatu składa [notifications.ts](src/lib/notifications.ts), nie baza:
-zmiana brzmienia to jedna linijka, a zmiana imienia nadawcy nie zostawia
-w skrzynce starej wersji. Kolejna wiadomość w tej samej, nieprzeczytanej
-rozmowie **podmienia** wpis — jedna zmiana to jedno powiadomienie.
+→ [docs/dashboard.md](docs/dashboard.md): skład listy „co teraz", placeholdery,
+reguła bieżącego etapu, Realtime.
 
 ---
 
@@ -313,9 +244,9 @@ src/
       startups/new/         kreator zakładania startupu
       team/                 skład, role, otwarte role, zgłoszenia
       team/profile/         profil publiczny teamu (to, co widzą obcy)
-      social/discover/      wyszukiwarka ludzi i teamów
-      social/people/[id]/   publiczny profil osoby
-      social/teams/[id]/    publiczny profil teamu
+      social/people/        talia „szukam ludzi" (+ [id]/ profil osoby)
+      social/teams/         talia „szukam projektu" (+ [id]/ profil teamu)
+      social/discover/      stary adres — tylko przekierowanie
       social/me/            podgląd własnej karty + ustawienia widoczności
       social/start/         kreator profilu publicznego (wejście do Social)
       social/invites/       jedna skrzynka: zaczepki i sprawy teamu
@@ -380,130 +311,65 @@ daje dwa przyciski po 100% szerokości w jednym rzędzie flex, które nie mogą 
 
 ---
 
-## Prowadzenie za rękę — co to znaczy w kodzie
+## Prowadzenie za rękę
 
-Zasada z góry tego pliku ma konkretne odbicie w aplikacji. Cztery wzorce, które
-trzeba utrzymać przy każdej nowej funkcji:
+Zasada z góry tego pliku ma cztery konkretne odbicia w kodzie: pierwsze
+wejście wygląda inaczej niż dziesiąte, każdy etap kończy się czymś do
+przeczytania, decyzja jest poprzedzona wynikami, akcje siedzą pod ręką, a nie
+przed oczami.
 
-**Pierwsze wejście wygląda inaczej niż dziesiąte.** Ekran etapu przy zerowym
-postępie pokazuje wprowadzenie (czym to jest, ile podpunktów, że nic nie
-przepada), a potem zwija się do jednego wiersza „Następny krok". Stan bierzemy
-z danych (`tree.done === 0`), nie z `localStorage` — dzięki temu nie ma
-osobnego stanu do zsynchronizowania i nic się nie pokazuje dwa razy na dwóch
-urządzeniach.
-
-**Każdy etap kończy się czymś do przeczytania.** `/app/stage/summary` renderuje
-wszystkie odpowiedzi jednego etapu jako treść, nie jako drugą kopię formularza
-(pytania bez odpowiedzi w ogóle się nie pokazują). Domknięcie Ambition prowadzi
-przez ten ekran, zanim trafi do wyboru kategorii.
-
-**Decyzja poprzedzona jest wynikami.** Kreator kończący Idea Stage zaczyna od
-kroku „Zanim zdecydujesz" z liczbami i linkiem do pełnych odpowiedzi. System
-nadal nie ocenia pomysłu — pokazuje to, na czym człowiek ma oprzeć własną decyzję.
+Jedna reguła stąd wiąże każdą nową akcję serwerową:
 
 **Żaden komunikat błędu nie wychodzi surowy.** `translateDbError()`
-w [db-errors.ts](src/lib/db-errors.ts) zamienia naruszenia RLS, limity
-i ograniczenia bazy na zdania po polsku. Nowa akcja serwerowa przepuszcza przez
-niego każdy `error.message`, którego sama nie obsłużyła.
+w [db-errors.ts](src/lib/db-errors.ts) zamienia naruszenia RLS i ograniczenia
+bazy na zdania po polsku — z ogonkami, bezosobowo (polszczyzna odmienia przez
+rodzaj, a my go nie znamy), i **nieznany błąd też dostaje zdanie po polsku**.
+
+→ [docs/ux.md](docs/ux.md) przed dokładaniem nowej funkcji.
 
 ---
 
-## Nawigacja — w menu jest tylko to, co działa
-
-Żadnej pozycji wyszarzonej, żadnego „wkrótce", żadnego linku do ekranu
-z informacją, że czegoś jeszcze nie ma. Ktoś, kto pierwszy raz widzi tę
-aplikację, nie odróżni „nieaktywne, bo nie powstało" od „nieaktywne, bo coś
-zrobiłem źle" — a pół menu na szaro wygląda jak aplikacja, która się nie
-wczytała. Widoczność rozstrzyga [nav-config.ts](src/components/app/nav-config.ts);
-`NavRow` nie ma już żadnej logiki dostępu.
-
-Stan docelowy menu:
-
-| Grupa | Pozycje |
-|---|---|
-| **Twój team** (tylko gdy jesteś w teamie) | Start · Etap startupu · Team |
-| **Social** | Odkrywaj · Wiadomości · Zaproszenia · Mój profil publiczny |
-| **Stopka** | Powiadomienia · Jak to działa · Ustawienia |
-
-**Jedna skrzynka, nie dwie.** Zaczepki od ludzi i sprawy członkostwa w teamie
-trafiają do wspólnych „Zaproszeń" z jednym licznikiem. Dwa osobne wejścia
-(„Kontakty" i „Zaproszenia") dla nowej osoby znaczyły to samo: ktoś czegoś ode
-mnie chce. Rozdział został w treści kart. `/app/social/connections` przekierowuje.
-
-**Bez teamu cała grupa workspace'u znika.** Ścieżkę do założenia startupu
-trzyma wtedy switcher teamów („Brak teamu → Stwórz startup"), a `/app` zostaje
-dostępny przez logo.
-
-Moduły, które wrócą razem z Execution Stage — Taski, Cele, Dokumenty, Workflow,
-Możliwości — mają swoje adresy i uczciwe ekrany, ale **nie są linkowane**.
-Wejdą do menu wtedy, gdy będą miały dane.
-
----
-
-## Usuwanie — co wolno skasować i jak
+## Usuwanie
 
 Reguła, o którą chodzi: **startup, który istnieje, musi mieć co najmniej
-jednego Foundera.** Usunięcie całego startupu to co innego niż odejście z niego
-i nie może wpadać w tę samą blokadę.
+jednego Foundera** — ale usunięcie całego startupu to co innego niż odejście
+z niego i nie może wpadać w tę samą blokadę. Ta pomyłka wystąpiła w trzech
+triggerach naraz (naprawione w 014 i 015), więc wniosek jest twardy:
 
-**Jedna pomyłka w trzech miejscach.** Strażnik nie odróżniał „ktoś odbiera mi
-wiersz" od „cały rodzic właśnie znika". Przy kaskadzie oba wyglądają tak samo,
-więc blokada odpalała się w momencie, w którym nie ma już czego chronić.
-Dotyczyło to trzech triggerów — i naprawa jest wszędzie ta sama: sprawdź, czy
-wiersz nadrzędny jeszcze istnieje, a jeśli nie, przepuść kaskadę.
+**Każdy nowy trigger `BEFORE/AFTER DELETE`, który cokolwiek blokuje albo
+dopisuje, musi na wejściu sprawdzić, czy jego rodzic jeszcze żyje.** Inaczej
+zablokuje własną kaskadę.
 
-| Trigger | Co blokował | Naprawione w |
-|---|---|---|
-| `protect_last_founder` | kasowanie startupu i konta | 014 |
-| `protect_general_category` | kasowanie startupu (kategoria `general`) | 015 |
-| `recalc_subpoint_progress` | kasowanie startupu (wpis postępu do usuniętego etapu) | 015 |
+**Storage nie jest częścią kaskady.** `storage.objects` nie ma klucza obcego
+do niczego z `public`, więc pliki trzeba kasować osobno. Wszystkie buckety
+trzymają je pod `<uuid-właściciela>/…` i **każdy nowy bucket ma się do tej
+konwencji stosować**. Trigger kasuje wiersz, ale bajty zwalnia dopiero API
+Storage — stąd `purgeStartupFiles()` w akcji, wołane PRZED usunięciem wiersza.
 
-**Wniosek na przyszłość:** każdy nowy trigger `BEFORE/AFTER DELETE`, który
-cokolwiek blokuje albo dopisuje, musi na wejściu sprawdzić, czy jego rodzic
-jeszcze żyje. Inaczej zablokuje własną kaskadę.
-
-Konsekwencje, które z tego wynikają:
-
-- **`startups.created_by` ma `on delete set null`**, nie kaskadę. Autor mógł
-  dawno przekazać rolę i odejść; usunięcie jego konta nie może kasować startupu,
-  który zespół nadal prowadzi.
-- **Usunięcie konta kasuje tylko te startupy, w których ta osoba była jedynym
-  Founderem** (trigger `profiles_cleanup_startups`, wykonywany PRZED kaskadą).
-  Pozostałe zostają z resztą Founderów.
-- **Usunięcie startupu wymaga przepisania nazwy** i jest dostępne wyłącznie dla
-  Foundera (Team → Profil publiczny). To operacja bez cofnięcia, więc
-  potwierdzenie musi wymagać uwagi, a nie jednego kliknięcia. Obok stoi
-  przypomnienie o pauzie i archiwum — one istnieją właśnie po to, żeby nikt tu
-  nie trafiał przez pomyłkę.
-- **Usunięcie konta** (Ustawienia → Konto) idzie przez `delete_own_account()`:
-  `security definer`, bierze `auth.uid()` z tokenu, nie z parametru, więc nie da
-  się przez nią usunąć cudzego konta. Potwierdzeniem jest przepisanie adresu
-  e-mail, a modal **wypisuje z nazwy** startupy, które znikną razem z kontem.
-  Jeśli baza nie pozwala kasować z `auth.users`, aplikacja mówi to wprost
-  i odsyła do panelu — nie udaje, że się udało.
+→ [docs/deletion.md](docs/deletion.md): co dokładnie kasuje usunięcie konta,
+potwierdzenia, `delete_own_account()`.
 
 ---
 
 ## Design system
 
-Tokeny w `src/app/globals.css`. **Nie używamy surowych hexów w komponentach `/app`.**
+Tokeny w `src/app/globals.css`. Cztery reguły, które łamie się najczęściej
+i które kosztują najwięcej:
 
-| Grupa | Tokeny |
-|---|---|
-| Marka | `--vairo` `#ee5f1c`, `--vairo-strong` (wypełnienia z białym tekstem) |
-| Powierzchnie | `--bg` → `--surface` → `--surface-2` → `--surface-3` |
-| Tekst | `--text` · `--text-muted` · `--text-subtle` · `--text-faint` |
-| Semantyka | `--success` `--warning` `--danger` `--info` |
+- **Nie używamy surowych hexów w komponentach `/app`.**
+- **`--text-faint` (34%, kontrast 3,05:1) wolno użyć WYŁĄCZNIE do dekoracji.**
+  Podłogą dla treści jest `--text-subtle` (5,7:1). Mikro-nagłówek sekcji jest
+  treścią, nie etykietą — audyt znalazł tę regułę złamaną w dziesięciu plikach.
+- **Jeden akcent na ekran.** Pomarańcz oznacza akcję główną albo bieżący stan.
+  Policz go przed wysłaniem ekranu; przy dziewięciu miejscach naraz żadne nie
+  znaczy już „tu patrz".
+- **Ozdoba musi mieć krawędź.** Rozmyta plama koloru to brud, rysunek
+  konturowy przy tym samym nasyceniu to grafika. Akcent krawędziowy **zaczyna
+  się od przezroczystości** — kreska o pełnym kryciu na zaokrąglonym narożniku
+  zawsze wygląda na przyciętą.
 
-**Nazwy tokenów tekstu niosą regułę:** `--text-subtle` (52%) to **podłoga dla
-treści** — poniżej kontrast spada pod 4.5:1. `--text-faint` (34%) wolno użyć
-**wyłącznie do dekoracji**.
-
-**Jeden akcent na ekran.** Pomarańcz oznacza akcję główną albo bieżący stan.
-Wszystko inne jest w skali szarości.
-
-**Każdy komponent ma komplet stanów:** hover, `focus-visible` (widoczny pierścień),
-active, disabled z powodem, loading, empty, error.
+→ [docs/design.md](docs/design.md): warstwy `lift-*`, tło, `topo`, pasek
+etapów, animacje wejścia, dwie szerokości kolumny, dotyk, komplet stanów.
 
 ---
 
@@ -545,9 +411,23 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `013_notifications` | powiadomienia z triggerów, jedno na zdarzenie |
 | `014_fix_deletion` | usuwanie startupu i konta przestaje wpadać w ochronę Foundera |
 | `015_fix_deletion_2` | te same poprawki w dwóch pozostałych triggerach + usuwanie konta |
+| `016_public_stage_consent` | etap widoczny publicznie tylko za zgodą Foundera |
+| `017_join_as_member` | przyjęcie zaproszenia tworzy członkostwo zawsze jako Member |
+| `018_notifications_realtime` | powiadomienia na żywo — tabela w publikacji `supabase_realtime` |
+| `019_chat_identity_and_realtime` | widok `contact_profiles` + wiadomości na żywo |
+| `020_storage_cleanup` | pliki znikają razem z etapem, startupem i kontem |
+
+**Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
+powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
+taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
+`migrations/002`…`020`. Zaczęcie od `002` kończy się błędem „relation does not
+exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
+kolejności: [supabase/README.md](supabase/README.md).
 
 Pomocnicze: `DIAGNOSTYKA.sql` (co faktycznie wjechało), `BACKUP_export.sql`
-(zrzut danych bez `pg_dump`), `ROLLBACK_003_007.sql`.
+(zrzut danych bez `pg_dump`), `CLEANUP_puste_etapy.sql`, `ROLLBACK_003_007.sql`.
+`profile_social.sql` w katalogu `supabase/` jest **wycofany** — zastąpiła go
+migracja 002; ma rekurencję w politykach RLS i nie wolno go odpalać.
 
 **Zasada:** każda zmiana schematu to **nowy numerowany plik**, nigdy edycja
 odpalonego. Wyjątek: pliki jeszcze nieodpalone u nikogo.

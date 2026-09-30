@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { EyeOff, Settings } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getPublicProfile } from "@/lib/social";
-import { PersonCover } from "@/components/social/person-cover";
+import { PersonPreviewCard } from "@/components/social/person-preview";
 import { ProfileNudge } from "@/components/social/profile-nudge";
 import { scoreProfile } from "@/lib/profile-completeness";
 import { SocialPreferencesForm } from "@/components/social/social-preferences-form";
@@ -95,15 +95,14 @@ export default async function MyPublicProfilePage() {
   });
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <div className="page-wide">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
             Mój profil publiczny
           </h1>
           <p className="mt-1 max-w-2xl text-[14px] leading-relaxed text-[var(--text-subtle)]">
-            Tak wyglądasz dla osób, które Cię jeszcze nie znają. Zdjęcie, imię i
-            headline zmieniasz w ustawieniach profilu.
+            Tak wyglądasz dla osób, które Cię jeszcze nie znają.
           </p>
         </div>
         <Button href="/app/settings/profile" variant="secondary">
@@ -112,42 +111,45 @@ export default async function MyPublicProfilePage() {
         </Button>
       </header>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
-        <div>
-          <p className="mb-2.5 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-faint)]">
-            Tak widzą Cię w Odkrywaj
+      {/* Podgląd na całą szerokość, ustawienia POD nim.
+          Wcześniej karta stała w wąskiej kolumnie obok formularza i była
+          mniejsza od rzeczy, które ją opisują — a to ona jest tu tematem.
+          Teraz jest pierwsza i pełnowymiarowa: dokładnie taki obiekt, jaki
+          zobaczą obcy, razem z prawą kolumną. */}
+      <section className="mt-6">
+        <p className="mb-2.5 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+          Tak widzą Cię w Odkrywaj
+        </p>
+        <PersonPreviewCard person={preview} />
+
+        {hidden ? (
+          <p className="mt-3 flex items-start gap-2 rounded-xl border border-[var(--warning)]/25 bg-[var(--warning)]/8 px-4 py-3 text-[12.5px] leading-relaxed text-[var(--warning)]">
+            <EyeOff className="mt-0.5 size-4 shrink-0" />
+            <span>
+              Ta karta nie pojawia się teraz w Odkrywaj — masz wyłączoną
+              widoczność. Włącz ją niżej, gdy uznasz, że jest gotowa.
+            </span>
           </p>
-          <PersonCover person={preview} />
+        ) : null}
+      </section>
 
-          {hidden ? (
-            <p className="mt-3 flex items-start gap-2 rounded-xl border border-[var(--warning)]/25 bg-[var(--warning)]/8 px-4 py-3 text-[12.5px] leading-relaxed text-[var(--warning)]">
-              <EyeOff className="mt-0.5 size-4 shrink-0" />
-              <span>
-                Ta karta nie pojawia się teraz w Odkrywaj — masz wyłączoną
-                widoczność. Włącz ją po prawej, gdy będziesz gotowy.
-              </span>
-            </p>
-          ) : null}
-        </div>
+      <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+        <ProfileNudge
+          score={completeness.score}
+          missing={completeness.missing}
+          variant="panel"
+        />
 
-        <div className="flex flex-col gap-5">
-          <ProfileNudge
-            score={completeness.score}
-            missing={completeness.missing}
-            variant="panel"
-          />
-
-          <Card>
-            <CardBody className="pt-6">
-              <SocialPreferencesForm
-                lookingFor={profile?.looking_for ?? null}
-                location={profile?.location ?? ""}
-                weeklyHours={profile?.weekly_hours ?? null}
-                isDiscoverable={profile?.is_discoverable ?? true}
-              />
-            </CardBody>
-          </Card>
-        </div>
+        <Card>
+          <CardBody className="pt-6">
+            <SocialPreferencesForm
+              lookingFor={profile?.looking_for ?? null}
+              location={profile?.location ?? ""}
+              weeklyHours={profile?.weekly_hours ?? null}
+              isDiscoverable={profile?.is_discoverable ?? true}
+            />
+          </CardBody>
+        </Card>
       </div>
     </div>
   );

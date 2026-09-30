@@ -6,8 +6,8 @@ export default function Page() {
   return (
     <ComingSoon
       title="Taski"
-      description="Zadania operacyjne z jednym właścicielem, deadlinem i priorytetem — obok Subpointów zasilają Next Actions."
-      step={10}
+      description="Drobna praca do wykonania: kto ma to zrobić, do kiedy i co jest pilne. Zadania trafiają potem na listę „Co teraz” na dashboardzie."
+      unlocksAt="razem z trackerem w Execution Stage"
     />
   );
 }

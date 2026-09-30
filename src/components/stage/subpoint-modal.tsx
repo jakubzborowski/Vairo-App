@@ -129,7 +129,7 @@ export function SubpointModal({
         aria-label={subpoint.title}
         tabIndex={-1}
         onKeyDown={onDialogKeyDown}
-        className="relative my-auto w-full max-w-[680px] rounded-2xl border border-white/10 bg-[var(--surface)] shadow-[0_24px_80px_rgba(0,0,0,.7)] outline-none"
+        className="relative my-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-white/10 bg-[var(--surface)] lift-3 edge-accent outline-none"
       >
         <header className="flex items-start justify-between gap-4 border-b border-white/[0.07] px-6 py-5">
           <div className="min-w-0">

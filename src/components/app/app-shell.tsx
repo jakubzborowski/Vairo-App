@@ -8,12 +8,8 @@ import { ChevronDown, LogOut, Menu } from "lucide-react";
 import { signOut } from "@/app/app/actions";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import {
-  footerNav,
-  isActivePath,
-  navGroups,
-  type NavItem,
-} from "./nav-config";
+import { footerNav, isActivePath, navGroups, type NavItem } from "./nav-config";
+import { AppBackdrop } from "./app-backdrop";
 import { NavRow } from "./nav-item";
 import { TeamSwitcher, type TeamSummary } from "./team-switcher";
 
@@ -40,6 +36,8 @@ type AppShellProps = {
   user: AppUser;
   teams: TeamSummary[];
   activeTeamId: string | null;
+  /** Czy w aktywnym teamie user jest Founderem albo Adminem. */
+  canManageActiveTeam: boolean;
   /**
    * Liczniki przy pozycjach nawigacji. Zawsze prawdziwe dane z bazy —
    * licznik, który kłamie, jest gorszy niż brak licznika.
@@ -52,11 +50,21 @@ export function AppShell({
   user,
   teams,
   activeTeamId,
+  canManageActiveTeam,
   badges,
   children,
 }: AppShellProps) {
   const pathname = usePathname();
   const hasTeam = teams.length > 0;
+  // Nagłówek grupy nosi NAZWĘ startupu, nie słowo „team".
+  //
+  // Vairo pozwala należeć do trzech zespołów naraz, a cały workspace — etapy,
+  // skład, otwarte role, odpowiedzi — jest za każdym razem inny. Napis
+  // „Twój team" nad menu sugerował, że jest jeden i że to po prostu sekcja
+  // aplikacji. Nazwa startupu mówi wprost: **to, co widzisz niżej, dotyczy
+  // TEGO projektu**, a przełącznik nad nim zmienia wszystko naraz.
+  const activeTeamName =
+    teams.find((team) => team.id === activeTeamId)?.name ?? teams[0]?.name ?? null;
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Stan rozwinięcia grupy Social przeżywa przeładowanie strony.
@@ -105,7 +113,7 @@ export function AppShell({
         aria-label="Vairo — dashboard"
       >
         <Image
-          src="/brand/logo-blob.png"
+          src="/brand/logo-mark.png"
           alt=""
           width={28}
           height={28}
@@ -133,7 +141,7 @@ export function AppShell({
                   type="button"
                   onClick={toggleSocial}
                   aria-expanded={socialOpen}
-                  className="mb-1 inline-flex w-full items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-faint)] transition-colors hover:text-[var(--text-subtle)]"
+                  className="mb-1 inline-flex w-full items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)] transition-colors hover:text-white"
                 >
                   {group.label}
                   <ChevronDown
@@ -145,14 +153,18 @@ export function AppShell({
                   />
                 </button>
               ) : (
-                <p className="mb-1 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-faint)]">
-                  {group.label}
+                <p className="mb-1 truncate px-2.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+                  {group.id === "team" && activeTeamName
+                    ? activeTeamName
+                    : group.label}
                 </p>
               )}
 
               {collapsed ? null : (
                 <ul className="flex flex-col gap-0.5">
-                  {group.items.map(renderItem)}
+                  {group.items
+                    .filter((item) => !item.requiresManage || canManageActiveTeam)
+                    .map(renderItem)}
                 </ul>
               )}
             </div>
@@ -191,8 +203,13 @@ export function AppShell({
   );
 
   return (
-    <div className="flex min-h-full flex-1 bg-[var(--bg)] text-white">
-      <aside className="sticky top-0 hidden h-svh w-[248px] shrink-0 border-r border-white/[0.06] bg-[var(--sidebar)] lg:block">
+    <div className="relative flex min-h-full flex-1 bg-[var(--bg)] text-white">
+      <AppBackdrop />
+
+      {/* Sidebar jest lekko przezroczysty, żeby światło z tła pod nim
+          przechodziło — bez tego byłby płaskim czarnym pasem doklejonym
+          do reszty. */}
+      <aside className="sticky top-0 z-10 hidden h-svh w-[248px] shrink-0 border-r border-white/[0.06] bg-[var(--sidebar)]/80 backdrop-blur-xl lg:block">
         {sidebar}
       </aside>
 
@@ -214,7 +231,7 @@ export function AppShell({
         </div>
       ) : null}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-white/[0.06] bg-[var(--bg)]/85 px-4 py-3 backdrop-blur lg:hidden">
           <button
             type="button"
@@ -226,7 +243,7 @@ export function AppShell({
           </button>
           <Link href="/app" className="inline-flex items-center gap-2">
             <Image
-              src="/brand/logo-blob.png"
+              src="/brand/logo-mark.png"
               alt=""
               width={24}
               height={24}

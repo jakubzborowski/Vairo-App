@@ -1,10 +1,9 @@
 import { redirect } from "next/navigation";
-import { Mail, ShieldCheck, Users } from "lucide-react";
+import { Mail, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getUserStartups } from "@/lib/startup";
 import { DeleteAccountButton } from "@/components/app/delete-account-button";
 import { SettingsTabs } from "@/components/app/settings-tabs";
-import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { MAX_STARTUPS, ROLE_LABELS } from "@/types/startup";
 
@@ -52,7 +51,7 @@ export default async function AccountSettingsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="page">
       <SettingsTabs active="account" />
 
       <header>
@@ -66,7 +65,7 @@ export default async function AccountSettingsPage() {
 
       <Card className="mt-6">
         <CardBody className="pt-5">
-          <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-faint)]">
+          <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
             <Mail className="size-3.5" />
             Logowanie
           </p>
@@ -75,18 +74,12 @@ export default async function AccountSettingsPage() {
             Zmiana adresu i hasła odbywa się przez e-mail od Vairo — ten ekran
             jeszcze tego nie obsługuje.
           </p>
-          <div className="mt-4">
-            <Button href="/app/settings/profile" variant="secondary" size="sm">
-              <ShieldCheck className="size-4" />
-              Przejdź do profilu
-            </Button>
-          </div>
         </CardBody>
       </Card>
 
       <Card className="mt-4">
         <CardBody className="pt-5">
-          <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-faint)]">
+          <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
             <Users className="size-3.5" />
             Teamy
           </p>
