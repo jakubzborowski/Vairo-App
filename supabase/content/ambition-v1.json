@@ -1,0 +1,185 @@
+{
+  "key": "ambition",
+  "version": 1,
+  "position": 1,
+  "title": "Ambition Stage",
+  "subtitle": "Twój pierwszy pomysł",
+  "intro": "Co ostatnio sprawiło, że pomyślałeś: „Przecież musi być łatwiejszy sposób”? Za chwilę wybierzesz jedną taką sytuację, wymyślisz sposób jej poprawienia i nadasz swojemu projektowi nazwę. Orientacyjny czas: 10–15 minut. Wystarczą krótkie odpowiedzi. Wszystko możesz później zmienić.",
+  "finish_label": "Sprawdzam mój pomysł",
+  "categories": [
+    {
+      "key": "general",
+      "title": "Twój pierwszy pomysł",
+      "always_active": true,
+      "points": [
+        {
+          "key": "pick-change",
+          "title": "Wybierz coś, co chcesz zmienić",
+          "duration_hint": "Około 3 minut",
+          "guide_body": "Nie szukaj przełomowego pomysłu. Szukaj sytuacji, która kogoś realnie irytuje — najlepiej takiej, którą znasz z własnego doświadczenia. Im konkretniejsza sytuacja, tym łatwiej będzie ją później sprawdzić. „Ludzie tracą czas” jest za szerokie. „Właściciel kawiarni codziennie wyrzuca niesprzedane kanapki” to coś, o co da się zapytać konkretnej osoby.",
+          "subpoints": [
+            {
+              "key": "catch-problem",
+              "title": "Złap problem",
+              "fields": [
+                {
+                  "key": "problem",
+                  "kind": "short_text",
+                  "question": "Co ostatnio było dla ciebie lub kogoś, kogo znasz, trudne, drogie, irytujące albo zabierało za dużo czasu? Wybierz jedną sytuację.",
+                  "help": "Przypomnij sobie ostatni tydzień: pracę, naukę, zakupy, hobby lub obowiązki. Co trzeba było poprawiać, długo załatwiać albo robić kilka razy?",
+                  "example": "W kawiarni, w której pracuję, pod koniec dnia zostają niesprzedane kanapki.",
+                  "config": { "min": 15, "max": 300 }
+                }
+              ]
+            },
+            {
+              "key": "who-to-help",
+              "title": "Wskaż, komu chcesz pomóc",
+              "fields": [
+                {
+                  "key": "audience",
+                  "kind": "short_text",
+                  "question": "Kogo dotyczy wybrana trudność?",
+                  "help": "Wskaż konkretnych ludzi lub rodzaj firmy. Możesz zacząć od siebie.",
+                  "example": "Właściciele małych kawiarni przygotowujących jedzenie na miejscu.",
+                  "config": { "min": 5, "max": 200 }
+                }
+              ]
+            },
+            {
+              "key": "working-name",
+              "title": "Nadaj projektowi roboczą nazwę",
+              "is_optional": true,
+              "fields": [
+                {
+                  "key": "working_name",
+                  "kind": "short_text",
+                  "question": "Jak chcesz go na razie nazywać?",
+                  "help": "Wystarczy zwykłe hasło, np. „Ostatnia kanapka”. Jeśli nic nie przychodzi ci do głowy, zostaw „Mój pierwszy projekt”.",
+                  "is_required": false,
+                  "config": { "max": 80, "syncs_startup_name": true }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "find-way",
+          "title": "Wymyśl sposób pomocy",
+          "duration_hint": "Około 4 minut",
+          "guide_body": "Rozwiązaniem nie musi być aplikacja. Może nim być usługa, lepsza organizacja pracy, przedmiot albo po prostu zrobienie czegoś za kogoś. Na tym etapie nie oceniaj, czy pomysł jest dobry — zapisz dwa i wybierz ten, który łatwiej sprawdzić. Drugi zachowaj; wrócisz do niego, jeśli pierwszy się nie obroni.",
+          "subpoints": [
+            {
+              "key": "two-ways",
+              "title": "Znajdź dwa sposoby",
+              "fields": [
+                {
+                  "key": "ideas",
+                  "kind": "list_short",
+                  "question": "Jak można ułatwić tę sytuację? Zapisz dwa różne pomysły.",
+                  "help": "Pomyśl, co można usunąć, uprościć, przygotować wcześniej lub zrobić za kogoś. Rozwiązaniem może być przedmiot, usługa, program albo lepszy sposób organizacji.",
+                  "example": "Zbieranie zamówień z pobliskich biur przed przygotowaniem kanapek · Sprzedaż pozostałych kanapek w zestawach pod koniec dnia",
+                  "config": { "min_items": 2, "max_items": 5, "item_max": 200 }
+                }
+              ]
+            },
+            {
+              "key": "pick-direction",
+              "title": "Wybierz pierwszy kierunek",
+              "fields": [
+                {
+                  "key": "chosen_idea",
+                  "kind": "short_text",
+                  "question": "Który z tych sposobów chcesz sprawdzić jako pierwszy?",
+                  "help": "Wybierz ten, którego działanie potrafisz sobie wyobrazić i o którym najłatwiej będzie ci dowiedzieć się więcej. Pozostały pomysł zachowaj.",
+                  "config": { "min": 5, "max": 300 }
+                }
+              ]
+            },
+            {
+              "key": "name-benefit",
+              "title": "Nazwij korzyść",
+              "fields": [
+                {
+                  "key": "benefit",
+                  "kind": "short_text",
+                  "question": "Co stanie się łatwiejsze lub lepsze dla tej osoby albo firmy?",
+                  "help": "Opisz zmianę, którą odbiorca zauważy. Na tym etapie nie musisz podawać liczb.",
+                  "example": "Właściciel sprzeda więcej przygotowanego jedzenia i mniej go wyrzuci.",
+                  "config": { "min": 10, "max": 300 }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foothold",
+          "title": "Znajdź swój punkt zaczepienia",
+          "duration_hint": "Około 2 minut",
+          "guide_body": "Przewagą na starcie nie jest doświadczenie w prowadzeniu firmy, tylko dostęp: znasz kogoś, pracujesz w tej branży, umiesz coś zrobić samodzielnie. To skraca drogę do pierwszej rozmowy z odbiorcą. Przeszkodę wskaż uczciwie — jeśli jej nie widzisz, wpisz „do sprawdzenia” i wróć do tego później.",
+          "subpoints": [
+            {
+              "key": "use-what-you-have",
+              "title": "Wykorzystaj to, co już masz",
+              "fields": [
+                {
+                  "key": "assets",
+                  "kind": "list_short",
+                  "question": "Co pomoże ci zacząć sprawdzać ten pomysł? Zapisz maksymalnie trzy rzeczy.",
+                  "help": "Może to być znajomość problemu, umiejętność, dostęp do miejsca albo osoba, z którą możesz porozmawiać. Nie potrzebujesz doświadczenia w prowadzeniu firmy.",
+                  "example": "Pracuję w kawiarni · Znam jej właściciela · Umiem przygotować prosty formularz zamówień",
+                  "config": { "min_items": 1, "max_items": 3, "item_max": 200 }
+                }
+              ]
+            },
+            {
+              "key": "biggest-obstacle",
+              "title": "Zauważ największą przeszkodę",
+              "fields": [
+                {
+                  "key": "obstacle",
+                  "kind": "short_text",
+                  "question": "Co najbardziej utrudnia ci zrobienie pierwszego kroku?",
+                  "help": "Wskaż jedną rzecz, np. brak kontaktu do odbiorców, mało czasu lub niewiedzę, jak działa dana branża. Jeśli jeszcze nie widzisz przeszkody, wpisz „do sprawdzenia”.",
+                  "config": { "min": 3, "max": 300 }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "save-idea",
+          "title": "Zapisz swój pomysł",
+          "duration_hint": "Około 1 minuty",
+          "guide_body": "To podsumowanie wszystkiego, co przed chwilą zapisałeś. Przeczytaj je jak jedną całość i sprawdź, czy oddaje to, co chcesz zrobić. Popraw tylko te odpowiedzi, które tego wymagają — reszta zostaje bez zmian. Po zatwierdzeniu przechodzisz do sprawdzania, czy osoby, którym chcesz pomóc, też potrzebują takiej zmiany.",
+          "subpoints": [
+            {
+              "key": "project-outline",
+              "title": "Przeczytaj zarys projektu",
+              "fields": [
+                {
+                  "key": "outline",
+                  "kind": "summary",
+                  "question": "Sprawdź, czy podsumowanie oddaje to, co chcesz zrobić.",
+                  "help": "Możesz poprawić każdą odpowiedź na miejscu. Zmiany zapisują się w tych samych polach, co wcześniej.",
+                  "config": {
+                    "confirm_label": "Zatwierdzam zarys",
+                    "sources": [
+                      { "field": "pick-change.working-name.working_name", "label": "Nazwa" },
+                      { "field": "pick-change.who-to-help.audience", "label": "Chcę pomóc" },
+                      { "field": "pick-change.catch-problem.problem", "label": "Problem, którym się zajmę" },
+                      { "field": "find-way.pick-direction.chosen_idea", "label": "Mój pomysł na rozwiązanie" },
+                      { "field": "find-way.name-benefit.benefit", "label": "Korzyść dla odbiorcy" },
+                      { "field": "foothold.use-what-you-have.assets", "label": "Mam na początek" },
+                      { "field": "foothold.biggest-obstacle.obstacle", "label": "Do wyjaśnienia" }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

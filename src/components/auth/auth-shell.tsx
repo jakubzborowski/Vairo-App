@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { SplashScreen } from "@/components/auth/splash-screen";
@@ -13,31 +13,35 @@ type AuthShellProps = {
   showSplash?: boolean;
 };
 
-export function AuthShell({ children, showSplash = true }: AuthShellProps) {
-  const [phase, setPhase] = useState<"boot" | "splash" | "ready">(
-    showSplash ? "boot" : "ready"
-  );
+/** sessionStorage jest zewnetrznym zrodlem — czytamy je przez subskrypcje,
+ *  zeby serwer i klient mialy jawnie rozne snapshoty zamiast setState w efekcie. */
+const subscribeNoop = () => () => {};
 
-  useEffect(() => {
-    if (!showSplash) return;
-    try {
-      if (sessionStorage.getItem(SPLASH_KEY) === "1") {
-        setPhase("ready");
-        return;
-      }
-    } catch {
-      // sessionStorage may be unavailable
-    }
-    setPhase("splash");
-  }, [showSplash]);
+function readSplashSeen() {
+  try {
+    return sessionStorage.getItem(SPLASH_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function AuthShell({ children, showSplash = true }: AuthShellProps) {
+  const splashSeen = useSyncExternalStore(
+    subscribeNoop,
+    readSplashSeen,
+    () => false
+  );
+  const [dismissed, setDismissed] = useState(false);
+  const phase: "splash" | "ready" =
+    showSplash && !splashSeen && !dismissed ? "splash" : "ready";
 
   const finishSplash = useCallback(() => {
     try {
       sessionStorage.setItem(SPLASH_KEY, "1");
     } catch {
-      // ignore
+      // prywatne okno — splash pokaze sie ponownie, nic sie nie psuje
     }
-    setPhase("ready");
+    setDismissed(true);
   }, []);
 
   return (
@@ -75,7 +79,7 @@ export function AuthShell({ children, showSplash = true }: AuthShellProps) {
         <header className="relative z-10 mx-auto flex w-full max-w-[440px] items-center px-5 pt-8 md:px-0 md:pt-10">
           <Link href="/" className="inline-flex items-center gap-2">
             <Image
-              src="/brand/logo-blob.png"
+              src="/brand/logo-mark.png"
               alt=""
               width={28}
               height={28}

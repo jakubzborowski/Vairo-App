@@ -1,58 +1,143 @@
-import { Button as ButtonPrimitive } from "@base-ui/react/button"
-import { cva, type VariantProps } from "class-variance-authority"
+import Link from "next/link";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
+/**
+ * Jedyny przycisk w aplikacji.
+ *
+ * Zasady, które wymusza za wszystkich:
+ * - widoczny focus ring (bez niego aplikacja jest nieużywalna z klawiatury),
+ * - `loading` blokuje podwójne kliknięcie i pokazuje spinner w środku,
+ * - `disabled` zawsze z `cursor-not-allowed` — user widzi, że nie zadziała.
+ *
+ * Wariant `primary` używa --vairo-strong, bo biały tekst na pełnym #ee5f1c
+ * ma kontrast ~3.3:1. Na przyciemnionym tle wychodzi powyżej progu.
+ */
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  [
+    "relative inline-flex shrink-0 items-center justify-center gap-2",
+    "font-medium whitespace-nowrap select-none",
+    "transition-[background-color,border-color,color,transform] duration-150",
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--vairo)]",
+    "active:scale-[.98]",
+    "disabled:pointer-events-none disabled:opacity-50",
+    "aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0",
+  ].join(" "),
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
-        outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+        primary:
+          "bg-[var(--vairo-strong)] text-white hover:bg-[var(--vairo)] " +
+          "shadow-[0_2px_12px_rgba(238,95,28,.28)] hover:shadow-[0_6px_22px_rgba(238,95,28,.38)]",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "border border-white/12 bg-[var(--surface-2)] text-[var(--text-muted)] hover:border-white/20 hover:bg-[var(--surface-3)] hover:text-white",
         ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
-        destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
+          "text-[var(--text-subtle)] hover:bg-white/[0.06] hover:text-white",
+        danger:
+          "border border-[var(--danger)]/30 bg-[var(--danger)]/10 text-[var(--danger)] hover:bg-[var(--danger)]/20",
       },
+      // Na telefonie każdy przycisk ma co najmniej 44 px wysokości (minimum
+      // dotykowe z wytycznych Apple i Material). Na większym ekranie wraca do
+      // zwartych rozmiarów, bo tam celuje się kursorem, nie palcem.
       size: {
-        default:
-          "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        icon: "size-8",
-        "icon-xs":
-          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm":
-          "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
-        "icon-lg": "size-9",
+        sm: "h-9 sm:h-8 rounded-[10px] px-3 text-[13px] [&_svg]:size-3.5",
+        md: "h-11 sm:h-10 rounded-xl px-4 text-[14px] [&_svg]:size-4",
+        lg: "h-12 rounded-xl px-6 text-[15px] [&_svg]:size-[18px]",
+        icon: "size-11 sm:size-10 rounded-xl [&_svg]:size-4",
+        "icon-sm": "size-9 sm:size-8 rounded-[10px] [&_svg]:size-3.5",
       },
+      // `w-full` musi wygrac z bazowym `shrink-0` — inaczej dwa przyciski
+      // `block` w jednym rzedzie flex zajmuja 2 x 100% i wychodza poza
+      // kontener, bo nie wolno im sie sciesnic.
+      block: { true: "w-full shrink min-w-0", false: "" },
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
+    defaultVariants: { variant: "primary", size: "md", block: false },
   }
-)
+);
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+type ButtonBaseProps = VariantProps<typeof buttonVariants> & {
+  loading?: boolean;
+  className?: string;
+  children?: React.ReactNode;
+};
+
+type ButtonProps = ButtonBaseProps &
+  Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "color"> & {
+    href?: never;
+  };
+
+type ButtonLinkProps = ButtonBaseProps &
+  Omit<React.ComponentPropsWithoutRef<typeof Link>, "color"> & {
+    href: string;
+  };
+
+export function Button(props: ButtonProps | ButtonLinkProps) {
+  const {
+    className,
+    variant,
+    size,
+    block,
+    loading,
+    children,
+    ...rest
+  } = props as ButtonBaseProps & Record<string, unknown>;
+
+  const classes = cn(buttonVariants({ variant, size, block }), className);
+
+  const content = (
+    <>
+      {loading ? (
+        <Loader2
+          className="absolute size-4 animate-spin"
+          aria-hidden="true"
+        />
+      ) : null}
+      <span
+        className={cn(
+          "inline-flex items-center gap-2",
+          loading && "invisible"
+        )}
+      >
+        {children}
+      </span>
+    </>
+  );
+
+  if (typeof rest.href === "string") {
+    const { href, ...linkRest } = rest as { href: string } & Record<
+      string,
+      unknown
+    >;
+    return (
+      <Link
+        href={href}
+        className={classes}
+        {...(linkRest as Omit<React.ComponentPropsWithoutRef<typeof Link>, "href">)}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  const { disabled, type, ...buttonRest } = rest as {
+    disabled?: boolean;
+    type?: "button" | "submit" | "reset";
+  } & Record<string, unknown>;
+
   return (
-    <ButtonPrimitive
-      data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
+    <button
+      type={type ?? "button"}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      className={classes}
+      {...(buttonRest as React.ButtonHTMLAttributes<HTMLButtonElement>)}
+    >
+      {content}
+    </button>
+  );
 }
 
-export { Button, buttonVariants }
+export { buttonVariants };

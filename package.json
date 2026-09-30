@@ -1,12 +1,14 @@
 {
-  "name": "vairo-landing",
+  "name": "vairo-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "node --use-system-ca ./node_modules/next/dist/bin/next dev",
-    "build": "node --use-system-ca ./node_modules/next/dist/bin/next build",
-    "start": "node --use-system-ca ./node_modules/next/dist/bin/next start",
-    "lint": "eslint"
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "content:build": "node scripts/build-content.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -31,5 +33,6 @@
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "packageManager": "npm@11.6.1"
 }

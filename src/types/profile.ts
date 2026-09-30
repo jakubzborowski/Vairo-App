@@ -1,10 +1,31 @@
 /**
  * DB shapes for mandatory onboarding:
  * name → idea → tags → done (no skip)
- * + social profile: skills, avatar, weekly focus, teams
+ * + profil społeczny: skille, avatar, weekly focus, widoczność
  */
 
-export type OnboardingStep = "name" | "idea" | "tags" | "done";
+/**
+ * Limit zdjęcia profilowego. Musi zgadzać się z `file_size_limit`
+ * bucketu `avatars` (migracje 002 / 002b) — inaczej Storage odrzuci
+ * plik, który aplikacja wcześniej przepuściła.
+ */
+export const AVATAR_MAX_MB = 15;
+export const AVATAR_MAX_BYTES = AVATAR_MAX_MB * 1024 * 1024;
+
+export type OnboardingStep =
+  | "path"
+  | "name"
+  | "idea"
+  | "categories"
+  | "done"
+  /** @deprecated stary krok, zostaje dla kont sprzed migracji 003 */
+  | "tags";
+
+/**
+ * Ścieżka wejścia wybierana przy rejestracji.
+ * Różnicuje wyłącznie onboarding — po jego zakończeniu konta są identyczne.
+ */
+export type OnboardingPath = "joiner" | "founder_idea" | "founder_no_idea";
 
 export type Profile = {
   id: string;
@@ -14,6 +35,9 @@ export type Profile = {
   avatar_url: string | null;
   headline: string | null;
   weekly_focus: string | null;
+  weekly_focus_updated_at: string | null;
+  is_discoverable: boolean;
+  onboarding_path: OnboardingPath | null;
   onboarding_step: OnboardingStep;
   onboarding_completed_at: string | null;
   created_at: string;
@@ -50,21 +74,9 @@ export type ProfileSkill = {
   created_at: string;
 };
 
-export type Team = {
-  id: string;
-  name: string;
-  description: string | null;
-  owner_id: string;
-  created_at: string;
-  updated_at: string;
-};
-
-export type TeamMember = {
-  team_id: string;
-  profile_id: string;
-  role: "owner" | "member";
-  created_at: string;
-};
+// Typy startupu (obecnie w kodzie: "team") dochodzą razem z migracją 003.
+// Świadomie nie zostawiamy tu Team/TeamMember, żeby nikt nie zaczął budować
+// na modelu, który za chwilę zmienia nazwę i kształt.
 
 export type ProfileOnboardingStatus = {
   id: string;
@@ -83,17 +95,34 @@ export function isOnboardingComplete(
   return Boolean(profile?.onboarding_completed_at);
 }
 
-/** Next route for an incomplete profile (no skip). */
+/** Dokąd trafia user z nieukończonym onboardingiem. */
 export function onboardingPathForStep(step: OnboardingStep | null | undefined) {
   switch (step) {
+    case "name":
+      return "/onboarding/name";
     case "idea":
       return "/onboarding/idea";
+    case "categories":
     case "tags":
-      return "/onboarding/tags";
+      return "/onboarding/categories";
     case "done":
       return "/app";
-    case "name":
+    case "path":
     default:
-      return "/onboarding/name";
+      return "/onboarding/path";
+  }
+}
+
+/** Kroki ścieżki — używane przez wskaźnik postępu „2 z 4". */
+export function stepsForPath(path: OnboardingPath | null | undefined): OnboardingStep[] {
+  switch (path) {
+    case "founder_idea":
+      // categories to dwa ekrany kreatora: kategorie walidacyjne i branża
+      return ["path", "name", "idea", "categories", "categories"];
+    case "founder_no_idea":
+    case "joiner":
+      return ["path", "name"];
+    default:
+      return ["path"];
   }
 }

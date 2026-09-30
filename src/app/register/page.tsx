@@ -7,10 +7,17 @@ export const metadata: Metadata = {
   description: "Załóż konto Vairo magic linkiem, Google lub Apple.",
 };
 
-export default function RegisterPage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function RegisterPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const error = typeof params.error === "string" ? params.error : null;
+
   return (
     <AuthShell>
-      <AuthForm mode="register" />
+      <AuthForm mode="register" initialErrorCode={error} />
     </AuthShell>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { AppleIcon, GoogleIcon } from "@/components/auth/provider-icons";
 import { createClient } from "@/lib/supabase/client";
@@ -11,6 +11,8 @@ type AuthMode = "login" | "register";
 
 type AuthFormProps = {
   mode: AuthMode;
+  /** Kod bledu z ?error=... — czytany na serwerze, zeby nie robic tego w efekcie. */
+  initialErrorCode?: string | null;
 };
 
 function getAuthRedirectTo() {
@@ -22,23 +24,17 @@ function getAuthRedirectTo() {
   return url.toString();
 }
 
-export function AuthForm({ mode }: AuthFormProps) {
+export function AuthForm({ mode, initialErrorCode = null }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
-    "idle"
+    initialErrorCode ? "error" : "idle"
   );
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    initialErrorCode ? authErrorMessage(initialErrorCode) : null
+  );
   const [providerPending, setProviderPending] = useState<
     "google" | "apple" | null
   >(null);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const error = params.get("error");
-    if (!error) return;
-    setStatus("error");
-    setErrorMessage(authErrorMessage(error));
-  }, []);
 
   const isLogin = mode === "login";
   const title = isLogin ? "Zaloguj się do Vairo" : "Dołącz do Vairo";
