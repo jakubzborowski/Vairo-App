@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getStartupRole, teamManageError } from "@/lib/permissions";
 import { clearActiveStartupIfMatches } from "@/lib/active-team";
 import { translateDbError } from "@/lib/db-errors";
+import { purgeStartupFiles } from "@/lib/storage-cleanup";
 import {
   canTransferOwnership,
   isLastFounderError,
@@ -660,6 +661,12 @@ export async function deleteStartup(input: {
   if (input.confirmName.trim() !== startup.name.trim()) {
     return { error: "Wpisana nazwa nie zgadza się z nazwą startupu." };
   }
+
+  // Pliki PRZED wierszem. Póki startup istnieje, Founder jest jego członkiem
+  // i RLS na bucketach go przepuszcza; po usunięciu wiersza nie ma już prawa
+  // dotknąć własnych załączników i zostałyby sierotami. Błąd tutaj nie
+  // przerywa usuwania — szczegóły w `storage-cleanup.ts`.
+  await purgeStartupFiles(supabase, input.startupId);
 
   const { error } = await supabase
     .from("startups")

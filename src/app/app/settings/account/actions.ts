@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { purgeOwnAccountFiles } from "@/lib/storage-cleanup";
 import { ACTIVE_TEAM_COOKIE } from "@/lib/active-team";
 
 type Result = { error: string | null };
@@ -32,6 +33,28 @@ export async function deleteOwnAccount(confirmEmail: string): Promise<Result> {
   if (confirmEmail.trim().toLowerCase() !== expected) {
     return { error: "Wpisany adres nie zgadza się z adresem tego konta." };
   }
+
+  // Pliki PRZED wywołaniem RPC — po nim nie ma już ani konta, ani sesji, ani
+  // praw do własnych bajtów. Kasujemy dokładnie to, co i tak zniknie razem
+  // z kontem: avatar i startupy, w których ta osoba jest jedynym Founderem.
+  const { data: founderRows } = await supabase
+    .from("startup_members")
+    .select("startup_id")
+    .eq("profile_id", user.id)
+    .eq("role", "founder");
+
+  const soloFounderIds: string[] = [];
+  for (const row of founderRows ?? []) {
+    const startupId = row.startup_id as string;
+    const { count } = await supabase
+      .from("startup_members")
+      .select("profile_id", { count: "exact", head: true })
+      .eq("startup_id", startupId)
+      .eq("role", "founder");
+    if ((count ?? 0) <= 1) soloFounderIds.push(startupId);
+  }
+
+  await purgeOwnAccountFiles(supabase, user.id, soloFounderIds);
 
   const { error } = await supabase.rpc("delete_own_account");
 

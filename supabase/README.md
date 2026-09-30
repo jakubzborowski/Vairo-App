@@ -37,6 +37,7 @@ tabeli. Każdy plik jest idempotentny, więc ponowne odpalenie niczego nie psuje
 | 21 | `migrations/017_join_as_member.sql` | przyjęcie zaproszenia tworzy członkostwo zawsze jako Member |
 | 22 | `migrations/018_notifications_realtime.sql` | powiadomienia na żywo — tabela w publikacji `supabase_realtime` |
 | 23 | `migrations/019_chat_identity_and_realtime.sql` | widok `contact_profiles` (imię rozmówcy spoza teamu) + wiadomości na żywo |
+| 24 | `migrations/020_storage_cleanup.sql` | pliki znikają razem z etapem, startupem i kontem |
 
 ## Bucketów nie zakładamy ręcznie
 
