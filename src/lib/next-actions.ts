@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadStageTree, type StageProgramEntry } from "@/lib/stage";
+import { loadOpenWork } from "@/lib/goals";
 import { scoreProfile } from "@/lib/profile-completeness";
 import { canEditStageData, canManageTeam } from "@/types/startup";
 import type { StartupContext } from "@/types/startup";
@@ -94,6 +95,8 @@ export async function loadNextActions(
         })
       : null;
 
+  const openWork = await loadOpenWork(supabase, active.id, userId);
+
   const actions: NextAction[] = [];
 
   // 1. Rzeczy, na które czeka drugi człowiek.
@@ -157,6 +160,37 @@ export async function loadNextActions(
         });
       }
     }
+  }
+
+  const shownGoalIds = new Set<string>();
+  for (const goal of openWork.goals) {
+    if (actions.length >= MAX_ACTIONS) break;
+    shownGoalIds.add(goal.id);
+    const why =
+      goal.status === "awaiting_proof"
+        ? "Wynik jest, brakuje dowodu."
+        : goal.status === "blocked"
+          ? "Ten cel jest zablokowany."
+          : "To Twój najbliższy cel.";
+    actions.push({
+      key: `goal-${goal.id}`,
+      title: goal.title,
+      why,
+      href: `/app/goals?goal=${goal.id}`,
+      tone: goal.status === "blocked" ? "warning" : "neutral",
+    });
+  }
+
+  for (const task of openWork.tasks) {
+    if (actions.length >= MAX_ACTIONS) break;
+    if (shownGoalIds.has(task.goalId)) continue;
+    actions.push({
+      key: `task-${task.id}`,
+      title: task.title,
+      why: "Zadanie przypisane do Ciebie.",
+      href: `/app/tasks?task=${task.id}`,
+      tone: "neutral",
+    });
   }
 
   // 3. Profil publiczny. Dla kogoś bez teamu to jest jego jedyne narzędzie,

@@ -1,15 +1,15 @@
 # Vairo App
 
-Frontend Vairo (Next.js) — landing, auth (Google + magic link via Supabase) i przykładowy dashboard.
+Aplikacja Vairo (Next.js, Supabase, TypeScript). Workspace startupu, pięć etapów programu i warstwa Social.
 
-## Setup
+## Uruchomienie lokalnie
 
 ```bash
 npm install
 cp .env.example .env.local
 ```
 
-Uzupełnij `.env.local` wspólnymi wartościami projektu Supabase (ten sam backend dla całego zespołu):
+Uzupełnij `.env.local` wartościami wspólnego projektu Supabase. Nie commituj tego pliku.
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=...
@@ -21,29 +21,28 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 npm run dev
 ```
 
-Aplikacja: [http://localhost:3000](http://localhost:3000)
+Aplikacja: [http://localhost:3000](http://localhost:3000). Używaj `localhost`, nie `127.0.0.1` — inaczej OAuth i ciasteczka nie zejdą się z allowlistą Supabase.
 
-## Schemat profilu / onboarding
+```bash
+npm run typecheck
+npm run lint
+npm run build
+```
 
-Po rejestracji każdy user musi dokończyć profil (bez pomijania):
+## Migracje
 
-1. **Imię i nazwisko** → `profiles.full_name`
-2. **Opis pomysłu** → `profiles.idea_description` (wymagany, bez „pomiń”)
-3. **Tagi obszarów** → `tags` + `profile_tags` (≥1 wymagany)
+Pliki leżą w `supabase/migrations/`. Wklejasz je w **Supabase → SQL Editor** i odpalasz **po kolei, według numeru**. Każdy plik jest idempotentny: powtórne odpalenie nie dubluje danych.
 
-SQL: [`supabase/profiles.sql`](supabase/profiles.sql) — wklej w **Supabase → SQL Editor → Run**.
+Execution Stage (cele, zadania, dowody, warunki Milestones, Rozpiska) jest w `018_execution_goals.sql`. Odpal go po `017`.
 
-Kluczowe kolumny: `onboarding_step` (`name` → `idea` → `tags` → `done`), `onboarding_completed_at` (null = nieukończone). Widok `profile_onboarding_status` ułatwia gate w aplikacji.
+Tracker w menu (Cele, Taski, Rozpiska) pojawia się, gdy startup domknie Preparation decyzją „kontynuuj”. Wcześniejsze cele da się otworzyć wprost pod `/app/goals` — na przykład z podpunktu, który wymaga Goals. Ponowne otwarcie Preparation nie chowa trackera.
 
-## Profil społeczny
+Warunki liczby celów wjeżdżają z treści etapu. W JSON podpunktu:
 
-Po onboardingu: [`/app/profile`](http://localhost:3000/app/profile) — skille, avatar, weekly focus, tworzenie teamu.
+```json
+"goal_conditions": [
+  { "goal_type_id": "product_test", "min_count": 2, "proof_kind": "link" }
+]
+```
 
-SQL: [`supabase/profile_social.sql`](supabase/profile_social.sql) (odpal po `profiles.sql`).
-
-## Ważne dla zespołu
-
-- Używajcie **`http://localhost:3000`** (nie `127.0.0.1` / IP w LAN), żeby OAuth i cookies działały z allowlistą Supabase/Google.
-- **Nie commitujcie** `.env.local`, kluczy Resend ani Google Client Secret.
-- Auth (Google, SMTP/Resend, użytkownicy) jest w **jednym projekcie Supabase** — konfiguracja dashboardu jest wspólna.
-- Po zmianach schematu odpal ponownie `supabase/profiles.sql` na wspólnym projekcie.
+Potem `npm run content:build -- <plik>`. Typy są stałe: `custom`, `product_test`, `build_result`, `prototype`, `customer`, `research`. Cel liczy się do warunku tylko wtedy, gdy jest jawnie podpięty, ma ten typ, status Ukończony i dowód. Ukończenie zadań tego nie zastępuje.

@@ -16,6 +16,7 @@ import {
   type StartupRole,
   type ValidationCategory,
 } from "@/types/startup";
+import { loadSubpointGoalConditions } from "@/lib/goals";
 
 type RawField = {
   id: string;
@@ -129,6 +130,7 @@ export async function loadStageTree(
 ): Promise<StageTree | null> {
   type StageRow = {
     id: string;
+    startup_id: string;
     status: "in_progress" | "completed";
     last_subpoint_id: string | null;
     template_id: string;
@@ -144,7 +146,7 @@ export async function loadStageTree(
   const { data: stageRow } = await supabase
     .from("startup_stages")
     .select(
-      "id, status, last_subpoint_id, template_id, " +
+      "id, startup_id, status, last_subpoint_id, template_id, " +
         "stage_templates(key, title, subtitle, intro, finish_label)"
     )
     .eq("id", params.startupStageId)
@@ -154,6 +156,16 @@ export async function loadStageTree(
   if (!stage) return null;
 
   const template = stage.stage_templates;
+  const [goalConditions, { data: progressRows }] = await Promise.all([
+    loadSubpointGoalConditions(supabase, stage.startup_id, stage.id),
+    supabase
+      .from("stage_subpoint_progress")
+      .select("subpoint_id, is_complete")
+      .eq("startup_stage_id", stage.id),
+  ]);
+  const storedComplete = new Map(
+    (progressRows ?? []).map((row) => [row.subpoint_id as string, Boolean(row.is_complete)])
+  );
 
   const treeSelect = (withSkip: boolean) =>
     supabase
@@ -231,10 +243,23 @@ export async function loadStageTree(
           }));
 
           const skipped = matchesSkip(rawSubpoint.skip_when, answers);
-          const isComplete =
-            fields.filter((f) => f.isRequired).every((f) =>
-              fieldAnswered(f, answers[f.answerKey])
-            ) && fields.some((f) => f.isRequired);
+          const hasRequired = fields.some((f) => f.isRequired);
+          const fieldsOk = fields
+            .filter((f) => f.isRequired)
+            .every((f) => fieldAnswered(f, answers[f.answerKey]));
+          const conds = goalConditions.get(rawSubpoint.id) ?? [];
+          const goalsOk = conds.every((condition) => condition.done >= condition.minCount);
+          const liveComplete = skipped || ((hasRequired ? fieldsOk : true) && goalsOk);
+          // Zamknięty etap trzyma swój wynik. Późniejsza zmiana celu
+          // nie odbiera mu odhaczenia zapisanego przy zamknięciu.
+          const frozen =
+            stage.status === "completed" && storedComplete.get(rawSubpoint.id) === true;
+          const shownConditions = frozen
+            ? conds.map((condition) => ({
+                ...condition,
+                done: Math.max(condition.done, condition.minCount),
+              }))
+            : conds;
 
           const subpoint: StageSubpoint = {
             id: rawSubpoint.id,
@@ -244,10 +269,11 @@ export async function loadStageTree(
             isOptional: rawSubpoint.is_optional,
             sharedKey: rawSubpoint.shared_key,
             fields,
-            // Podpunkt bez wymaganych pól jest z definicji ukończony —
-            // opcjonalne nie mogą blokować domknięcia etapu.
-            // Pominięty warunkiem też nie blokuje, ale nie wchodzi do licznika.
-            isComplete: skipped || (fields.some((f) => f.isRequired) ? isComplete : true),
+            goalConditions: shownConditions,
+            isComplete:
+              stage.status === "completed" && storedComplete.has(rawSubpoint.id)
+                ? skipped || storedComplete.get(rawSubpoint.id) === true
+                : liveComplete,
             skipped,
             skipWhen: rawSubpoint.skip_when,
             alsoIn: [],

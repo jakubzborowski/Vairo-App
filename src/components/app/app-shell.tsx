@@ -45,6 +45,8 @@ type AppShellProps = {
    * licznik, który kłamie, jest gorszy niż brak licznika.
    */
   badges?: Partial<Record<NonNullable<NavItem["badgeKey"]>, number>>;
+  /** Po domknięciu Preparation. Wcześniej Cele, Taski i Rozpiska nie są w menu. */
+  executionUnlocked?: boolean;
   children: React.ReactNode;
 };
 
@@ -53,6 +55,7 @@ export function AppShell({
   teams,
   activeTeamId,
   badges,
+  executionUnlocked = false,
   children,
 }: AppShellProps) {
   const pathname = usePathname();
@@ -152,7 +155,9 @@ export function AppShell({
 
               {collapsed ? null : (
                 <ul className="flex flex-col gap-0.5">
-                  {group.items.map(renderItem)}
+                  {group.items
+                    .filter((item) => executionUnlocked || !item.requiresExecution)
+                    .map(renderItem)}
                 </ul>
               )}
             </div>

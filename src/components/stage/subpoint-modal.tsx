@@ -85,6 +85,9 @@ export function SubpointModal({
   const missing = subpoint.fields.filter(
     (f) => f.isRequired && !fieldAnswered(f, draft[f.answerKey])
   );
+  const goalsOpen = (subpoint.goalConditions ?? []).filter(
+    (condition) => condition.done < condition.minCount
+  );
 
   // Odpowiedzi krótsze niż sugerowane minimum. To wskazówka, nie blokada —
   // pokazujemy ją dopiero po kliknięciu „Zapisz" i nigdy nie zamykamy drogi.
@@ -206,6 +209,36 @@ export function SubpointModal({
               />
             )
           )}
+          {subpoint.goalConditions.length > 0 ? (
+            <div className="rounded-xl border border-white/10 px-4 py-3">
+              <p className="text-[13px] font-medium text-white">Cele, które zaliczają ten punkt</p>
+              <ul className="mt-2 flex flex-col gap-1.5">
+                {subpoint.goalConditions.map((condition) => (
+                  <li key={condition.id} className="text-[13px] text-[var(--text-muted)]">
+                    {condition.label} {condition.done}/{condition.minCount}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button href="/app/goals" variant="secondary" size="sm">
+                  Otwórz powiązane cele
+                </Button>
+                <Button
+                  href={`/app/goals?condition=${subpoint.goalConditions[0]?.id ?? ""}&new=1`}
+                  size="sm"
+                >
+                  Dodaj cel
+                </Button>
+                <Button
+                  href={`/app/goals?condition=${subpoint.goalConditions[0]?.id ?? ""}&link=1`}
+                  variant="ghost"
+                  size="sm"
+                >
+                  Podepnij istniejący
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {readOnly ? (
@@ -238,6 +271,11 @@ export function SubpointModal({
                 Do uzupełnienia: {missing.length}{" "}
                 {missing.length === 1 ? "pytanie" : "pytania"}. Możesz zapisać
                 częściowo i wrócić.
+              </p>
+            ) : goalsOpen.length > 0 ? (
+              <p className="text-[12.5px] text-[var(--text-subtle)]">
+                Zostały cele:{" "}
+                {goalsOpen.map((condition) => `${condition.label} ${condition.done}/${condition.minCount}`).join(", ")}.
               </p>
             ) : (
               <Badge tone="success">

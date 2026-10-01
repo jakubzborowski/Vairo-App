@@ -5,6 +5,8 @@
  * to, co przychodzi z bazy po imporcie.
  */
 
+import type { SubpointGoalCondition } from "@/types/goals";
+
 export const FIELD_KINDS = [
   "short_text",
   "long_text",
@@ -110,6 +112,8 @@ export type StageSubpoint = {
   sharedKey: string | null;
   fields: StageField[];
   isComplete: boolean;
+  /** Warunki liczby Goals. Pusta lista znaczy, że podpunkt ich nie ma. */
+  goalConditions: SubpointGoalCondition[];
   /** Warunek z treści sprawił, że podpunkt nie liczy się do postępu. */
   skipped: boolean;
   skipWhen: SkipWhen | null;

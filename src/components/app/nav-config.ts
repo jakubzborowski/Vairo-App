@@ -1,15 +1,18 @@
 import {
   Bell,
   Compass,
-  HelpCircle,
+  Flag,
   FolderOpen,
+  HelpCircle,
   LayoutDashboard,
+  ListTodo,
   Mail,
   MessageSquare,
   Settings,
   Target,
   UserRound,
   Users,
+  Waypoints,
   type LucideIcon,
 } from "lucide-react";
 
@@ -22,15 +25,16 @@ import {
  * „nieaktywne, bo jeszcze nie powstało" od „nieaktywne, bo coś zrobiłem źle" —
  * a połowa wyszarzonego menu wygląda jak aplikacja, która się nie wczytała.
  *
- * Moduły, które wrócą tu razem z Execution Stage (mają już własne ekrany pod
- * swoimi adresami, tylko nie są linkowane): Taski, Cele, Dokumenty, Workflow,
- * Możliwości. Wejdą wtedy, gdy będą miały dane — nie wcześniej.
+ * Moduły Execution (Cele, Taski, Rozpiska) są w menu, gdy startup domknął
+ * Preparation — `requiresExecution`. Wcześniej nie ma wyszarzonych pozycji.
  */
 export type NavItem = {
   label: string;
   href: string;
   icon: LucideIcon;
   badgeKey?: "messages" | "inbox" | "notifications";
+  /** Pokazujemy po domknięciu Preparation. Wcześniej pozycji nie ma w menu. */
+  requiresExecution?: boolean;
 };
 
 export type NavGroup = {
@@ -50,6 +54,9 @@ export const navGroups: NavGroup[] = [
     items: [
       { label: "Start", href: "/app", icon: LayoutDashboard },
       { label: "Etap startupu", href: "/app/stage", icon: Target },
+      { label: "Cele", href: "/app/goals", icon: Flag, requiresExecution: true },
+      { label: "Taski", href: "/app/tasks", icon: ListTodo, requiresExecution: true },
+      { label: "Rozpiska", href: "/app/workflows", icon: Waypoints, requiresExecution: true },
       { label: "Pliki", href: "/app/files", icon: FolderOpen },
       { label: "Team", href: "/app/team", icon: Users },
     ],

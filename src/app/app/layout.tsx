@@ -5,6 +5,7 @@ import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { getActiveStartupId } from "@/lib/active-team";
 import { countPendingSignals, countUnreadMessages } from "@/lib/messages";
 import { countUnreadNotifications } from "@/lib/notifications";
+import { isExecutionUnlocked } from "@/lib/goals";
 import type { TeamSummary } from "@/components/app/team-switcher";
 
 export const dynamic = "force-dynamic";
@@ -73,6 +74,7 @@ export default async function AppLayout({
     unreadMessages,
     pendingContacts,
     unreadNotifications,
+    executionUnlocked,
   ] = await Promise.all([
     supabase
       .from("startup_join_requests")
@@ -82,6 +84,7 @@ export default async function AppLayout({
     countUnreadMessages(supabase, user.id),
     countPendingSignals(supabase, user.id),
     countUnreadNotifications(supabase, user.id),
+    active ? isExecutionUnlocked(supabase, active.id) : Promise.resolve(false),
   ]);
 
   return (
@@ -99,6 +102,7 @@ export default async function AppLayout({
         messages: unreadMessages,
         notifications: unreadNotifications,
       }}
+      executionUnlocked={executionUnlocked}
     >
       {children}
     </AppShell>

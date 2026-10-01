@@ -19,6 +19,7 @@ import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { getActiveStartupId } from "@/lib/active-team";
 import { currentProgramEntry, loadStageProgram } from "@/lib/stage";
 import { loadNextActions, type Blocker, type NextAction } from "@/lib/next-actions";
+import { isExecutionUnlocked } from "@/lib/goals";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -120,6 +121,7 @@ export default async function AppPage() {
     program,
     current,
   });
+  const trackerOpen = await isExecutionUnlocked(supabase, active.id);
 
   return (
     <div className="mx-auto w-full max-w-5xl">
@@ -192,7 +194,16 @@ export default async function AppPage() {
       {blocker ? <BlockerNote blocker={blocker} /> : null}
 
       <p className="mt-4 text-[12.5px] text-[var(--text-faint)]">
-        Taski, cele, dokumenty i workflow odblokują się po domknięciu Idea Stage.
+        {trackerOpen ? (
+          <>
+            <Link href="/app/goals" className="text-[var(--text-subtle)] underline-offset-2 hover:text-white hover:underline">
+              Otwórz tracker celów
+            </Link>
+            . Przypisania, terminy i dowody są osobnym narzędziem — układ tej strony zostaje taki sam.
+          </>
+        ) : (
+          "Tracker celów otworzy się po domknięciu Preparation."
+        )}
       </p>
     </div>
   );

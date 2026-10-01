@@ -27,6 +27,14 @@ const FIELD_KINDS = new Set([
   "sentence_template", "summary", "records", "action", "people",
 ]);
 
+const GOAL_TYPE_IDS = new Set([
+  "custom", "product_test", "build_result", "prototype", "customer", "research",
+]);
+
+const GOAL_PROOF_KINDS = new Set([
+  "sentence", "long_text", "select", "scale", "link", "file", "module_result", "goal_set",
+]);
+
 const CATEGORY_KEYS = new Set(["general", "saas", "hardware", "b2b", "b2c"]);
 
 /** Numer migracji nadawany per szablon, żeby pliki nie kolidowały. */
@@ -106,6 +114,30 @@ function validate(doc) {
 
         if (subpoint.skip_when) {
           skipChecks.push([sPath, subpoint.skip_when]);
+        }
+
+        if (subpoint.goal_conditions !== undefined) {
+          if (!Array.isArray(subpoint.goal_conditions)) {
+            fail(sPath, "`goal_conditions` musi być tablicą");
+          } else {
+            const seenTypes = new Set();
+            for (const condition of subpoint.goal_conditions) {
+              const cPath = `${sPath}.goal_conditions`;
+              if (!GOAL_TYPE_IDS.has(condition.goal_type_id)) {
+                fail(cPath, `nieznany goal_type_id „${condition.goal_type_id}”`);
+              }
+              if (!Number.isInteger(condition.min_count) || condition.min_count < 1) {
+                fail(cPath, "`min_count` musi być liczbą całkowitą ≥ 1");
+              }
+              if (condition.proof_kind && !GOAL_PROOF_KINDS.has(condition.proof_kind)) {
+                fail(cPath, `nieznany proof_kind „${condition.proof_kind}”`);
+              }
+              if (seenTypes.has(condition.goal_type_id)) {
+                fail(cPath, `duplikat typu „${condition.goal_type_id}”`);
+              }
+              seenTypes.add(condition.goal_type_id);
+            }
+          }
         }
       }
     }
@@ -273,6 +305,24 @@ function buildSql(doc) {
         w(`  delete from public.stage_fields`);
         w(`  where subpoint_id = v_subpoint and key <> all(${keyArray(fieldKeys)});`);
         w();
+
+        if (Array.isArray(subpoint.goal_conditions)) {
+          const typeIds = [];
+          subpoint.goal_conditions.forEach((condition, gi) => {
+            typeIds.push(condition.goal_type_id);
+            w("  insert into public.stage_goal_conditions");
+            w("    (subpoint_id, goal_type_id, min_count, proof_kind, position)");
+            w(`  values (v_subpoint, ${lit(condition.goal_type_id)}, ${condition.min_count},`);
+            w(`          ${condition.proof_kind ? lit(condition.proof_kind) : "null"}, ${gi + 1})`);
+            w("  on conflict (subpoint_id, goal_type_id) do update set");
+            w("    min_count = excluded.min_count, proof_kind = excluded.proof_kind,");
+            w("    position = excluded.position;");
+            w();
+          });
+          w("  delete from public.stage_goal_conditions");
+          w(`  where subpoint_id = v_subpoint and goal_type_id <> all(${keyArray(typeIds)});`);
+          w();
+        }
       });
 
       w(`  delete from public.stage_subpoints`);
