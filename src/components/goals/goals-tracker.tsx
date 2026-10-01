@@ -6,6 +6,7 @@ import { Flag, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { MenuSelect } from "@/components/ui/menu-select";
 import { Modal } from "@/components/ui/modal";
 import {
   addGoalMaterial,
@@ -189,33 +190,32 @@ export function GoalsTracker({
       ) : null}
 
       <div className="mt-5 flex flex-wrap gap-2">
-        <select
-          className={fieldClass + " h-9 w-auto"}
+        <MenuSelect
+          size="sm"
+          className="w-auto min-w-[160px]"
+          ariaLabel="Filtr właściciela"
           value={ownerFilter}
-          onChange={(event) => setOwnerFilter(event.target.value)}
-          aria-label="Filtr właściciela"
-        >
-          <option value="all">Wszyscy</option>
-          <option value="me">Moje</option>
-          {members.map((member) => (
-            <option key={member.id} value={member.id}>
-              {member.name}
-            </option>
-          ))}
-        </select>
-        <select
-          className={fieldClass + " h-9 w-auto"}
+          onChange={setOwnerFilter}
+          options={[
+            { value: "all", label: "Wszyscy" },
+            { value: "me", label: "Moje" },
+            ...members.map((member) => ({ value: member.id, label: member.name })),
+          ]}
+        />
+        <MenuSelect
+          size="sm"
+          className="w-auto min-w-[160px]"
+          ariaLabel="Filtr statusu"
           value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-          aria-label="Filtr statusu"
-        >
-          <option value="all">Każdy status</option>
-          {GOAL_STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {GOAL_STATUS_LABELS[status]}
-            </option>
-          ))}
-        </select>
+          onChange={setStatusFilter}
+          options={[
+            { value: "all", label: "Każdy status" },
+            ...GOAL_STATUSES.map((status) => ({
+              value: status,
+              label: GOAL_STATUS_LABELS[status],
+            })),
+          ]}
+        />
         <button
           type="button"
           onClick={() => setShowArchived((value) => !value)}
@@ -445,60 +445,51 @@ function GoalDraft({
           <textarea className={fieldClass + " mt-1.5 h-20 py-2"} value={description} onChange={(e) => setDescription(e.target.value)} />
         </label>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="text-[13px] text-[var(--text-muted)]">
+          <div className="text-[13px] text-[var(--text-muted)]">
             Typ
-            <select
-              className={fieldClass + " mt-1.5"}
+            <MenuSelect
+              className="mt-1.5"
+              ariaLabel="Typ"
               value={goalTypeId}
               disabled={Boolean(preset)}
-              onChange={(e) => setGoalTypeId(e.target.value)}
-            >
-              {goalTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
-          </label>
+              onChange={setGoalTypeId}
+              options={goalTypes.map((type) => ({ value: type.id, label: type.label }))}
+            />
+          </div>
           <label className="text-[13px] text-[var(--text-muted)]">
             Termin
             <input type="date" className={fieldClass + " mt-1.5"} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </label>
         </div>
-        <label className="text-[13px] text-[var(--text-muted)]">
+        <div className="text-[13px] text-[var(--text-muted)]">
           Właściciel
-          <select
-            className={fieldClass + " mt-1.5"}
+          <MenuSelect
+            className="mt-1.5"
+            ariaLabel="Właściciel"
             value={canAssign ? ownerId : userId}
             disabled={!canAssign}
-            onChange={(e) => setOwnerId(e.target.value)}
-          >
-            {members.map((member) => (
-              <option key={member.id} value={member.id}>
-                {member.name}
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={setOwnerId}
+            options={members.map((member) => ({ value: member.id, label: member.name }))}
+          />
+        </div>
         <label className="text-[13px] text-[var(--text-muted)]">
           Czym pokażecie, że jest gotowe
           <input className={fieldClass + " mt-1.5"} value={proofLabel} onChange={(e) => setProofLabel(e.target.value)} />
         </label>
-        <label className="text-[13px] text-[var(--text-muted)]">
+        <div className="text-[13px] text-[var(--text-muted)]">
           Format dowodu
-          <select
-            className={fieldClass + " mt-1.5"}
+          <MenuSelect
+            className="mt-1.5"
+            ariaLabel="Format dowodu"
             value={kind}
             disabled={Boolean(preset?.proofKind)}
-            onChange={(e) => setKind(e.target.value as ProofKind)}
-          >
-            {PROOF_KINDS.map((item) => (
-              <option key={item} value={item}>
-                {PROOF_KIND_LABELS[item]}
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={(next) => setKind(next as ProofKind)}
+            options={PROOF_KINDS.map((item) => ({
+              value: item,
+              label: PROOF_KIND_LABELS[item],
+            }))}
+          />
+        </div>
         {kind === "select" ? (
           <label className="text-[13px] text-[var(--text-muted)]">
             Opcje, jedna na linię
@@ -592,14 +583,15 @@ function GoalCard({
         ) : null}
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="text-[13px] text-[var(--text-muted)]">
+          <div className="text-[13px] text-[var(--text-muted)]">
             Status
-            <select
-              className={fieldClass + " mt-1.5"}
+            <MenuSelect
+              className="mt-1.5"
+              ariaLabel="Status"
               disabled={!editable}
               value={goal.status === "completed" ? "completed" : goal.status}
-              onChange={(event) => {
-                const status = event.target.value as GoalStatus;
+              onChange={(next) => {
+                const status = next as GoalStatus;
                 if (status === "completed") return;
                 run(() =>
                   updateGoal({
@@ -610,15 +602,15 @@ function GoalCard({
                   })
                 );
               }}
-            >
-              {GOAL_STATUSES.filter((status) => status !== "completed").map((status) => (
-                <option key={status} value={status}>
-                  {GOAL_STATUS_LABELS[status]}
-                </option>
-              ))}
-              {locked ? <option value="completed">Ukończony</option> : null}
-            </select>
-          </label>
+              options={[
+                ...GOAL_STATUSES.filter((status) => status !== "completed").map((status) => ({
+                  value: status,
+                  label: GOAL_STATUS_LABELS[status],
+                })),
+                ...(locked ? [{ value: "completed", label: "Ukończony" }] : []),
+              ]}
+            />
+          </div>
           <label className="text-[13px] text-[var(--text-muted)]">
             Termin
             <input
@@ -633,43 +625,37 @@ function GoalCard({
               }}
             />
           </label>
-          <label className="text-[13px] text-[var(--text-muted)]">
+          <div className="text-[13px] text-[var(--text-muted)]">
             Właściciel
-            <select
-              className={fieldClass + " mt-1.5"}
+            <MenuSelect
+              className="mt-1.5"
+              ariaLabel="Właściciel"
               disabled={!editable || !canAssign}
               value={goal.ownerId ?? ""}
-              onChange={(event) =>
-                run(() => updateGoal({ startupId, goalId: goal.id, ownerId: event.target.value }))
+              onChange={(next) =>
+                run(() => updateGoal({ startupId, goalId: goal.id, ownerId: next }))
               }
-            >
-              {goal.ownerId && !members.some((member) => member.id === goal.ownerId) ? (
-                <option value={goal.ownerId}>{goal.ownerName}</option>
-              ) : null}
-              {members.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-[13px] text-[var(--text-muted)]">
+              options={[
+                ...(goal.ownerId && !members.some((member) => member.id === goal.ownerId)
+                  ? [{ value: goal.ownerId, label: goal.ownerName }]
+                  : []),
+                ...members.map((member) => ({ value: member.id, label: member.name })),
+              ]}
+            />
+          </div>
+          <div className="text-[13px] text-[var(--text-muted)]">
             Typ
-            <select
-              className={fieldClass + " mt-1.5"}
+            <MenuSelect
+              className="mt-1.5"
+              ariaLabel="Typ"
               disabled={!editable || locked}
               value={goal.goalTypeId}
-              onChange={(event) =>
-                run(() => updateGoal({ startupId, goalId: goal.id, goalTypeId: event.target.value }))
+              onChange={(next) =>
+                run(() => updateGoal({ startupId, goalId: goal.id, goalTypeId: next }))
               }
-            >
-              {goalTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
-          </label>
+              options={goalTypes.map((type) => ({ value: type.id, label: type.label }))}
+            />
+          </div>
         </div>
 
         {goal.status === "blocked" || blocker ? (
@@ -706,26 +692,26 @@ function GoalCard({
                 <span className="min-w-0 flex-1 text-[14px] text-white">{task.title}</span>
                 <span className="text-[12px] text-[var(--text-subtle)]">{task.ownerName}</span>
                 {task.needsReassign ? <Badge tone="danger">Do przypisania</Badge> : null}
-                <select
-                  className={fieldClass + " h-8 w-auto"}
+                <MenuSelect
+                  size="sm"
+                  className="w-auto min-w-[150px]"
+                  ariaLabel={`Status zadania: ${task.title}`}
                   disabled={!canChangeOwnWork(role, userId, task.ownerId) && !canAssign}
                   value={task.status}
-                  onChange={(event) =>
+                  onChange={(next) =>
                     run(() =>
                       updateTask({
                         startupId,
                         taskId: task.id,
-                        status: event.target.value as TaskStatus,
+                        status: next as TaskStatus,
                       })
                     )
                   }
-                >
-                  {TASK_STATUSES.map((status) => (
-                    <option key={status} value={status}>
-                      {TASK_STATUS_LABELS[status]}
-                    </option>
-                  ))}
-                </select>
+                  options={TASK_STATUSES.map((status) => ({
+                    value: status,
+                    label: TASK_STATUS_LABELS[status],
+                  }))}
+                />
               </li>
             ))}
           </ul>
@@ -807,13 +793,12 @@ function GoalCard({
               </div>
               {files.length > 0 ? (
                 <div className="flex gap-2">
-                  <select className={fieldClass} value={fileId} onChange={(e) => setFileId(e.target.value)}>
-                    {files.map((file) => (
-                      <option key={file.id} value={file.id}>
-                        {file.name}
-                      </option>
-                    ))}
-                  </select>
+                  <MenuSelect
+                    ariaLabel="Plik z biblioteki"
+                    value={fileId}
+                    onChange={setFileId}
+                    options={files.map((file) => ({ value: file.id, label: file.name }))}
+                  />
                   <Button
                     variant="secondary"
                     onClick={() =>
@@ -977,13 +962,15 @@ function ProofFields(props: {
         />
       ) : null}
       {kind === "select" ? (
-        <select className={fieldClass} value={props.proofOption} onChange={(e) => props.setProofOption(e.target.value)}>
-          {(props.goal.proofRequirement.options ?? []).map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <MenuSelect
+          ariaLabel="Wybrana opcja"
+          value={props.proofOption}
+          onChange={props.setProofOption}
+          options={(props.goal.proofRequirement.options ?? []).map((option) => ({
+            value: option.value,
+            label: option.label,
+          }))}
+        />
       ) : null}
       {kind === "scale" ? (
         <input
@@ -1003,26 +990,27 @@ function ProofFields(props: {
       ) : null}
       {kind === "file" ? (
         props.files.length > 0 ? (
-          <select className={fieldClass} value={props.proofFile} onChange={(e) => props.setProofFile(e.target.value)}>
-            {props.files.map((file) => (
-              <option key={file.id} value={file.id}>
-                {file.name}
-              </option>
-            ))}
-          </select>
+          <MenuSelect
+            ariaLabel="Plik jako dowód"
+            value={props.proofFile}
+            onChange={props.setProofFile}
+            options={props.files.map((file) => ({ value: file.id, label: file.name }))}
+          />
         ) : (
           <p className="text-[13px] text-[var(--text-subtle)]">Najpierw dodaj plik w bibliotece.</p>
         )
       ) : null}
       {kind === "module_result" ? (
         props.workflows.length > 0 ? (
-          <select className={fieldClass} value={props.proofFlow} onChange={(e) => props.setProofFlow(e.target.value)}>
-            {props.workflows.map((flow) => (
-              <option key={flow.id} value={flow.id}>
-                {flow.title} · wersja {flow.version}
-              </option>
-            ))}
-          </select>
+          <MenuSelect
+            ariaLabel="Rozpiska jako dowód"
+            value={props.proofFlow}
+            onChange={props.setProofFlow}
+            options={props.workflows.map((flow) => ({
+              value: flow.id,
+              label: `${flow.title} · wersja ${flow.version}`,
+            }))}
+          />
         ) : (
           <p className="text-[13px] text-[var(--text-subtle)]">Najpierw zapisz Rozpiskę.</p>
         )

@@ -6,6 +6,7 @@ import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import {
   RozpiskaEditor,
   type RozpiskaRecord,
+  type RozpiskaVersion,
 } from "@/components/workflows/rozpiska-editor";
 import type { RozpiskaEdge, RozpiskaNode } from "@/app/app/workflows/actions";
 
@@ -76,10 +77,30 @@ export default async function WorkflowsPage() {
     edges: asEdges(row.edges),
   }));
 
+  const workflowIds = diagrams.map((item) => item.id);
+  const versionsResult =
+    workflowIds.length === 0
+      ? { data: [] }
+      : await supabase
+          .from("workflow_versions")
+          .select("workflow_id, version, title, nodes, edges, created_at")
+          .in("workflow_id", workflowIds)
+          .order("version", { ascending: false });
+
+  const versions: RozpiskaVersion[] = (versionsResult.data ?? []).map((row) => ({
+    workflowId: row.workflow_id as string,
+    version: row.version as number,
+    title: row.title as string,
+    nodes: asNodes(row.nodes),
+    edges: asEdges(row.edges),
+    createdAt: row.created_at as string,
+  }));
+
   return (
     <RozpiskaEditor
       startupId={active.id}
       diagrams={diagrams}
+      versions={versions}
       goals={workspace.goals}
       initialId={diagrams[0]?.id ?? null}
     />

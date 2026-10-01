@@ -6,6 +6,7 @@ import { ListTodo } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { MenuSelect } from "@/components/ui/menu-select";
 import { createTask, updateTask } from "@/app/app/goals/actions";
 import { canAssignToOthers, canChangeOwnWork, type StartupRole } from "@/types/startup";
 import {
@@ -119,23 +120,21 @@ export function TasksView({
             placeholder="Co jest do zrobienia"
             aria-label="Tytuł zadania"
           />
-          <select className={fieldClass} value={goalId} onChange={(e) => setGoalId(e.target.value)} aria-label="Cel">
-            {goals
+          <MenuSelect
+            ariaLabel="Cel"
+            value={goalId}
+            onChange={setGoalId}
+            options={goals
               .filter((goal) => !goal.archivedAt)
-              .map((goal) => (
-                <option key={goal.id} value={goal.id}>
-                  {goal.title}
-                </option>
-              ))}
-          </select>
+              .map((goal) => ({ value: goal.id, label: goal.title }))}
+          />
           {canAssign ? (
-            <select className={fieldClass} value={ownerId} onChange={(e) => setOwnerId(e.target.value)} aria-label="Właściciel">
-              {members.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name}
-                </option>
-              ))}
-            </select>
+            <MenuSelect
+              ariaLabel="Właściciel"
+              value={ownerId}
+              onChange={setOwnerId}
+              options={members.map((member) => ({ value: member.id, label: member.name }))}
+            />
           ) : null}
           <Button type="submit" loading={pending} disabled={title.trim().length < 2} title={title.trim().length < 2 ? "Wpisz zadanie" : undefined}>
             Dodaj
@@ -180,27 +179,26 @@ export function TasksView({
                   </p>
                 </div>
                 {task.needsReassign ? <Badge tone="danger">Do przypisania</Badge> : null}
-                <select
-                  className={fieldClass + " w-auto"}
+                <MenuSelect
+                  size="sm"
+                  className="w-auto min-w-[150px]"
                   disabled={!canEdit}
                   value={task.status}
-                  aria-label={`Status: ${task.title}`}
-                  onChange={(event) =>
+                  ariaLabel={`Status: ${task.title}`}
+                  onChange={(next) =>
                     save(() =>
                       updateTask({
                         startupId,
                         taskId: task.id,
-                        status: event.target.value as TaskStatus,
+                        status: next as TaskStatus,
                       })
                     )
                   }
-                >
-                  {TASK_STATUSES.map((status) => (
-                    <option key={status} value={status}>
-                      {TASK_STATUS_LABELS[status]}
-                    </option>
-                  ))}
-                </select>
+                  options={TASK_STATUSES.map((status) => ({
+                    value: status,
+                    label: TASK_STATUS_LABELS[status],
+                  }))}
+                />
               </li>
             );
           })}
