@@ -30,7 +30,7 @@ const FIELD_KINDS = new Set([
 const CATEGORY_KEYS = new Set(["general", "saas", "hardware", "b2b", "b2c"]);
 
 /** Numer migracji nadawany per szablon, żeby pliki nie kolidowały. */
-const MIGRATION_NUMBER = { ambition: "006", idea: "007", preparation: "017" };
+const MIGRATION_NUMBER = { ambition: "006", idea: "007", preparation: "019" };
 
 // ---------------------------------------------------------------------------
 // Walidacja
@@ -340,8 +340,8 @@ if (existsSync(guidesPath)) {
     for (const point of category.points ?? []) {
       const guide = guides[category.key]?.[point.guide ?? point.key];
       if (!guide) continue;
-      point.guide_body = point.guide_body ?? guide.body ?? null;
-      point.guide_sources = point.guide_sources ?? guide.sources ?? [];
+      if (guide.body) point.guide_body = guide.body;
+      if (guide.sources) point.guide_sources = guide.sources;
     }
   }
 }
