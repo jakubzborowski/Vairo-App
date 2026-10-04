@@ -1,8 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  hasAnswer,
+  fieldAnswered,
+  matchesSkip,
   type FieldConfig,
   type FieldKind,
+  type SkipWhen,
   type StageCategory,
   type StagePoint,
   type StageSubpoint,
@@ -36,6 +38,7 @@ type RawSubpoint = {
   description: string | null;
   is_optional: boolean;
   shared_key: string | null;
+  skip_when: SkipWhen | null;
   position: number;
   fields: RawField[] | null;
 };
@@ -168,7 +171,7 @@ export async function loadStageTree(
 
   const template = stage.stage_templates;
 
-  const [{ data: categoryRows }, { data: answerRows }] = await Promise.all([
+  const treeSelect = (withSkip: boolean) =>
     supabase
       .from("stage_categories")
       .select(
@@ -177,7 +180,9 @@ export async function loadStageTree(
            id, key, title, description, duration_hint,
            guide_body, guide_sources, guide_source_label, position,
            subpoints:stage_subpoints(
-             id, key, title, description, is_optional, shared_key, position,
+             id, key, title, description, is_optional, shared_key, ${
+               withSkip ? "skip_when, " : ""
+             }position,
              fields:stage_fields(
                id, key, kind, question, help, example,
                is_required, shared_key, answer_key, config, position
@@ -186,12 +191,21 @@ export async function loadStageTree(
          )`
       )
       .eq("template_id", stage.template_id)
-      .in("key", params.activeCategories),
+      .in("key", params.activeCategories);
+
+  const [categoryResult, { data: answerRows }] = await Promise.all([
+    treeSelect(true),
     supabase
       .from("stage_answers")
       .select("answer_key, value")
       .eq("startup_stage_id", params.startupStageId),
   ]);
+
+  // Kolumna skip_when powstaje w migracji 021. Zanim ktoś ją odpali,
+  // etapy Ambition i Idea mają się dalej otwierać.
+  const categoryRows = categoryResult.error?.message.includes("skip_when")
+    ? (await treeSelect(false)).data
+    : categoryResult.data;
 
   const answers: Record<string, unknown> = {};
   for (const row of answerRows ?? []) answers[row.answer_key] = row.value;
@@ -232,9 +246,11 @@ export async function loadStageTree(
             config: f.config ?? {},
           }));
 
+          const skipped = matchesSkip(rawSubpoint.skip_when, answers);
           const isComplete =
-            fields.filter((f) => f.isRequired).every((f) => hasAnswer(answers[f.answerKey])) &&
-            fields.some((f) => f.isRequired);
+            fields.filter((f) => f.isRequired).every((f) =>
+              fieldAnswered(f, answers[f.answerKey])
+            ) && fields.some((f) => f.isRequired);
 
           const subpoint: StageSubpoint = {
             id: rawSubpoint.id,
@@ -246,7 +262,10 @@ export async function loadStageTree(
             fields,
             // Podpunkt bez wymaganych pól jest z definicji ukończony —
             // opcjonalne nie mogą blokować domknięcia etapu.
-            isComplete: fields.some((f) => f.isRequired) ? isComplete : true,
+            // Pominięty warunkiem też nie blokuje, ale nie wchodzi do licznika.
+            isComplete: skipped || (fields.some((f) => f.isRequired) ? isComplete : true),
+            skipped,
+            skipWhen: rawSubpoint.skip_when,
             alsoIn: [],
           };
 
@@ -256,7 +275,7 @@ export async function loadStageTree(
           subpoints.push(subpoint);
         }
 
-        const counted = subpoints.filter((s) => !s.isOptional);
+        const counted = subpoints.filter((s) => !s.isOptional && !s.skipped);
 
         return {
           id: rawPoint.id,
@@ -316,7 +335,7 @@ export function findNextSubpoint(tree: StageTree) {
   for (const category of tree.categories) {
     for (const point of category.points) {
       for (const subpoint of point.subpoints) {
-        if (!subpoint.isComplete && !subpoint.isOptional) {
+        if (!subpoint.isComplete && !subpoint.isOptional && !subpoint.skipped) {
           return { category, point, subpoint };
         }
       }

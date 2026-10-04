@@ -24,13 +24,13 @@ const MIGRATIONS_DIR = join(ROOT, "supabase", "migrations");
 const FIELD_KINDS = new Set([
   "short_text", "long_text", "list_short", "list_long", "scale", "select",
   "multi_select", "number", "date", "files", "links", "checkmark",
-  "sentence_template", "summary",
+  "sentence_template", "summary", "records", "action", "people",
 ]);
 
 const CATEGORY_KEYS = new Set(["general", "saas", "hardware", "b2b", "b2c"]);
 
 /** Numer migracji nadawany per szablon, żeby pliki nie kolidowały. */
-const MIGRATION_NUMBER = { ambition: "006", idea: "007" };
+const MIGRATION_NUMBER = { ambition: "006", idea: "007", preparation: "024" };
 
 // ---------------------------------------------------------------------------
 // Walidacja
@@ -50,6 +50,8 @@ function validate(doc) {
 
   // ścieżka pola -> definicja; potrzebne do sprawdzenia źródeł `summary`
   const fieldsByPath = new Map();
+  const answerKeys = new Set();
+  const skipChecks = [];
   const seen = { categories: new Set(), points: new Set(), subpoints: new Set() };
 
   for (const category of doc.categories) {
@@ -87,11 +89,35 @@ function validate(doc) {
           }
           if (fieldKeys.has(field.key)) fail(fPath, "duplikat klucza pola w podpunkcie");
           fieldKeys.add(field.key);
+          if (field.kind === "records" && !(field.config?.columns?.length > 0)) {
+            fail(fPath, "bloczek `records` wymaga `config.columns`");
+          }
+          if (field.kind === "action" && !field.config?.href) {
+            fail(fPath, "pole `action` wymaga `config.href`");
+          }
+
+          answerKeys.add(
+            field.shared ?? `${doc.key}.${point.key}.${subpoint.key}.${field.key}`
+          );
 
           // Ścieżka bez kategorii — `summary` odwołuje się w obrębie szablonu.
           fieldsByPath.set(`${point.key}.${subpoint.key}.${field.key}`, field);
         }
+
+        if (subpoint.skip_when) {
+          skipChecks.push([sPath, subpoint.skip_when]);
+        }
       }
+    }
+  }
+
+  for (const [path, skip] of skipChecks) {
+    if (!skip.answer_key) fail(path, "skip_when bez answer_key");
+    else if (!answerKeys.has(skip.answer_key)) {
+      fail(path, `skip_when wskazuje na nieznane pole „${skip.answer_key}”`);
+    }
+    if (!skip.one_of && !Object.prototype.hasOwnProperty.call(skip, "equals")) {
+      fail(path, "skip_when wymaga `one_of` albo `equals`");
     }
   }
 
@@ -205,14 +231,16 @@ function buildSql(doc) {
 
       (point.subpoints ?? []).forEach((subpoint, si) => {
         subpointKeys.push(subpoint.key);
+        const skipSql = subpoint.skip_when ? jsonLit(subpoint.skip_when) : "null";
         w("  insert into public.stage_subpoints");
-        w("    (point_id, key, title, description, is_optional, shared_key, position)");
+        w("    (point_id, key, title, description, is_optional, shared_key, skip_when, position)");
         w(`  values (v_point, ${lit(subpoint.key)}, ${lit(subpoint.title)},`);
         w(`          ${lit(subpoint.description)}, ${bool(subpoint.is_optional)},`);
-        w(`          ${lit(subpoint.shared ?? null)}, ${si + 1})`);
+        w(`          ${lit(subpoint.shared ?? null)}, ${skipSql}, ${si + 1})`);
         w("  on conflict (point_id, key) do update set");
         w("    title = excluded.title, description = excluded.description,");
         w("    is_optional = excluded.is_optional, shared_key = excluded.shared_key,");
+        w("    skip_when = excluded.skip_when,");
         w("    position = excluded.position");
         w("  returning id into v_subpoint;");
         w();
@@ -312,8 +340,8 @@ if (existsSync(guidesPath)) {
     for (const point of category.points ?? []) {
       const guide = guides[category.key]?.[point.guide ?? point.key];
       if (!guide) continue;
-      point.guide_body = point.guide_body ?? guide.body ?? null;
-      point.guide_sources = point.guide_sources ?? guide.sources ?? [];
+      if (guide.body) point.guide_body = guide.body;
+      if (guide.sources) point.guide_sources = guide.sources;
     }
   }
 }

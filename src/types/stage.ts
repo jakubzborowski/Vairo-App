@@ -20,6 +20,9 @@ export const FIELD_KINDS = [
   "checkmark",
   "sentence_template",
   "summary",
+  "records",
+  "action",
+  "people",
 ] as const;
 
 export type FieldKind = (typeof FIELD_KINDS)[number];
@@ -34,6 +37,12 @@ export type SummarySource = {
   /** Ścieżka `punkt.podpunkt.pole` w obrębie szablonu. */
   field: string;
   label: string;
+};
+
+export type RecordColumn = {
+  key: string;
+  label: string;
+  placeholder?: string;
 };
 
 export type FieldConfig = {
@@ -55,6 +64,28 @@ export type FieldConfig = {
   confirm_label?: string;
   /** Pole, którego wartość staje się nazwą startupu (Ambition, roboczy tytuł). */
   syncs_startup_name?: boolean;
+  /** Kolumny bloczka `records`. Użytkownik dodaje kolejne wiersze. */
+  columns?: RecordColumn[];
+  /** Pozwala dopisać własne kolumny do bloczka, np. w profilu co-foundera. */
+  allow_custom_columns?: boolean;
+  /** Pusta lista jest świadomą odpowiedzią — „niczego nie brakuje”. */
+  empty_ok?: boolean;
+  add_label?: string;
+  /** Przycisk wychodzący z modala: sekcja Plików albo Social. */
+  href?: string;
+  label?: string;
+};
+
+/** Warunek, po którym podpunkt wypada z postępu etapu. */
+export type SkipWhen = {
+  answer_key: string;
+  equals?: unknown;
+  one_of?: string[];
+};
+
+export type RecordsValue = {
+  rows: Record<string, string>[];
+  extra_columns?: RecordColumn[];
 };
 
 export type StageField = {
@@ -79,6 +110,9 @@ export type StageSubpoint = {
   sharedKey: string | null;
   fields: StageField[];
   isComplete: boolean;
+  /** Warunek z treści sprawił, że podpunkt nie liczy się do postępu. */
+  skipped: boolean;
+  skipWhen: SkipWhen | null;
   /** Kategorie, w których to samo pytanie też występuje (zwinięte duplikaty). */
   alsoIn: string[];
 };
@@ -166,9 +200,60 @@ export function emptyValueFor(kind: FieldKind): unknown {
     case "sentence_template":
     case "summary":
       return {};
+    case "records":
+      return { rows: [], extra_columns: [] } satisfies RecordsValue;
+    case "action":
+      return false;
+    case "people":
+      return [];
     default:
       return "";
   }
+}
+
+export function asRecords(value: unknown): RecordsValue {
+  if (value && typeof value === "object" && !Array.isArray(value) && "rows" in value) {
+    const raw = value as RecordsValue;
+    return {
+      rows: Array.isArray(raw.rows) ? raw.rows : [],
+      extra_columns: Array.isArray(raw.extra_columns) ? raw.extra_columns : [],
+    };
+  }
+  return { rows: [], extra_columns: [] };
+}
+
+/** Czy zapisana wartość spełnia pole. Pusta lista bloczków liczy się tylko przy `empty_ok`. */
+export function fieldAnswered(
+  field: { kind: FieldKind; config: FieldConfig },
+  value: unknown
+): boolean {
+  if (field.kind === "records") {
+    if (value === null || value === undefined) return false;
+    const filled = asRecords(value).rows.some((row) =>
+      Object.values(row).some((cell) => String(cell ?? "").trim().length > 0)
+    );
+    if (filled) return true;
+    return Boolean(field.config.empty_ok) && typeof value === "object";
+  }
+  if (field.kind === "action") return value === true;
+  if (field.kind === "people") {
+    if (Array.isArray(value) && value.length > 0) return true;
+    return Boolean(field.config.empty_ok) && Array.isArray(value);
+  }
+  return hasAnswer(value);
+}
+
+export function matchesSkip(
+  skip: SkipWhen | null | undefined,
+  answers: Record<string, unknown>
+): boolean {
+  if (!skip) return false;
+  const value = answers[skip.answer_key];
+  if (skip.one_of && skip.one_of.length > 0) {
+    return typeof value === "string" && skip.one_of.includes(value);
+  }
+  if ("equals" in skip) return value === skip.equals;
+  return false;
 }
 
 /**

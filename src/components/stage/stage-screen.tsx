@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   BookOpen,
   Check,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Eye,
@@ -46,7 +47,22 @@ type Props = {
   isCurrent?: boolean;
   /** Tytuł bieżącego etapu — do powrotu, gdy oglądamy inny. */
   currentTitle?: string | null;
+  /** Podpunkt do otwarcia od razu, np. po powrocie z Plików. */
+  initialSubpointId?: string | null;
 };
+
+function locateSubpoint(tree: StageTree, subpointId?: string | null) {
+  if (!subpointId) return null;
+  for (const category of tree.categories) {
+    for (const point of category.points) {
+      const subpoint = point.subpoints.find((item) => item.id === subpointId);
+      if (subpoint) {
+        return { categoryKey: category.key, pointKey: point.key, subpoint };
+      }
+    }
+  }
+  return null;
+}
 
 /**
  * Ekran etapu.
@@ -63,19 +79,31 @@ export function StageScreen({
   role,
   isCurrent = true,
   currentTitle,
+  initialSubpointId,
 }: Props) {
   const router = useRouter();
+  const located = locateSubpoint(tree, initialSubpointId);
   const [categoryKey, setCategoryKey] = useState(
-    () => tree.categories.find((c) => !c.isComplete)?.key ?? tree.categories[0]?.key ?? ""
+    () =>
+      located?.categoryKey ??
+      tree.categories.find((c) => !c.isComplete)?.key ??
+      tree.categories[0]?.key ??
+      ""
   );
   const category = tree.categories.find((c) => c.key === categoryKey) ?? tree.categories[0];
 
   const [pointKey, setPointKey] = useState(
-    () => category?.points.find((p) => !p.isComplete)?.key ?? category?.points[0]?.key ?? ""
+    () =>
+      located?.pointKey ??
+      category?.points.find((p) => !p.isComplete)?.key ??
+      category?.points[0]?.key ??
+      ""
   );
   const point = category?.points.find((p) => p.key === pointKey) ?? category?.points[0];
 
-  const [openSubpoint, setOpenSubpoint] = useState<StageSubpoint | null>(null);
+  const [openSubpoint, setOpenSubpoint] = useState<StageSubpoint | null>(
+    () => located?.subpoint ?? null
+  );
   const [guideOpen, setGuideOpen] = useState(true);
   const [closing, setClosing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -441,7 +469,9 @@ export function StageScreen({
               key={item.key}
               title={item.title}
               subtitle={
-                item.isComplete
+                item.skipped
+                  ? "Pominięte"
+                  : item.isComplete
                   ? "Uzupełnione"
                   : readOnly
                     ? "Jeszcze nieuzupełnione"
@@ -464,7 +494,7 @@ export function StageScreen({
 
         {hasGuide && point ? (
           guideOpen ? (
-            <GuidePanel point={point} onClose={() => setGuideOpen(false)} />
+            <GuidePanel key={point.id} point={point} onClose={() => setGuideOpen(false)} />
           ) : (
             <button
               type="button"
@@ -703,30 +733,44 @@ function ListRow({
 /**
  * Przewodnik — trzecia kolumna ekranu etapu.
  *
- * Wyglądał dokładnie tak samo jak dwie listy obok: ta sama powierzchnia,
- * ta sama ramka, ten sam rozmiar pisma. Skutek był taki, że **proza czytała
- * się jak trzecia lista** — a to jest jedyne miejsce w całej aplikacji, gdzie
- * człowiek ma coś PRZECZYTAĆ, a nie odhaczyć.
- *
- * Dlatego ta kolumna jest teraz zbudowana jak tekst, nie jak panel:
- * pasek konturu u góry zamiast zwykłej krawędzi, tytuł w kroju nagłówkowym
- * z powietrzem wokół, akapit prowadzący większy od reszty, i szerokość linii
- * pilnowana przez `max-w` — bo przy 90 znakach w wierszu oko gubi początek
- * następnej linijki.
+ * Kolumna jest zbudowana jak tekst do czytania, nie jak trzecia lista.
+ * Dłuższy przewodnik dzieli się na strony znakiem `§`, żeby dało się go
+ * przejść bez gubienia miejsca.
  */
+function splitGuide(body: string) {
+  return body
+    .split(/\n§\n/)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .map((chunk) => {
+      const lines = chunk.split(/\n+/).filter(Boolean);
+      const first = lines[0] ?? "";
+      const rest = lines.slice(1);
+      const firstIsHeading = first.length > 0 && first.length <= 80 && rest.length > 0;
+      return firstIsHeading
+        ? { title: first, paragraphs: rest }
+        : { title: "", paragraphs: lines };
+    });
+}
+
 function GuidePanel({ point, onClose }: { point: StagePoint; onClose: () => void }) {
-  const paragraphs = (point.guideBody ?? "").split(/\n+/).filter(Boolean);
-  const [lead, ...rest] = paragraphs;
+  const pages = splitGuide(point.guideBody ?? "");
+  const [index, setIndex] = useState(0);
+  const page = pages[index] ?? pages[0];
+  const several = pages.length > 1;
+  const [lead, ...rest] = page?.paragraphs ?? [];
 
   return (
-    <aside className="overflow-hidden rounded-2xl border border-white/[0.07] bg-[var(--surface)]">
-      {/* Pasek z fakturą warstwic — ten sam znak, co na karcie bohatera
-          dashboardu. Dzięki niemu kolumna od razu mówi „to jest do czytania",
-          zanim ktokolwiek przeczyta słowo „Przewodnik". */}
+    <aside className="flex max-h-[min(78vh,720px)] flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-[var(--surface)]">
       <header className="topo flex items-start justify-between gap-3 border-b border-white/[0.06] bg-[var(--surface-2)]/60 px-5 py-3.5">
         <p className="flex items-center gap-2 text-[13px] font-semibold text-[var(--vairo)]">
           <BookOpen className="size-4 shrink-0" strokeWidth={2} />
           Przewodnik
+          {several ? (
+            <span className="tabular font-medium text-[var(--text-subtle)]">
+              {index + 1} z {pages.length}
+            </span>
+          ) : null}
         </p>
         <div className="flex shrink-0 items-center gap-2">
           {point.guideSourceLabel ? (
@@ -745,10 +789,13 @@ function GuidePanel({ point, onClose }: { point: StagePoint; onClose: () => void
         </div>
       </header>
 
-      <div className="px-5 py-5 lg:max-h-[min(58vh,560px)] lg:overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
         <h3 className="max-w-[46ch] font-heading text-[19px] font-semibold leading-snug text-white">
           {point.title}
         </h3>
+        {page?.title ? (
+          <h4 className="mt-3 max-w-[46ch] text-[14px] font-semibold text-white">{page.title}</h4>
+        ) : null}
 
         {lead ? (
           <p className="mt-3.5 max-w-[62ch] text-[15px] leading-[1.7] text-[var(--text)]">
@@ -763,26 +810,53 @@ function GuidePanel({ point, onClose }: { point: StagePoint; onClose: () => void
             ))}
           </div>
         ) : null}
-
-        {point.guideSources.length > 0 ? (
-          <details className="group mt-6 border-t border-white/[0.06] pt-3.5">
-            <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-[12px] text-[var(--text-subtle)] transition-colors hover:text-white">
-              <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
-              Źródła ({point.guideSources.length})
-            </summary>
-            <ul className="mt-2.5 flex max-w-[62ch] flex-col gap-2">
-              {point.guideSources.map((source, i) => (
-                <li
-                  key={i}
-                  className="border-l-2 border-[var(--vairo)]/25 pl-3 text-[12.5px] leading-relaxed text-[var(--text-subtle)]"
-                >
-                  {source}
-                </li>
-              ))}
-            </ul>
-          </details>
-        ) : null}
       </div>
+
+      {several ? (
+        <div className="flex items-center justify-between gap-2 border-t border-white/[0.06] px-5 py-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={index === 0}
+            onClick={() => setIndex((current) => Math.max(0, current - 1))}
+          >
+            <ChevronLeft className="size-4" />
+            Wstecz
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={index >= pages.length - 1}
+            onClick={() =>
+              setIndex((current) => Math.min(pages.length - 1, current + 1))
+            }
+          >
+            Dalej
+            <ChevronRight className="size-4" />
+          </Button>
+        </div>
+      ) : null}
+
+      {point.guideSources.length > 0 ? (
+        <details className="group border-t border-white/[0.06] px-5 py-3.5">
+          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-[12px] text-[var(--text-subtle)] transition-colors hover:text-white">
+            <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
+            Źródła ({point.guideSources.length})
+          </summary>
+          <ul className="mt-2.5 flex max-w-[62ch] flex-col gap-2">
+            {point.guideSources.map((source, i) => (
+              <li
+                key={i}
+                className="border-l-2 border-[var(--vairo)]/25 pl-3 text-[12.5px] leading-relaxed text-[var(--text-subtle)]"
+              >
+                {source}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
     </aside>
   );
 }
