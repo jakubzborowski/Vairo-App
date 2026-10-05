@@ -121,7 +121,7 @@ export function AppShell({
 
       <TeamSwitcher teams={teams} activeTeamId={activeTeamId} />
 
-      <nav className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
+      <nav className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {navGroups.map((group) => {
           const collapsed = group.collapsible && !socialOpen;
 

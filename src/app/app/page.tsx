@@ -115,6 +115,13 @@ export default async function AppPage() {
     stage && stage.total > 0 ? Math.round((stage.done / stage.total) * 100) : 0;
   const canEdit = canEditStageData(active.role);
 
+  const { error: dueError } = await supabase.rpc("notify_upcoming_deadlines", {
+    p_startup_id: active.id,
+  });
+  if (dueError && !dueError.message.includes("notify_upcoming_deadlines")) {
+    console.error("[notify_upcoming_deadlines]", dueError.message);
+  }
+
   const { actions, blocker } = await loadNextActions(supabase, {
     userId: user.id,
     active,
@@ -143,6 +150,21 @@ export default async function AppPage() {
       </header>
 
       <StageBar program={program} currentKey={current?.key ?? null} />
+
+      {program.some((item) => item.key === "mvp" && item.status === "completed") ? (
+        <Card className="mt-4">
+          <CardBody className="pt-5">
+            <h2 className="font-heading text-[18px] font-semibold text-white">
+              Program jest domknięty
+            </h2>
+            <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-[var(--text-muted)]">
+              Wyniki, cele i materiały zostają do odczytu. Dalsze prowadzenie po MVP
+              Stage to osobna rozmowa o współpracy. Ukończenie programu nie oznacza,
+              że firma jest już potwierdzonym sukcesem.
+            </p>
+          </CardBody>
+        </Card>
+      ) : null}
 
       <p className="mt-2">
         <Link

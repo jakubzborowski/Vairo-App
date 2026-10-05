@@ -19,6 +19,7 @@ export const NOTIFICATION_KINDS = [
   "goal_assigned",
   "task_assigned",
   "goal_blocked",
+  "goal_due",
 ] as const;
 
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
@@ -145,6 +146,8 @@ function describe(
       return `${who} przypisał Ci zadanie w ${team}`;
     case "goal_blocked":
       return `Przeszkoda przy celu w ${team}`;
+    case "goal_due":
+      return `Zbliża się termin celu w ${team}`;
     default:
       return "Nowe zdarzenie";
   }

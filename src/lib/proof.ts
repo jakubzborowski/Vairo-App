@@ -123,6 +123,8 @@ type QualifyGoal = {
   goalTypeId: string;
   status: string;
   archivedAt: string | null;
+  ownerId?: string | null;
+  dueDate?: string | null;
   proofRequirement: ProofRequirement;
   proofSnapshot: ProofSnapshot | null;
 };
@@ -130,11 +132,21 @@ type QualifyGoal = {
 /** Cel wlicza się do warunku. Sam zbieżny tytuł nie wystarcza — powiązanie jest osobno. */
 export function goalQualifies(
   goal: QualifyGoal,
-  condition: { startupId: string; goalTypeId: string; proofKind: string | null }
+  condition: {
+    startupId: string;
+    goalTypeId: string;
+    proofKind: string | null;
+    countsWhen?: "completed" | "defined" | null;
+    matchAnyType?: boolean;
+  }
 ): boolean {
   if (goal.startupId !== condition.startupId) return false;
-  if (goal.goalTypeId !== condition.goalTypeId) return false;
-  if (goal.status !== "completed" || goal.archivedAt) return false;
+  if (goal.archivedAt) return false;
+  if (!condition.matchAnyType && goal.goalTypeId !== condition.goalTypeId) return false;
+  if (condition.countsWhen === "defined") {
+    return Boolean(goal.ownerId && goal.dueDate && goal.proofRequirement.kind);
+  }
+  if (goal.status !== "completed") return false;
   if (!proofMatches(goal.proofRequirement, goal.proofSnapshot)) return false;
   if (condition.proofKind && goal.proofSnapshot?.kind !== condition.proofKind) return false;
   return true;

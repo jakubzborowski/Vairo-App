@@ -1,0 +1,801 @@
+{
+  "key": "execution",
+  "version": 1,
+  "position": 4,
+  "title": "Execution",
+  "subtitle": "Zbuduj pierwszą wersję",
+  "intro": "Prowadzisz budowę w trackerze celów. Punkty programu mówią, jaki wynik jest wymagany. Dodatkowe cele nie blokują przejścia.",
+  "finish_label": "Przechodzę do MVP",
+  "categories": [
+    {
+      "key": "general",
+      "title": "Ogólne",
+      "always_active": true,
+      "intro": "Te punkty dotyczą każdej budowy. Kategorie dokładają własne wyniki.",
+      "points": [
+        {
+          "key": "next",
+          "title": "Wybierz najbliższy wynik i przydziel pracę",
+          "duration_hint": "Około 15 minut",
+          "subpoints": [
+            {
+              "key": "setup",
+              "title": "Ustal wynik, właściciela, termin i dowód",
+              "description": "Cel może nadal być w trakcie. Zadania i materiały są opcjonalne.",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "custom",
+                  "min_count": 1,
+                  "counts_when": "defined",
+                  "match_any_type": true
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Otwórz istniejący cel albo utwórz go dla najbliższej pracy.",
+                  "help": "Samo kliknięcie nie zalicza punktu. Liczy się cel z nazwanym wynikiem, właścicielem, terminem i ustalonym dowodem.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1&from=preparation",
+                    "label": "Utwórz cel z listy Preparation"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "work",
+          "title": "Prowadź pracę do ukończonego wyniku",
+          "duration_hint": "Przez całą budowę",
+          "subpoints": [
+            {
+              "key": "done",
+              "title": "Zamknij osiągnięty cel",
+              "description": "Jeden jawnie podpięty cel bieżącej budowy, ukończony i z wymaganym dowodem.",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "custom",
+                  "min_count": 1,
+                  "counts_when": "completed",
+                  "match_any_type": true
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Wskaż dowód i oznacz cel jako ukończony.",
+                  "help": "Jeśli wyniku jeszcze nie ma, zostaw cel otwarty i popraw zadania.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "close",
+          "title": "Zamknij Execution",
+          "duration_hint": "Gdy reszta wymagań jest spełniona",
+          "subpoints": [
+            {
+              "key": "summary",
+              "title": "Sprawdź, czego brakuje",
+              "is_optional": true,
+              "description": "Ten punkt nie jest warunkiem pojawienia się przycisku zakończenia.",
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Otwórz podsumowanie etapu i uzupełnij brakujące wyniki.",
+                  "help": "Przycisk zakończenia liczy pozostałe wymagane punkty, nie ten podpunkt.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/stage/summary",
+                    "label": "Podsumowanie"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "saas",
+      "title": "SaaS",
+      "intro": "Pierwsza wersja programu: działanie, dostęp, dane, próby i gotowość do poprawiania.",
+      "points": [
+        {
+          "key": "saas-core",
+          "title": "Zbuduj główne działanie programu",
+          "subpoints": [
+            {
+              "key": "result",
+              "title": "Doprowadź użytkownika do pierwszego wyniku",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Podepnij albo utwórz cel typu „Wynik budowy”.",
+                  "help": "Dowód pokazuje wersję, działanie i wynik.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "saas-access",
+          "title": "Zadbaj o dostęp i dane",
+          "subpoints": [
+            {
+              "key": "rules",
+              "title": "Wprowadź zasady dostępu do programu",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Pokaż, że wybrany sposób dostępu działa.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ]
+            },
+            {
+              "key": "data",
+              "title": "Obsłuż dane w całym działaniu programu",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Opisz działającą obsługę danych i wskaż wynik jej sprawdzenia.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "saas-check",
+          "title": "Sprawdź program podczas korzystania",
+          "subpoints": [
+            {
+              "key": "behavior",
+              "title": "Sprawdź wynik działania i reakcję na problemy",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Zapisz wersję, zakres prób, oczekiwane i uzyskane wyniki oraz wykryte problemy.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ],
+              "depends_on": [
+                "saas-core.result",
+                "saas-access.rules",
+                "saas-access.data"
+              ]
+            },
+            {
+              "key": "load",
+              "title": "Sprawdź obciążenie i koszt korzystania",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Zapisz warunki użycia, wynik próby obciążenia i oszacowanie kosztu.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ],
+              "depends_on": [
+                "saas-core.result"
+              ]
+            },
+            {
+              "key": "fix",
+              "title": "Popraw problem i sprawdź zmianę",
+              "is_optional": true,
+              "description": "Brak usterki nie tworzy obowiązku poprawki.",
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Jeśli coś blokuje użycie, popraw to w trackerze i sprawdź zmianę.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "saas-keep",
+          "title": "Przygotuj program do utrzymania i aktualizacji",
+          "subpoints": [
+            {
+              "key": "release",
+              "title": "Uruchom wersję, którą można udostępnić i poprawiać",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Wskaż adres i wersję, materiały do odtworzenia oraz udaną aktualizację.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ]
+            },
+            {
+              "key": "recover",
+              "title": "Sprawdź odzyskanie działania i potrzebnych danych",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Zapisz sposób odzyskania i wynik wykonanej próby.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ],
+              "depends_on": [
+                "saas-access.data",
+                "saas-keep.release"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "saas-ready",
+          "title": "Potwierdź gotowość pierwszej wersji",
+          "subpoints": [
+            {
+              "key": "confirm",
+              "title": "Potwierdź gotowość wskazanej wersji",
+              "depends_on": [
+                "saas-core.result",
+                "saas-access.rules",
+                "saas-access.data",
+                "saas-check.behavior",
+                "saas-check.load",
+                "saas-keep.release",
+                "saas-keep.recover"
+              ],
+              "fields": [
+                {
+                  "key": "version",
+                  "kind": "short_text",
+                  "question": "Którą wersję potwierdzasz?",
+                  "help": "Wpisz oznaczenie wersji, której dotyczą wcześniejsze dowody."
+                },
+                {
+                  "key": "ready",
+                  "kind": "select",
+                  "question": "Czy ta wersja jest gotowa do pierwszego użycia?",
+                  "help": "Zostaw puste, dopóki wcześniejsze wyniki nie są gotowe. Nie ma drugiej opcji.",
+                  "config": {
+                    "options": [
+                      {
+                        "value": "ready",
+                        "label": "Wersja gotowa do pierwszego użycia"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "hardware",
+      "title": "Hardware",
+      "intro": "Od wymagań i bezpieczeństwa, przez egzemplarz, po gotowość do pierwszego użycia.",
+      "points": [
+        {
+          "key": "hw-spec",
+          "title": "Ustal wymagania pierwszej wersji",
+          "subpoints": [
+            {
+              "key": "checks",
+              "title": "Ustal, co sprawdzisz przed pierwszym użyciem",
+              "fields": [
+                {
+                  "key": "use",
+                  "kind": "long_text",
+                  "question": "Do czego służy pierwsza wersja, kto z niej korzysta i w jakich warunkach?",
+                  "help": "Jeśli masz już taki opis, wklej go albo wskaż plik."
+                },
+                {
+                  "key": "requirements",
+                  "kind": "files",
+                  "question": "Dokument: co produkt musi robić, jaki wynik wystarczy i jak to sprawdzisz.",
+                  "help": "Przy wymaganiu, które może zużyć egzemplarz, uwzględnij dodatkowe sztuki.",
+                  "config": {
+                    "min_items": 1
+                  }
+                }
+              ]
+            },
+            {
+              "key": "safety",
+              "title": "Sprawdź, co jest potrzebne, żeby produkt był bezpieczny i spełniał przepisy",
+              "fields": [
+                {
+                  "key": "rules",
+                  "kind": "long_text",
+                  "question": "Jakie przepisy, zabezpieczenia, badania i dokumenty dotyczą tego użycia?",
+                  "help": "Podaj źródło. Jeśli czegoś nie wiesz, zapisz, co trzeba wyjaśnić. To rozpoznanie wymagań, nie certyfikat."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "hw-try",
+          "title": "Sprawdź niepewny element przed budową całości",
+          "subpoints": [
+            {
+              "key": "probe",
+              "title": "Wykonaj wcześniejszą próbę, jeśli jej wynik może zmienić konstrukcję",
+              "is_optional": true,
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Cel typu „Wynik testu”: wersja, warunki, wynik i decyzja.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ],
+              "depends_on": [
+                "hw-spec.checks",
+                "hw-spec.safety"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "hw-build",
+          "title": "Wykonaj lub zamów pierwszą wersję produktu",
+          "subpoints": [
+            {
+              "key": "unit",
+              "title": "Wykonaj egzemplarz, który można sprawdzić",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Podepnij cel z oznaczeniem wersji i dowodem, że egzemplarz powstał.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ],
+              "depends_on": [
+                "hw-spec.checks",
+                "hw-spec.safety"
+              ]
+            },
+            {
+              "key": "repeat",
+              "title": "Zachowaj informacje potrzebne do wykonania tej wersji",
+              "fields": [
+                {
+                  "key": "how",
+                  "kind": "long_text",
+                  "question": "Jak powstaje ta wersja: dostępność, sposób i koszt pierwszych egzemplarzy?",
+                  "help": "Dołącz rysunki albo projekty, jeśli są potrzebne do powtórzenia."
+                },
+                {
+                  "key": "files",
+                  "kind": "files",
+                  "question": "Pliki tej wersji.",
+                  "is_required": false,
+                  "config": {
+                    "min_items": 0
+                  }
+                }
+              ],
+              "depends_on": [
+                "hw-spec.checks",
+                "hw-spec.safety"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "hw-test",
+          "title": "Sprawdź produkt i popraw wykryte problemy",
+          "subpoints": [
+            {
+              "key": "trial",
+              "title": "Sprawdź pierwszą wersję według ustalonych wymagań",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Dowód zawiera wyniki sprawdzeń wymaganych dla pierwszego użycia.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ],
+              "depends_on": [
+                "hw-build.unit"
+              ]
+            },
+            {
+              "key": "fix",
+              "title": "Usuń problem i sprawdź poprawkę",
+              "is_optional": true,
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Jeśli próba wykryła problem, popraw go i zapisz nowe sprawdzenie.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "hw-ready",
+          "title": "Przygotuj produkt do pierwszego użycia",
+          "subpoints": [
+            {
+              "key": "pack",
+              "title": "Przygotuj potrzebny egzemplarz i materiały do użycia",
+              "fields": [
+                {
+                  "key": "control",
+                  "kind": "long_text",
+                  "question": "Które egzemplarze idą do użycia i jakie instrukcje oraz dokumenty im towarzyszą?",
+                  "help": "Możesz wskazać materiały już użyte przy budowie i próbie, jeśli dotyczą tej wersji."
+                }
+              ]
+            },
+            {
+              "key": "confirm",
+              "title": "Potwierdź gotowość wskazanej wersji",
+              "depends_on": [
+                "hw-spec.checks",
+                "hw-spec.safety",
+                "hw-build.unit",
+                "hw-build.repeat",
+                "hw-test.trial",
+                "hw-ready.pack"
+              ],
+              "fields": [
+                {
+                  "key": "version",
+                  "kind": "short_text",
+                  "question": "Którą wersję potwierdzasz?"
+                },
+                {
+                  "key": "ready",
+                  "kind": "select",
+                  "question": "Czy ta wersja jest gotowa do ustalonego użycia?",
+                  "help": "Pole jest puste, dopóki go nie potwierdzisz.",
+                  "config": {
+                    "options": [
+                      {
+                        "value": "ready",
+                        "label": "Wersja gotowa do ustalonego użycia"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "b2b",
+      "title": "B2B",
+      "intro": "Przygotuj przekazanie firmie i przećwicz drogę od startu do odebranego wyniku.",
+      "points": [
+        {
+          "key": "b2b-hand",
+          "title": "Przygotuj rozwiązanie do użycia w firmie",
+          "subpoints": [
+            {
+              "key": "pack",
+              "title": "Przygotuj pierwsze przekazanie firmie",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Cel z gotowymi materiałami rozpoczęcia i przekazania wyniku.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "b2b-try",
+          "title": "Sprawdź użycie rozwiązania w pracy firmy",
+          "subpoints": [
+            {
+              "key": "trial",
+              "title": "Przećwicz przebieg od rozpoczęcia do odebrania wyniku",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Dowód próby: od startu pracy firmy do odebranego wyniku.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ]
+            },
+            {
+              "key": "ready",
+              "title": "Potwierdź gotowość do pierwszego użycia w firmie",
+              "depends_on": [
+                "b2b-hand.pack",
+                "b2b-try.trial"
+              ],
+              "fields": [
+                {
+                  "key": "version",
+                  "kind": "short_text",
+                  "question": "Którą wersję potwierdzasz?"
+                },
+                {
+                  "key": "ready",
+                  "kind": "select",
+                  "question": "Czy ta wersja jest gotowa do pierwszego użycia w firmie?",
+                  "help": "Pole jest puste, dopóki go nie potwierdzisz.",
+                  "config": {
+                    "options": [
+                      {
+                        "value": "ready",
+                        "label": "Gotowe do pierwszego użycia w firmie"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "b2c",
+      "title": "B2C",
+      "intro": "Przygotuj ofertę dla konsumenta i przećwicz drogę od otrzymania produktu do zgłoszenia problemu.",
+      "points": [
+        {
+          "key": "b2c-offer",
+          "title": "Przygotuj ofertę dla konsumenta",
+          "subpoints": [
+            {
+              "key": "place",
+              "title": "Umieść potrzebne informacje w miejscu wyboru",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Cel z gotową ofertą w miejscu wyboru.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "b2c-path",
+          "title": "Sprawdź całą drogę klienta",
+          "subpoints": [
+            {
+              "key": "trial",
+              "title": "Przećwicz otrzymanie produktu i zgłoszenie problemu",
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
+                }
+              ],
+              "fields": [
+                {
+                  "key": "open",
+                  "kind": "action",
+                  "question": "Dowód próby otrzymania i obsługi zgłoszenia.",
+                  "is_required": false,
+                  "config": {
+                    "href": "/app/goals?new=1",
+                    "label": "Otwórz cele"
+                  }
+                }
+              ]
+            },
+            {
+              "key": "ready",
+              "title": "Potwierdź gotowość do obsługi pierwszego klienta",
+              "depends_on": [
+                "b2c-offer.place",
+                "b2c-path.trial"
+              ],
+              "fields": [
+                {
+                  "key": "version",
+                  "kind": "short_text",
+                  "question": "Którą wersję potwierdzasz?"
+                },
+                {
+                  "key": "ready",
+                  "kind": "select",
+                  "question": "Czy ta wersja jest gotowa do obsługi pierwszego klienta?",
+                  "help": "Pole jest puste, dopóki go nie potwierdzisz.",
+                  "config": {
+                    "options": [
+                      {
+                        "value": "ready",
+                        "label": "Gotowe do obsługi pierwszego klienta"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

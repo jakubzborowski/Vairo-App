@@ -29,7 +29,7 @@ create table if not exists public.goal_types (
 
 insert into public.goal_types (id, label, description, position) values
   ('custom', 'Własny cel', 'Organizacja pracy. Nie zalicza warunku programu, dopóki ten nie wymaga właśnie tego typu.', 1),
-  ('product_test', 'Test produktu', 'Sprawdzenie, czy ktoś użył wersji i co z tego wynikło.', 2),
+  ('product_test', 'Wynik testu', 'Sprawdzenie wersji: warunki, wynik i decyzja, co z tego wynika.', 2),
   ('build_result', 'Wynik budowy', 'Konkretna rzecz, która powstała w trakcie budowy.', 3),
   ('prototype', 'Prototyp', 'Pierwsza wersja, którą da się pokazać.', 4),
   ('customer', 'Pierwszy klient', 'Ktoś, kto naprawdę skorzystał albo zapłacił.', 5),

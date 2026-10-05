@@ -198,6 +198,7 @@ export type SubpointGoalCondition = {
   minCount: number;
   done: number;
   proofKind: string | null;
+  countsWhen: "completed" | "defined";
 };
 
 export type LibraryPick = {

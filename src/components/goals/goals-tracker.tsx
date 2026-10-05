@@ -59,6 +59,8 @@ export function GoalsTracker({
   initialGoalId,
   initialConditionId,
   initialMode,
+  initialTitle = "",
+  initialDescription = "",
 }: {
   startupId: string;
   userId: string;
@@ -72,6 +74,8 @@ export function GoalsTracker({
   initialGoalId: string | null;
   initialConditionId: string | null;
   initialMode: Mode;
+  initialTitle?: string;
+  initialDescription?: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -298,6 +302,8 @@ export function GoalsTracker({
           canAssign={canAssign}
           userId={userId}
           preset={preset}
+          initialTitle={initialTitle}
+          initialDescription={initialDescription}
           onClose={() => setCreating(false)}
           onSubmit={(values) =>
             run(
@@ -370,6 +376,8 @@ function GoalDraft({
   canAssign,
   userId,
   preset,
+  initialTitle = "",
+  initialDescription = "",
   onClose,
   onSubmit,
 }: {
@@ -380,6 +388,8 @@ function GoalDraft({
   canAssign: boolean;
   userId: string;
   preset: MilestoneCondition | null;
+  initialTitle?: string;
+  initialDescription?: string;
   onClose: () => void;
   onSubmit: (values: {
     title: string;
@@ -392,8 +402,8 @@ function GoalDraft({
     addAnother: boolean;
   }) => void;
 }) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [title, setTitle] = useState(initialTitle);
+  const [description, setDescription] = useState(initialDescription);
   const [goalTypeId, setGoalTypeId] = useState(preset?.goalTypeId ?? "custom");
   const [ownerId, setOwnerId] = useState(userId);
   const [dueDate, setDueDate] = useState("");

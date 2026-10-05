@@ -465,7 +465,9 @@ export function StageScreen({
               key={item.key}
               title={item.title}
               subtitle={
-                item.skipped
+                item.waitingOn
+                  ? item.waitingOn
+                  : item.skipped
                   ? "Pominięte"
                   : item.goalConditions.length > 0
                     ? item.goalConditions

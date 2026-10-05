@@ -114,6 +114,10 @@ export type StageSubpoint = {
   isComplete: boolean;
   /** Warunki liczby Goals. Pusta lista znaczy, że podpunkt ich nie ma. */
   goalConditions: SubpointGoalCondition[];
+  /** Klucze `punkt.podpunkt`, które muszą być ukończone wcześniej. */
+  dependsOn: string[];
+  /** Wcześniejszy wynik jeszcze nie jest gotowy. */
+  waitingOn: string | null;
   /** Warunek z treści sprawił, że podpunkt nie liczy się do postępu. */
   skipped: boolean;
   skipWhen: SkipWhen | null;

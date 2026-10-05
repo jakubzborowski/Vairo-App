@@ -195,7 +195,7 @@ export async function loadGoalsWorkspace(
            goal_condition_links(
              condition_id,
              startup_goal_conditions(
-               id, startup_id, goal_type_id, min_count, proof_kind,
+               id, startup_id, goal_type_id, min_count, proof_kind, counts_when, match_any_type,
                stage_subpoints(title)
              )
            )`
@@ -205,13 +205,13 @@ export async function loadGoalsWorkspace(
       supabase
         .from("startup_goal_conditions")
         .select(
-          `id, subpoint_id, goal_type_id, min_count, proof_kind, startup_id,
+          `id, subpoint_id, goal_type_id, min_count, proof_kind, counts_when, match_any_type, startup_id,
            goal_types(label),
            stage_subpoints(title),
            goal_condition_links(
              goal_id,
              goals(
-               id, startup_id, goal_type_id, status, archived_at,
+               id, startup_id, goal_type_id, owner_id, due_date, status, archived_at,
                proof_requirement, proof_snapshot
              )
            )`
@@ -245,6 +245,8 @@ export async function loadGoalsWorkspace(
     goal_type_id: string;
     min_count: number;
     proof_kind: string | null;
+    counts_when?: "completed" | "defined" | null;
+    match_any_type?: boolean | null;
     startup_id: string;
     goal_types: { label: string } | null;
     stage_subpoints: { title: string } | null;
@@ -254,6 +256,8 @@ export async function loadGoalsWorkspace(
         id: string;
         startup_id: string;
         goal_type_id: string;
+        owner_id?: string | null;
+        due_date?: string | null;
         status: string;
         archived_at: string | null;
         proof_requirement: unknown;
@@ -276,6 +280,8 @@ export async function loadGoalsWorkspace(
             goalTypeId: goal.goal_type_id,
             status: goal.status,
             archivedAt: goal.archived_at,
+            ownerId: "owner_id" in goal ? goal.owner_id : null,
+            dueDate: "due_date" in goal ? goal.due_date : null,
             proofRequirement: parseRequirement(goal.proof_requirement),
             proofSnapshot: parseSnapshot(goal.proof_snapshot),
           },
@@ -283,6 +289,8 @@ export async function loadGoalsWorkspace(
             startupId: row.startup_id,
             goalTypeId: row.goal_type_id,
             proofKind: row.proof_kind,
+            countsWhen: "counts_when" in row && row.counts_when === "defined" ? "defined" : "completed",
+            matchAnyType: "match_any_type" in row && Boolean(row.match_any_type),
           }
         )
       ) {
@@ -439,10 +447,10 @@ export async function loadSubpointGoalConditions(
   const { data, error } = await supabase
     .from("startup_goal_conditions")
     .select(
-      `id, subpoint_id, goal_type_id, min_count, proof_kind, startup_id,
+      `id, subpoint_id, goal_type_id, min_count, proof_kind, counts_when, match_any_type, startup_id,
        goal_types(label),
        goal_condition_links(
-         goals(id, startup_id, goal_type_id, status, archived_at, proof_requirement, proof_snapshot)
+         goals(id, startup_id, goal_type_id, owner_id, due_date, status, archived_at, proof_requirement, proof_snapshot)
        )`
     )
     .eq("startup_stage_id", startupStageId);
@@ -455,6 +463,8 @@ export async function loadSubpointGoalConditions(
     goal_type_id: string;
     min_count: number;
     proof_kind: string | null;
+    counts_when: "completed" | "defined" | null;
+    match_any_type: boolean | null;
     startup_id: string;
     goal_types: { label: string } | null;
     goal_condition_links: {
@@ -462,6 +472,8 @@ export async function loadSubpointGoalConditions(
         id: string;
         startup_id: string;
         goal_type_id: string;
+        owner_id: string | null;
+        due_date: string | null;
         status: string;
         archived_at: string | null;
         proof_requirement: unknown;
@@ -482,6 +494,8 @@ export async function loadSubpointGoalConditions(
             goalTypeId: goal.goal_type_id,
             status: goal.status,
             archivedAt: goal.archived_at,
+            ownerId: "owner_id" in goal ? goal.owner_id : null,
+            dueDate: "due_date" in goal ? goal.due_date : null,
             proofRequirement: parseRequirement(goal.proof_requirement),
             proofSnapshot: parseSnapshot(goal.proof_snapshot),
           },
@@ -489,6 +503,8 @@ export async function loadSubpointGoalConditions(
             startupId: row.startup_id,
             goalTypeId: row.goal_type_id,
             proofKind: row.proof_kind,
+            countsWhen: "counts_when" in row && row.counts_when === "defined" ? "defined" : "completed",
+            matchAnyType: "match_any_type" in row && Boolean(row.match_any_type),
           }
         )
       ) {
@@ -497,13 +513,19 @@ export async function loadSubpointGoalConditions(
     }
 
     const list = map.get(row.subpoint_id) ?? [];
+    const countsWhen = row.counts_when === "defined" ? "defined" : "completed";
     list.push({
       id: row.id,
       goalTypeId: row.goal_type_id,
-      label: row.goal_types?.label ?? row.goal_type_id,
+      label: row.match_any_type
+        ? countsWhen === "defined"
+          ? "Cel zapisany"
+          : "Cel ukończony"
+        : (row.goal_types?.label ?? row.goal_type_id),
       minCount: row.min_count,
       done: ids.size,
       proofKind: row.proof_kind,
+      countsWhen,
     });
     map.set(row.subpoint_id, list);
   }
