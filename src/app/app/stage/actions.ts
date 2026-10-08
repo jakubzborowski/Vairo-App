@@ -236,6 +236,12 @@ export async function closeStage(input: {
     };
   }
 
+  // MVP Stage kończy program ekranem z wynikami i prostą ofertą dalszej współpracy (§1C).
+  if (templateKey === "mvp") {
+    revalidatePath("/app/stage/complete");
+    return { error: null, next: "/app/stage/complete" };
+  }
+
   return { error: null, next: "/app" };
 }
 
@@ -337,6 +343,54 @@ export async function chooseCategoriesAfterAmbition(
   revalidatePath("/app/stage");
   revalidatePath("/app");
   return { error: null };
+}
+
+/**
+ * Domknięcie szkieletu etapu bez treści (np. Execution zanim wjedzie JSON).
+ * Zakłada instancję i od razu zamyka ją decyzją „continue”, żeby program
+ * mógł przejść dalej — jawnie, przyciskiem Foundera/Admina.
+ */
+export async function advanceSkeletonStage(formData: FormData) {
+  const stageKey = String(formData.get("stage_key") ?? "").trim();
+  if (!stageKey) return;
+
+  const { supabase, user } = await requireUser();
+  if (!user) return;
+
+  const [startups, activeTeamId] = await Promise.all([
+    getUserStartups(supabase, user.id),
+    getActiveStartupId(),
+  ]);
+  const active = resolveActiveStartup(startups, activeTeamId);
+  if (!active) return;
+
+  const denied = stageWriteError(active.role);
+  if (denied) return;
+
+  const { data: template } = await supabase
+    .from("stage_templates")
+    .select("id, published_at")
+    .eq("key", stageKey)
+    .order("version", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // Tylko szkielet — gdy treść już jest, domknięcie idzie normalną ścieżką etapu.
+  if (!template || template.published_at) return;
+
+  const stageId = await ensureStartupStage(supabase, active.id, stageKey);
+  if (!stageId) return;
+
+  await closeStage({
+    startupStageId: stageId,
+    decision: "continue",
+  });
+
+  revalidatePath("/app/stage");
+  revalidatePath("/app");
+  // Po szkielecie zawsze wracamy do etapu — bieżący program powinien wskazać
+  // kolejny z treścią (np. MVP), a nie dashboard.
+  redirect("/app/stage");
 }
 
 /**

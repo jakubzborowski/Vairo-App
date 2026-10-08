@@ -38,7 +38,13 @@ const GOAL_PROOF_KINDS = new Set([
 const CATEGORY_KEYS = new Set(["general", "saas", "hardware", "b2b", "b2c"]);
 
 /** Numer migracji nadawany per szablon, żeby pliki nie kolidowały. */
-const MIGRATION_NUMBER = { ambition: "006", idea: "007", preparation: "017", execution: "020" };
+const MIGRATION_NUMBER = {
+  ambition: "006",
+  idea: "007",
+  preparation: "017",
+  execution: "020",
+  mvp: "021",
+};
 
 // ---------------------------------------------------------------------------
 // Walidacja

@@ -419,6 +419,7 @@ export type StageProgramEntry = {
   title: string;
   subtitle: string | null;
   intro: string | null;
+  finishLabel: string | null;
   position: number;
   hasContent: boolean;
   startupStageId: string | null;
@@ -433,7 +434,9 @@ export async function loadStageProgram(
   const [{ data: templateRows }, { data: stageRows }] = await Promise.all([
     supabase
       .from("stage_templates")
-      .select("id, key, version, title, subtitle, intro, position, published_at")
+      .select(
+        "id, key, version, title, subtitle, intro, finish_label, position, published_at"
+      )
       .order("position", { ascending: true }),
     startupId
       ? supabase
@@ -467,6 +470,7 @@ export async function loadStageProgram(
         title: template.title,
         subtitle: template.subtitle,
         intro: template.intro,
+        finishLabel: (template.finish_label as string | null) ?? null,
         position: template.position,
         hasContent: template.published_at !== null,
         startupStageId: instance?.id ?? null,

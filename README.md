@@ -33,9 +33,9 @@ npm run build
 
 Pliki leżą w `supabase/migrations/`. Wklejasz je w **Supabase → SQL Editor** i odpalasz **po kolei, według numeru**. Każdy plik jest idempotentny: powtórne odpalenie nie dubluje danych.
 
-Execution Stage (cele, zadania, dowody, warunki Milestones, Rozpiska) jest w `018_execution_goals.sql`. Odpal go po `017`.
+Execution Stage (cele, zadania, dowody, warunki Milestones, Rozpiska) jest w `018_execution_goals.sql`. Odpal go po `017`. Treść Execution: `019` + `020_content_execution_v1.sql`. Treść MVP Stage: `021_content_mvp_v1.sql` (po `020`).
 
-Tracker w menu (Cele, Taski, Rozpiska) pojawia się, gdy startup domknie Preparation decyzją „kontynuuj”. Wcześniejsze cele da się otworzyć wprost pod `/app/goals` — na przykład z podpunktu, który wymaga Goals. Ponowne otwarcie Preparation nie chowa trackera.
+Tracker w menu (Cele, Taski, Rozpiska) pojawia się, gdy startup domknie Preparation decyzją „kontynuuj”. Domknięcie MVP Stage prowadzi na `/app/stage/complete` (podsumowanie + kontakt w sprawie dalszej współpracy; bez płatności).
 
 Warunki liczby celów wjeżdżają z treści etapu. W JSON podpunktu:
 

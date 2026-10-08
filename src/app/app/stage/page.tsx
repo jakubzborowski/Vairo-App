@@ -10,7 +10,7 @@ import {
   loadStageTree,
 } from "@/lib/stage";
 import { StageScreen } from "@/components/stage/stage-screen";
-import { openStage } from "./actions";
+import { advanceSkeletonStage, openStage } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -72,10 +72,29 @@ export default async function StagePage({
     : null;
   const entry = requested ?? currentProgramEntry(program);
 
-  // Etap bez treści = szkielet (Preparation, Execution, MVP). Mówimy to wprost,
-  // zamiast pokazywać puste kolumny albo udawać, że coś się da tu zrobić.
+  // Etap bez treści = szkielet. Mówimy to wprost, zamiast pokazywać puste
+  // kolumny. Gdy poprzedni etap jest domknięty, Founder/Admin może przejść
+  // dalej przyciskiem finish_label (np. Execution → MVP).
   if (!entry || !entry.hasContent) {
     const done = program.filter((item) => item.status === "completed");
+    const entryIndex = entry ? program.findIndex((item) => item.key === entry.key) : -1;
+    const previous =
+      entryIndex > 0
+        ? program[entryIndex - 1]
+        : done.length > 0
+          ? done.at(-1)!
+          : null;
+    const previousDone = previous?.status === "completed";
+    const canAdvance =
+      Boolean(entry) &&
+      previousDone &&
+      entry!.status !== "completed" &&
+      canEditStageData(active.role);
+    const nextWithContent = entry
+      ? program.find(
+          (item) => item.position > entry.position && item.hasContent
+        )
+      : null;
 
     return (
       <div className="mx-auto w-full max-w-2xl">
@@ -101,6 +120,17 @@ export default async function StagePage({
               </p>
             ) : null}
             <div className="mt-6 flex flex-wrap justify-center gap-2">
+              {canAdvance && entry ? (
+                <form action={advanceSkeletonStage}>
+                  <input type="hidden" name="stage_key" value={entry.key} />
+                  <Button type="submit">
+                    {entry.finishLabel ??
+                      (nextWithContent
+                        ? `Przejdź do ${nextWithContent.title}`
+                        : "Przejdź dalej")}
+                  </Button>
+                </form>
+              ) : null}
               {done.length > 0 ? (
                 <Button href={`/app/stage?stage=${done.at(-1)!.key}`} variant="secondary">
                   Przejrzyj {done.at(-1)!.title}
@@ -110,6 +140,12 @@ export default async function StagePage({
                 Wróć na dashboard
               </Button>
             </div>
+            {canAdvance && nextWithContent ? (
+              <p className="mt-4 text-[12.5px] text-[var(--text-subtle)]">
+                Treść tego etapu jeszcze nie wjechała. Możesz domknąć szkielet
+                i przejść do {nextWithContent.title}. Tracker i materiały zostają.
+              </p>
+            ) : null}
           </CardBody>
         </Card>
       </div>
