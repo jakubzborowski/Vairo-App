@@ -15,7 +15,7 @@ export function Logo({ className }: { className?: string }) {
       className={cn("inline-flex items-center gap-2", className)}
     >
       <Image
-        src="/brand/logo-blob.png"
+        src="/brand/logo-mark.png"
         alt=""
         width={34}
         height={34}

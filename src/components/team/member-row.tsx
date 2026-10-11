@@ -3,12 +3,26 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Crown, Pencil, ShieldCheck, Trash2, User, X } from "lucide-react";
-import { removeMember, updateJobTitle, updateMemberRole } from "@/app/app/team/actions";
+import {
+  Check,
+  Crown,
+  Pencil,
+  ShieldCheck,
+  Trash2,
+  User,
+  X,
+} from "lucide-react";
+import {
+  removeMember,
+  transferFounder,
+  updateJobTitle,
+  updateMemberRole,
+} from "@/app/app/team/actions";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { Modal } from "@/components/ui/modal";
 import { Pill } from "@/components/ui/pill";
 import { cn } from "@/lib/utils";
@@ -51,6 +65,7 @@ export function MemberRow({
   const [title, setTitle] = useState(member.jobTitle ?? "");
   const [roleOpen, setRoleOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [confirmTransfer, setConfirmTransfer] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, startBusy] = useTransition();
 
@@ -151,22 +166,12 @@ export function MemberRow({
               </div>
             </div>
           ) : (
-            <p className="mt-0.5 flex items-center gap-2 text-[13px] text-[var(--text-subtle)]">
+            <p className="mt-0.5 text-[13px] text-[var(--text-subtle)]">
               {member.jobTitle ?? (
                 <span className="italic text-[var(--text-faint)]">
                   Bez stanowiska
                 </span>
               )}
-              {canEditTitle ? (
-                <button
-                  type="button"
-                  onClick={() => setEditingTitle(true)}
-                  aria-label="Zmień stanowisko"
-                  className="rounded-md p-1 text-[var(--text-faint)] transition-colors hover:bg-white/6 hover:text-white"
-                >
-                  <Pencil className="size-3.5" />
-                </button>
-              ) : null}
             </p>
           )}
 
@@ -190,39 +195,70 @@ export function MemberRow({
           ) : null}
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          {canChangeRole ? (
-            <button
-              type="button"
-              onClick={() => setRoleOpen(true)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/10 px-3 text-[13px] text-[var(--text-muted)] transition-colors hover:border-white/22 hover:text-white"
-            >
-              <Icon className="size-3.5" />
-              {ROLE_LABELS[member.role]}
-            </button>
-          ) : (
-            <span
-              title={
-                isLastFounder
-                  ? "Jedyny Founder — najpierw przekaż tę rolę komuś innemu"
-                  : undefined
-              }
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-white/6 px-3 text-[13px] text-[var(--text-subtle)]"
-            >
-              <Icon className="size-3.5" />
-              {ROLE_LABELS[member.role]}
-            </span>
-          )}
+        {/* Rola jako plakietka do CZYTANIA, akcje pod trzema kropkami.
+            Wcześniej po prawej stały trzy klikalne rzeczy — przycisk roli,
+            ołówek przy stanowisku i kosz — więc wiersz o jednej osobie miał
+            trzy wezwania do działania. Teraz wiersz mówi, kto to jest i co
+            może; co z tym zrobić, sprawdza się na żądanie. */}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span
+            title={
+              isLastFounder
+                ? "Jedyny Founder — najpierw przekaż tę rolę komuś innemu"
+                : ROLE_DESCRIPTIONS[member.role]
+            }
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-white/[0.06] px-2.5 text-[12.5px] text-[var(--text-muted)]"
+          >
+            <Icon className="size-3.5" />
+            {ROLE_LABELS[member.role]}
+          </span>
 
-          {canRemove ? (
-            <button
-              type="button"
-              onClick={() => setConfirmRemove(true)}
-              aria-label={`Usuń ${member.fullName ?? "osobę"} z teamu`}
-              className="inline-flex size-9 items-center justify-center rounded-lg text-[var(--text-faint)] transition-colors hover:bg-[var(--danger)]/12 hover:text-[var(--danger)]"
-            >
-              <Trash2 className="size-4" />
-            </button>
+          {canEditTitle || canChangeRole || canRemove ? (
+            <Menu label={`Zarządzaj: ${member.fullName ?? "osoba"}`}>
+              {(close) => (
+                <>
+                  {canEditTitle ? (
+                    <MenuItem
+                      icon={Pencil}
+                      onClick={() => {
+                        setEditingTitle(true);
+                        close();
+                      }}
+                    >
+                      Zmień stanowisko
+                    </MenuItem>
+                  ) : null}
+
+                  {canChangeRole ? (
+                    <MenuItem
+                      icon={ShieldCheck}
+                      onClick={() => {
+                        setRoleOpen(true);
+                        close();
+                      }}
+                    >
+                      Zmień rolę
+                    </MenuItem>
+                  ) : null}
+
+                  {canRemove ? (
+                    <>
+                      <MenuSeparator />
+                      <MenuItem
+                        icon={Trash2}
+                        tone="danger"
+                        onClick={() => {
+                          setConfirmRemove(true);
+                          close();
+                        }}
+                      >
+                        Usuń z teamu
+                      </MenuItem>
+                    </>
+                  ) : null}
+                </>
+              )}
+            </Menu>
           ) : null}
         </div>
       </div>
@@ -298,6 +334,80 @@ export function MemberRow({
               );
             })}
           </div>
+
+          {/* Oddanie sterów to osobna decyzja, nie „zmiana roli" — bo zmienia
+              rolę DWÓM osobom naraz. Dlatego stoi pod listą, oddzielona. */}
+          {viewerRole === "founder" && !isSelf && member.role !== "founder" ? (
+            <div className="border-t border-white/[0.07] pt-4">
+              <p className="text-[13px] font-medium text-white">
+                Oddajesz prowadzenie?
+              </p>
+              <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
+                {member.fullName ?? "Ta osoba"} zostanie Founderem, a Ty
+                Adminem. Stracisz możliwość usunięcia startupu i nadawania roli
+                Foundera.
+              </p>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-3"
+                disabled={busy}
+                onClick={() => {
+                  setRoleOpen(false);
+                  setConfirmTransfer(true);
+                }}
+              >
+                <Crown className="size-4" />
+                Przekaż rolę Foundera
+              </Button>
+            </div>
+          ) : null}
+
+          {error ? (
+            <p className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-3 py-2 text-[13px] text-[var(--danger)]">
+              {error}
+            </p>
+          ) : null}
+        </Modal>
+      ) : null}
+
+      {confirmTransfer ? (
+        <Modal
+          title="Przekazać rolę Foundera?"
+          description={`${member.fullName ?? "Ta osoba"} przejmie prowadzenie teamu. Ty zostaniesz Adminem — nadal zarządzasz składem i etapami, ale nie usuniesz startupu ani nie nadasz nikomu roli Foundera.`}
+          onClose={() => setConfirmTransfer(false)}
+          footer={
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => setConfirmTransfer(false)}
+                disabled={busy}
+              >
+                Anuluj
+              </Button>
+              <Button
+                loading={busy}
+                onClick={() =>
+                  run(
+                    () =>
+                      transferFounder({
+                        startupId,
+                        toProfileId: member.profileId,
+                      }),
+                    () => setConfirmTransfer(false)
+                  )
+                }
+              >
+                <Crown className="size-4" />
+                Przekazuję
+              </Button>
+            </>
+          }
+        >
+          <p className="rounded-xl border border-white/10 bg-[var(--surface-2)] px-4 py-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
+            Tę zmianę da się odwrócić tylko wtedy, gdy nowy Founder odda Ci
+            rolę z powrotem. Rób to tylko z osobą, z którą się na to umówiłeś.
+          </p>
 
           {error ? (
             <p className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-3 py-2 text-[13px] text-[var(--danger)]">

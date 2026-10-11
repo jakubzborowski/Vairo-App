@@ -8,7 +8,7 @@ import { respondToJoinRequest } from "@/app/app/social/actions";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ROLE_LABELS } from "@/types/startup";
+import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/types/startup";
 import { JOIN_STATUS_LABELS, type JoinRequest } from "@/types/social";
 import { TeamLogo } from "./team-logo";
 
@@ -79,6 +79,16 @@ export function RequestCard({ request }: { request: JoinRequest }) {
               ? ` · stanowisko: ${request.jobTitle}`
               : null}
           </p>
+
+          {/* „Zaprasza Cię jako Admin" nie znaczy nic dla kogoś, kto pierwszy
+              raz widzi tę aplikację — a to jest decyzja o uprawnieniach, którą
+              podejmuje się raz. Dlatego przy roli innej niż zwykły członek
+              mówimy wprost, co ona daje. */}
+          {!isApplication && request.proposedRole !== "member" ? (
+            <p className="mt-1.5 rounded-lg bg-white/[0.04] px-3 py-2 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
+              Co to znaczy: {ROLE_DESCRIPTIONS[request.proposedRole]}
+            </p>
+          ) : null}
 
           {isApplication && request.profileHeadline ? (
             <p className="mt-1 text-[12.5px] text-[var(--text-faint)]">

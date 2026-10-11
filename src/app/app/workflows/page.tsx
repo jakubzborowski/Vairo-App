@@ -62,7 +62,7 @@ export default async function WorkflowsPage() {
       <div className="mx-auto w-full max-w-xl">
         <h1 className="font-heading text-[1.6rem] font-semibold text-white">Rozpiska</h1>
         <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-muted)]">
-          Brakuje migracji 018. Odpal ją w Supabase → SQL Editor.
+          Brakuje migracji 025. Odpal ją w Supabase → SQL Editor.
         </p>
       </div>
     );

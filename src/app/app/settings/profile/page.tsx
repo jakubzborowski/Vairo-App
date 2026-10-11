@@ -42,7 +42,7 @@ export default async function ProfileSettingsPage() {
 
   return (
     <div>
-      <div className="mx-auto w-full max-w-3xl">
+      <div className="page">
         <SettingsTabs active="profile" />
       </div>
       <ProfileEditor

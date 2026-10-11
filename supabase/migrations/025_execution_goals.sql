@@ -1,5 +1,5 @@
 -- ============================================================================
--- 018 · Execution: Goals, taski, proof, warunki Milestones, Rozpiska
+-- 025 · Execution: Goals, taski, proof, warunki Milestones, Rozpiska
 -- ----------------------------------------------------------------------------
 -- Milestones zostają treścią Vairo (stage_*). Goals są celami użytkownika.
 -- Subpoint zalicza Goal dopiero, gdy jest jawnie podpięty, ma właściwy typ,
@@ -9,7 +9,13 @@
 -- Zamknięty etap nie jest przeliczany ponownie. Ponowne otwarcie wraca do
 -- aktualnych danych, a snapshot zamknięcia zostaje w stage_closures.
 --
--- Odpal PO 017. Idempotentne.
+-- Odpal PO 024. Idempotentne.
+--
+-- Numer 025, nie 018: ta migracja korzysta z `startup_files` i `skip_when`
+-- z 021 (Preparation) i nadpisuje `recalc_subpoint_progress()` wersją, która
+-- jako jedyna łączy strażnika kaskady z 015, `skip_when` z 021 i warunki celów.
+-- Musi więc biec PO 021 — inaczej 021 nadpisze ją swoją wersją bez celów
+-- i bez strażnika, a postęp etapu przestanie liczyć Goals bez żadnego błędu.
 -- ============================================================================
 
 alter table public.startups

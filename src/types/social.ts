@@ -155,13 +155,24 @@ export type JoinRequest = {
 };
 
 /** Komunikaty błędów z triggerów bazy — tłumaczone na ludzki język. */
-export function translateJoinError(message: string | null | undefined) {
+export function translateJoinError(
+  message: string | null | undefined,
+  /**
+   * Kogo dotyczy limit, gdy ten zadziała. Przy przyjmowaniu ZGŁOSZENIA limit
+   * należy do kandydata, przy przyjmowaniu ZAPROSZENIA — do nas. Bez tego
+   * Founder widział „Limit 3 teamów na konto został osiągnięty" i mógł
+   * zrozumieć, że to jego konto jest pełne, choć chodziło o kandydata.
+   */
+  limitSubject: "me" | "them" = "me"
+) {
   if (!message) return null;
   if (message.includes("already_member")) {
     return "Ta osoba jest już w tym teamie.";
   }
   if (message.includes("startup_limit_reached")) {
-    return "Limit 3 teamów na konto został osiągnięty.";
+    return limitSubject === "them"
+      ? "Ta osoba należy już do 3 teamów — to maksimum na konto i nie da się jej dodać."
+      : "Należysz już do 3 teamów — to maksimum na konto.";
   }
   if (message.includes("join_requests_one_pending")) {
     return "Rozmowa z tą osobą już trwa — sprawdź Zaproszenia.";
@@ -198,6 +209,8 @@ export type ContactSignal = {
   /** null = kontakt prywatny, jako osoba. */
   contextStartupId: string | null;
   contextStartupName: string | null;
+  contextStartupLogoUrl: string | null;
+  contextStartupTagline: string | null;
   /** Dane drugiej strony — tej, której user nie zna. */
   otherId: string;
   otherName: string | null;
@@ -230,7 +243,7 @@ export type ChatMessage = {
 export function translateContactError(message: string | null | undefined) {
   if (!message) return null;
   if (message.includes("contact_signals_one_pending")) {
-    return "Już wysłałeś zaczepkę do tej osoby — czeka na odpowiedź.";
+    return "Zaczepka do tej osoby już czeka na odpowiedź.";
   }
   if (message.includes("not_a_member_of_context")) {
     return "Możesz pisać w imieniu teamu, do którego należysz.";

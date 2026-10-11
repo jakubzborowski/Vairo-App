@@ -8,6 +8,7 @@ import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { loadStageProgram } from "@/lib/stage";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
+import { plural } from "@/lib/utils";
 
 export const metadata = { title: "Koniec programu — Vairo" };
 export const dynamic = "force-dynamic";
@@ -70,15 +71,16 @@ export default async function StageCompletePage() {
 
       <Card className="mt-8">
         <CardBody className="flex flex-col gap-4 pt-5">
-          <p className="text-[12px] font-medium tracking-wide text-[var(--text-faint)] uppercase">
+          <p className="text-[12px] font-medium tracking-wide text-[var(--text-subtle)] uppercase">
             Co zostało z programu
           </p>
           <ul className="flex flex-col gap-3">
             <li className="flex items-start gap-3 text-[14px] text-[var(--text-muted)]">
               <Flag className="mt-0.5 size-4 shrink-0 text-[var(--vairo)]" />
               <span>
-                <span className="text-white">{completedGoals ?? 0}</span> ukończonych
-                celów z dowodem
+                <span className="text-white">{completedGoals ?? 0}</span>{" "}
+                {plural(completedGoals ?? 0, "ukończony cel", "ukończone cele", "ukończonych celów")}{" "}
+                z dowodem
               </span>
             </li>
             <li className="flex items-start gap-3 text-[14px] text-[var(--text-muted)]">
@@ -86,9 +88,9 @@ export default async function StageCompletePage() {
               <span>
                 Otwarte u Ciebie:{" "}
                 <span className="text-white">{openGoals}</span>{" "}
-                {openGoals === 1 ? "cel" : "cele"} ·{" "}
+                {plural(openGoals, "cel", "cele", "celów")} ·{" "}
                 <span className="text-white">{openTasks}</span>{" "}
-                {openTasks === 1 ? "zadanie" : "zadania"}
+                {plural(openTasks, "zadanie", "zadania", "zadań")}
               </span>
             </li>
           </ul>
@@ -105,7 +107,7 @@ export default async function StageCompletePage() {
 
       <Card className="mt-4">
         <CardBody className="pt-5">
-          <p className="text-[12px] font-medium tracking-wide text-[var(--text-faint)] uppercase">
+          <p className="text-[12px] font-medium tracking-wide text-[var(--text-subtle)] uppercase">
             Co dalej
           </p>
           <h2 className="mt-2 font-heading text-[1.15rem] font-semibold text-white">
@@ -118,20 +120,10 @@ export default async function StageCompletePage() {
             workspace.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
-            {contactUrl.startsWith("/") ? (
-              <Button href={contactUrl}>
-                <MessageCircle className="size-4" />
-                Porozmawiaj o współpracy
-              </Button>
-            ) : (
-              <a
-                href={contactUrl}
-                className="relative inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--vairo-strong)] px-4 py-2.5 text-[14px] font-medium text-white shadow-[0_2px_12px_rgba(238,95,28,.25)] transition-[background-color,transform] duration-150 hover:bg-[var(--vairo)] active:scale-[.98]"
-              >
-                <MessageCircle className="size-4" />
-                Porozmawiaj o współpracy
-              </a>
-            )}
+            <Button href={contactUrl}>
+              <MessageCircle className="size-4" />
+              Porozmawiaj o współpracy
+            </Button>
             <Button href="/app" variant="secondary">
               Wróć na Start
               <ArrowRight className="size-4" />
@@ -140,9 +132,9 @@ export default async function StageCompletePage() {
         </CardBody>
       </Card>
 
-      <p className="mt-6 text-center text-[12.5px] text-[var(--text-faint)]">
+      <p className="mt-6 text-center text-[12.5px] text-[var(--text-subtle)]">
         Tracker, team i pliki działają jak wcześniej.{" "}
-        <Link href="/app/program" className="text-[var(--text-subtle)] underline-offset-2 hover:text-white hover:underline">
+        <Link href="/app/program" className="text-[var(--text-muted)] underline-offset-2 hover:text-white hover:underline">
           Zobacz cały program
         </Link>
         .

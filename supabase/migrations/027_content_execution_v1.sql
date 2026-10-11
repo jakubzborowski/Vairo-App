@@ -1,5 +1,5 @@
 -- ============================================================================
--- 020 · Treść etapu: Execution (v1)
+-- 027 · Treść etapu: Execution (v1)
 -- ----------------------------------------------------------------------------
 -- PLIK GENEROWANY — nie edytuj ręcznie.
 -- Źródło: supabase/content/execution-v1.json

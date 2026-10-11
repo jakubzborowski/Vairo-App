@@ -44,7 +44,7 @@ export default async function DocsPage() {
       </p>
       {error ? (
         <p className="mt-4 text-[14px] text-[var(--text-muted)]">
-          Brakuje tabeli dokumentów. Odpal migrację 019 w Supabase.
+          Brakuje tabeli dokumentów. Odpal migrację 026 w Supabase.
         </p>
       ) : (
         <DocsEditor documents={documents} />

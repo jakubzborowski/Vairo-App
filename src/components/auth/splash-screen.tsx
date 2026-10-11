@@ -73,7 +73,7 @@ export function SplashScreen({
       <div className="relative z-10 flex w-full max-w-[280px] flex-col items-center px-6 splash-center">
         <div className="flex items-center gap-3">
           <Image
-            src="/brand/logo-blob.png"
+            src="/brand/logo-mark.png"
             alt=""
             width={52}
             height={52}

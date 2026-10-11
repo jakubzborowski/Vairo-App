@@ -24,7 +24,8 @@ async function requireUser() {
 
 function revalidateSocial() {
   revalidatePath("/app/social/invites");
-  revalidatePath("/app/social/discover");
+  revalidatePath("/app/social/people");
+  revalidatePath("/app/social/teams");
   revalidatePath("/app/team");
   revalidatePath("/app");
 }
@@ -32,7 +33,8 @@ function revalidateSocial() {
 function revalidateContacts() {
   revalidatePath("/app/social/invites");
   revalidatePath("/app/social/messages");
-  revalidatePath("/app/social/discover");
+  revalidatePath("/app/social/people");
+  revalidatePath("/app/social/teams");
   revalidatePath("/app");
 }
 
@@ -121,7 +123,13 @@ export async function inviteToStartup(input: {
  */
 export async function respondToJoinRequest(
   requestId: string,
-  action: "accept" | "decline" | "withdraw"
+  action: "accept" | "decline" | "withdraw",
+  /**
+   * Kierunek prośby — służy WYŁĄCZNIE do doboru brzmienia komunikatu o limicie
+   * trzech teamów. Uprawnienia rozstrzyga funkcja w bazie, więc podanie tu
+   * czegokolwiek nie zmienia tego, co wolno zrobić.
+   */
+  direction?: "application" | "invite"
 ): Promise<Result> {
   const { supabase, user } = await requireUser();
   if (!user) return { error: "Musisz być zalogowany." };
@@ -137,7 +145,12 @@ export async function respondToJoinRequest(
         error: "Brakuje migracji 009 — odpal ją w Supabase → SQL Editor.",
       };
     }
-    return { error: translateJoinError(error.message) };
+    return {
+      error: translateJoinError(
+        error.message,
+        direction === "application" ? "them" : "me"
+      ),
+    };
   }
 
   revalidateSocial();
@@ -435,28 +448,50 @@ export async function passCandidate(input: {
     return { error: "Podaj dokładnie jeden cel do pominięcia." };
   }
 
-  const { error } = await supabase.from("discovery_passes").upsert(
-    {
-      actor_id: user.id,
-      target_profile_id: input.profileId ?? null,
-      target_startup_id: input.startupId ?? null,
-    },
-    {
-      onConflict: hasPerson
-        ? "actor_id,target_profile_id"
-        : "actor_id,target_startup_id",
-      ignoreDuplicates: true,
-    }
-  );
+  // Zwykły INSERT, nie UPSERT — i to jest wymuszone przez kształt tabeli.
+  //
+  // `discovery_passes` ma dwa indeksy unikalne, oba CZĘŚCIOWE:
+  //   (actor_id, target_profile_id) where target_profile_id is not null
+  //   (actor_id, target_startup_id) where target_startup_id is not null
+  //
+  // Postgres nie przyjmie indeksu częściowego jako arbitra `ON CONFLICT`,
+  // dopóki zapytanie nie powtórzy jego warunku (`... where target_profile_id
+  // is not null`). PostgREST nie ma jak takiego predykatu wysłać — parametr
+  // `onConflict` przyjmuje wyłącznie listę kolumn. Stąd błąd, który widział
+  // user przy każdym pominięciu karty:
+  // „there is no unique or exclusion constraint matching the ON CONFLICT
+  // specification".
+  //
+  // Indeksy są częściowe słusznie: jeden wiersz opisuje ALBO osobę, ALBO
+  // team, więc druga kolumna jest zawsze NULL-em, a NULL-e w Postgresie nie
+  // kolidują ze sobą. Zamiast naginać schemat pod składnię klienta, robimy
+  // zwykły INSERT i traktujemy duplikat jako sukces — bo nim jest: karta i tak
+  // miała zniknąć z talii, a to, że była pominięta już wcześniej, niczego dla
+  // użytkownika nie zmienia.
+  const { error } = await supabase.from("discovery_passes").insert({
+    actor_id: user.id,
+    target_profile_id: input.profileId ?? null,
+    target_startup_id: input.startupId ?? null,
+  });
 
   if (error) {
-    if (error.message.includes("discovery_passes")) {
-      return { error: "Brakuje migracji 011 — odpal ją w Supabase → SQL Editor." };
+    // 23505 = unique_violation. Ten sam cel pominięty drugi raz (np. dwa
+    // kliknięcia pod rząd albo dwie otwarte karty) to nie jest błąd.
+    const duplicate =
+      error.code === "23505" || error.message.includes("duplicate key");
+
+    if (!duplicate) {
+      if (error.message.includes("discovery_passes")) {
+        return {
+          error: "Brakuje migracji 011 — odpal ją w Supabase → SQL Editor.",
+        };
+      }
+      return { error: translateDbError(error.message) };
     }
-    return { error: error.message };
   }
 
-  revalidatePath("/app/social/discover");
+  revalidatePath("/app/social/people");
+  revalidatePath("/app/social/teams");
   return { error: null };
 }
 
@@ -486,7 +521,8 @@ export async function undoLastPass(kind: "person" | "team"): Promise<Result> {
 
   if (error) return { error: error.message };
 
-  revalidatePath("/app/social/discover");
+  revalidatePath("/app/social/people");
+  revalidatePath("/app/social/teams");
   return { error: null };
 }
 
@@ -505,6 +541,7 @@ export async function clearPasses(kind: "person" | "team"): Promise<Result> {
 
   if (error) return { error: error.message };
 
-  revalidatePath("/app/social/discover");
+  revalidatePath("/app/social/people");
+  revalidatePath("/app/social/teams");
   return { error: null };
 }

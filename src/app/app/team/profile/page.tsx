@@ -4,6 +4,8 @@ import { ArrowLeft, Eye } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
+import { getOpenRoles } from "@/lib/social";
+import { loadStageProgram } from "@/lib/stage";
 import { TeamProfileEditor } from "@/components/team/team-profile-editor";
 import { ProfileNudge } from "@/components/social/profile-nudge";
 import { scoreTeamProfile } from "@/lib/profile-completeness";
@@ -32,7 +34,7 @@ export default async function TeamProfilePage() {
 
   if (!canManageTeam(active.role)) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="page">
         <EmptyState
           icon={Eye}
           title="Profil publiczny edytują Founder i Admin"
@@ -60,38 +62,75 @@ export default async function TeamProfilePage() {
     location: string | null;
     website_url: string | null;
     is_discoverable: boolean;
+    show_stage_publicly: boolean;
     status: StartupStatus;
   };
 
-  const { data: row } = await supabase
+  // `show_stage_publicly` przychodzi z migracją 016. Dopóki ktoś jej nie
+  // odpali, `select` z tą nazwą kończy się błędem — a błąd oznacza tu puste
+  // `row`, czyli Founder zamiast edytora dostaje ciche przekierowanie i nie ma
+  // jak się domyślić, dlaczego. Dlatego pytamy najpierw z kolumną, a przy
+  // niepowodzeniu ponawiamy bez niej i przyjmujemy wartość domyślną.
+  const BASE_COLUMNS =
+    "name, logo_url, public_tagline, public_description, location, " +
+    "website_url, is_discoverable, status";
+
+  const withFlag = await supabase
     .from("startups")
-    .select(
-      "name, logo_url, public_tagline, public_description, location, " +
-        "website_url, is_discoverable, status"
-    )
+    .select(`${BASE_COLUMNS}, show_stage_publicly`)
     .eq("id", active.id)
     .maybeSingle();
 
-  const startup = row as unknown as Row | null;
+  let startup = withFlag.data as unknown as Row | null;
+
+  // Czy w bazie w ogóle jest o co pytać. Jeśli nie, przełącznik etapu się nie
+  // pokaże — kontrolka, która nic nie zapisuje, jest gorsza niż jej brak.
+  const stageConsentAvailable = startup !== null;
+
+  if (!startup) {
+    const legacy = await supabase
+      .from("startups")
+      .select(BASE_COLUMNS)
+      .eq("id", active.id)
+      .maybeSingle();
+    startup = legacy.data
+      ? ({ ...(legacy.data as object), show_stage_publicly: false } as unknown as Row)
+      : null;
+  }
 
   if (!startup) redirect("/app/team");
 
-  const { count: openRoleCount } = await supabase
-    .from("startup_open_roles")
-    .select("id", { count: "exact", head: true })
-    .eq("startup_id", active.id)
-    .eq("is_open", true);
+  // Podgląd karty pokazuje to samo, co talia w Odkrywaj, więc potrzebuje tych
+  // samych danych: składu, otwartych ról i etapu. Liczby są z bazy — panel
+  // z wymyśloną metryką wyglądałby mądrze i nie znaczyłby nic.
+  const [openRoles, { count: memberCount }, program] = await Promise.all([
+    getOpenRoles(supabase, active.id),
+    supabase
+      .from("startup_members")
+      .select("profile_id", { count: "exact", head: true })
+      .eq("startup_id", active.id),
+    loadStageProgram(supabase, active.id),
+  ]);
+
+  const visibleRoles = openRoles.filter((role) => role.isOpen);
+  const openRoleCount = visibleRoles.length;
+
+  // Ten sam etap, który wystawia widok `public_startups`: NAJDALSZY
+  // rozpoczęty, nie pierwszy otwarty. Gdyby podgląd liczył to inaczej,
+  // pokazywałby coś, czego obcy nigdy nie zobaczą.
+  const started = program.filter((entry) => entry.status !== "not_started");
+  const stageLabel = started.at(-1)?.title ?? null;
 
   const completeness = scoreTeamProfile({
     logo_url: startup.logo_url,
     public_tagline: startup.public_tagline,
     public_description: startup.public_description,
     location: startup.location,
-    openRoleCount: openRoleCount ?? 0,
+    openRoleCount,
   });
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="page-wide">
       <Link
         href="/app/team"
         className="mb-5 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white"
@@ -106,9 +145,7 @@ export default async function TeamProfilePage() {
             Profil publiczny teamu
           </h1>
           <p className="mt-1 max-w-xl text-[14px] leading-relaxed text-[var(--text-subtle)]">
-            Tak widzą Was ludzie, którzy szukają projektu. Pełny opis pomysłu
-            z Idea Stage zostaje prywatny — na zewnątrz idzie tylko to, co
-            napiszecie tutaj.
+            Tak widzą Was ludzie, którzy szukają projektu.
           </p>
         </div>
         <Button href={`/app/social/teams/${active.id}`} variant="secondary" size="sm">
@@ -129,7 +166,10 @@ export default async function TeamProfilePage() {
             showFix={false}
           />
           <p className="mt-2 px-1 text-[12.5px] text-[var(--text-subtle)]">
-            Logo, opis i lokalizację uzupełnisz poniżej. Otwarte role dodajesz{" "}
+            {/* „Logo, opis i lokalizację uzupełnisz poniżej" opisywało pola,
+                które są dwadzieścia pikseli niżej. Zostaje sama informacja
+                nieoczywista: gdzie są otwarte role. */}
+            Otwarte role dodajesz{" "}
             <Link
               href="/app/team"
               className="text-[var(--vairo)] underline-offset-2 hover:underline"
@@ -150,9 +190,19 @@ export default async function TeamProfilePage() {
         location={startup.location ?? ""}
         websiteUrl={startup.website_url ?? ""}
         isDiscoverable={startup.is_discoverable}
+        showStagePublicly={startup.show_stage_publicly ?? false}
+        stageConsentAvailable={stageConsentAvailable}
         status={startup.status}
         canArchive={canTransferOwnership(active.role)}
         canDelete={canTransferOwnership(active.role)}
+        memberCount={memberCount ?? 0}
+        stageLabel={stageLabel}
+        openRoles={visibleRoles.map((role) => ({
+          id: role.id,
+          title: role.title,
+          weeklyHours: role.weeklyHours,
+          skills: role.skills,
+        }))}
       />
     </div>
   );

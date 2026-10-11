@@ -6,6 +6,9 @@ import { getActiveStartupId } from "@/lib/active-team";
 import { countPendingSignals, countUnreadMessages } from "@/lib/messages";
 import { countUnreadNotifications } from "@/lib/notifications";
 import { isExecutionUnlocked } from "@/lib/goals";
+import { canManageTeam } from "@/types/startup";
+import { ToastProvider } from "@/components/ui/toast";
+import { LiveNotifications } from "@/components/app/live-notifications";
 import type { TeamSummary } from "@/components/app/team-switcher";
 
 export const dynamic = "force-dynamic";
@@ -97,6 +100,7 @@ export default async function AppLayout({
       }}
       teams={teams}
       activeTeamId={active?.id ?? null}
+      canManageActiveTeam={active ? canManageTeam(active.role) : false}
       badges={{
         inbox: (pendingInvites ?? 0) + pendingContacts,
         messages: unreadMessages,
@@ -104,7 +108,10 @@ export default async function AppLayout({
       }}
       executionUnlocked={executionUnlocked}
     >
-      {children}
+      <ToastProvider>
+        <LiveNotifications profileId={user.id} />
+        {children}
+      </ToastProvider>
     </AppShell>
   );
 }

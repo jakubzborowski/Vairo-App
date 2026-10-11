@@ -56,7 +56,7 @@ export default async function GoalsPage({
       <div className="mx-auto w-full max-w-xl">
         <h1 className="font-heading text-[1.6rem] font-semibold text-white">Cele</h1>
         <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-muted)]">
-          Brakuje migracji 018. Wklej ją w Supabase → SQL Editor, po migracji 017.
+          Brakuje migracji 025. Wklej ją w Supabase → SQL Editor, po migracji 024.
           Dopiero wtedy da się zapisywać cele, dowody i zadania.
         </p>
       </div>
@@ -69,7 +69,7 @@ export default async function GoalsPage({
         <h1 className="font-heading text-[1.6rem] font-semibold text-white">Cele</h1>
         <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-muted)]">
           Nie udało się wczytać celów tego startupu. Odśwież stronę. Jeśli komunikat
-          wraca, sprawdź, czy migracja 018 jest odpalona w całości.
+          wraca, sprawdź, czy migracja 025 jest odpalona w całości.
         </p>
       </div>
     );

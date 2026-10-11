@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ListTodo } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -59,9 +59,14 @@ export function TasksView({
 
   const canAssign = canAssignToOthers(role);
 
-  useEffect(() => {
+  // Optymistyczne statusy (przeciąganie między kolumnami) obowiązują do chwili,
+  // gdy serwer odeśle świeże `goals`. Korekta w trakcie renderu, nie w efekcie:
+  // efekt najpierw pokazałby klatkę ze starym nadpisaniem na nowych danych.
+  const [seenGoals, setSeenGoals] = useState(goals);
+  if (seenGoals !== goals) {
+    setSeenGoals(goals);
     setStatusOverride({});
-  }, [goals]);
+  }
 
   const rows = useMemo(() => {
     return goals

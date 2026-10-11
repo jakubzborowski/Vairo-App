@@ -3,14 +3,15 @@ import { redirect } from "next/navigation";
 import {
   AlertTriangle,
   ArrowRight,
-  Check,
   ChevronRight,
   Compass,
   Eye,
   HelpCircle,
+  History,
   Lock,
-  Minus,
+  Plus,
   Rocket,
+  Sparkles,
   Target,
   Users,
 } from "lucide-react";
@@ -19,12 +20,18 @@ import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { getActiveStartupId } from "@/lib/active-team";
 import { currentProgramEntry, loadStageProgram } from "@/lib/stage";
 import { loadNextActions, type Blocker, type NextAction } from "@/lib/next-actions";
-import { isExecutionUnlocked } from "@/lib/goals";
+import { isExecutionUnlocked, loadNearestGoal, type NearestGoal } from "@/lib/goals";
+import { GOAL_STATUS_LABELS } from "@/types/goals";
+import { getTeamMembers } from "@/lib/social";
+import { StageProgress } from "@/components/app/stage-progress";
 import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
 import { Card, CardBody } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { ROLE_LABELS, canEditStageData } from "@/types/startup";
-import type { StageProgramEntry } from "@/lib/stage";
+import { CountUp } from "@/components/ui/count-up";
+import { scoreProfile } from "@/lib/profile-completeness";
+import { cn, plural } from "@/lib/utils";
+import { ROLE_LABELS, canEditStageData, canManageTeam } from "@/types/startup";
+import type { TeamMember } from "@/lib/social";
 
 export const metadata = { title: "Dashboard — Vairo" };
 export const dynamic = "force-dynamic";
@@ -41,7 +48,7 @@ export default async function AppPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name")
+    .select("full_name, avatar_url, headline, weekly_focus, looking_for")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -60,7 +67,7 @@ export default async function AppPage() {
   // nie błąd. Dlatego zamiast pustych kafelków dostaje dwa konkretne wyjścia.
   if (!active) {
     return (
-      <div className="mx-auto w-full max-w-4xl">
+      <div className="page">
         <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white sm:text-[1.85rem]">
           {greeting}
         </h1>
@@ -109,10 +116,15 @@ export default async function AppPage() {
   // Pasek etapów czyta `stage_templates`, nie listę zaszytą w kodzie — dodanie
   // etapu to migracja, nie zmiana w trzech komponentach.
   const program = await loadStageProgram(supabase, active.id);
+  const programDone = program.some((item) => item.key === "mvp" && item.status === "completed");
   const current = currentProgramEntry(program);
   const stage = active.stage;
   const percent =
     stage && stage.total > 0 ? Math.round((stage.done / stage.total) * 100) : 0;
+  // „2 z 5" w karcie i klocek numer 2 na pasku to ta sama informacja podana
+  // dwa razy — i o to chodzi. Pasek pokazuje kształt drogi, karta nazywa
+  // miejsce na niej słowami.
+  const stepNumber = program.findIndex((item) => item.key === current?.key) + 1;
   const canEdit = canEditStageData(active.role);
 
   const { error: dueError } = await supabase.rpc("notify_upcoming_deadlines", {
@@ -129,9 +141,51 @@ export default async function AppPage() {
     current,
   });
   const trackerOpen = await isExecutionUnlocked(supabase, active.id);
+  // Panel celu stoi w tym samym miejscu przez cały program (guidelines,
+  // sekcja 9). Dane dostaje dopiero, gdy tracker jest otwarty — wcześniej
+  // pytanie o cele nie ma sensu, bo nikt nie mógł ich jeszcze założyć.
+  const nearestGoal = trackerOpen ? await loadNearestGoal(supabase, active.id) : null;
+
+  // Liczby do paneli. Każda pochodzi z bazy — panel z wymyśloną metryką
+  // („wynik gotowości: 72") wyglądałby mądrze i nie znaczyłby nic.
+  const [{ count: memberCount }, { count: waitingCount }, { count: skillCount }] =
+    await Promise.all([
+      supabase
+        .from("startup_members")
+        .select("profile_id", { count: "exact", head: true })
+        .eq("startup_id", active.id),
+      canManageTeam(active.role)
+        ? supabase
+            .from("startup_join_requests")
+            .select("id", { count: "exact", head: true })
+            .eq("startup_id", active.id)
+            .eq("status", "pending")
+            .eq("direction", "application")
+        : Promise.resolve({ count: 0 }),
+      supabase
+        .from("profile_skills")
+        .select("skill_id", { count: "exact", head: true })
+        .eq("profile_id", user.id),
+    ]);
+
+  // Skład zespołu — „kto za co odpowiada" z guidelines, sekcja 9. Na razie
+  // odpowiedzialność wyraża rola i stanowisko; przypisania pracy dojdą razem
+  // z Goals w Execution.
+  const members = await getTeamMembers(supabase, active.id);
+
+  const completeness = scoreProfile({
+    full_name: profile?.full_name,
+    avatar_url: profile?.avatar_url,
+    headline: profile?.headline,
+    weekly_focus: profile?.weekly_focus,
+    looking_for: profile?.looking_for,
+    skillCount: skillCount ?? 0,
+  });
+
+  const doneStages = program.filter((item) => item.status === "completed").length;
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <div className="page-wide">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white sm:text-[1.85rem]">
@@ -149,9 +203,13 @@ export default async function AppPage() {
         </span>
       </header>
 
-      <StageBar program={program} currentKey={current?.key ?? null} />
+      <StageProgress
+        program={program}
+        currentKey={current?.key ?? null}
+        className="mt-6"
+      />
 
-      {program.some((item) => item.key === "mvp" && item.status === "completed") ? (
+      {programDone ? (
         <Card className="mt-4">
           <CardBody className="pt-5">
             <h2 className="font-heading text-[18px] font-semibold text-white">
@@ -176,154 +234,455 @@ export default async function AppPage() {
         </Link>
       </p>
 
-      {stage ? (
-        <Card className="mt-4">
-          <CardBody className="pt-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-faint)]">
-                  {stage.status === "completed" ? "Etap domknięty" : "Bieżący etap"}
-                </p>
-                <h2 className="mt-1 font-heading text-[20px] font-semibold text-white">
-                  {stage.title}
-                </h2>
-                <p className="mt-1.5 text-[13.5px] text-[var(--text-muted)]">
+      {/* Dashboard jako SIATKA paneli, nie jedna kolumna kart.
+          Kolumna narzuca czytanie po kolei, jakby wszystko było tak samo
+          ważne i tak samo pilne. Siatka pozwala postawić jedną rzecz jako
+          główną (bieżący etap na całą szerokość), a resztę jako trzy krótkie
+          odpowiedzi obok siebie — każda na inne pytanie z guidelines:
+          gdzie jestem, kto jest w zespole, jak wyglądam na zewnątrz.
+
+          `panels` daje im wejście po kolei, co 70 ms. Kolejność pojawiania
+          się jest tą samą informacją co kolejność w siatce. */}
+      <div className="panels mt-4 grid gap-3 md:grid-cols-6">
+        {stage ? (
+          <Card className="topo md:col-span-6" interactive>
+            <CardBody className="pt-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+                    {stage.status === "completed" ? "Etap domknięty" : "Bieżący etap"}
+                    {stepNumber > 0 ? (
+                      <span className="tabular font-normal normal-case tracking-normal">
+                        · {stepNumber} z {program.length}
+                      </span>
+                    ) : null}
+                  </p>
+                  <h2 className="mt-1 font-heading text-[20px] font-semibold text-white">
+                    {stage.title}
+                  </h2>
+                  {/* Podtytuł etapu leżał w bazie nieużywany, a to jedyne
+                      zdanie, które mówi, PO CO jest ten etap. Sama nazwa
+                      „Idea Stage" nie znaczy nic dla kogoś, kto pierwszy raz
+                      słyszy o walidacji. */}
+                  {current?.subtitle ? (
+                    <p className="mt-1 text-[14px] text-[var(--text-muted)]">
+                      {current.subtitle}
+                    </p>
+                  ) : null}
+                </div>
+                <Button href="/app/stage">
+                  {stage.status === "completed" || !canEdit ? "Przejrzyj" : "Kontynuuj"}
+                  <ArrowRight className="size-4" />
+                </Button>
+              </div>
+
+              <div className="mt-4 flex items-center gap-3">
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/8">
+                  <div
+                    className="grow-bar h-full rounded-full bg-[var(--vairo)]"
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+                <span className="tabular shrink-0 text-[12.5px] text-[var(--text-subtle)]">
                   {stage.status === "completed"
                     ? canEdit
-                      ? "Możesz tu wrócić i poprawić odpowiedzi."
-                      : "Możesz przejrzeć wszystko, co zespół uzupełnił."
-                    : `Uzupełnione ${stage.done} z ${stage.total} podpunktów.`}
-                </p>
+                      ? "Możesz tu wrócić i poprawić odpowiedzi"
+                      : "Tylko do odczytu"
+                    : `${stage.done} z ${stage.total}`}
+                </span>
               </div>
-              <Button href="/app/stage">
-                {stage.status === "completed" || !canEdit ? "Przejrzyj" : "Kontynuuj"}
-                <ArrowRight className="size-4" />
-              </Button>
-            </div>
+            </CardBody>
+          </Card>
+        ) : null}
 
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/8">
-              <div
-                className="h-full rounded-full bg-[var(--vairo)] transition-[width] duration-500"
-                style={{ width: `${percent}%` }}
-              />
-            </div>
-          </CardBody>
-        </Card>
-      ) : null}
+        <StatPanel
+          href="/app/program"
+          icon={Rocket}
+          label="Program"
+          value={`${doneStages} z ${program.length}`}
+          hint="etapów domkniętych"
+        />
 
-      <NextActions actions={actions} />
+        <StatPanel
+          href="/app/team"
+          icon={Users}
+          label="Team"
+          value={<CountUp value={memberCount ?? 0} />}
+          hint={plural(memberCount ?? 0, "osoba w zespole", "osoby w zespole", "osób w zespole")}
+          badge={
+            waitingCount && waitingCount > 0
+              ? `${waitingCount} czeka na decyzję`
+              : undefined
+          }
+          action={
+            canManageTeam(active.role)
+              ? { href: "/app/team/profile", label: "Profil publiczny" }
+              : undefined
+          }
+        />
+
+        <StatPanel
+          href="/app/social/me"
+          icon={Target}
+          label="Twój profil publiczny"
+          value={<CountUp value={completeness.score} suffix="%" delayMs={280} />}
+          hint={completeness.missing.length === 0 ? "komplet" : "gotowe"}
+          badge={
+            completeness.missing.length > 0
+              ? `${completeness.missing.length} ${plural(
+                  completeness.missing.length,
+                  "brak",
+                  "braki",
+                  "braków"
+                )}`
+              : undefined
+          }
+          progress={completeness.score}
+        />
+
+      </div>
 
       {blocker ? <BlockerNote blocker={blocker} /> : null}
 
-      <p className="mt-4 text-[12.5px] text-[var(--text-faint)]">
-        {trackerOpen ? (
-          <>
-            <Link href="/app/goals" className="text-[var(--text-subtle)] underline-offset-2 hover:text-white hover:underline">
-              Otwórz tracker celów
-            </Link>
-            . Przypisania, terminy i dowody są osobnym narzędziem — układ tej strony zostaje taki sam.
-          </>
+      {/* Układ z guidelines, sekcja 9: „Po lewej: Next Actions. Po prawej:
+          najbliższy Goal i odpowiedzialności zespołu. Na dole: ostatnia
+          aktywność oraz kontekstowe Opportunities."
+
+          Dokument mówi też, że układ dashboardu jest STAŁY przez wszystkie
+          etapy — nie chowamy sekcji zależnie od Stage. Dlatego miejsca, które
+          napełnią się dopiero w Execution, stoją tu od razu, ale **puste
+          i podpisane**: mówią, czego będą dotyczyć i kiedy się odblokują.
+          To nie jest fake UI — nie pokazują wymyślonych danych, tylko własną
+          nieobecność. */}
+      <div className="panels mt-4 grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-start">
+        <NextActions actions={actions} />
+
+        <div className="flex flex-col gap-3">
+          <TeamPanel members={members} canManage={canEdit} />
+          {/* Po scaleniu z Execution ten panel nie może już być zawsze
+              zamknięty: przy otwartym trackerze mówiłby „odblokuje się
+              w Execution" komuś, kto ma w Execution trzy cele. To dokładnie
+              ten rodzaj nieprawdy, który CLAUDE.md nazywa fake UI. */}
+          {trackerOpen ? (
+            <GoalPanel goal={nearestGoal} />
+          ) : (
+            <LockedPanel
+              icon={Target}
+              title="Najbliższy cel"
+              note="Cele i ich terminy otworzą się po domknięciu Preparation."
+            />
+          )}
+        </div>
+      </div>
+
+      <div className="panels mt-3 grid gap-3 md:grid-cols-2">
+        <LockedPanel
+          icon={History}
+          title="Ostatnia aktywność"
+          note={
+            // „Pojawi się razem z trackerem" przestało być prawdą w chwili,
+            // gdy tracker trafił do tej samej gałęzi. Wspólnego logu zespołu
+            // nadal nie ma — historia jest przy każdym celu z osobna.
+            trackerOpen
+              ? "Wspólnego logu zmian zespołu jeszcze nie ma. Historia każdego celu jest w trackerze, przy celu."
+              : "Wspólny log zmian zespołu jeszcze nie powstał."
+          }
+        />
+        <LockedPanel
+          icon={Sparkles}
+          title="Możliwości"
+          note={
+            // „Po MVP Stage" jest prawdą tylko do chwili, w której ktoś MVP
+            // domknie — a od scalenia z MVP da się to zrobić. Wtedy obietnica
+            // zamieniłaby się w nieprawdę, bo tej części Vairo jeszcze nie ma.
+            programDone
+              ? "Programy, konkursy i partnerzy dla startupów po MVP — tej części Vairo jeszcze nie ma."
+              : "Programy, konkursy i partnerzy dopasowani do etapu — po MVP Stage."
+          }
+        />
+      </div>
+
+    </div>
+  );
+}
+
+/**
+ * Kto jest w zespole i z jakimi uprawnieniami.
+ *
+ * Guidelines wymagają na dashboardzie odpowiedzi na pytanie „kto za co
+ * odpowiada". Dopóki nie ma Goals ani zadań, jedyna prawdziwa odpowiedź to
+ * rola i stanowisko — i tyle pokazujemy. Dopisanie tu wymyślonych „3 zadania
+ * w toku" byłoby liczbą bez pokrycia w bazie.
+ */
+function TeamPanel({
+  members,
+  canManage,
+}: {
+  members: TeamMember[];
+  canManage: boolean;
+}) {
+  // Rząd awatarów zamiast listy wierszy — tak jak na dostarczonych mockupach.
+  // Przy zespole do sześciu osób (a limit i tak jest niski) rząd twarzy czyta
+  // się jednym spojrzeniem, a lista wymaga przebiegnięcia w dół. Pod każdą
+  // twarzą stoi stanowisko albo rola, bo samo zdjęcie nie mówi, kto za co
+  // odpowiada — a to jest pytanie, na które ten panel ma odpowiadać.
+  const shown = members.slice(0, 6);
+  const hidden = members.length - shown.length;
+
+  return (
+    <Card className="overflow-hidden">
+      <CardBody className="pt-5">
+        <div className="flex items-center justify-between gap-3">
+          <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+            <Users className="size-3.5" />
+            Zespół
+          </p>
+          <Link
+            href="/app/team"
+            className="inline-flex items-center gap-1 text-[12px] text-[var(--text-subtle)] underline-offset-2 transition-colors hover:text-white hover:underline"
+          >
+            {canManage ? "Zarządzaj" : "Zobacz"}
+            <ChevronRight className="size-3.5" />
+          </Link>
+        </div>
+
+        <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-4">
+          {shown.map((member) => (
+            <li
+              key={member.profileId}
+              className="flex w-[64px] flex-col items-center text-center"
+            >
+              <Avatar src={member.avatarUrl} name={member.fullName} size="md" />
+              <span className="mt-1.5 line-clamp-2 text-[11px] leading-tight text-[var(--text-subtle)]">
+                {member.jobTitle ?? ROLE_LABELS[member.role]}
+              </span>
+            </li>
+          ))}
+
+          {hidden > 0 ? (
+            <li className="flex w-[64px] flex-col items-center text-center">
+              <span className="tabular inline-flex size-10 items-center justify-center rounded-full bg-white/[0.06] text-[13px] font-medium text-[var(--text-muted)]">
+                +{hidden}
+              </span>
+              <span className="mt-1.5 text-[11px] leading-tight text-[var(--text-subtle)]">
+                {plural(hidden, "osoba", "osoby", "osób")}
+              </span>
+            </li>
+          ) : null}
+
+          {/* „Otwarta rola" z mockupu — ale tylko dla kogoś, kto może ją
+              dodać. Dla Członka byłby to przycisk prowadzący pod zamknięte
+              drzwi. */}
+          {canManage ? (
+            <li className="flex w-[64px] flex-col items-center text-center">
+              <Link
+                href="/app/team"
+                aria-label="Dodaj otwartą rolę"
+                className="inline-flex size-10 items-center justify-center rounded-full border border-dashed border-white/20 text-[var(--text-subtle)] transition-colors hover:border-[var(--vairo)]/60 hover:text-white"
+              >
+                <Plus className="size-4" />
+              </Link>
+              <span className="mt-1.5 text-[11px] leading-tight text-[var(--text-subtle)]">
+                Otwarta rola
+              </span>
+            </li>
+          ) : null}
+        </ul>
+      </CardBody>
+    </Card>
+  );
+}
+
+/**
+ * Najbliższy cel zespołu — gdy tracker Execution jest otwarty.
+ *
+ * Odpowiada na pytanie z guidelines „czym zespół zajmuje się teraz i do
+ * kiedy". Jeden cel, nie lista: lista celów jest w trackerze, a panel ma dać
+ * odpowiedź w jednym spojrzeniu. Termin po czasie dostaje kolor ostrzeżenia
+ * RAZEM ze słowem — sam kolor nie jest informacją.
+ */
+function GoalPanel({ goal }: { goal: NearestGoal | null }) {
+  return (
+    <Card className="overflow-hidden">
+      <CardBody className="pt-5">
+        <div className="flex items-center justify-between gap-3">
+          <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+            <Target className="size-3.5" />
+            Najbliższy cel
+          </p>
+          <Link
+            href="/app/goals"
+            className="inline-flex items-center gap-1 text-[12px] text-[var(--text-subtle)] underline-offset-2 transition-colors hover:text-white hover:underline"
+          >
+            Tracker
+            <ChevronRight className="size-3.5" />
+          </Link>
+        </div>
+
+        {goal ? (
+          <Link
+            href={`/app/goals?goal=${goal.id}`}
+            className="group mt-3 block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[var(--vairo)]"
+          >
+            <p className="line-clamp-2 text-[14.5px] font-medium leading-snug text-white group-hover:underline group-hover:underline-offset-2">
+              {goal.title}
+            </p>
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[var(--text-subtle)]">
+              <span className={cn(goal.overdue && "font-medium text-[var(--warning)]")}>
+                {goal.overdue ? "Po terminie · " : "do "}
+                {formatDue(goal.dueDate)}
+              </span>
+              <span>{GOAL_STATUS_LABELS[goal.status]}</span>
+              {goal.ownerName ? <span>{goal.ownerName}</span> : null}
+            </p>
+          </Link>
         ) : (
-          "Tracker celów otworzy się po domknięciu Preparation."
+          <div className="mt-3">
+            <p className="text-[13px] leading-relaxed text-[var(--text-subtle)]">
+              Zespół nie ma teraz otwartego celu.
+            </p>
+            <Link
+              href="/app/goals?new=1"
+              className="mt-2 inline-flex items-center gap-1 text-[12.5px] text-[var(--text-muted)] underline-offset-2 transition-colors hover:text-white hover:underline"
+            >
+              <Plus className="size-3.5" />
+              Dodaj cel
+            </Link>
+          </div>
         )}
+      </CardBody>
+    </Card>
+  );
+}
+
+/** „14 października" — termin celu jest datą, nie chwilą, więc bez godziny. */
+function formatDue(isoDate: string) {
+  const date = new Date(`${isoDate}T00:00:00`);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString("pl-PL", {
+    day: "numeric",
+    month: "long",
+    year: sameYear ? undefined : "numeric",
+  });
+}
+
+/**
+ * Miejsce, które jeszcze nie ma danych — i mówi to wprost.
+ *
+ * Guidelines wymagają stałego układu dashboardu przez wszystkie etapy, więc
+ * te sekcje nie mogą pojawiać się i znikać. Zasada „zero fake UI" mówi z kolei,
+ * że liczba bez pokrycia w bazie nie istnieje. Jedyne wyjście, które spełnia
+ * oba warunki naraz: miejsce stoi, jest wyraźnie nieaktywne i **nazywa, czego
+ * będzie dotyczyć oraz kiedy się odblokuje**. Nic tu nie udaje danych.
+ */
+function LockedPanel({
+  icon: Icon,
+  title,
+  note,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  note: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-dashed border-white/[0.09] px-5 py-4">
+      <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+        <Icon className="size-3.5" />
+        {title}
+        <Lock className="ml-auto size-3.5 text-[var(--text-faint)]" />
+      </p>
+      <p className="mt-2 text-[12.5px] leading-relaxed text-[var(--text-faint)]">
+        {note}
       </p>
     </div>
   );
 }
 
-
 /**
- * Pasek etapów.
+ * Mały panel z jedną liczbą.
  *
- * Cztery stany, nie trzy. Etap pominięty (founder, który wszedł z gotowym
- * pomysłem, przeskakuje Ambition) nie może wyglądać jak zablokowany — kłódka
- * PRZED bieżącym etapem czyta się jak awaria. Domknięte i pominięte etapy są
- * klikalne, bo do obu wolno wrócić.
+ * Liczba jest duża, podpis mały, a cały kafelek jest linkiem — bo liczba bez
+ * możliwości pójścia dalej to tylko ciekawostka. Każda wartość pochodzi
+ * z zapytania do bazy; panel, który nie ma czego pokazać, po prostu nie
+ * dostaje danych i nie istnieje.
  */
-function StageBar({
-  program,
-  currentKey,
+function StatPanel({
+  href,
+  icon: Icon,
+  label,
+  value,
+  hint,
+  badge,
+  progress,
+  action,
 }: {
-  program: StageProgramEntry[];
-  currentKey: string | null;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: React.ReactNode;
+  hint: string;
+  badge?: string;
+  progress?: number;
+  /** Drugie wyjście z panelu — inne niż kliknięcie całego kafelka. */
+  action?: { href: string; label: string };
 }) {
-  const currentIndex = program.findIndex((item) => item.key === currentKey);
-
   return (
-    <div className="mt-6 flex flex-wrap items-center gap-1.5">
-      {program.map((item, index) => {
-        const isCurrent = index === currentIndex;
-        const isDone = item.status === "completed";
-        // Etap otwarty, ale nie bieżący: ktoś do niego wrócił albo otworzył
-        // go z własnej woli. To NIE to samo co pominięty.
-        const isOpen = item.status === "in_progress" && !isCurrent;
-        const isSkipped =
-          item.status === "not_started" &&
-          currentIndex >= 0 &&
-          index < currentIndex;
-        const isLocked = !isDone && !isCurrent && !isOpen && !isSkipped;
+    // Cały kafelek jest klikalny, ale NIE jest jednym linkiem — bo wtedy nie
+    // dałoby się umieścić w nim drugiego. Rozwiązuje to link rozciągnięty na
+    // całą powierzchnię (`absolute inset-0`), nad którym drugi link leży
+    // wyżej w stosie. Zero JavaScriptu, więc panel zostaje komponentem
+    // serwerowym.
+    <div className="lift-hover group relative flex flex-col justify-between rounded-2xl border border-white/[0.07] bg-[var(--surface)] p-4 lift-1 hover:border-white/15 md:col-span-2">
+      <Link href={href} className="absolute inset-0 rounded-2xl">
+        <span className="sr-only">{label}</span>
+      </Link>
 
-        const label = (
-          <>
-            {isDone ? (
-              <Check className="size-3.5" strokeWidth={2.5} />
-            ) : isSkipped ? (
-              <Minus className="size-3.5" />
-            ) : isLocked ? (
-              <Lock className="size-3" />
-            ) : null}
-            {item.title}
-          </>
-        );
+      <p className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--text-faint)]">
+        <Icon className="size-3.5" />
+        {label}
+      </p>
 
-        const className = cn(
-          "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors",
-          isCurrent && "bg-[var(--vairo)]/12 text-[var(--vairo)]",
-          isDone && !isCurrent && "bg-[var(--success)]/10 text-[var(--success)]",
-          isOpen && "text-white ring-1 ring-inset ring-white/15",
-          isSkipped && "text-[var(--text-subtle)] ring-1 ring-inset ring-white/10",
-          isLocked && "text-[var(--text-faint)]"
-        );
+      <p className="mt-3 flex items-baseline gap-2">
+        <span className="tabular font-heading text-[26px] font-semibold leading-none text-white">
+          {value}
+        </span>
+        <span className="min-w-0 truncate text-[12.5px] text-[var(--text-subtle)]">
+          {hint}
+        </span>
+      </p>
 
-        // Do etapu bez treści nie ma po co wchodzić — tam czeka tylko ekran
-        // „w przygotowaniu".
-        if (item.hasContent && (isDone || isSkipped || isOpen)) {
-          return (
-            <Link
-              key={item.key}
-              href={`/app/stage?stage=${item.key}`}
-              title={
-                isSkipped
-                  ? "Etap pominięty — możesz go uzupełnić, ale nie musisz"
-                  : isOpen
-                    ? "Etap otwarty — możesz do niego wrócić"
-                    : "Etap domknięty — możesz przejrzeć odpowiedzi"
-              }
-              className={cn(className, "hover:bg-white/[0.06] hover:text-white")}
-            >
-              {label}
-            </Link>
-          );
-        }
+      {typeof progress === "number" ? (
+        <span className="mt-3 flex h-1.5 overflow-hidden rounded-full bg-white/8">
+          <span
+            className="grow-bar h-full rounded-full bg-[var(--vairo)]"
+            style={{ width: `${progress}%` }}
+          />
+        </span>
+      ) : null}
 
-        return (
-          <div
-            key={item.key}
-            title={
-              item.hasContent
-                ? undefined
-                : "Etap jest w programie, treść jeszcze w przygotowaniu"
-            }
-            className={className}
-          >
-            {label}
-          </div>
-        );
-      })}
+      {badge ? (
+        <p className="mt-3 inline-flex items-center gap-1.5 self-start rounded-md bg-[var(--warning)]/12 px-2 py-1 text-[11.5px] text-[var(--warning)]">
+          <AlertTriangle className="size-3" />
+          {badge}
+        </p>
+      ) : null}
+
+      {/* Drugie wyjście z panelu. Bez niego profil publiczny teamu był
+          dostępny wyłącznie przez wejście w Team i znalezienie przycisku
+          w nagłówku — czyli trzy kliknięcia do rzeczy, którą pokazuje się
+          obcym. */}
+      {action ? (
+        <Link
+          href={action.href}
+          className="relative z-10 mt-3 inline-flex w-fit items-center gap-1 text-[12px] text-[var(--text-subtle)] underline-offset-2 transition-colors hover:text-white hover:underline"
+        >
+          {action.label}
+          <ChevronRight className="size-3.5" />
+        </Link>
+      ) : null}
     </div>
   );
 }
-
 
 /**
  * „Co teraz" — jedyne miejsce na dashboardzie, które mówi wprost, co zrobić.
@@ -336,35 +695,37 @@ function NextActions({ actions }: { actions: NextAction[] }) {
   if (actions.length === 0) return null;
 
   return (
-    <Card className="mt-4">
+    // Najważniejsza karta na ekranie, więc jedyna z włosem akcentu na krawędzi.
+    <Card className="edge-accent overflow-hidden">
       <CardBody className="pt-5">
-        <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-faint)]">
+        <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
           <Target className="size-3.5" />
           Co teraz
         </p>
 
-        <ul className="mt-3 flex flex-col gap-1.5">
+        {/* Kolejność pozycji jest informacją, więc pojawiają się po kolei —
+            po 40 ms. Wzrok dostaje podpowiedź, od czego zacząć czytanie. */}
+        <ul className="stagger mt-3 flex flex-col gap-1.5">
           {actions.map((action) => (
             <li key={action.key}>
               <Link
                 href={action.href}
-                className={cn(
-                  "group flex items-start gap-3 rounded-xl px-3.5 py-3 transition-colors",
-                  action.tone === "brand"
-                    ? "bg-[var(--vairo)]/8 hover:bg-[var(--vairo)]/12"
-                    : action.tone === "warning"
-                      ? "bg-[var(--warning)]/8 hover:bg-[var(--warning)]/12"
-                      : "hover:bg-white/[0.05]"
-                )}
+                // Wiersze miały kiedyś kolorowe wypełnienia zależne od tonu.
+                // Przy pięciu pozycjach dawało to dwa–trzy pomarańczowe pasy
+                // obok pomarańczowego przycisku — i nagle nic nie było
+                // najważniejsze. Ton niesie teraz sama kropka: to wystarczy,
+                // żeby odróżnić pilne od zwykłego, i nie zabiera akcji głównej
+                // jej jedynego przywileju, czyli nasycenia.
+                className="group flex items-start gap-3 rounded-xl px-3.5 py-3 transition-colors duration-150 hover:bg-white/[0.05]"
               >
                 <span
                   className={cn(
                     "mt-[7px] size-1.5 shrink-0 rounded-full",
                     action.tone === "brand"
-                      ? "bg-[var(--vairo)]"
+                      ? "bg-[var(--vairo)] ring-4 ring-[var(--vairo)]/15"
                       : action.tone === "warning"
-                        ? "bg-[var(--warning)]"
-                        : "bg-white/30"
+                        ? "bg-[var(--warning)] ring-4 ring-[var(--warning)]/15"
+                        : "bg-white/25"
                   )}
                   aria-hidden="true"
                 />
@@ -392,7 +753,7 @@ function NextActions({ actions }: { actions: NextAction[] }) {
  */
 function BlockerNote({ blocker }: { blocker: NonNullable<Blocker> }) {
   return (
-    <div className="mt-4 flex items-start gap-3 rounded-2xl border border-[var(--warning)]/25 bg-[var(--warning)]/8 px-5 py-4">
+    <div className="mt-3 flex items-start gap-3 rounded-2xl border border-[var(--warning)]/25 bg-[var(--warning)]/8 px-5 py-4">
       <AlertTriangle className="mt-0.5 size-4 shrink-0 text-[var(--warning)]" />
       <div className="min-w-0">
         <p className="text-[14px] font-medium text-white">{blocker.title}</p>

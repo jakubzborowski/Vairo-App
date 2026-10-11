@@ -30,7 +30,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-[var(--vairo-strong)] text-white hover:bg-[var(--vairo)] shadow-[0_2px_12px_rgba(238,95,28,.25)]",
+          "bg-[var(--vairo-strong)] text-white hover:bg-[var(--vairo)] " +
+          "shadow-[0_2px_12px_rgba(238,95,28,.28)] hover:shadow-[0_6px_22px_rgba(238,95,28,.38)]",
         secondary:
           "border border-white/12 bg-[var(--surface-2)] text-[var(--text-muted)] hover:border-white/20 hover:bg-[var(--surface-3)] hover:text-white",
         ghost:
@@ -38,12 +39,15 @@ const buttonVariants = cva(
         danger:
           "border border-[var(--danger)]/30 bg-[var(--danger)]/10 text-[var(--danger)] hover:bg-[var(--danger)]/20",
       },
+      // Na telefonie każdy przycisk ma co najmniej 44 px wysokości (minimum
+      // dotykowe z wytycznych Apple i Material). Na większym ekranie wraca do
+      // zwartych rozmiarów, bo tam celuje się kursorem, nie palcem.
       size: {
-        sm: "h-8 rounded-[10px] px-3 text-[13px] [&_svg]:size-3.5",
-        md: "h-10 rounded-xl px-4 text-[14px] [&_svg]:size-4",
+        sm: "h-9 sm:h-8 rounded-[10px] px-3 text-[13px] [&_svg]:size-3.5",
+        md: "h-11 sm:h-10 rounded-xl px-4 text-[14px] [&_svg]:size-4",
         lg: "h-12 rounded-xl px-6 text-[15px] [&_svg]:size-[18px]",
-        icon: "size-10 rounded-xl [&_svg]:size-4",
-        "icon-sm": "size-8 rounded-[10px] [&_svg]:size-3.5",
+        icon: "size-11 sm:size-10 rounded-xl [&_svg]:size-4",
+        "icon-sm": "size-9 sm:size-8 rounded-[10px] [&_svg]:size-3.5",
       },
       // `w-full` musi wygrac z bazowym `shrink-0` — inaczej dwa przyciski
       // `block` w jednym rzedzie flex zajmuja 2 x 100% i wychodza poza

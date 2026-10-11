@@ -1,7 +1,7 @@
 import type { ProofRequirement, ProofSnapshot } from "@/types/goals";
 
 /**
- * Ta sama reguła co `proof_matches` w migracji 018.
+ * Ta sama reguła co `proof_matches` w migracji 025.
  * Baza i tak odrzuca zły dowód — tu tylko mówimy człowiekowi, czego brakuje,
  * zanim kliknie „Ukończ".
  */

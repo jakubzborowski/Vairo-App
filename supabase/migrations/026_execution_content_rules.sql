@@ -1,11 +1,11 @@
 -- ============================================================================
--- 019 · Reguły treści Execution
+-- 026 · Reguły treści Execution
 -- ----------------------------------------------------------------------------
 -- Dokumenty Execution rozróżniają cel dopiero ustawiony (wynik, właściciel,
 -- termin, oczekiwany dowód) od celu ukończonego. Końcowe potwierdzenie
 -- czeka na wcześniejsze podpunkty. Słownik mówi „Wynik testu”.
 --
--- Odpal PO 018. Idempotentne.
+-- Odpal PO 025. Idempotentne.
 -- ============================================================================
 
 update public.goal_types
