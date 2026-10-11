@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   BookOpen,
   Check,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Eye,
@@ -261,7 +262,10 @@ export function StageScreen({
               .
             </span>
           </p>
-        ) : tree.intro ? (
+        ) : tree.intro && !isFirstVisit ? (
+          // Przy pierwszym wejściu ten sam akapit jest już w panelu
+          // wprowadzenia niżej. Dwa razy to samo na jednym ekranie czyta się
+          // jak usterka, a nie jak podkreślenie.
           <p className="mt-4 max-w-3xl rounded-xl border border-white/[0.07] bg-[var(--surface)] px-4 py-3 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
             {tree.intro}
           </p>
@@ -290,7 +294,7 @@ export function StageScreen({
           pierwszy, potrzebuje wiedzieć, czym to jest i ile potrwa; ten, który
           wraca po raz dziesiąty, potrzebuje tylko „co dalej". */}
       {isFirstVisit && next ? (
-        <section className="mb-5 rounded-2xl border border-[var(--vairo)]/30 bg-[var(--vairo)]/6 px-5 py-5 sm:px-6">
+        <section className="edge-accent mb-5 overflow-hidden rounded-2xl border border-[var(--vairo)]/30 bg-[var(--vairo)]/6 px-5 py-5 lift-2 sm:px-6">
           <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--vairo)]">
             Zaczynasz nowy etap
           </p>
@@ -345,7 +349,7 @@ export function StageScreen({
         <button
           type="button"
           onClick={openNext}
-          className="mb-4 flex w-full items-center gap-4 rounded-2xl border border-[var(--vairo)]/35 bg-[var(--vairo)]/8 px-5 py-4 text-left transition-colors hover:border-[var(--vairo)]/55 hover:bg-[var(--vairo)]/12"
+          className="lift-hover mb-4 flex w-full items-center gap-4 rounded-2xl border border-[var(--vairo)]/35 bg-[var(--vairo)]/8 px-5 py-4 text-left hover:border-[var(--vairo)]/55 hover:bg-[var(--vairo)]/12"
         >
           <PlayCircle
             className="size-6 shrink-0 text-[var(--vairo)]"
@@ -496,7 +500,7 @@ export function StageScreen({
 
         {hasGuide && point ? (
           guideOpen ? (
-            <GuidePanel point={point} onClose={() => setGuideOpen(false)} />
+            <GuidePanel key={point.id} point={point} onClose={() => setGuideOpen(false)} />
           ) : (
             <button
               type="button"
@@ -518,7 +522,7 @@ export function StageScreen({
         ) : null}
       </div>
 
-      <footer className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-5 py-4">
+      <footer className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-5 py-4 lift-1">
         <div className="min-w-0">
           <p className="text-[14px] font-medium text-white">
             {isCompleted
@@ -622,8 +626,11 @@ function Column({
   return (
     <section
       className={cn(
-        "rounded-2xl border bg-[var(--surface)] p-4 transition-colors",
-        active ? "border-[var(--vairo)]/45" : "border-white/[0.07]"
+        "rounded-2xl border bg-[var(--surface)] p-4 lift-1",
+        "transition-colors duration-150",
+        active
+          ? "edge-accent overflow-hidden border-[var(--vairo)]/45"
+          : "border-white/[0.07]"
       )}
     >
       <header className="mb-3 flex items-start justify-between gap-2 px-1">
@@ -640,7 +647,12 @@ function Column({
         </div>
         {meta ? <div className="shrink-0">{meta}</div> : null}
       </header>
-      <ul className="flex max-h-[min(58vh,560px)] flex-col gap-1 overflow-y-auto pr-1">
+      {/* Na telefonie kolumny są jedna pod drugą, więc własny obszar
+          przewijania w każdej z nich tworzył przewijanie w przewijaniu —
+          jeden z najbardziej frustrujących wzorców na dotyku. Tam lista
+          płynie z całą stroną; ograniczenie wysokości wraca dopiero przy
+          układzie kolumnowym. */}
+      <ul className="flex flex-col gap-1 lg:max-h-[min(58vh,560px)] lg:overflow-y-auto lg:pr-1">
         {children}
       </ul>
     </section>
@@ -671,7 +683,8 @@ function ListRow({
         onClick={onClick}
         aria-current={active ? "true" : undefined}
         className={cn(
-          "group flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
+          "group flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left",
+          "transition-colors duration-150",
           active ? "bg-[var(--vairo)]/10" : "hover:bg-white/[0.05]"
         )}
       >
@@ -723,13 +736,47 @@ function ListRow({
   );
 }
 
+/**
+ * Przewodnik — trzecia kolumna ekranu etapu.
+ *
+ * Kolumna jest zbudowana jak tekst do czytania, nie jak trzecia lista.
+ * Dłuższy przewodnik dzieli się na strony znakiem `§`, żeby dało się go
+ * przejść bez gubienia miejsca.
+ */
+function splitGuide(body: string) {
+  return body
+    .split(/\n§\n/)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .map((chunk) => {
+      const lines = chunk.split(/\n+/).filter(Boolean);
+      const first = lines[0] ?? "";
+      const rest = lines.slice(1);
+      const firstIsHeading = first.length > 0 && first.length <= 80 && rest.length > 0;
+      return firstIsHeading
+        ? { title: first, paragraphs: rest }
+        : { title: "", paragraphs: lines };
+    });
+}
+
 function GuidePanel({ point, onClose }: { point: StagePoint; onClose: () => void }) {
+  const pages = splitGuide(point.guideBody ?? "");
+  const [index, setIndex] = useState(0);
+  const page = pages[index] ?? pages[0];
+  const several = pages.length > 1;
+  const [lead, ...rest] = page?.paragraphs ?? [];
+
   return (
-    <aside className="rounded-2xl border border-white/[0.07] bg-[var(--surface)] p-5">
-      <header className="mb-4 flex items-start justify-between gap-3">
+    <aside className="flex max-h-[min(78vh,720px)] flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-[var(--surface)]">
+      <header className="topo flex items-start justify-between gap-3 border-b border-white/[0.06] bg-[var(--surface-2)]/60 px-5 py-3.5">
         <p className="flex items-center gap-2 text-[13px] font-semibold text-[var(--vairo)]">
           <BookOpen className="size-4 shrink-0" strokeWidth={2} />
           Przewodnik
+          {several ? (
+            <span className="tabular font-medium text-[var(--text-subtle)]">
+              {index + 1} z {pages.length}
+            </span>
+          ) : null}
         </p>
         <div className="flex shrink-0 items-center gap-2">
           {point.guideSourceLabel ? (
@@ -748,40 +795,74 @@ function GuidePanel({ point, onClose }: { point: StagePoint; onClose: () => void
         </div>
       </header>
 
-      <div className="max-h-[min(58vh,560px)] overflow-y-auto pr-1">
-        <h3 className="font-heading text-[17px] font-semibold leading-snug text-white">
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+        <h3 className="max-w-[46ch] font-heading text-[19px] font-semibold leading-snug text-white">
           {point.title}
         </h3>
+        {page?.title ? (
+          <h4 className="mt-3 max-w-[46ch] text-[14px] font-semibold text-white">{page.title}</h4>
+        ) : null}
 
-        {point.guideBody ? (
-          <div className="mt-3 flex flex-col gap-3 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-            {point.guideBody
-              .split(/\n+/)
-              .filter(Boolean)
-              .map((paragraph, i) => (
-                <p key={i}>{paragraph}</p>
-              ))}
+        {lead ? (
+          <p className="mt-3.5 max-w-[62ch] text-[15px] leading-[1.7] text-[var(--text)]">
+            {lead}
+          </p>
+        ) : null}
+
+        {rest.length > 0 ? (
+          <div className="mt-3.5 flex max-w-[62ch] flex-col gap-3.5 text-[14px] leading-[1.75] text-[var(--text-muted)]">
+            {rest.map((paragraph, i) => (
+              <p key={i}>{paragraph}</p>
+            ))}
           </div>
         ) : null}
-
-        {point.guideSources.length > 0 ? (
-          <details className="mt-5 border-t border-white/[0.06] pt-3">
-            <summary className="cursor-pointer text-[12px] text-[var(--text-subtle)] transition-colors hover:text-white">
-              Źródła ({point.guideSources.length})
-            </summary>
-            <ul className="mt-2.5 flex flex-col gap-2">
-              {point.guideSources.map((source, i) => (
-                <li
-                  key={i}
-                  className="border-l-2 border-white/10 pl-3 text-[12px] leading-relaxed text-[var(--text-subtle)]"
-                >
-                  {source}
-                </li>
-              ))}
-            </ul>
-          </details>
-        ) : null}
       </div>
+
+      {several ? (
+        <div className="flex items-center justify-between gap-2 border-t border-white/[0.06] px-5 py-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={index === 0}
+            onClick={() => setIndex((current) => Math.max(0, current - 1))}
+          >
+            <ChevronLeft className="size-4" />
+            Wstecz
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={index >= pages.length - 1}
+            onClick={() =>
+              setIndex((current) => Math.min(pages.length - 1, current + 1))
+            }
+          >
+            Dalej
+            <ChevronRight className="size-4" />
+          </Button>
+        </div>
+      ) : null}
+
+      {point.guideSources.length > 0 ? (
+        <details className="group border-t border-white/[0.06] px-5 py-3.5">
+          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-[12px] text-[var(--text-subtle)] transition-colors hover:text-white">
+            <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
+            Źródła ({point.guideSources.length})
+          </summary>
+          <ul className="mt-2.5 flex max-w-[62ch] flex-col gap-2">
+            {point.guideSources.map((source, i) => (
+              <li
+                key={i}
+                className="border-l-2 border-[var(--vairo)]/25 pl-3 text-[12.5px] leading-relaxed text-[var(--text-subtle)]"
+              >
+                {source}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
     </aside>
   );
 }

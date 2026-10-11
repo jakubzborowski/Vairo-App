@@ -1,11 +1,11 @@
 -- ============================================================================
--- 016 · Narzędzia Preparation
+-- 021 · Narzędzia Preparation
 -- ----------------------------------------------------------------------------
 -- Bloczki (kilka pól w powtarzanej pozycji), pomijanie podpunktu po odpowiedzi,
 -- przycisk do Plików albo Social, wybór prawdziwych profili oraz biblioteka
 -- plików startupu.
 --
--- Odpal PO 015. Idempotentne. Treść etapu (017) wymaga tej migracji.
+-- Odpal PO 020. Idempotentne. Treść etapu (022) wymaga tej migracji.
 -- ============================================================================
 
 alter table public.stage_subpoints

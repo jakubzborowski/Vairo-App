@@ -79,7 +79,7 @@ export function AuthShell({ children, showSplash = true }: AuthShellProps) {
         <header className="relative z-10 mx-auto flex w-full max-w-[440px] items-center px-5 pt-8 md:px-0 md:pt-10">
           <Link href="/" className="inline-flex items-center gap-2">
             <Image
-              src="/brand/logo-blob.png"
+              src="/brand/logo-mark.png"
               alt=""
               width={28}
               height={28}

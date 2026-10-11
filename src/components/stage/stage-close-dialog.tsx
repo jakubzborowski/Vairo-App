@@ -202,7 +202,7 @@ export function StageCloseDialog({
           {tree.categories.map((category) => (
             <div key={category.id}>
               {tree.showCategories ? (
-                <p className="mb-1.5 text-[11.5px] font-semibold uppercase tracking-wide text-[var(--text-faint)]">
+                <p className="mb-1.5 text-[11.5px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
                   {category.title}
                 </p>
               ) : null}

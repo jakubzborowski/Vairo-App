@@ -9,7 +9,6 @@ import {
   uploadAvatar,
   type ProfileDraft,
 } from "@/app/app/settings/profile/actions";
-import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Textarea } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
@@ -203,10 +202,10 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
         <Card>
           <CardHeader>
             <div>
+              {/* Bez opisu sekcji. Zdanie „pierwsza rzecz, którą zobaczą inni"
+                  i zdanie obok kadru („to zdjęcie decyduje o kliknięciu")
+                  mówiły to samo dwa razy na przestrzeni dwudziestu pikseli. */}
               <CardTitle>Zdjęcie profilowe</CardTitle>
-              <CardDescription>
-                Pierwsza rzecz, którą zobaczą inni w Social.
-              </CardDescription>
             </div>
           </CardHeader>
           <CardBody>
@@ -257,25 +256,19 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                 )}
               </button>
 
-              <div className="flex flex-col justify-center gap-3">
+              {/* Jedna akcja, nie cztery elementy.
+                  Było tu: klikalny kadr z napisem „Dodaj zdjęcie", akapit
+                  przekonujący, DRUGI przycisk robiący dokładnie to samo co
+                  kadr, i nota o formatach. Dwa przyciski do jednej czynności
+                  to nie ułatwienie, tylko pytanie „czym one się różnią".
+                  Zostaje kadr jako przycisk i dwie linijki: po co i w czym. */}
+              <div className="flex flex-col justify-center gap-2">
                 <p className="text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-                  W Odkrywaj ludzie przeglądają profile jeden po drugim. Zdjęcie
-                  twarzy, na którym wyraźnie widać, kim jesteś, robi tu większą
-                  różnicę niż cokolwiek innego w profilu.
+                  W Odkrywaj to zdjęcie decyduje o kliknięciu bardziej niż
+                  cokolwiek innego w profilu.
                 </p>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => fileRef.current?.click()}
-                  loading={pending}
-                  className="w-fit"
-                >
-                  <Camera className="size-4" />
-                  {avatarUrl ? "Zmień zdjęcie" : "Wybierz zdjęcie"}
-                </Button>
                 <p className="text-[12px] text-[var(--text-faint)]">
-                  JPG, PNG albo WebP, do {AVATAR_MAX_MB} MB. Najlepiej wygląda
-                  kadr poziomy albo kwadratowy.
+                  JPG, PNG albo WebP, do {AVATAR_MAX_MB} MB.
                 </p>
               </div>
             </div>
@@ -286,8 +279,10 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
         <Card>
           <CardHeader>
             <div>
+              {/* „Imię i jedna linijka o Tobie" to spis etykiet pól, które
+                  są dwa centymetry niżej. Opis, który streszcza zawartość
+                  widoczną gołym okiem, uczy pomijać wszystkie opisy. */}
               <CardTitle>Podstawy</CardTitle>
-              <CardDescription>Imię i jedna linijka o Tobie.</CardDescription>
             </div>
           </CardHeader>
           <CardBody className="flex flex-col gap-4">
@@ -326,9 +321,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
           <CardHeader>
             <div>
               <CardTitle>Co potrafisz</CardTitle>
-              <CardDescription>
-                Po tym znajdują Cię teamy szukające konkretnych kompetencji.
-              </CardDescription>
+              <CardDescription>Po tym znajdują Cię teamy.</CardDescription>
             </div>
             <span className="tabular shrink-0 text-[12px] text-[var(--text-subtle)]">
               {draft.skillIds.length} wybranych
@@ -393,8 +386,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
             <div>
               <CardTitle>Nad czym teraz pracujesz</CardTitle>
               <CardDescription>
-                Najważniejsze pole w całym profilu — po nim ludzie decydują, czy
-                się odezwać.
+                Po tym ludzie decydują, czy się odezwać.
               </CardDescription>
             </div>
           </CardHeader>

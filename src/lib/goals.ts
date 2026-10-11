@@ -533,6 +533,59 @@ export async function loadSubpointGoalConditions(
   return map;
 }
 
+export type NearestGoal = {
+  id: string;
+  title: string;
+  status: GoalStatus;
+  dueDate: string;
+  ownerName: string | null;
+  overdue: boolean;
+};
+
+/**
+ * Najbliższy otwarty cel CAŁEGO zespołu — do panelu na dashboardzie.
+ *
+ * `loadOpenWork` zwraca pracę jednej osoby (lista „Co teraz"). Panel
+ * „Najbliższy cel" odpowiada na inne pytanie z guidelines: czym zespół zajmuje
+ * się teraz i do kiedy. Dlatego bez filtra po właścicielu.
+ *
+ * „Po terminie" liczymy tak samo jak w `loadGoalsWorkspace` — dwie różne
+ * definicje tego samego słowa na dwóch ekranach to dwie różne odpowiedzi.
+ */
+export async function loadNearestGoal(
+  supabase: SupabaseClient,
+  startupId: string
+): Promise<NearestGoal | null> {
+  const { data, error } = await supabase
+    .from("goals")
+    .select("id, title, status, due_date, profiles!goals_owner_id_fkey(full_name)")
+    .eq("startup_id", startupId)
+    .is("archived_at", null)
+    .neq("status", "completed")
+    .order("due_date", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  const row = data as unknown as {
+    id: string;
+    title: string;
+    status: GoalStatus;
+    due_date: string;
+    profiles: { full_name: string | null } | null;
+  };
+
+  return {
+    id: row.id,
+    title: row.title,
+    status: row.status,
+    dueDate: row.due_date,
+    ownerName: row.profiles?.full_name ?? null,
+    overdue: row.due_date < todayIso(),
+  };
+}
+
 export type OpenWork = {
   goals: { id: string; title: string; status: GoalStatus; dueDate: string; ownerId: string | null }[];
   tasks: { id: string; title: string; goalId: string; ownerId: string | null; dueDate: string | null }[];

@@ -38,7 +38,27 @@ const GOAL_PROOF_KINDS = new Set([
 const CATEGORY_KEYS = new Set(["general", "saas", "hardware", "b2b", "b2c"]);
 
 /** Numer migracji nadawany per szablon, żeby pliki nie kolidowały. */
-const MIGRATION_NUMBER = { ambition: "006", idea: "007", preparation: "017", execution: "020" };
+const MIGRATION_NUMBER = { ambition: "006", idea: "007", preparation: "024", execution: "027" };
+
+/**
+ * Od której migracji istnieje kolumna, którą generator umie wypełnić.
+ *
+ * Plik treści dostaje NISKI numer (Ambition 006, Idea 007), ale generator
+ * rośnie razem ze schematem. Bez tej tabeli ponowne `content:build -- idea-v1`
+ * dopisywało `skip_when` (powstaje w 021) i `depends_on` (026) do każdego
+ * podpunktu Idei — a na świeżej bazie 007 biegnie dwadzieścia migracji
+ * wcześniej i kończy się „column does not exist". Błąd nie wychodził przy
+ * generowaniu, tylko przy pierwszym stawianiu bazy od zera.
+ *
+ * Reguła: plik treści odwołuje się wyłącznie do kolumn, które na jego pozycji
+ * w kolejności NA PEWNO już istnieją. Nowa kolumna w generatorze = nowy wpis
+ * tutaj, z numerem migracji, która ją tworzy.
+ */
+const COLUMN_SINCE = { skip_when: "021", depends_on: "026" };
+
+/** Czy plik treści tego szablonu może już używać danej kolumny. */
+const hasColumn = (doc, column) =>
+  Number(MIGRATION_NUMBER[doc.key] ?? "999") > Number(COLUMN_SINCE[column]);
 
 // ---------------------------------------------------------------------------
 // Walidacja
@@ -292,15 +312,33 @@ function buildSql(doc) {
         const dependsSql = Array.isArray(subpoint.depends_on) && subpoint.depends_on.length
           ? `array[${subpoint.depends_on.map((dep) => lit(dep)).join(", ")}]::text[]`
           : "null";
+
+        // Kolumny dokładane przez późniejsze migracje — tylko tam, gdzie już są.
+        const extra = [];
+        if (hasColumn(doc, "skip_when")) extra.push(["skip_when", skipSql]);
+        if (hasColumn(doc, "depends_on")) extra.push(["depends_on", dependsSql]);
+        // Szablon bez danej kolumny nie może jej używać — inaczej wartość
+        // z JSON-a zniknęłaby po cichu przy generowaniu.
+        if (!hasColumn(doc, "skip_when") && subpoint.skip_when) {
+          fail(`${doc.key}.${subpoint.key}`, "skip_when wymaga migracji 021 — ten szablon ma niższy numer");
+        }
+        if (!hasColumn(doc, "depends_on") && dependsSql !== "null") {
+          fail(`${doc.key}.${subpoint.key}`, "depends_on wymaga migracji 026 — ten szablon ma niższy numer");
+        }
+        const extraCols = extra.map(([column]) => `${column}, `).join("");
+        const extraVals = extra.map(([, value]) => `${value}, `).join("");
+
         w("  insert into public.stage_subpoints");
-        w("    (point_id, key, title, description, is_optional, shared_key, skip_when, depends_on, position)");
+        w(`    (point_id, key, title, description, is_optional, shared_key, ${extraCols}position)`);
         w(`  values (v_point, ${lit(subpoint.key)}, ${lit(subpoint.title)},`);
         w(`          ${lit(subpoint.description)}, ${bool(subpoint.is_optional)},`);
-        w(`          ${lit(subpoint.shared ?? null)}, ${skipSql}, ${dependsSql}, ${si + 1})`);
+        w(`          ${lit(subpoint.shared ?? null)}, ${extraVals}${si + 1})`);
         w("  on conflict (point_id, key) do update set");
         w("    title = excluded.title, description = excluded.description,");
         w("    is_optional = excluded.is_optional, shared_key = excluded.shared_key,");
-        w("    skip_when = excluded.skip_when, depends_on = excluded.depends_on,");
+        if (extra.length > 0) {
+          w(`    ${extra.map(([column]) => `${column} = excluded.${column}`).join(", ")},`);
+        }
         w("    position = excluded.position");
         w("  returning id into v_subpoint;");
         w();
@@ -421,24 +459,32 @@ if (existsSync(guidesPath)) {
     for (const point of category.points ?? []) {
       const guide = guides[category.key]?.[point.guide ?? point.key];
       if (!guide) continue;
-      point.guide_body = point.guide_body ?? guide.body ?? null;
-      point.guide_sources = point.guide_sources ?? guide.sources ?? [];
+      if (guide.body) point.guide_body = guide.body;
+      if (guide.sources) point.guide_sources = guide.sources;
     }
   }
 }
 
 validate(doc);
 
-if (errors.length > 0) {
+function exitOnErrors() {
+  if (errors.length === 0) return;
   console.error(`\n✖ Treść ma ${errors.length} ${errors.length === 1 ? "błąd" : "błędów"}:\n`);
   for (const error of errors) console.error(`   ${error}`);
   console.error("");
   process.exit(1);
 }
 
+exitOnErrors();
+
 const number = MIGRATION_NUMBER[doc.key] ?? "0xx";
 const target = join(MIGRATIONS_DIR, `${number}_content_${name.replace(/-/g, "_")}.sql`);
-writeFileSync(target, buildSql(doc), "utf8");
+// Drugie sprawdzenie PO złożeniu SQL-a: część reguł (kolumna użyta w szablonie,
+// który na swojej pozycji jeszcze jej nie ma) da się ocenić dopiero przy
+// generowaniu. Plik nie powstaje, dopóki obie bramki nie są czyste.
+const sql = buildSql(doc);
+exitOnErrors();
+writeFileSync(target, sql, "utf8");
 
 const counts = doc.categories.reduce(
   (acc, c) => {

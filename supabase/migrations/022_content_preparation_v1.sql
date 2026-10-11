@@ -1,5 +1,5 @@
 -- ============================================================================
--- 017 · Treść etapu: Preparation (v1)
+-- 022 · Treść etapu: Preparation (v1)
 -- ----------------------------------------------------------------------------
 -- PLIK GENEROWANY — nie edytuj ręcznie.
 -- Źródło: supabase/content/preparation-v1.json

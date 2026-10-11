@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Clock, MapPin, Users } from "lucide-react";
+import { Clock, MapPin, Sparkles, Users } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Pill } from "@/components/ui/pill";
+import type { MatchReason } from "@/lib/match";
 import { MAX_STARTUPS } from "@/types/startup";
 import { LOOKING_FOR_LABELS, type PublicProfile } from "@/types/social";
 
@@ -18,9 +19,12 @@ const MAX_VISIBLE_SKILLS = 5;
 export function PersonCard({
   person,
   action,
+  highlight,
 }: {
   person: PublicProfile;
   action?: React.ReactNode;
+  /** Jedno zdanie o pokryciu z moimi rolami albo umiejętnościami. */
+  highlight?: MatchReason | null;
 }) {
   const full = person.team_count >= MAX_STARTUPS;
   const skills = person.skills ?? [];
@@ -64,6 +68,16 @@ export function PersonCard({
           </div>
         </div>
       </div>
+
+      {highlight ? (
+        <p className="mt-3 flex items-start gap-2 rounded-xl border border-[var(--vairo)]/18 bg-[var(--vairo)]/[0.06] px-3.5 py-2 text-[12.5px] leading-relaxed text-[var(--text-muted)]">
+          <Sparkles className="mt-[3px] size-3.5 shrink-0 text-[var(--vairo)]" aria-hidden="true" />
+          <span>
+            <span className="sr-only">Dlaczego to widzisz: </span>
+            {highlight.text}
+          </span>
+        </p>
+      ) : null}
 
       {person.looking_for ? (
         <div className="mt-3">

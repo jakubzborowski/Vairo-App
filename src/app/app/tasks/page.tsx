@@ -35,7 +35,7 @@ export default async function TasksPage({
         <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-muted)]">
           {workspace.ready
             ? "Nie udało się wczytać zadań. Odśwież stronę."
-            : "Brakuje migracji 018. Odpal ją w Supabase → SQL Editor."}
+            : "Brakuje migracji 025. Odpal ją w Supabase → SQL Editor."}
         </p>
       </div>
     );

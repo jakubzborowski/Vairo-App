@@ -77,7 +77,18 @@ const byPosition = <T extends { position: number }>(a: T, b: T) =>
 export async function ensureStartupStage(
   supabase: SupabaseClient,
   startupId: string,
-  templateKey: string
+  templateKey: string,
+  /**
+   * Stan, w jakim etap ma powstać. Domyślnie „rozpoczęty" — bo normalnie
+   * instancja powstaje w momencie, w którym ktoś do etapu wchodzi.
+   *
+   * `completed` służy jednemu przypadkowi: zakładaniu startupu od Idea Stage.
+   * Ambition istnieje po to, żeby pomóc znaleźć pomysł; kto przychodzi
+   * z pomysłem, ma ten etap z definicji za sobą. Zostawianie go jako
+   * „pominięty" mówiło coś nieprawdziwego — że człowiek coś ominął — zamiast
+   * tego, co się faktycznie stało: że nie było czego robić.
+   */
+  status: "in_progress" | "completed" = "in_progress"
 ): Promise<string | null> {
   const { data: template } = await supabase
     .from("stage_templates")
@@ -100,7 +111,12 @@ export async function ensureStartupStage(
 
   const { data: created, error } = await supabase
     .from("startup_stages")
-    .insert({ startup_id: startupId, template_id: template.id })
+    .insert({
+      startup_id: startupId,
+      template_id: template.id,
+      status,
+      ...(status === "completed" ? { completed_at: new Date().toISOString() } : {}),
+    })
     .select("id")
     .single();
 
@@ -198,7 +214,7 @@ export async function loadStageTree(
       .eq("startup_stage_id", params.startupStageId),
   ]);
 
-  // Kolumna skip_when powstaje w migracji 016. Zanim ktoś ją odpali,
+  // Kolumna skip_when powstaje w migracji 021. Zanim ktoś ją odpali,
   // etapy Ambition i Idea mają się dalej otwierać.
   const categoryRows = categoryResult.error?.message.includes("depends_on")
     ? (await treeSelect(true, false)).data

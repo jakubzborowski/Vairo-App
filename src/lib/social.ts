@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { EMPTY_MATCH_CONTEXT, type MatchContext } from "@/lib/match";
 import type {
   JoinDirection,
   JoinRequest,
@@ -223,6 +224,7 @@ export type OpenRole = {
   weeklyHours: number | null;
   isOpen: boolean;
   createdAt: string;
+  skills: { id: string; label: string }[];
 };
 
 export async function getOpenRoles(
@@ -231,17 +233,35 @@ export async function getOpenRoles(
 ): Promise<OpenRole[]> {
   const { data } = await supabase
     .from("startup_open_roles")
-    .select("id, title, description, weekly_hours, is_open, created_at")
+    .select(
+      "id, title, description, weekly_hours, is_open, created_at, " +
+        "startup_open_role_skills(skills(id, label))"
+    )
     .eq("startup_id", startupId)
     .order("created_at", { ascending: true });
 
-  return (data ?? []).map((row) => ({
-    id: row.id as string,
-    title: row.title as string,
-    description: row.description as string | null,
-    weeklyHours: row.weekly_hours as number | null,
-    isOpen: row.is_open as boolean,
-    createdAt: row.created_at as string,
+  type Link = { skills: { id: string; label: string } | null };
+  type Row = {
+    id: string;
+    title: string;
+    description: string | null;
+    weekly_hours: number | null;
+    is_open: boolean;
+    created_at: string;
+    startup_open_role_skills: Link[] | null;
+  };
+
+  return ((data ?? []) as unknown as Row[]).map((row) => ({
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    weeklyHours: row.weekly_hours,
+    isOpen: row.is_open,
+    createdAt: row.created_at,
+    skills: (row.startup_open_role_skills ?? [])
+      .map((link) => link.skills)
+      .filter((skill): skill is { id: string; label: string } => Boolean(skill))
+      .sort((a, b) => a.label.localeCompare(b.label, "pl")),
   }));
 }
 
@@ -384,6 +404,66 @@ export async function findPendingRequest(
     .maybeSingle();
 
   return data ?? null;
+}
+
+/**
+ * Kontekst, na podstawie którego karta w Odkrywaj mówi „dlaczego to widzisz".
+ *
+ * Trzy zapytania i nic więcej — reszta to czysta funkcja w `match.ts`.
+ * Świadomie liczymy to RAZ na stronę i przekazujemy w dół, zamiast pytać bazę
+ * przy każdej karcie: talia ma do sześćdziesięciu pozycji, a ten sam zestaw
+ * moich umiejętności i moich otwartych ról jest dla wszystkich identyczny.
+ *
+ * Gdy cokolwiek zawiedzie, zwracamy pusty kontekst. Brak powodu na karcie jest
+ * nieszkodliwy; komunikat błędu w miejscu, w którym user chciał obejrzeć czyjś
+ * profil, już nie.
+ */
+export async function loadMatchContext(
+  supabase: SupabaseClient,
+  userId: string,
+  myStartupIds: string[]
+): Promise<MatchContext> {
+  const rolesQuery =
+    myStartupIds.length > 0
+      ? supabase
+          .from("startup_open_roles")
+          .select("title, startup_open_role_skills(skills(label))")
+          .in("startup_id", myStartupIds)
+          .eq("is_open", true)
+      : null;
+
+  const [mine, me, roles] = await Promise.all([
+    supabase.from("profile_skills").select("skills(label)").eq("profile_id", userId),
+    supabase.from("profiles").select("location").eq("id", userId).maybeSingle(),
+    rolesQuery,
+  ]);
+
+  if (mine.error) return EMPTY_MATCH_CONTEXT;
+
+  type SkillRow = { skills: { label: string } | { label: string }[] | null };
+  const labelsOf = (row: SkillRow): string[] => {
+    const value = row.skills;
+    if (!value) return [];
+    return Array.isArray(value) ? value.map((item) => item.label) : [value.label];
+  };
+
+  const mySkills = ((mine.data ?? []) as unknown as SkillRow[]).flatMap(labelsOf);
+
+  const wanted: MatchContext["wanted"] = [];
+  type RoleRow = { title: string; startup_open_role_skills: SkillRow[] | null };
+  for (const role of (roles?.data ?? []) as unknown as RoleRow[]) {
+    for (const link of role.startup_open_role_skills ?? []) {
+      for (const label of labelsOf(link)) {
+        wanted.push({ skill: label, roleTitle: role.title });
+      }
+    }
+  }
+
+  return {
+    wanted,
+    mySkills,
+    myLocation: (me.data as { location: string | null } | null)?.location ?? null,
+  };
 }
 
 /**

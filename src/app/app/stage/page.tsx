@@ -52,7 +52,7 @@ export default async function StagePage({
 
   if (program.length === 0) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="page">
         <EmptyState
           icon={Database}
           title="Treść etapów nie jest jeszcze wgrana"
@@ -78,7 +78,7 @@ export default async function StagePage({
     const done = program.filter((item) => item.status === "completed");
 
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="page">
         <Card>
           <CardBody className="pt-6 text-center">
             <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-[var(--vairo)]/12 text-[var(--vairo)]">
@@ -125,7 +125,7 @@ export default async function StagePage({
     const canOpen = canEditStageData(active.role);
 
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="page">
         <Card>
           <CardBody className="pt-6 text-center">
             <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-white/6 text-[var(--text-subtle)]">
@@ -135,7 +135,7 @@ export default async function StagePage({
               {requested.title} został pominięty
             </h1>
             <p className="mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-[var(--text-muted)]">
-              Zaczynałeś z gotowym pomysłem, więc Vairo przeskoczyło ten etap.
+              Ten startup zaczął się od gotowego pomysłu, więc Vairo przeskoczyło ten etap.
               {requested.subtitle ? ` ${requested.subtitle}.` : ""}{" "}
               Możesz go uzupełnić, ale <strong>nie musisz</strong> — nie blokuje
               tego, co robisz teraz.
@@ -178,7 +178,7 @@ export default async function StagePage({
 
   if (!stageId) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="page">
         <EmptyState
           icon={Rocket}
           title="Etap nie jest jeszcze otwarty"
@@ -201,7 +201,7 @@ export default async function StagePage({
 
   if (!tree || tree.total === 0) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="page">
         <EmptyState
           icon={Rocket}
           title="Ten etap nie ma jeszcze treści"

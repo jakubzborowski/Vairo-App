@@ -55,8 +55,12 @@ export default async function StageCategoriesPage() {
           Masz pierwszy zarys projektu
         </p>
         <p className="mt-1 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-          Teraz wiesz o swoim pomyśle więcej niż na starcie. Odpowiedz na trzy
-          pytania, a Vairo dobierze do nich pytania w Idea Stage.
+          {/* Było „odpowiedz na trzy pytania" przy kreatorze, który ma dwa
+              kroki. Liczba w obietnicy musi zgadzać się z licznikiem obok,
+              inaczej pierwszy ekran po domknięciu etapu zaczyna od nieprawdy.
+              Bez liczby zdanie nic nie traci. */}
+          Teraz wiesz o swoim pomyśle więcej niż na starcie. Odpowiedz na kilka
+          pytań, a Vairo dobierze do nich pytania w Idea Stage.
         </p>
       </div>
 
