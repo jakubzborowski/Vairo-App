@@ -14,9 +14,9 @@
       "intro": "Wspólna podstawa dla każdego produktu — niezależnie od kategorii.",
       "points": [
         {
-          "key": "zbuduj-minimalna-wersje-rozwiazania",
+          "key": "general-zbuduj-minimalna-wersje-rozwiazania",
           "title": "Zbuduj minimalną wersję rozwiązania",
-          "guide": "zbuduj-minimalna-wersje-rozwiazania",
+          "guide": "general-zbuduj-minimalna-wersje-rozwiazania",
           "subpoints": [
             {
               "key": "zrealizuj-podstawowe-funkcje-mvp",
@@ -26,10 +26,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zbuduj wyłącznie funkcje potrzebne do sprawdzenia głównego założenia.",
-                  "help": "Zbuduj wyłącznie funkcje potrzebne do sprawdzenia głównego założenia.",
+                  "help": "Zbuduj wyłącznie funkcje potrzebne do sprawdzenia głównego założenia. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -41,10 +48,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Spraw, by użytkownik mógł wykonać główne działanie w rozwiązaniu.",
-                  "help": "Spraw, by użytkownik mógł wykonać główne działanie w rozwiązaniu.",
+                  "help": "Spraw, by użytkownik mógł wykonać główne działanie w rozwiązaniu. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -56,19 +70,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Doprowadź MVP do stanu gotowego do użycia przez pierwszych odbiorców.",
-                  "help": "Doprowadź MVP do stanu gotowego do użycia przez pierwszych odbiorców.",
+                  "help": "Doprowadź MVP do stanu gotowego do użycia przez pierwszych odbiorców. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "rozpocznij-testowanie-z-uzytkownikami",
+          "key": "general-rozpocznij-testowanie-z-uzytkownikami",
           "title": "Rozpocznij testowanie z użytkownikami",
-          "guide": "rozpocznij-testowanie-z-uzytkownikami",
+          "guide": "general-rozpocznij-testowanie-z-uzytkownikami",
           "subpoints": [
             {
               "key": "okresl-grupe-badawcza",
@@ -78,10 +99,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wybierz osoby najlepiej pasujące do testowania rozwiązania.",
-                  "help": "Wybierz osoby najlepiej pasujące do testowania rozwiązania.",
+                  "help": "Wybierz osoby najlepiej pasujące do testowania rozwiązania. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "defined"
                 }
               ]
             },
@@ -93,10 +121,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wyznacz, jak długo potrwają testy MVP.",
-                  "help": "Wyznacz, jak długo potrwają testy MVP.",
+                  "help": "Wyznacz, jak długo potrwają testy MVP. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "defined"
                 }
               ]
             },
@@ -108,10 +143,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Daj wybranej grupie dostęp do MVP.",
-                  "help": "Daj wybranej grupie dostęp do MVP.",
+                  "help": "Daj wybranej grupie dostęp do MVP. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -123,19 +165,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Śledź, jak użytkownicy korzystają z produktu i jakie mają problemy.",
-                  "help": "Śledź, jak użytkownicy korzystają z produktu i jakie mają problemy.",
+                  "help": "Śledź, jak użytkownicy korzystają z produktu i jakie mają problemy. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "zbierz-feedback",
+          "key": "general-zbierz-feedback",
           "title": "Zbierz feedback",
-          "guide": "zbierz-feedback",
+          "guide": "general-zbierz-feedback",
           "subpoints": [
             {
               "key": "zbieraj-opinie-uzytkownikow",
@@ -145,10 +194,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zapytaj użytkowników wprost o ich doświadczenia z MVP.",
-                  "help": "Zapytaj użytkowników wprost o ich doświadczenia z MVP.",
+                  "help": "Zapytaj użytkowników wprost o ich doświadczenia z MVP. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -160,10 +216,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Skonsultuj rozwiązanie ze specjalistami i doświadczonymi osobami.",
-                  "help": "Skonsultuj rozwiązanie ze specjalistami i doświadczonymi osobami.",
+                  "help": "Skonsultuj rozwiązanie ze specjalistami i doświadczonymi osobami. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -175,10 +238,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zapisuj usterki, trudności i niejasne elementy.",
-                  "help": "Zapisuj usterki, trudności i niejasne elementy.",
+                  "help": "Zapisuj usterki, trudności i niejasne elementy. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -190,19 +260,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Notuj propozycje użytkowników dotyczące funkcji głównych i dodatkowych.",
-                  "help": "Notuj propozycje użytkowników dotyczące funkcji głównych i dodatkowych.",
+                  "help": "Notuj propozycje użytkowników dotyczące funkcji głównych i dodatkowych. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "przeanalizuj-feedback",
+          "key": "general-przeanalizuj-feedback",
           "title": "Przeanalizuj feedback",
-          "guide": "przeanalizuj-feedback",
+          "guide": "general-przeanalizuj-feedback",
           "subpoints": [
             {
               "key": "ocen-poziom-zadowolenia",
@@ -212,10 +289,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, jak bardzo użytkownicy są zadowoleni z rozwiązania.",
-                  "help": "Sprawdź, jak bardzo użytkownicy są zadowoleni z rozwiązania.",
+                  "help": "Sprawdź, jak bardzo użytkownicy są zadowoleni z rozwiązania. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -227,10 +311,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Znajdź najczęściej powtarzające się usterki i bariery.",
-                  "help": "Znajdź najczęściej powtarzające się usterki i bariery.",
+                  "help": "Znajdź najczęściej powtarzające się usterki i bariery. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -242,10 +333,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, których funkcji użytkownicy naprawdę potrzebują.",
-                  "help": "Sprawdź, których funkcji użytkownicy naprawdę potrzebują.",
+                  "help": "Sprawdź, których funkcji użytkownicy naprawdę potrzebują. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -257,19 +355,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Ustal, co wymaga zmiany, a co dalszego sprawdzenia.",
-                  "help": "Ustal, co wymaga zmiany, a co dalszego sprawdzenia.",
+                  "help": "Ustal, co wymaga zmiany, a co dalszego sprawdzenia. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "opracuj-kierunek-dalszego-rozwoju",
+          "key": "general-opracuj-kierunek-dalszego-rozwoju",
           "title": "Opracuj kierunek dalszego rozwoju",
-          "guide": "opracuj-kierunek-dalszego-rozwoju",
+          "guide": "general-opracuj-kierunek-dalszego-rozwoju",
           "subpoints": [
             {
               "key": "ustal-najwazniejsze-poprawki",
@@ -279,10 +384,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wybierz zmiany o największym wpływie na wartość produktu.",
-                  "help": "Wybierz zmiany o największym wpływie na wartość produktu.",
+                  "help": "Wybierz zmiany o największym wpływie na wartość produktu. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "defined"
                 }
               ]
             },
@@ -294,10 +406,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zaplanuj, jak dostosować MVP do zebranego feedbacku.",
-                  "help": "Zaplanuj, jak dostosować MVP do zebranego feedbacku.",
+                  "help": "Zaplanuj, jak dostosować MVP do zebranego feedbacku. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "defined"
                 }
               ]
             },
@@ -334,9 +453,9 @@
           ]
         },
         {
-          "key": "ponownie-skonsultuj-rozwiazanie",
+          "key": "general-ponownie-skonsultuj-rozwiazanie",
           "title": "Ponownie skonsultuj rozwiązanie",
-          "guide": "ponownie-skonsultuj-rozwiazanie",
+          "guide": "general-ponownie-skonsultuj-rozwiazanie",
           "subpoints": [
             {
               "key": "wprowadz-najwazniejsze-zmiany",
@@ -346,10 +465,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wprowadź do MVP zmiany wynikające z analizy.",
-                  "help": "Wprowadź do MVP zmiany wynikające z analizy.",
+                  "help": "Wprowadź do MVP zmiany wynikające z analizy. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -361,10 +487,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Udostępnij zmienioną wersję i sprawdź reakcję użytkowników.",
-                  "help": "Udostępnij zmienioną wersję i sprawdź reakcję użytkowników.",
+                  "help": "Udostępnij zmienioną wersję i sprawdź reakcję użytkowników. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -376,10 +509,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, czy zmiany poprawiły odbiór rozwiązania.",
-                  "help": "Sprawdź, czy zmiany poprawiły odbiór rozwiązania.",
+                  "help": "Sprawdź, czy zmiany poprawiły odbiór rozwiązania. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -391,10 +531,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Powtarzaj cykl testowania, feedbacku i ulepszania.",
-                  "help": "Powtarzaj cykl testowania, feedbacku i ulepszania.",
+                  "help": "Powtarzaj cykl testowania, feedbacku i ulepszania. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
@@ -406,12 +553,12 @@
       "key": "saas",
       "title": "SaaS",
       "always_active": false,
-      "intro": "Dodatkowe punkty, gdy budujesz oprogramowanie jako usługę.",
+      "intro": "Warstwa dla produktu subskrypcyjnego — uruchomienie, użycie i model.",
       "points": [
         {
-          "key": "uruchom-pierwsza-wersje-saas",
+          "key": "saas-uruchom-pierwsza-wersje-saas",
           "title": "Uruchom pierwszą wersję SaaS",
-          "guide": "uruchom-pierwsza-wersje-saas",
+          "guide": "saas-uruchom-pierwsza-wersje-saas",
           "subpoints": [
             {
               "key": "zrealizuj-zakres-mvp",
@@ -421,10 +568,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zbuduj tylko funkcje potrzebne do sprawdzenia głównej wartości produktu.",
-                  "help": "Zbuduj tylko funkcje potrzebne do sprawdzenia głównej wartości produktu.",
+                  "help": "Zbuduj tylko funkcje potrzebne do sprawdzenia głównej wartości produktu. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -436,10 +590,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Spraw, by użytkownik mógł przejść całą podstawową ścieżkę w aplikacji.",
-                  "help": "Spraw, by użytkownik mógł przejść całą podstawową ścieżkę w aplikacji.",
+                  "help": "Spraw, by użytkownik mógł przejść całą podstawową ścieżkę w aplikacji. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -451,10 +612,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Uruchom produkt na prawdziwej infrastrukturze, dostępnej dla realnych użytkowników.",
-                  "help": "Uruchom produkt na prawdziwej infrastrukturze, dostępnej dla realnych użytkowników.",
+                  "help": "Uruchom produkt na prawdziwej infrastrukturze, dostępnej dla realnych użytkowników. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -466,10 +634,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Upewnij się, że integracje z innymi systemami działają poprawnie w praktyce.",
-                  "help": "Upewnij się, że integracje z innymi systemami działają poprawnie w praktyce.",
+                  "help": "Upewnij się, że integracje z innymi systemami działają poprawnie w praktyce. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -481,19 +656,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Upewnij się, że płatność, zmiana planu i anulowanie subskrypcji działają bez problemów.",
-                  "help": "Upewnij się, że płatność, zmiana planu i anulowanie subskrypcji działają bez problemów.",
+                  "help": "Upewnij się, że płatność, zmiana planu i anulowanie subskrypcji działają bez problemów. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "przetestuj-saas-z-rzeczywistymi-uzytkownikami",
+          "key": "saas-przetestuj-saas-z-rzeczywistymi-uzytkownikami",
           "title": "Przetestuj SaaS z rzeczywistymi użytkownikami",
-          "guide": "przetestuj-saas-z-rzeczywistymi-uzytkownikami",
+          "guide": "saas-przetestuj-saas-z-rzeczywistymi-uzytkownikami",
           "subpoints": [
             {
               "key": "udostepnij-produkt-pierwszym-uzytkownikom",
@@ -503,10 +685,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Daj dostęp do SaaS wybranej grupie testowych użytkowników.",
-                  "help": "Daj dostęp do SaaS wybranej grupie testowych użytkowników.",
+                  "help": "Daj dostęp do SaaS wybranej grupie testowych użytkowników. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -518,10 +707,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, czy nowi użytkownicy sami poradzą sobie z rozpoczęciem korzystania z produktu.",
-                  "help": "Sprawdź, czy nowi użytkownicy sami poradzą sobie z rozpoczęciem korzystania z produktu.",
+                  "help": "Sprawdź, czy nowi użytkownicy sami poradzą sobie z rozpoczęciem korzystania z produktu. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -533,10 +729,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Śledź, jak użytkownicy faktycznie korzystają z produktu.",
-                  "help": "Śledź, jak użytkownicy faktycznie korzystają z produktu.",
+                  "help": "Śledź, jak użytkownicy faktycznie korzystają z produktu. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -548,19 +751,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zapisuj napotkane błędy i trudności użytkowników.",
-                  "help": "Zapisuj napotkane błędy i trudności użytkowników.",
+                  "help": "Zapisuj napotkane błędy i trudności użytkowników. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "zmierz-wykorzystanie-saas",
+          "key": "saas-zmierz-wykorzystanie-saas",
           "title": "Zmierz wykorzystanie SaaS",
-          "guide": "zmierz-wykorzystanie-saas",
+          "guide": "saas-zmierz-wykorzystanie-saas",
           "subpoints": [
             {
               "key": "zmierz-aktywacje-uzytkownikow",
@@ -570,10 +780,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, ilu użytkowników dociera do pierwszego momentu wartości.",
-                  "help": "Sprawdź, ilu użytkowników dociera do pierwszego momentu wartości.",
+                  "help": "Sprawdź, ilu użytkowników dociera do pierwszego momentu wartości. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -585,10 +802,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, które funkcje są rzeczywiście używane.",
-                  "help": "Sprawdź, które funkcje są rzeczywiście używane.",
+                  "help": "Sprawdź, które funkcje są rzeczywiście używane. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -600,10 +824,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, jak często użytkownicy wracają do produktu.",
-                  "help": "Sprawdź, jak często użytkownicy wracają do produktu.",
+                  "help": "Sprawdź, jak często użytkownicy wracają do produktu. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -615,10 +846,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, ilu użytkowników pozostaje aktywnych po pewnym czasie.",
-                  "help": "Sprawdź, ilu użytkowników pozostaje aktywnych po pewnym czasie.",
+                  "help": "Sprawdź, ilu użytkowników pozostaje aktywnych po pewnym czasie. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -630,19 +868,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zestaw rzeczywiste dane z wcześniej ustalonymi celami.",
-                  "help": "Zestaw rzeczywiste dane z wcześniej ustalonymi celami.",
+                  "help": "Zestaw rzeczywiste dane z wcześniej ustalonymi celami. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "zweryfikuj-wartosc-saas",
+          "key": "saas-zweryfikuj-wartosc-saas",
           "title": "Zweryfikuj wartość SaaS",
-          "guide": "zweryfikuj-wartosc-saas",
+          "guide": "saas-zweryfikuj-wartosc-saas",
           "subpoints": [
             {
               "key": "sprawdz-osiaganie-glownego-rezultatu",
@@ -652,10 +897,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Oceń, czy produkt realnie daje użytkownikom zakładaną wartość.",
-                  "help": "Oceń, czy produkt realnie daje użytkownikom zakładaną wartość.",
+                  "help": "Oceń, czy produkt realnie daje użytkownikom zakładaną wartość. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -667,10 +919,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zapytaj użytkowników, czy produkt jest dla nich przydatny.",
-                  "help": "Zapytaj użytkowników, czy produkt jest dla nich przydatny.",
+                  "help": "Zapytaj użytkowników, czy produkt jest dla nich przydatny. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -682,10 +941,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Znajdź, co przeszkadza użytkownikom w osiągnięciu wartości.",
-                  "help": "Znajdź, co przeszkadza użytkownikom w osiągnięciu wartości.",
+                  "help": "Znajdź, co przeszkadza użytkownikom w osiągnięciu wartości. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -697,10 +963,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, czy użytkownicy mają powód wracać do produktu regularnie.",
-                  "help": "Sprawdź, czy użytkownicy mają powód wracać do produktu regularnie.",
+                  "help": "Sprawdź, czy użytkownicy mają powód wracać do produktu regularnie. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -712,19 +985,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wybierz problemy, które najbardziej wpływają na wartość produktu.",
-                  "help": "Wybierz problemy, które najbardziej wpływają na wartość produktu.",
+                  "help": "Wybierz problemy, które najbardziej wpływają na wartość produktu. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "defined"
                 }
               ]
             }
           ]
         },
         {
-          "key": "zweryfikuj-model-subskrypcyjny",
+          "key": "saas-zweryfikuj-model-subskrypcyjny",
           "title": "Zweryfikuj model subskrypcyjny",
-          "guide": "zweryfikuj-model-subskrypcyjny",
+          "guide": "saas-zweryfikuj-model-subskrypcyjny",
           "subpoints": [
             {
               "key": "sprawdz-konwersje-na-platne-plany",
@@ -734,10 +1014,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, ilu użytkowników przechodzi na płatną wersję.",
-                  "help": "Sprawdź, ilu użytkowników przechodzi na płatną wersję.",
+                  "help": "Sprawdź, ilu użytkowników przechodzi na płatną wersję. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -749,10 +1036,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, czy płacący użytkownicy odnawiają subskrypcję.",
-                  "help": "Sprawdź, czy płacący użytkownicy odnawiają subskrypcję.",
+                  "help": "Sprawdź, czy płacący użytkownicy odnawiają subskrypcję. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -764,10 +1058,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, ile osób rezygnuje i dlaczego.",
-                  "help": "Sprawdź, ile osób rezygnuje i dlaczego.",
+                  "help": "Sprawdź, ile osób rezygnuje i dlaczego. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -779,10 +1080,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Oblicz, jaki procent klientów rezygnuje z subskrypcji.",
-                  "help": "Oblicz, jaki procent klientów rezygnuje z subskrypcji.",
+                  "help": "Oblicz, jaki procent klientów rezygnuje z subskrypcji. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -794,19 +1102,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, czy model subskrypcyjny się opłaca.",
-                  "help": "Sprawdź, czy model subskrypcyjny się opłaca.",
+                  "help": "Sprawdź, czy model subskrypcyjny się opłaca. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "ulepsz-lub-zmien-kierunek-saas",
+          "key": "saas-ulepsz-lub-zmien-kierunek-saas",
           "title": "Ulepsz lub zmień kierunek SaaS",
-          "guide": "ulepsz-lub-zmien-kierunek-saas",
+          "guide": "saas-ulepsz-lub-zmien-kierunek-saas",
           "subpoints": [
             {
               "key": "ustal-priorytety-zmian",
@@ -816,10 +1131,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wybierz problemy o największym wpływie na wartość produktu.",
-                  "help": "Wybierz problemy o największym wpływie na wartość produktu.",
+                  "help": "Wybierz problemy o największym wpływie na wartość produktu. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "defined"
                 }
               ]
             },
@@ -831,10 +1153,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zmień produkt zgodnie z danymi i feedbackiem.",
-                  "help": "Zmień produkt zgodnie z danymi i feedbackiem.",
+                  "help": "Zmień produkt zgodnie z danymi i feedbackiem. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -846,10 +1175,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, czy wprowadzone zmiany przyniosły efekt.",
-                  "help": "Sprawdź, czy wprowadzone zmiany przyniosły efekt.",
+                  "help": "Sprawdź, czy wprowadzone zmiany przyniosły efekt. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -860,8 +1196,8 @@
                 {
                   "key": "decision",
                   "kind": "select",
-                  "question": "Oceń potrzebę zmiany kierunku — co wybierasz?",
-                  "help": "Zdecyduj, czy potrzebna jest głębsza zmiana produktu lub modelu.",
+                  "question": "Zdecyduj, czy potrzebna jest głębsza zmiana produktu lub modelu — co wybierasz?",
+                  "help": "Wybierz kierunek pracy. Żeby wstrzymać albo zarchiwizować startup, zakończ etap decyzją pauza lub archiwum — sama odpowiedź tego nie zrobi.",
                   "config": {
                     "options": [
                       {
@@ -875,10 +1211,6 @@
                       {
                         "value": "pivot",
                         "label": "Zmieniam kierunek"
-                      },
-                      {
-                        "value": "stop",
-                        "label": "Wstrzymuję projekt"
                       }
                     ]
                   }
@@ -908,12 +1240,12 @@
       "key": "hardware",
       "title": "Hardware",
       "always_active": false,
-      "intro": "Dodatkowe punkty dla urządzenia i łańcucha dostaw.",
+      "intro": "Warstwa dla urządzenia — pierwsza seria, awarie, łańcuch i decyzja o skali.",
       "points": [
         {
-          "key": "zrealizuj-pierwsza-wysylke-i-przetestuj-logistyke",
+          "key": "hardware-zrealizuj-pierwsza-wysylke-i-przetestuj-logistyke",
           "title": "Zrealizuj pierwszą wysyłkę i przetestuj logistykę",
-          "guide": "zrealizuj-pierwsza-wysylke-i-przetestuj-logistyke",
+          "guide": "hardware-zrealizuj-pierwsza-wysylke-i-przetestuj-logistyke",
           "subpoints": [
             {
               "key": "wyslij-pierwsza-serie-produktow-pvt",
@@ -923,10 +1255,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Przekaż wyprodukowane 50–100 sztuk pierwszym klientom lub testerom i sprawdź cały proces od przygotowania zamówienia do dostarczenia produktu.",
-                  "help": "Przekaż wyprodukowane 50–100 sztuk pierwszym klientom lub testerom i sprawdź cały proces od przygotowania zamówienia do dostarczenia produktu.",
+                  "help": "Przekaż wyprodukowane 50–100 sztuk pierwszym klientom lub testerom i sprawdź cały proces od przygotowania zamówienia do dostarczenia produktu. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -938,10 +1277,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, czy opakowania dobrze chronią urządzenia podczas transportu oraz czy produkty docierają do odbiorców bez uszkodzeń.",
-                  "help": "Sprawdź, czy opakowania dobrze chronią urządzenia podczas transportu oraz czy produkty docierają do odbiorców bez uszkodzeń.",
+                  "help": "Sprawdź, czy opakowania dobrze chronią urządzenia podczas transportu oraz czy produkty docierają do odbiorców bez uszkodzeń. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -953,10 +1299,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, ile czasu użytkownik potrzebuje na rozpakowanie, podłączenie i uruchomienie urządzenia, aby wykryć elementy powodujące frustrację lub zwroty.",
-                  "help": "Sprawdź, ile czasu użytkownik potrzebuje na rozpakowanie, podłączenie i uruchomienie urządzenia, aby wykryć elementy powodujące frustrację lub zwroty.",
+                  "help": "Sprawdź, ile czasu użytkownik potrzebuje na rozpakowanie, podłączenie i uruchomienie urządzenia, aby wykryć elementy powodujące frustrację lub zwroty. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -968,19 +1321,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Obserwuj liczbę pytań technicznych i zgłoszeń oraz czas potrzebny zespołowi na udzielenie użytkownikom pomocy.",
-                  "help": "Obserwuj liczbę pytań technicznych i zgłoszeń oraz czas potrzebny zespołowi na udzielenie użytkownikom pomocy.",
+                  "help": "Obserwuj liczbę pytań technicznych i zgłoszeń oraz czas potrzebny zespołowi na udzielenie użytkownikom pomocy. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "zbadaj-awaryjnosc-i-satysfakcje-w-uzytkowaniu",
+          "key": "hardware-zbadaj-awaryjnosc-i-satysfakcje-w-uzytkowaniu",
           "title": "Zbadaj awaryjność i satysfakcję w użytkowaniu",
-          "guide": "zbadaj-awaryjnosc-i-satysfakcje-w-uzytkowaniu",
+          "guide": "hardware-zbadaj-awaryjnosc-i-satysfakcje-w-uzytkowaniu",
           "subpoints": [
             {
               "key": "oblicz-wskaznik-awaryjnosci-rma",
@@ -990,10 +1350,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Policz, ile urządzeń z pierwszej serii uległo awarii lub miało wady fabryczne w pierwszych tygodniach użytkowania.",
-                  "help": "Policz, ile urządzeń z pierwszej serii uległo awarii lub miało wady fabryczne w pierwszych tygodniach użytkowania.",
+                  "help": "Policz, ile urządzeń z pierwszej serii uległo awarii lub miało wady fabryczne w pierwszych tygodniach użytkowania. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1005,10 +1372,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zapytaj użytkowników o problemy z baterią, obudową, przyciskami, łącznością i innymi elementami urządzenia, aby znaleźć powtarzające się usterki.",
-                  "help": "Zapytaj użytkowników o problemy z baterią, obudową, przyciskami, łącznością i innymi elementami urządzenia, aby znaleźć powtarzające się usterki.",
+                  "help": "Zapytaj użytkowników o problemy z baterią, obudową, przyciskami, łącznością i innymi elementami urządzenia, aby znaleźć powtarzające się usterki. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1020,10 +1394,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zapytaj pierwszych użytkowników, jak prawdopodobne jest, że polecą urządzenie znajomym, i wykorzystaj odpowiedzi do oceny ich ogólnej satysfakcji.",
-                  "help": "Zapytaj pierwszych użytkowników, jak prawdopodobne jest, że polecą urządzenie znajomym, i wykorzystaj odpowiedzi do oceny ich ogólnej satysfakcji.",
+                  "help": "Zapytaj pierwszych użytkowników, jak prawdopodobne jest, że polecą urządzenie znajomym, i wykorzystaj odpowiedzi do oceny ich ogólnej satysfakcji. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1035,19 +1416,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wypuść pierwszą zdalną aktualizację firmware'u, aby naprawić błędy wykryte podczas rzeczywistego użytkowania sprzętu.",
-                  "help": "Wypuść pierwszą zdalną aktualizację firmware'u, aby naprawić błędy wykryte podczas rzeczywistego użytkowania sprzętu.",
+                  "help": "Wypuść pierwszą zdalną aktualizację firmware'u, aby naprawić błędy wykryte podczas rzeczywistego użytkowania sprzętu. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "przygotuj-proces-reklamacji-i-obslugi-posprzedazowej",
+          "key": "hardware-przygotuj-proces-reklamacji-i-obslugi-posprzedazowej",
           "title": "Przygotuj proces reklamacji i obsługi posprzedażowej",
-          "guide": "przygotuj-proces-reklamacji-i-obslugi-posprzedazowej",
+          "guide": "hardware-przygotuj-proces-reklamacji-i-obslugi-posprzedazowej",
           "subpoints": [
             {
               "key": "ustal-procedure-wymiany-wadliwych-sztuk",
@@ -1057,10 +1445,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Określ prosty sposób zgłaszania i zwracania uszkodzonego sprzętu oraz przygotuj zapasowe urządzenia, które można szybko wysłać w ramach wymiany.",
-                  "help": "Określ prosty sposób zgłaszania i zwracania uszkodzonego sprzętu oraz przygotuj zapasowe urządzenia, które można szybko wysłać w ramach wymiany.",
+                  "help": "Określ prosty sposób zgłaszania i zwracania uszkodzonego sprzętu oraz przygotuj zapasowe urządzenia, które można szybko wysłać w ramach wymiany. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "defined"
                 }
               ]
             },
@@ -1072,10 +1467,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Odbieraj uszkodzone urządzenia, analizuj ich poszczególne elementy i ustalaj bezpośrednią przyczynę każdej usterki.",
-                  "help": "Odbieraj uszkodzone urządzenia, analizuj ich poszczególne elementy i ustalaj bezpośrednią przyczynę każdej usterki.",
+                  "help": "Odbieraj uszkodzone urządzenia, analizuj ich poszczególne elementy i ustalaj bezpośrednią przyczynę każdej usterki. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1087,19 +1489,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zapisuj najczęściej powtarzające się pytania i problemy, a następnie przygotuj na ich podstawie FAQ, instrukcje lub krótkie materiały wideo.",
-                  "help": "Zapisuj najczęściej powtarzające się pytania i problemy, a następnie przygotuj na ich podstawie FAQ, instrukcje lub krótkie materiały wideo.",
+                  "help": "Zapisuj najczęściej powtarzające się pytania i problemy, a następnie przygotuj na ich podstawie FAQ, instrukcje lub krótkie materiały wideo. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "zabezpiecz-lancuch-dostaw-pod-wieksza-produkcje",
+          "key": "hardware-zabezpiecz-lancuch-dostaw-pod-wieksza-produkcje",
           "title": "Zabezpiecz łańcuch dostaw pod większą produkcję",
-          "guide": "zabezpiecz-lancuch-dostaw-pod-wieksza-produkcje",
+          "guide": "hardware-zabezpiecz-lancuch-dostaw-pod-wieksza-produkcje",
           "subpoints": [
             {
               "key": "sprawdz-dostepnosc-komponentow-u-dostawcow",
@@ -1109,10 +1518,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Upewnij się, że kluczowe układy, materiały i inne komponenty są dostępne w ilościach potrzebnych do kolejnej serii produkcyjnej.",
-                  "help": "Upewnij się, że kluczowe układy, materiały i inne komponenty są dostępne w ilościach potrzebnych do kolejnej serii produkcyjnej.",
+                  "help": "Upewnij się, że kluczowe układy, materiały i inne komponenty są dostępne w ilościach potrzebnych do kolejnej serii produkcyjnej. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1124,10 +1540,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wykorzystaj większą liczbę planowanych zamówień do negocjowania z fabryką niższego kosztu jednostkowego produkcji.",
-                  "help": "Wykorzystaj większą liczbę planowanych zamówień do negocjowania z fabryką niższego kosztu jednostkowego produkcji.",
+                  "help": "Wykorzystaj większą liczbę planowanych zamówień do negocjowania z fabryką niższego kosztu jednostkowego produkcji. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1139,19 +1562,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wprowadź ostatnie niezbędne zmiany w obudowie, elektronice lub innych elementach na podstawie problemów wykrytych podczas pierwszej serii.",
-                  "help": "Wprowadź ostatnie niezbędne zmiany w obudowie, elektronice lub innych elementach na podstawie problemów wykrytych podczas pierwszej serii.",
+                  "help": "Wprowadź ostatnie niezbędne zmiany w obudowie, elektronice lub innych elementach na podstawie problemów wykrytych podczas pierwszej serii. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "potwierdz-marzowosc-i-zamow-serie-masowa",
+          "key": "hardware-potwierdz-marzowosc-i-zamow-serie-masowa",
           "title": "Potwierdź marżowość i zamów serię masową",
-          "guide": "potwierdz-marzowosc-i-zamow-serie-masowa",
+          "guide": "hardware-potwierdz-marzowosc-i-zamow-serie-masowa",
           "subpoints": [
             {
               "key": "zderz-rzeczywisty-koszt-jednostkowy-z-przychodem",
@@ -1161,10 +1591,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Policz pełny koszt jednego produktu, uwzględniając produkcję, pakowanie, wysyłkę i zwroty, a następnie porównaj go z ceną sprzedaży.",
-                  "help": "Policz pełny koszt jednego produktu, uwzględniając produkcję, pakowanie, wysyłkę i zwroty, a następnie porównaj go z ceną sprzedaży.",
+                  "help": "Policz pełny koszt jednego produktu, uwzględniając produkcję, pakowanie, wysyłkę i zwroty, a następnie porównaj go z ceną sprzedaży. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1176,10 +1613,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zbierz przedsprzedaż lub konkretne deklaracje zamówień od dystrybutorów, aby potwierdzić popyt i pomóc pokryć koszty uruchomienia większej produkcji.",
-                  "help": "Zbierz przedsprzedaż lub konkretne deklaracje zamówień od dystrybutorów, aby potwierdzić popyt i pomóc pokryć koszty uruchomienia większej produkcji.",
+                  "help": "Zbierz przedsprzedaż lub konkretne deklaracje zamówień od dystrybutorów, aby potwierdzić popyt i pomóc pokryć koszty uruchomienia większej produkcji. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1190,8 +1634,8 @@
                 {
                   "key": "decision",
                   "kind": "select",
-                  "question": "Podejmij decyzję o zamówieniu masowym — co wybierasz?",
-                  "help": "Na podstawie marży, jakości produktu i potwierdzonego popytu zdecyduj, czy wpłacić zaliczkę na produkcję masową, czy wstrzymać projekt.",
+                  "question": "Na podstawie marży, jakości produktu i potwierdzonego popytu zdecyduj, czy wpłacić zaliczkę na produkcję masową, czy wstrzymać projekt — co wybierasz?",
+                  "help": "Wybierz kierunek pracy. Żeby wstrzymać albo zarchiwizować startup, zakończ etap decyzją pauza lub archiwum — sama odpowiedź tego nie zrobi.",
                   "config": {
                     "options": [
                       {
@@ -1205,10 +1649,6 @@
                       {
                         "value": "pivot",
                         "label": "Zmieniam kierunek"
-                      },
-                      {
-                        "value": "stop",
-                        "label": "Wstrzymuję projekt"
                       }
                     ]
                   }
@@ -1223,12 +1663,12 @@
       "key": "b2b",
       "title": "B2B",
       "always_active": false,
-      "intro": "Dodatkowe punkty, gdy sprzedajesz firmom.",
+      "intro": "Warstwa dla sprzedaży do firm — MVP, test z klientami biznesowymi, feedback.",
       "points": [
         {
-          "key": "zbuduj-minimalna-wersje-rozwiazania",
+          "key": "b2b-zbuduj-minimalna-wersje-rozwiazania",
           "title": "Zbuduj minimalną wersję rozwiązania",
-          "guide": "zbuduj-minimalna-wersje-rozwiazania",
+          "guide": "b2b-zbuduj-minimalna-wersje-rozwiazania",
           "subpoints": [
             {
               "key": "zrealizuj-podstawowe-funkcje-mvp",
@@ -1238,10 +1678,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Stwórz tylko funkcje niezbędne do sprawdzenia głównej wartości rozwiązania. Skup się wyłącznie na tym, co pozwoli sprawdzić, czy Twoje rozwiązanie faktycznie rozwiązuje problem klienta B2B — unikaj dodawania funkcji „na przyszłość”, bo wydłużają czas budowy i odciągają uwagę od głównego celu.",
-                  "help": "Stwórz tylko funkcje niezbędne do sprawdzenia głównej wartości rozwiązania. Skup się wyłącznie na tym, co pozwoli sprawdzić, czy Twoje rozwiązanie faktycznie rozwiązuje problem klienta B2B — unikaj dodawania funkcji „na przyszłość”, bo wydłużają czas budowy i odciągają uwagę o…",
+                  "help": "Stwórz tylko funkcje niezbędne do sprawdzenia głównej wartości rozwiązania. Skup się wyłącznie na tym, co pozwoli sprawdzić, czy Twoje rozwiązanie faktycznie rozwiązuje problem klienta B2B — unikaj dodawania funkcji „na przyszłość”, bo wydłużają czas budowy i odciągają uwagę od głównego celu. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1253,10 +1700,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zapewnij działanie podstawowej ścieżki użytkownika. Upewnij się, że użytkownik może przejść całą podstawową ścieżkę — od pierwszego kontaktu z produktem aż po uzyskanie głównej wartości — a wszystkie elementy MVP działają razem jako spójna całość, nawet jeśli są uproszczone.",
-                  "help": "Zapewnij działanie podstawowej ścieżki użytkownika. Upewnij się, że użytkownik może przejść całą podstawową ścieżkę — od pierwszego kontaktu z produktem aż po uzyskanie głównej wartości — a wszystkie elementy MVP działają razem jako spójna całość, nawet jeśli są uproszczone.",
+                  "help": "Zapewnij działanie podstawowej ścieżki użytkownika. Upewnij się, że użytkownik może przejść całą podstawową ścieżkę — od pierwszego kontaktu z produktem aż po uzyskanie głównej wartości — a wszystkie elementy MVP działają razem jako spójna całość, nawet jeśli są uproszczone. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1268,19 +1722,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wprowadź minimalną wersję rozwiązania do rzeczywistego użytkowania. Oddaj MVP w ręce prawdziwych użytkowników biznesowych, zamiast testować je tylko wewnątrz zespołu — dopiero kontakt z realnymi warunkami pracy klienta pokaże, czy rozwiązanie się sprawdza.",
-                  "help": "Wprowadź minimalną wersję rozwiązania do rzeczywistego użytkowania. Oddaj MVP w ręce prawdziwych użytkowników biznesowych, zamiast testować je tylko wewnątrz zespołu — dopiero kontakt z realnymi warunkami pracy klienta pokaże, czy rozwiązanie się sprawdza.",
+                  "help": "Wprowadź minimalną wersję rozwiązania do rzeczywistego użytkowania. Oddaj MVP w ręce prawdziwych użytkowników biznesowych, zamiast testować je tylko wewnątrz zespołu — dopiero kontakt z realnymi warunkami pracy klienta pokaże, czy rozwiązanie się sprawdza. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "rozpocznij-testowanie-z-uzytkownikami",
+          "key": "b2b-rozpocznij-testowanie-z-uzytkownikami",
           "title": "Rozpocznij testowanie z użytkownikami",
-          "guide": "rozpocznij-testowanie-z-uzytkownikami",
+          "guide": "b2b-rozpocznij-testowanie-z-uzytkownikami",
           "subpoints": [
             {
               "key": "okresl-grupe-badawcza",
@@ -1290,10 +1751,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wybierz osoby odpowiednie do testowania rozwiązania. Wybierz firmy lub osoby, które najlepiej reprezentują Twoją docelową grupę klientów B2B i realnie mierzą się z problemem, który rozwiązujesz.",
-                  "help": "Wybierz osoby odpowiednie do testowania rozwiązania. Wybierz firmy lub osoby, które najlepiej reprezentują Twoją docelową grupę klientów B2B i realnie mierzą się z problemem, który rozwiązujesz.",
+                  "help": "Wybierz osoby odpowiednie do testowania rozwiązania. Wybierz firmy lub osoby, które najlepiej reprezentują Twoją docelową grupę klientów B2B i realnie mierzą się z problemem, który rozwiązujesz. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "defined"
                 }
               ]
             },
@@ -1305,10 +1773,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Określ, jak długo użytkownicy będą testować MVP. Wyznacz konkretny przedział czasowy testów, aby użytkownicy mieli wystarczająco dużo czasu na poznanie produktu — zbyt krótki okres nie pozwoli zaobserwować realnego sposobu korzystania z rozwiązania.",
-                  "help": "Określ, jak długo użytkownicy będą testować MVP. Wyznacz konkretny przedział czasowy testów, aby użytkownicy mieli wystarczająco dużo czasu na poznanie produktu — zbyt krótki okres nie pozwoli zaobserwować realnego sposobu korzystania z rozwiązania.",
+                  "help": "Określ, jak długo użytkownicy będą testować MVP. Wyznacz konkretny przedział czasowy testów, aby użytkownicy mieli wystarczająco dużo czasu na poznanie produktu — zbyt krótki okres nie pozwoli zaobserwować realnego sposobu korzystania z rozwiązania. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "defined"
                 }
               ]
             },
@@ -1320,10 +1795,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zapewnij wybranej grupie dostęp do rozwiązania. Przekaż grupie testowej dostęp do MVP wraz z prostą instrukcją, jak zacząć z niego korzystać, dbając, by proces wdrożenia był jak najprostszy.",
-                  "help": "Zapewnij wybranej grupie dostęp do rozwiązania. Przekaż grupie testowej dostęp do MVP wraz z prostą instrukcją, jak zacząć z niego korzystać, dbając, by proces wdrożenia był jak najprostszy.",
+                  "help": "Zapewnij wybranej grupie dostęp do rozwiązania. Przekaż grupie testowej dostęp do MVP wraz z prostą instrukcją, jak zacząć z niego korzystać, dbając, by proces wdrożenia był jak najprostszy. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1335,19 +1817,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zwracaj uwagę na sposób korzystania i pojawiające się problemy. Śledź, które funkcje użytkownicy faktycznie wykorzystują, a które ignorują, oraz gdzie napotykają trudności — te obserwacje często mówią więcej niż same deklaracje.",
-                  "help": "Zwracaj uwagę na sposób korzystania i pojawiające się problemy. Śledź, które funkcje użytkownicy faktycznie wykorzystują, a które ignorują, oraz gdzie napotykają trudności — te obserwacje często mówią więcej niż same deklaracje.",
+                  "help": "Zwracaj uwagę na sposób korzystania i pojawiające się problemy. Śledź, które funkcje użytkownicy faktycznie wykorzystują, a które ignorują, oraz gdzie napotykają trudności — te obserwacje często mówią więcej niż same deklaracje. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "zbierz-feedback",
+          "key": "b2b-zbierz-feedback",
           "title": "Zbierz feedback",
-          "guide": "zbierz-feedback",
+          "guide": "b2b-zbierz-feedback",
           "subpoints": [
             {
               "key": "zbieraj-opinie-uzytkownikow",
@@ -1357,10 +1846,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Pozyskaj bezpośrednie informacje o doświadczeniach z MVP. Przeprowadź rozmowy, ankiety lub krótkie wywiady, aby poznać subiektywne odczucia użytkowników i dowiedzieć się wprost, co im się podobało, a co sprawiało trudność.",
-                  "help": "Pozyskaj bezpośrednie informacje o doświadczeniach z MVP. Przeprowadź rozmowy, ankiety lub krótkie wywiady, aby poznać subiektywne odczucia użytkowników i dowiedzieć się wprost, co im się podobało, a co sprawiało trudność.",
+                  "help": "Pozyskaj bezpośrednie informacje o doświadczeniach z MVP. Przeprowadź rozmowy, ankiety lub krótkie wywiady, aby poznać subiektywne odczucia użytkowników i dowiedzieć się wprost, co im się podobało, a co sprawiało trudność. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1372,10 +1868,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zasięgnij opinii osób posiadających odpowiednią wiedzę lub doświadczenie. Skonsultuj się z ekspertami z branży lub doświadczonymi przedsiębiorcami, którzy spojrzą na rozwiązanie z szerszej perspektywy i pomogą wychwycić ryzyka niewidoczne dla użytkowników.",
-                  "help": "Zasięgnij opinii osób posiadających odpowiednią wiedzę lub doświadczenie. Skonsultuj się z ekspertami z branży lub doświadczonymi przedsiębiorcami, którzy spojrzą na rozwiązanie z szerszej perspektywy i pomogą wychwycić ryzyka niewidoczne dla użytkowników.",
+                  "help": "Zasięgnij opinii osób posiadających odpowiednią wiedzę lub doświadczenie. Skonsultuj się z ekspertami z branży lub doświadczonymi przedsiębiorcami, którzy spojrzą na rozwiązanie z szerszej perspektywy i pomogą wychwycić ryzyka niewidoczne dla użytkowników. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1387,10 +1890,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Rejestruj usterki, trudności i niezrozumiałe elementy. Dokumentuj wszystkie zgłoszone błędy techniczne, momenty zagubienia użytkownika i niejasne elementy interfejsu — taka lista stanie się podstawą dalszych poprawek.",
-                  "help": "Rejestruj usterki, trudności i niezrozumiałe elementy. Dokumentuj wszystkie zgłoszone błędy techniczne, momenty zagubienia użytkownika i niejasne elementy interfejsu — taka lista stanie się podstawą dalszych poprawek.",
+                  "help": "Rejestruj usterki, trudności i niezrozumiałe elementy. Dokumentuj wszystkie zgłoszone błędy techniczne, momenty zagubienia użytkownika i niejasne elementy interfejsu — taka lista stanie się podstawą dalszych poprawek. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1402,19 +1912,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zapisuj propozycje dotyczące funkcji głównych i dodatkowych. Notuj wszystkie pomysły i sugestie użytkowników, aby lepiej zrozumieć, czego naprawdę potrzebuje rynek.",
-                  "help": "Zapisuj propozycje dotyczące funkcji głównych i dodatkowych. Notuj wszystkie pomysły i sugestie użytkowników, aby lepiej zrozumieć, czego naprawdę potrzebuje rynek.",
+                  "help": "Zapisuj propozycje dotyczące funkcji głównych i dodatkowych. Notuj wszystkie pomysły i sugestie użytkowników, aby lepiej zrozumieć, czego naprawdę potrzebuje rynek. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "przeanalizuj-feedback",
+          "key": "b2b-przeanalizuj-feedback",
           "title": "Przeanalizuj feedback",
-          "guide": "przeanalizuj-feedback",
+          "guide": "b2b-przeanalizuj-feedback",
           "subpoints": [
             {
               "key": "ocen-poziom-zadowolenia",
@@ -1424,10 +1941,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, jak użytkownicy oceniają rozwiązanie. Przeanalizuj zebrane opinie, aby ocenić ogólny poziom satysfakcji, korzystając np. z prostej skali ocen lub wskaźnika NPS.",
-                  "help": "Sprawdź, jak użytkownicy oceniają rozwiązanie. Przeanalizuj zebrane opinie, aby ocenić ogólny poziom satysfakcji, korzystając np. z prostej skali ocen lub wskaźnika NPS.",
+                  "help": "Sprawdź, jak użytkownicy oceniają rozwiązanie. Przeanalizuj zebrane opinie, aby ocenić ogólny poziom satysfakcji, korzystając np. z prostej skali ocen lub wskaźnika NPS. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1439,10 +1963,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zidentyfikuj najczęściej pojawiające się usterki i bariery. Pogrupuj zgłoszone problemy według częstotliwości występowania, aby wskazać te dotyczące największej liczby użytkowników i ustalić priorytety dalszych prac.",
-                  "help": "Zidentyfikuj najczęściej pojawiające się usterki i bariery. Pogrupuj zgłoszone problemy według częstotliwości występowania, aby wskazać te dotyczące największej liczby użytkowników i ustalić priorytety dalszych prac.",
+                  "help": "Zidentyfikuj najczęściej pojawiające się usterki i bariery. Pogrupuj zgłoszone problemy według częstotliwości występowania, aby wskazać te dotyczące największej liczby użytkowników i ustalić priorytety dalszych prac. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1454,10 +1985,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Określ, których funkcji użytkownicy rzeczywiście potrzebują. Oddziel funkcje niezbędne dla głównej wartości produktu od tych, które są jedynie miłym dodatkiem, koncentrując się na tym, co realnie wpływa na decyzje zakupowe klientów B2B.",
-                  "help": "Określ, których funkcji użytkownicy rzeczywiście potrzebują. Oddziel funkcje niezbędne dla głównej wartości produktu od tych, które są jedynie miłym dodatkiem, koncentrując się na tym, co realnie wpływa na decyzje zakupowe klientów B2B.",
+                  "help": "Określ, których funkcji użytkownicy rzeczywiście potrzebują. Oddziel funkcje niezbędne dla głównej wartości produktu od tych, które są jedynie miłym dodatkiem, koncentrując się na tym, co realnie wpływa na decyzje zakupowe klientów B2B. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1469,19 +2007,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Ustal, co zostało potwierdzone, podważone lub pozostaje niewiadome. Podsumuj, które z pierwotnych założeń biznesowych potwierdziły się w testach, które zostały obalone, a które wciąż wymagają weryfikacji.",
-                  "help": "Ustal, co zostało potwierdzone, podważone lub pozostaje niewiadome. Podsumuj, które z pierwotnych założeń biznesowych potwierdziły się w testach, które zostały obalone, a które wciąż wymagają weryfikacji.",
+                  "help": "Ustal, co zostało potwierdzone, podważone lub pozostaje niewiadome. Podsumuj, które z pierwotnych założeń biznesowych potwierdziły się w testach, które zostały obalone, a które wciąż wymagają weryfikacji. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "okresl-kierunek-dalszego-dzialania",
+          "key": "b2b-okresl-kierunek-dalszego-dzialania",
           "title": "Określ kierunek dalszego działania",
-          "guide": "okresl-kierunek-dalszego-dzialania",
+          "guide": "b2b-okresl-kierunek-dalszego-dzialania",
           "subpoints": [
             {
               "key": "ustal-najwazniejsze-poprawki",
@@ -1491,10 +2036,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wybierz zmiany mające największy wpływ na wartość produktu. Wybierz spośród wniosków te zmiany, które przyniosą użytkownikom największą korzyść, zamiast próbować wprowadzić wszystko naraz.",
-                  "help": "Wybierz zmiany mające największy wpływ na wartość produktu. Wybierz spośród wniosków te zmiany, które przyniosą użytkownikom największą korzyść, zamiast próbować wprowadzić wszystko naraz.",
+                  "help": "Wybierz zmiany mające największy wpływ na wartość produktu. Wybierz spośród wniosków te zmiany, które przyniosą użytkownikom największą korzyść, zamiast próbować wprowadzić wszystko naraz. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "defined"
                 }
               ]
             },
@@ -1506,10 +2058,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Określ, jak dostosować rozwiązanie do otrzymanego feedbacku. Stwórz konkretny, realistyczny plan działania opisujący, jakie zmiany zostaną wprowadzone, w jakiej kolejności i w jakim czasie.",
-                  "help": "Określ, jak dostosować rozwiązanie do otrzymanego feedbacku. Stwórz konkretny, realistyczny plan działania opisujący, jakie zmiany zostaną wprowadzone, w jakiej kolejności i w jakim czasie.",
+                  "help": "Określ, jak dostosować rozwiązanie do otrzymanego feedbacku. Stwórz konkretny, realistyczny plan działania opisujący, jakie zmiany zostaną wprowadzone, w jakiej kolejności i w jakim czasie. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "defined"
                 }
               ]
             },
@@ -1535,8 +2094,8 @@
                 {
                   "key": "decision",
                   "kind": "select",
-                  "question": "Podejmij decyzję o dalszym działaniu — co wybierasz?",
-                  "help": "Wybierz dalszy rozwój, pivot lub zakończenie projektu. Na podstawie zebranych danych zdecyduj świadomie, czy kontynuować rozwój w obecnym kierunku, zmienić strategię, czy zakończyć projekt.",
+                  "question": "Wybierz dalszy rozwój, pivot lub zakończenie projektu. Na podstawie zebranych danych zdecyduj świadomie, czy kontynuować rozwój w obecnym kierunku, zmienić strategię, czy zakończyć projekt — co wybierasz?",
+                  "help": "Wybierz kierunek pracy. Żeby wstrzymać albo zarchiwizować startup, zakończ etap decyzją pauza lub archiwum — sama odpowiedź tego nie zrobi.",
                   "config": {
                     "options": [
                       {
@@ -1550,10 +2109,6 @@
                       {
                         "value": "pivot",
                         "label": "Zmieniam kierunek"
-                      },
-                      {
-                        "value": "stop",
-                        "label": "Wstrzymuję projekt"
                       }
                     ]
                   }
@@ -1563,9 +2118,9 @@
           ]
         },
         {
-          "key": "ponownie-przetestuj-rozwiazanie",
+          "key": "b2b-ponownie-przetestuj-rozwiazanie",
           "title": "Ponownie przetestuj rozwiązanie",
-          "guide": "ponownie-przetestuj-rozwiazanie",
+          "guide": "b2b-ponownie-przetestuj-rozwiazanie",
           "subpoints": [
             {
               "key": "wprowadz-najwazniejsze-zmiany",
@@ -1575,10 +2130,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Dostosuj MVP zgodnie z wynikami analizy. Wdróż zmiany wynikające z analizy feedbacku, koncentrując się na tych o największym wpływie na wartość dla użytkownika i zachowując spójność z resztą rozwiązania.",
-                  "help": "Dostosuj MVP zgodnie z wynikami analizy. Wdróż zmiany wynikające z analizy feedbacku, koncentrując się na tych o największym wpływie na wartość dla użytkownika i zachowując spójność z resztą rozwiązania.",
+                  "help": "Dostosuj MVP zgodnie z wynikami analizy. Wdróż zmiany wynikające z analizy feedbacku, koncentrując się na tych o największym wpływie na wartość dla użytkownika i zachowując spójność z resztą rozwiązania. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1590,10 +2152,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź reakcję na zmienioną wersję. Przekaż zaktualizowane MVP tej samej lub podobnej grupie użytkowników i obserwuj, czy nowe rozwiązania faktycznie usuwają wcześniej zgłoszone problemy.",
-                  "help": "Sprawdź reakcję na zmienioną wersję. Przekaż zaktualizowane MVP tej samej lub podobnej grupie użytkowników i obserwuj, czy nowe rozwiązania faktycznie usuwają wcześniej zgłoszone problemy.",
+                  "help": "Sprawdź reakcję na zmienioną wersję. Przekaż zaktualizowane MVP tej samej lub podobnej grupie użytkowników i obserwuj, czy nowe rozwiązania faktycznie usuwają wcześniej zgłoszone problemy. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1605,10 +2174,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Oceń wpływ wprowadzonych zmian. Zestaw wyniki testów sprzed i po poprawkach, zwracając uwagę zarówno na wskaźniki ilościowe, jak i jakościowe opinie użytkowników.",
-                  "help": "Oceń wpływ wprowadzonych zmian. Zestaw wyniki testów sprzed i po poprawkach, zwracając uwagę zarówno na wskaźniki ilościowe, jak i jakościowe opinie użytkowników.",
+                  "help": "Oceń wpływ wprowadzonych zmian. Zestaw wyniki testów sprzed i po poprawkach, zwracając uwagę zarówno na wskaźniki ilościowe, jak i jakościowe opinie użytkowników. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1620,10 +2196,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Kontynuuj cykl testowania, feedbacku i ulepszania. Traktuj walidację MVP jako powtarzalny cykl, a nie jednorazowe działanie — po każdej rundzie testów wracaj do zbierania feedbacku i wprowadzania kolejnych ulepszeń.",
-                  "help": "Kontynuuj cykl testowania, feedbacku i ulepszania. Traktuj walidację MVP jako powtarzalny cykl, a nie jednorazowe działanie — po każdej rundzie testów wracaj do zbierania feedbacku i wprowadzania kolejnych ulepszeń.",
+                  "help": "Kontynuuj cykl testowania, feedbacku i ulepszania. Traktuj walidację MVP jako powtarzalny cykl, a nie jednorazowe działanie — po każdej rundzie testów wracaj do zbierania feedbacku i wprowadzania kolejnych ulepszeń. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
@@ -1635,12 +2218,12 @@
       "key": "b2c",
       "title": "B2C",
       "always_active": false,
-      "intro": "Dodatkowe punkty, gdy sprzedajesz konsumentom.",
+      "intro": "Warstwa dla produktów konsumenckich — udostępnienie, test, poprawki.",
       "points": [
         {
-          "key": "przetestuj-pozyskiwanie-uzytkownikow-i-konwersje",
+          "key": "b2c-przetestuj-pozyskiwanie-uzytkownikow-i-konwersje",
           "title": "Przetestuj pozyskiwanie użytkowników i konwersję",
-          "guide": "przetestuj-pozyskiwanie-uzytkownikow-i-konwersje",
+          "guide": "b2c-przetestuj-pozyskiwanie-uzytkownikow-i-konwersje",
           "subpoints": [
             {
               "key": "uruchom-platne-kampanie-akwizycyjne",
@@ -1650,10 +2233,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wypuść przygotowane reklamy z małym budżetem, aby sprowadzić na stronę pierwszą grupę realnych użytkowników i sprawdzić, czy reklamy generują zainteresowanie.",
-                  "help": "Wypuść przygotowane reklamy z małym budżetem, aby sprowadzić na stronę pierwszą grupę realnych użytkowników i sprawdzić, czy reklamy generują zainteresowanie.",
+                  "help": "Wypuść przygotowane reklamy z małym budżetem, aby sprowadzić na stronę pierwszą grupę realnych użytkowników i sprawdzić, czy reklamy generują zainteresowanie. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1665,10 +2255,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, jaki procent odwiedzających dokonuje zakupu oraz ile średnio kosztuje pozyskanie jednego płacącego klienta.",
-                  "help": "Sprawdź, jaki procent odwiedzających dokonuje zakupu oraz ile średnio kosztuje pozyskanie jednego płacącego klienta.",
+                  "help": "Sprawdź, jaki procent odwiedzających dokonuje zakupu oraz ile średnio kosztuje pozyskanie jednego płacącego klienta. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1680,10 +2277,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Przeanalizuj dane z analityki strony i nagrania sesji, aby znaleźć moment, w którym użytkownicy najczęściej rezygnują z zakupu.",
-                  "help": "Przeanalizuj dane z analityki strony i nagrania sesji, aby znaleźć moment, w którym użytkownicy najczęściej rezygnują z zakupu.",
+                  "help": "Przeanalizuj dane z analityki strony i nagrania sesji, aby znaleźć moment, w którym użytkownicy najczęściej rezygnują z zakupu. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1695,19 +2299,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Testuj różne nagłówki, teksty i grafiki reklamowe metodą A/B, aby znaleźć warianty, które skuteczniej prowadzą do sprzedaży przy niższym koszcie.",
-                  "help": "Testuj różne nagłówki, teksty i grafiki reklamowe metodą A/B, aby znaleźć warianty, które skuteczniej prowadzą do sprzedaży przy niższym koszcie.",
+                  "help": "Testuj różne nagłówki, teksty i grafiki reklamowe metodą A/B, aby znaleźć warianty, które skuteczniej prowadzą do sprzedaży przy niższym koszcie. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "ocen-zaangazowanie-i-utrzymanie-uzytkownikow-retention",
+          "key": "b2c-ocen-zaangazowanie-i-utrzymanie-uzytkownikow-retention",
           "title": "Oceń zaangażowanie i utrzymanie użytkowników (Retention)",
-          "guide": "ocen-zaangazowanie-i-utrzymanie-uzytkownikow-retention",
+          "guide": "b2c-ocen-zaangazowanie-i-utrzymanie-uzytkownikow-retention",
           "subpoints": [
             {
               "key": "zmierz-poziom-powracalnosci-do-produktu",
@@ -1717,10 +2328,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, ilu klientów wraca do aplikacji lub usługi po 1, 7 i 30 dniach od zakupu, aby ocenić, czy produkt jest używany także po pierwszym kontakcie.",
-                  "help": "Sprawdź, ilu klientów wraca do aplikacji lub usługi po 1, 7 i 30 dniach od zakupu, aby ocenić, czy produkt jest używany także po pierwszym kontakcie.",
+                  "help": "Sprawdź, ilu klientów wraca do aplikacji lub usługi po 1, 7 i 30 dniach od zakupu, aby ocenić, czy produkt jest używany także po pierwszym kontakcie. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1729,14 +2347,20 @@
               "title": "Przeanalizuj aktywność w programie poleceń",
               "fields": [
                 {
-                  "key": "links",
-                  "kind": "links",
+                  "key": "note",
+                  "kind": "long_text",
                   "question": "Sprawdź, ilu użytkowników udostępnia swój link polecający oraz ile nowych osób faktycznie trafia do produktu dzięki tym zaproszeniom.",
-                  "help": "Sprawdź, ilu użytkowników udostępnia swój link polecający oraz ile nowych osób faktycznie trafia do produktu dzięki tym zaproszeniom.",
+                  "help": "Sprawdź, ilu użytkowników udostępnia swój link polecający oraz ile nowych osób faktycznie trafia do produktu dzięki tym zaproszeniom. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min_items": 1,
-                    "max_items": 5
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1748,10 +2372,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Określ konkretną akcję lub moment, po którym użytkownicy zaczynają regularnie korzystać z produktu i otrzymują z niego realną wartość.",
-                  "help": "Określ konkretną akcję lub moment, po którym użytkownicy zaczynają regularnie korzystać z produktu i otrzymują z niego realną wartość.",
+                  "help": "Określ konkretną akcję lub moment, po którym użytkownicy zaczynają regularnie korzystać z produktu i otrzymują z niego realną wartość. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1763,19 +2394,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Porozmawiaj z osobami, które przestały korzystać z produktu lub poprosiły o zwrot pieniędzy, aby ustalić główne przyczyny ich odejścia.",
-                  "help": "Porozmawiaj z osobami, które przestały korzystać z produktu lub poprosiły o zwrot pieniędzy, aby ustalić główne przyczyny ich odejścia.",
+                  "help": "Porozmawiaj z osobami, które przestały korzystać z produktu lub poprosiły o zwrot pieniędzy, aby ustalić główne przyczyny ich odejścia. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "obsluz-zwroty-reklamacje-i-kwestie-prawne",
+          "key": "b2c-obsluz-zwroty-reklamacje-i-kwestie-prawne",
           "title": "Obsłuż zwroty, reklamacje i kwestie prawne",
-          "guide": "obsluz-zwroty-reklamacje-i-kwestie-prawne",
+          "guide": "b2c-obsluz-zwroty-reklamacje-i-kwestie-prawne",
           "subpoints": [
             {
               "key": "zmierz-wskaznik-zwrotow",
@@ -1785,10 +2423,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Policz, jaki procent klientów prosi o zwrot pieniędzy i zapisuj konkretne powody, aby wiedzieć, jakie problemy wymagają poprawy.",
-                  "help": "Policz, jaki procent klientów prosi o zwrot pieniędzy i zapisuj konkretne powody, aby wiedzieć, jakie problemy wymagają poprawy.",
+                  "help": "Policz, jaki procent klientów prosi o zwrot pieniędzy i zapisuj konkretne powody, aby wiedzieć, jakie problemy wymagają poprawy. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1800,10 +2445,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Wysyłaj automatyczne przypomnienia osobom, które rozpoczęły proces zakupu lub podały e-mail, ale nie zakończyły płatności.",
-                  "help": "Wysyłaj automatyczne przypomnienia osobom, które rozpoczęły proces zakupu lub podały e-mail, ale nie zakończyły płatności.",
+                  "help": "Wysyłaj automatyczne przypomnienia osobom, które rozpoczęły proces zakupu lub podały e-mail, ale nie zakończyły płatności. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1815,19 +2467,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Upewnij się, że zbieranie e-maili, analityka oraz regulamin sprzedaży są odpowiednio przygotowane i zgodne z obowiązującymi zasadami przed dalszym pozyskiwaniem klientów.",
-                  "help": "Upewnij się, że zbieranie e-maili, analityka oraz regulamin sprzedaży są odpowiednio przygotowane i zgodne z obowiązującymi zasadami przed dalszym pozyskiwaniem klientów.",
+                  "help": "Upewnij się, że zbieranie e-maili, analityka oraz regulamin sprzedaży są odpowiednio przygotowane i zgodne z obowiązującymi zasadami przed dalszym pozyskiwaniem klientów. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "przeprowadz-poglebione-wywiady-z-uzytkownikami",
+          "key": "b2c-przeprowadz-poglebione-wywiady-z-uzytkownikami",
           "title": "Przeprowadź pogłębione wywiady z użytkownikami",
-          "guide": "przeprowadz-poglebione-wywiady-z-uzytkownikami",
+          "guide": "b2c-przeprowadz-poglebione-wywiady-z-uzytkownikami",
           "subpoints": [
             {
               "key": "porozmawiaj-z-placacymi-klientami",
@@ -1837,10 +2496,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Przeprowadź rozmowy z osobami, które kupiły produkt, i dowiedz się, jaki problem chcieli rozwiązać oraz co przekonało ich do zapłaty.",
-                  "help": "Przeprowadź rozmowy z osobami, które kupiły produkt, i dowiedz się, jaki problem chcieli rozwiązać oraz co przekonało ich do zapłaty.",
+                  "help": "Przeprowadź rozmowy z osobami, które kupiły produkt, i dowiedz się, jaki problem chcieli rozwiązać oraz co przekonało ich do zapłaty. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1852,10 +2518,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Porozmawiaj z osobami, które odwiedziły stronę, ale nie kupiły produktu, aby poznać ich główne wątpliwości i bariery zakupowe.",
-                  "help": "Porozmawiaj z osobami, które odwiedziły stronę, ale nie kupiły produktu, aby poznać ich główne wątpliwości i bariery zakupowe.",
+                  "help": "Porozmawiaj z osobami, które odwiedziły stronę, ale nie kupiły produktu, aby poznać ich główne wątpliwości i bariery zakupowe. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "research",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1867,19 +2540,26 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Zbieraj opinie od pierwszych zadowolonych użytkowników i za ich zgodą wykorzystuj je jako referencje lub social proof na stronie.",
-                  "help": "Zbieraj opinie od pierwszych zadowolonych użytkowników i za ich zgodą wykorzystuj je jako referencje lub social proof na stronie.",
+                  "help": "Zbieraj opinie od pierwszych zadowolonych użytkowników i za ich zgodą wykorzystuj je jako referencje lub social proof na stronie. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "build_result",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             }
           ]
         },
         {
-          "key": "potwierdz-oplacalnosc-biznesu-i-wyznacz-kolejny-krok",
+          "key": "b2c-potwierdz-oplacalnosc-biznesu-i-wyznacz-kolejny-krok",
           "title": "Potwierdź opłacalność biznesu i wyznacz kolejny krok",
-          "guide": "potwierdz-oplacalnosc-biznesu-i-wyznacz-kolejny-krok",
+          "guide": "b2c-potwierdz-oplacalnosc-biznesu-i-wyznacz-kolejny-krok",
           "subpoints": [
             {
               "key": "zestaw-koszt-pozyskania-cac-z-wartoscia-klienta-ltv",
@@ -1889,10 +2569,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Porównaj koszt pozyskania klienta z wartością, jaką klient generuje w czasie, aby sprawdzić, czy model biznesowy może być opłacalny.",
-                  "help": "Porównaj koszt pozyskania klienta z wartością, jaką klient generuje w czasie, aby sprawdzić, czy model biznesowy może być opłacalny.",
+                  "help": "Porównaj koszt pozyskania klienta z wartością, jaką klient generuje w czasie, aby sprawdzić, czy model biznesowy może być opłacalny. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
-                    "min": 15
+                    "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1904,10 +2591,17 @@
                   "key": "note",
                   "kind": "long_text",
                   "question": "Sprawdź, czy startup zdobył wcześniej ustaloną liczbę płacących klientów potrzebną do walidacji produktu i modelu biznesowego.",
-                  "help": "Sprawdź, czy startup zdobył wcześniej ustaloną liczbę płacących klientów potrzebną do walidacji produktu i modelu biznesowego.",
+                  "help": "Sprawdź, czy startup zdobył wcześniej ustaloną liczbę płacących klientów potrzebną do walidacji produktu i modelu biznesowego. Podepnij cel wymagany w tym punkcie i dołącz dowód w karcie celu.",
                   "config": {
                     "min": 20
                   }
+                }
+              ],
+              "goal_conditions": [
+                {
+                  "goal_type_id": "product_test",
+                  "min_count": 1,
+                  "counts_when": "completed"
                 }
               ]
             },
@@ -1918,8 +2612,8 @@
                 {
                   "key": "decision",
                   "kind": "select",
-                  "question": "Podejmij decyzję o skalowaniu lub zmianie — co wybierasz?",
-                  "help": "Na podstawie wyników zdecyduj, czy zwiększyć budżet i skalować pozyskiwanie użytkowników, czy najpierw poprawić najważniejsze elementy produktu.",
+                  "question": "Na podstawie wyników zdecyduj, czy zwiększyć budżet i skalować pozyskiwanie użytkowników, czy najpierw poprawić najważniejsze elementy produktu — co wybierasz?",
+                  "help": "Wybierz kierunek pracy. Żeby wstrzymać albo zarchiwizować startup, zakończ etap decyzją pauza lub archiwum — sama odpowiedź tego nie zrobi.",
                   "config": {
                     "options": [
                       {
@@ -1933,10 +2627,6 @@
                       {
                         "value": "pivot",
                         "label": "Zmieniam kierunek"
-                      },
-                      {
-                        "value": "stop",
-                        "label": "Wstrzymuję projekt"
                       }
                     ]
                   }
