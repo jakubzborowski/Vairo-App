@@ -27,10 +27,38 @@ const FIELD_KINDS = new Set([
   "sentence_template", "summary", "records", "action", "people",
 ]);
 
+const GOAL_TYPE_IDS = new Set([
+  "custom", "product_test", "build_result", "prototype", "customer", "research",
+]);
+
+const GOAL_PROOF_KINDS = new Set([
+  "sentence", "long_text", "select", "scale", "link", "file", "module_result", "goal_set",
+]);
+
 const CATEGORY_KEYS = new Set(["general", "saas", "hardware", "b2b", "b2c"]);
 
 /** Numer migracji nadawany per szablon, żeby pliki nie kolidowały. */
-const MIGRATION_NUMBER = { ambition: "006", idea: "007", preparation: "024" };
+const MIGRATION_NUMBER = { ambition: "006", idea: "007", preparation: "024", execution: "027" };
+
+/**
+ * Od której migracji istnieje kolumna, którą generator umie wypełnić.
+ *
+ * Plik treści dostaje NISKI numer (Ambition 006, Idea 007), ale generator
+ * rośnie razem ze schematem. Bez tej tabeli ponowne `content:build -- idea-v1`
+ * dopisywało `skip_when` (powstaje w 021) i `depends_on` (026) do każdego
+ * podpunktu Idei — a na świeżej bazie 007 biegnie dwadzieścia migracji
+ * wcześniej i kończy się „column does not exist". Błąd nie wychodził przy
+ * generowaniu, tylko przy pierwszym stawianiu bazy od zera.
+ *
+ * Reguła: plik treści odwołuje się wyłącznie do kolumn, które na jego pozycji
+ * w kolejności NA PEWNO już istnieją. Nowa kolumna w generatorze = nowy wpis
+ * tutaj, z numerem migracji, która ją tworzy.
+ */
+const COLUMN_SINCE = { skip_when: "021", depends_on: "026" };
+
+/** Czy plik treści tego szablonu może już używać danej kolumny. */
+const hasColumn = (doc, column) =>
+  Number(MIGRATION_NUMBER[doc.key] ?? "999") > Number(COLUMN_SINCE[column]);
 
 // ---------------------------------------------------------------------------
 // Walidacja
@@ -53,6 +81,8 @@ function validate(doc) {
   const answerKeys = new Set();
   const skipChecks = [];
   const seen = { categories: new Set(), points: new Set(), subpoints: new Set() };
+  const subpointRefs = new Set();
+  const dependencyChecks = [];
 
   for (const category of doc.categories) {
     const cPath = `${doc.key}.${category.key}`;
@@ -107,6 +137,53 @@ function validate(doc) {
         if (subpoint.skip_when) {
           skipChecks.push([sPath, subpoint.skip_when]);
         }
+        if (subpoint.depends_on !== undefined && !Array.isArray(subpoint.depends_on)) {
+          fail(sPath, "`depends_on` musi być tablicą kluczy punkt.podpunkt");
+        } else if (Array.isArray(subpoint.depends_on)) {
+          subpointRefs.add(`${point.key}.${subpoint.key}`);
+          dependencyChecks.push([sPath, subpoint.depends_on]);
+        } else {
+          subpointRefs.add(`${point.key}.${subpoint.key}`);
+        }
+
+        if (subpoint.goal_conditions !== undefined) {
+          if (!Array.isArray(subpoint.goal_conditions)) {
+            fail(sPath, "`goal_conditions` musi być tablicą");
+          } else {
+            const seenTypes = new Set();
+            for (const condition of subpoint.goal_conditions) {
+              const cPath = `${sPath}.goal_conditions`;
+              if (!GOAL_TYPE_IDS.has(condition.goal_type_id)) {
+                fail(cPath, `nieznany goal_type_id „${condition.goal_type_id}”`);
+              }
+              if (!Number.isInteger(condition.min_count) || condition.min_count < 1) {
+                fail(cPath, "`min_count` musi być liczbą całkowitą ≥ 1");
+              }
+              if (condition.proof_kind && !GOAL_PROOF_KINDS.has(condition.proof_kind)) {
+                fail(cPath, `nieznany proof_kind „${condition.proof_kind}”`);
+              }
+              if (
+                condition.counts_when &&
+                condition.counts_when !== "completed" &&
+                condition.counts_when !== "defined"
+              ) {
+                fail(cPath, "`counts_when` to `completed` albo `defined`");
+              }
+              if (seenTypes.has(condition.goal_type_id)) {
+                fail(cPath, `duplikat typu „${condition.goal_type_id}”`);
+              }
+              seenTypes.add(condition.goal_type_id);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for (const [path, deps] of dependencyChecks) {
+    for (const dep of deps) {
+      if (!subpointRefs.has(dep)) {
+        fail(path, `depends_on wskazuje na nieznany podpunkt „${dep}”`);
       }
     }
   }
@@ -232,15 +309,36 @@ function buildSql(doc) {
       (point.subpoints ?? []).forEach((subpoint, si) => {
         subpointKeys.push(subpoint.key);
         const skipSql = subpoint.skip_when ? jsonLit(subpoint.skip_when) : "null";
+        const dependsSql = Array.isArray(subpoint.depends_on) && subpoint.depends_on.length
+          ? `array[${subpoint.depends_on.map((dep) => lit(dep)).join(", ")}]::text[]`
+          : "null";
+
+        // Kolumny dokładane przez późniejsze migracje — tylko tam, gdzie już są.
+        const extra = [];
+        if (hasColumn(doc, "skip_when")) extra.push(["skip_when", skipSql]);
+        if (hasColumn(doc, "depends_on")) extra.push(["depends_on", dependsSql]);
+        // Szablon bez danej kolumny nie może jej używać — inaczej wartość
+        // z JSON-a zniknęłaby po cichu przy generowaniu.
+        if (!hasColumn(doc, "skip_when") && subpoint.skip_when) {
+          fail(`${doc.key}.${subpoint.key}`, "skip_when wymaga migracji 021 — ten szablon ma niższy numer");
+        }
+        if (!hasColumn(doc, "depends_on") && dependsSql !== "null") {
+          fail(`${doc.key}.${subpoint.key}`, "depends_on wymaga migracji 026 — ten szablon ma niższy numer");
+        }
+        const extraCols = extra.map(([column]) => `${column}, `).join("");
+        const extraVals = extra.map(([, value]) => `${value}, `).join("");
+
         w("  insert into public.stage_subpoints");
-        w("    (point_id, key, title, description, is_optional, shared_key, skip_when, position)");
+        w(`    (point_id, key, title, description, is_optional, shared_key, ${extraCols}position)`);
         w(`  values (v_point, ${lit(subpoint.key)}, ${lit(subpoint.title)},`);
         w(`          ${lit(subpoint.description)}, ${bool(subpoint.is_optional)},`);
-        w(`          ${lit(subpoint.shared ?? null)}, ${skipSql}, ${si + 1})`);
+        w(`          ${lit(subpoint.shared ?? null)}, ${extraVals}${si + 1})`);
         w("  on conflict (point_id, key) do update set");
         w("    title = excluded.title, description = excluded.description,");
         w("    is_optional = excluded.is_optional, shared_key = excluded.shared_key,");
-        w("    skip_when = excluded.skip_when,");
+        if (extra.length > 0) {
+          w(`    ${extra.map(([column]) => `${column} = excluded.${column}`).join(", ")},`);
+        }
         w("    position = excluded.position");
         w("  returning id into v_subpoint;");
         w();
@@ -273,6 +371,27 @@ function buildSql(doc) {
         w(`  delete from public.stage_fields`);
         w(`  where subpoint_id = v_subpoint and key <> all(${keyArray(fieldKeys)});`);
         w();
+
+        if (Array.isArray(subpoint.goal_conditions)) {
+          const typeIds = [];
+          subpoint.goal_conditions.forEach((condition, gi) => {
+            typeIds.push(condition.goal_type_id);
+            const countsWhen = condition.counts_when === "defined" ? "defined" : "completed";
+            const matchAny = condition.match_any_type === true;
+            w("  insert into public.stage_goal_conditions");
+            w("    (subpoint_id, goal_type_id, min_count, proof_kind, counts_when, match_any_type, position)");
+            w(`  values (v_subpoint, ${lit(condition.goal_type_id)}, ${condition.min_count},`);
+            w(`          ${condition.proof_kind ? lit(condition.proof_kind) : "null"}, ${lit(countsWhen)}, ${bool(matchAny)}, ${gi + 1})`);
+            w("  on conflict (subpoint_id, goal_type_id) do update set");
+            w("    min_count = excluded.min_count, proof_kind = excluded.proof_kind,");
+            w("    counts_when = excluded.counts_when, match_any_type = excluded.match_any_type,");
+            w("    position = excluded.position;");
+            w();
+          });
+          w("  delete from public.stage_goal_conditions");
+          w(`  where subpoint_id = v_subpoint and goal_type_id <> all(${keyArray(typeIds)});`);
+          w();
+        }
       });
 
       w(`  delete from public.stage_subpoints`);
@@ -348,16 +467,24 @@ if (existsSync(guidesPath)) {
 
 validate(doc);
 
-if (errors.length > 0) {
+function exitOnErrors() {
+  if (errors.length === 0) return;
   console.error(`\n✖ Treść ma ${errors.length} ${errors.length === 1 ? "błąd" : "błędów"}:\n`);
   for (const error of errors) console.error(`   ${error}`);
   console.error("");
   process.exit(1);
 }
 
+exitOnErrors();
+
 const number = MIGRATION_NUMBER[doc.key] ?? "0xx";
 const target = join(MIGRATIONS_DIR, `${number}_content_${name.replace(/-/g, "_")}.sql`);
-writeFileSync(target, buildSql(doc), "utf8");
+// Drugie sprawdzenie PO złożeniu SQL-a: część reguł (kolumna użyta w szablonie,
+// który na swojej pozycji jeszcze jej nie ma) da się ocenić dopiero przy
+// generowaniu. Plik nie powstaje, dopóki obie bramki nie są czyste.
+const sql = buildSql(doc);
+exitOnErrors();
+writeFileSync(target, sql, "utf8");
 
 const counts = doc.categories.reduce(
   (acc, c) => {

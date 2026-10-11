@@ -80,7 +80,7 @@ export const ROLE_DESCRIPTIONS: Record<StartupRole, string> = {
   admin:
     "Wypełnia etapy, zarządza członkami i zaproszeniami. Nie usuwa startupu.",
   member:
-    "Czyta wszystko, co zespół wypełnił. Nie zmienia odpowiedzi w etapach.",
+    "Czyta etapy. Tworzy własne cele i zadania oraz kończy te, za które odpowiada.",
 };
 
 /** Kto może wypełniać i zmieniać dane etapów (Ambition, Idea, kolejne). */
@@ -101,6 +101,21 @@ export function canEditStartupProfile(role: StartupRole) {
 /** Tylko Founder: nadawanie roli Foundera i usunięcie startupu. */
 export function canTransferOwnership(role: StartupRole) {
   return role === "founder";
+}
+
+/** Przypisanie pracy komuś innemu i zmiana cudzego celu. */
+export function canAssignToOthers(role: StartupRole) {
+  return role === "founder" || role === "admin";
+}
+
+/** Własny cel albo zadanie może dokończyć jego właściciel. Founder i Admin — każdy. */
+export function canChangeOwnWork(
+  role: StartupRole,
+  userId: string,
+  ownerId: string | null
+) {
+  if (canAssignToOthers(role)) return true;
+  return ownerId === userId;
 }
 
 export type Startup = {

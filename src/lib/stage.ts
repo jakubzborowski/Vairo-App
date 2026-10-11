@@ -16,6 +16,7 @@ import {
   type StartupRole,
   type ValidationCategory,
 } from "@/types/startup";
+import { loadSubpointGoalConditions } from "@/lib/goals";
 
 type RawField = {
   id: string;
@@ -39,6 +40,7 @@ type RawSubpoint = {
   is_optional: boolean;
   shared_key: string | null;
   skip_when: SkipWhen | null;
+  depends_on: string[] | null;
   position: number;
   fields: RawField[] | null;
 };
@@ -145,6 +147,7 @@ export async function loadStageTree(
 ): Promise<StageTree | null> {
   type StageRow = {
     id: string;
+    startup_id: string;
     status: "in_progress" | "completed";
     last_subpoint_id: string | null;
     template_id: string;
@@ -160,7 +163,7 @@ export async function loadStageTree(
   const { data: stageRow } = await supabase
     .from("startup_stages")
     .select(
-      "id, status, last_subpoint_id, template_id, " +
+      "id, startup_id, status, last_subpoint_id, template_id, " +
         "stage_templates(key, title, subtitle, intro, finish_label)"
     )
     .eq("id", params.startupStageId)
@@ -170,8 +173,18 @@ export async function loadStageTree(
   if (!stage) return null;
 
   const template = stage.stage_templates;
+  const [goalConditions, { data: progressRows }] = await Promise.all([
+    loadSubpointGoalConditions(supabase, stage.startup_id, stage.id),
+    supabase
+      .from("stage_subpoint_progress")
+      .select("subpoint_id, is_complete")
+      .eq("startup_stage_id", stage.id),
+  ]);
+  const storedComplete = new Map(
+    (progressRows ?? []).map((row) => [row.subpoint_id as string, Boolean(row.is_complete)])
+  );
 
-  const treeSelect = (withSkip: boolean) =>
+  const treeSelect = (withSkip: boolean, withDepends = withSkip) =>
     supabase
       .from("stage_categories")
       .select(
@@ -181,7 +194,7 @@ export async function loadStageTree(
            guide_body, guide_sources, guide_source_label, position,
            subpoints:stage_subpoints(
              id, key, title, description, is_optional, shared_key, ${
-               withSkip ? "skip_when, " : ""
+               withSkip ? `skip_when, ${withDepends ? "depends_on, " : ""}` : ""
              }position,
              fields:stage_fields(
                id, key, kind, question, help, example,
@@ -203,9 +216,11 @@ export async function loadStageTree(
 
   // Kolumna skip_when powstaje w migracji 021. Zanim ktoś ją odpali,
   // etapy Ambition i Idea mają się dalej otwierać.
-  const categoryRows = categoryResult.error?.message.includes("skip_when")
-    ? (await treeSelect(false)).data
-    : categoryResult.data;
+  const categoryRows = categoryResult.error?.message.includes("depends_on")
+    ? (await treeSelect(true, false)).data
+    : categoryResult.error?.message.includes("skip_when")
+      ? (await treeSelect(false)).data
+      : categoryResult.data;
 
   const answers: Record<string, unknown> = {};
   for (const row of answerRows ?? []) answers[row.answer_key] = row.value;
@@ -247,10 +262,23 @@ export async function loadStageTree(
           }));
 
           const skipped = matchesSkip(rawSubpoint.skip_when, answers);
-          const isComplete =
-            fields.filter((f) => f.isRequired).every((f) =>
-              fieldAnswered(f, answers[f.answerKey])
-            ) && fields.some((f) => f.isRequired);
+          const hasRequired = fields.some((f) => f.isRequired);
+          const fieldsOk = fields
+            .filter((f) => f.isRequired)
+            .every((f) => fieldAnswered(f, answers[f.answerKey]));
+          const conds = goalConditions.get(rawSubpoint.id) ?? [];
+          const goalsOk = conds.every((condition) => condition.done >= condition.minCount);
+          const liveComplete = skipped || ((hasRequired ? fieldsOk : true) && goalsOk);
+          // Zamknięty etap trzyma swój wynik. Późniejsza zmiana celu
+          // nie odbiera mu odhaczenia zapisanego przy zamknięciu.
+          const frozen =
+            stage.status === "completed" && storedComplete.get(rawSubpoint.id) === true;
+          const shownConditions = frozen
+            ? conds.map((condition) => ({
+                ...condition,
+                done: Math.max(condition.done, condition.minCount),
+              }))
+            : conds;
 
           const subpoint: StageSubpoint = {
             id: rawSubpoint.id,
@@ -260,10 +288,13 @@ export async function loadStageTree(
             isOptional: rawSubpoint.is_optional,
             sharedKey: rawSubpoint.shared_key,
             fields,
-            // Podpunkt bez wymaganych pól jest z definicji ukończony —
-            // opcjonalne nie mogą blokować domknięcia etapu.
-            // Pominięty warunkiem też nie blokuje, ale nie wchodzi do licznika.
-            isComplete: skipped || (fields.some((f) => f.isRequired) ? isComplete : true),
+            goalConditions: shownConditions,
+            dependsOn: rawSubpoint.depends_on ?? [],
+            waitingOn: null,
+            isComplete:
+              stage.status === "completed" && storedComplete.has(rawSubpoint.id)
+                ? skipped || storedComplete.get(rawSubpoint.id) === true
+                : liveComplete,
             skipped,
             skipWhen: rawSubpoint.skip_when,
             alsoIn: [],
@@ -307,6 +338,52 @@ export async function loadStageTree(
       isComplete: total > 0 && done === total,
     };
   });
+
+  const byRef = new Map<string, StageSubpoint>();
+  for (const category of categories) {
+    for (const point of category.points) {
+      for (const subpoint of point.subpoints) {
+        byRef.set(`${point.key}.${subpoint.key}`, subpoint);
+      }
+    }
+  }
+  const baseComplete = new Map(
+    [...byRef.values()].map((subpoint) => [subpoint.id, subpoint.isComplete])
+  );
+  for (let pass = 0; pass < 8; pass += 1) {
+    let changed = false;
+    for (const [ref, subpoint] of byRef) {
+      if (subpoint.skipped) continue;
+      const waiting = subpoint.dependsOn.filter((dep) => {
+        const earlier = byRef.get(dep);
+        return earlier ? !earlier.isComplete && !earlier.skipped : false;
+      });
+      const next = Boolean(baseComplete.get(subpoint.id)) && waiting.length === 0;
+      if (next !== subpoint.isComplete) {
+        subpoint.isComplete = next;
+        changed = true;
+      }
+      subpoint.waitingOn =
+        waiting.length > 0 ? "Czeka na wcześniejszy wynik" : null;
+      void ref;
+    }
+    if (!changed) break;
+  }
+  for (const category of categories) {
+    let categoryDone = 0;
+    let categoryTotal = 0;
+    for (const point of category.points) {
+      const counted = point.subpoints.filter((subpoint) => !subpoint.isOptional && !subpoint.skipped);
+      point.done = counted.filter((subpoint) => subpoint.isComplete).length;
+      point.total = counted.length;
+      point.isComplete = counted.length > 0 && point.done === counted.length;
+      categoryDone += point.done;
+      categoryTotal += point.total;
+    }
+    category.done = categoryDone;
+    category.total = categoryTotal;
+    category.isComplete = categoryTotal > 0 && categoryDone === categoryTotal;
+  }
 
   const done = categories.reduce((sum, c) => sum + c.done, 0);
   const total = categories.reduce((sum, c) => sum + c.total, 0);

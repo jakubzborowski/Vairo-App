@@ -43,6 +43,8 @@ type AppShellProps = {
    * licznik, który kłamie, jest gorszy niż brak licznika.
    */
   badges?: Partial<Record<NonNullable<NavItem["badgeKey"]>, number>>;
+  /** Po domknięciu Preparation. Wcześniej Cele, Taski i Rozpiska nie są w menu. */
+  executionUnlocked?: boolean;
   children: React.ReactNode;
 };
 
@@ -52,6 +54,7 @@ export function AppShell({
   activeTeamId,
   canManageActiveTeam,
   badges,
+  executionUnlocked = false,
   children,
 }: AppShellProps) {
   const pathname = usePathname();
@@ -126,7 +129,7 @@ export function AppShell({
 
       <TeamSwitcher teams={teams} activeTeamId={activeTeamId} />
 
-      <nav className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
+      <nav className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {navGroups.map((group) => {
           const collapsed = group.collapsible && !socialOpen;
 
@@ -163,6 +166,7 @@ export function AppShell({
               {collapsed ? null : (
                 <ul className="flex flex-col gap-0.5">
                   {group.items
+                    .filter((item) => executionUnlocked || !item.requiresExecution)
                     .filter((item) => !item.requiresManage || canManageActiveTeam)
                     .map(renderItem)}
                 </ul>

@@ -38,6 +38,23 @@ tabeli. Każdy plik jest idempotentny, więc ponowne odpalenie niczego nie psuje
 | 22 | `migrations/018_notifications_realtime.sql` | powiadomienia na żywo — tabela w publikacji `supabase_realtime` |
 | 23 | `migrations/019_chat_identity_and_realtime.sql` | widok `contact_profiles` (imię rozmówcy spoza teamu) + wiadomości na żywo |
 | 24 | `migrations/020_storage_cleanup.sql` | pliki znikają razem z etapem, startupem i kontem |
+| 25 | `migrations/021_preparation_tools.sql` | narzędzia Preparation: bloczki, `skip_when`, wybór profili, biblioteka plików |
+| 26 | `migrations/022_content_preparation_v1.sql` | treść Preparation (starsze wygenerowanie) |
+| 27 | `migrations/023_content_preparation_v1.sql` | treść Preparation (starsze wygenerowanie) |
+| 28 | `migrations/024_content_preparation_v1.sql` | treść Preparation — **obowiązująca** |
+| 29 | `migrations/025_execution_goals.sql` | Execution: cele, taski, dowody, warunki Milestones, Rozpiska |
+| 30 | `migrations/026_execution_content_rules.sql` | reguły treści Execution, `depends_on`, dokumenty zespołu |
+| 31 | `migrations/027_content_execution_v1.sql` | treść Execution (generowana) |
+
+> **022 i 023 to wcześniejsze wygenerowania tej samej treści co 024.** Każde
+> jest idempotentne i usuwa to, czego nie ma w swoim JSON-ie, więc odpalenie
+> wszystkich trzech po kolei kończy się stanem z 024. Można je pominąć na
+> świeżej bazie — szkodzić nie szkodzą.
+
+> **Execution miał wcześniej numery 018–020** i kolidował z Social. Jeśli
+> u kogoś te pliki już szły pod starymi numerami, **trzeba odpalić 025–027
+> jeszcze raz** — 021 (Preparation) nadpisuje `recalc_subpoint_progress()`
+> wersją bez warunków celów, a 025 przywraca właściwą.
 
 ## Bucketów nie zakładamy ręcznie
 

@@ -50,6 +50,33 @@ export function translateDbError(message: string | null | undefined) {
   if (message.includes("JWT") || message.includes("not_authenticated")) {
     return "Sesja wygasła. Zaloguj się ponownie.";
   }
+  if (message.includes("goal_proof_required")) {
+    return "Cel nie może być ukończony bez dowodu w wymaganym formacie.";
+  }
+  if (message.includes("goal_locked_reopen_first")) {
+    return "Najpierw otwórz cel ponownie. Dopiero wtedy zmienisz wynik, typ albo dowód.";
+  }
+  if (message.includes("goal_type_mismatch")) {
+    return "Ten cel ma inny typ niż warunek programu, więc nie da się go podpiąć.";
+  }
+  if (message.includes("goal_startup_mismatch")) {
+    return "Cel i warunek muszą należeć do tego samego startupu.";
+  }
+  if (message.includes("goal_owner_not_in_team")) {
+    return "Właścicielem może być tylko osoba z tego teamu.";
+  }
+  if (message.includes("goal_blocker_needs_note")) {
+    return "Napisz, co blokuje pracę — samo oznaczenie nic nie mówi.";
+  }
+  if (message.includes("goal_proof_file_foreign")) {
+    return "Ten plik nie należy do tego startupu.";
+  }
+  if (message.includes("goal_proof_workflow_missing")) {
+    return "Nie ma takiej zapisanej wersji Rozpiski.";
+  }
+  if (message.includes("goal_archived")) {
+    return "Zarchiwizowanego celu nie da się ukończyć.";
+  }
 
   // Nieznany błąd: user dostaje zdanie, z którym da się coś zrobić, a pełna
   // treść trafia do logu serwera — nie na ekran.

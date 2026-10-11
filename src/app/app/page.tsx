@@ -20,6 +20,8 @@ import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { getActiveStartupId } from "@/lib/active-team";
 import { currentProgramEntry, loadStageProgram } from "@/lib/stage";
 import { loadNextActions, type Blocker, type NextAction } from "@/lib/next-actions";
+import { isExecutionUnlocked, loadNearestGoal, type NearestGoal } from "@/lib/goals";
+import { GOAL_STATUS_LABELS } from "@/types/goals";
 import { getTeamMembers } from "@/lib/social";
 import { StageProgress } from "@/components/app/stage-progress";
 import { Button } from "@/components/ui/button";
@@ -124,12 +126,24 @@ export default async function AppPage() {
   const stepNumber = program.findIndex((item) => item.key === current?.key) + 1;
   const canEdit = canEditStageData(active.role);
 
+  const { error: dueError } = await supabase.rpc("notify_upcoming_deadlines", {
+    p_startup_id: active.id,
+  });
+  if (dueError && !dueError.message.includes("notify_upcoming_deadlines")) {
+    console.error("[notify_upcoming_deadlines]", dueError.message);
+  }
+
   const { actions, blocker } = await loadNextActions(supabase, {
     userId: user.id,
     active,
     program,
     current,
   });
+  const trackerOpen = await isExecutionUnlocked(supabase, active.id);
+  // Panel celu stoi w tym samym miejscu przez cały program (guidelines,
+  // sekcja 9). Dane dostaje dopiero, gdy tracker jest otwarty — wcześniej
+  // pytanie o cele nie ma sensu, bo nikt nie mógł ich jeszcze założyć.
+  const nearestGoal = trackerOpen ? await loadNearestGoal(supabase, active.id) : null;
 
   // Liczby do paneli. Każda pochodzi z bazy — panel z wymyśloną metryką
   // („wynik gotowości: 72") wyglądałby mądrze i nie znaczyłby nic.
@@ -193,6 +207,21 @@ export default async function AppPage() {
         currentKey={current?.key ?? null}
         className="mt-6"
       />
+
+      {program.some((item) => item.key === "mvp" && item.status === "completed") ? (
+        <Card className="mt-4">
+          <CardBody className="pt-5">
+            <h2 className="font-heading text-[18px] font-semibold text-white">
+              Program jest domknięty
+            </h2>
+            <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-[var(--text-muted)]">
+              Wyniki, cele i materiały zostają do odczytu. Dalsze prowadzenie po MVP
+              Stage to osobna rozmowa o współpracy. Ukończenie programu nie oznacza,
+              że firma jest już potwierdzonym sukcesem.
+            </p>
+          </CardBody>
+        </Card>
+      ) : null}
 
       <p className="mt-2">
         <Link
@@ -329,11 +358,19 @@ export default async function AppPage() {
 
         <div className="flex flex-col gap-3">
           <TeamPanel members={members} canManage={canEdit} />
-          <LockedPanel
-            icon={Target}
-            title="Najbliższy cel"
-            note="Cele (Goals) i ich terminy odblokowują się w Execution Stage."
-          />
+          {/* Po scaleniu z Execution ten panel nie może już być zawsze
+              zamknięty: przy otwartym trackerze mówiłby „odblokuje się
+              w Execution" komuś, kto ma w Execution trzy cele. To dokładnie
+              ten rodzaj nieprawdy, który CLAUDE.md nazywa fake UI. */}
+          {trackerOpen ? (
+            <GoalPanel goal={nearestGoal} />
+          ) : (
+            <LockedPanel
+              icon={Target}
+              title="Najbliższy cel"
+              note="Cele i ich terminy otworzą się po domknięciu Preparation."
+            />
+          )}
         </div>
       </div>
 
@@ -341,7 +378,14 @@ export default async function AppPage() {
         <LockedPanel
           icon={History}
           title="Ostatnia aktywność"
-          note="Log zmian w zespole pojawi się razem z trackerem w Execution Stage."
+          note={
+            // „Pojawi się razem z trackerem" przestało być prawdą w chwili,
+            // gdy tracker trafił do tej samej gałęzi. Wspólnego logu zespołu
+            // nadal nie ma — historia jest przy każdym celu z osobna.
+            trackerOpen
+              ? "Wspólnego logu zmian zespołu jeszcze nie ma. Historia każdego celu jest w trackerze, przy celu."
+              : "Wspólny log zmian zespołu jeszcze nie powstał."
+          }
         />
         <LockedPanel
           icon={Sparkles}
@@ -350,9 +394,6 @@ export default async function AppPage() {
         />
       </div>
 
-      <p className="mt-4 text-[12.5px] text-[var(--text-faint)]">
-        Taski, cele, dokumenty i workflow odblokują się po domknięciu Idea Stage.
-      </p>
     </div>
   );
 }
@@ -442,6 +483,79 @@ function TeamPanel({
       </CardBody>
     </Card>
   );
+}
+
+/**
+ * Najbliższy cel zespołu — gdy tracker Execution jest otwarty.
+ *
+ * Odpowiada na pytanie z guidelines „czym zespół zajmuje się teraz i do
+ * kiedy". Jeden cel, nie lista: lista celów jest w trackerze, a panel ma dać
+ * odpowiedź w jednym spojrzeniu. Termin po czasie dostaje kolor ostrzeżenia
+ * RAZEM ze słowem — sam kolor nie jest informacją.
+ */
+function GoalPanel({ goal }: { goal: NearestGoal | null }) {
+  return (
+    <Card className="overflow-hidden">
+      <CardBody className="pt-5">
+        <div className="flex items-center justify-between gap-3">
+          <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+            <Target className="size-3.5" />
+            Najbliższy cel
+          </p>
+          <Link
+            href="/app/goals"
+            className="inline-flex items-center gap-1 text-[12px] text-[var(--text-subtle)] underline-offset-2 transition-colors hover:text-white hover:underline"
+          >
+            Tracker
+            <ChevronRight className="size-3.5" />
+          </Link>
+        </div>
+
+        {goal ? (
+          <Link
+            href={`/app/goals?goal=${goal.id}`}
+            className="group mt-3 block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[var(--vairo)]"
+          >
+            <p className="line-clamp-2 text-[14.5px] font-medium leading-snug text-white group-hover:underline group-hover:underline-offset-2">
+              {goal.title}
+            </p>
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[var(--text-subtle)]">
+              <span className={cn(goal.overdue && "font-medium text-[var(--warning)]")}>
+                {goal.overdue ? "Po terminie · " : "do "}
+                {formatDue(goal.dueDate)}
+              </span>
+              <span>{GOAL_STATUS_LABELS[goal.status]}</span>
+              {goal.ownerName ? <span>{goal.ownerName}</span> : null}
+            </p>
+          </Link>
+        ) : (
+          <div className="mt-3">
+            <p className="text-[13px] leading-relaxed text-[var(--text-subtle)]">
+              Zespół nie ma teraz otwartego celu.
+            </p>
+            <Link
+              href="/app/goals?new=1"
+              className="mt-2 inline-flex items-center gap-1 text-[12.5px] text-[var(--text-muted)] underline-offset-2 transition-colors hover:text-white hover:underline"
+            >
+              <Plus className="size-3.5" />
+              Dodaj cel
+            </Link>
+          </div>
+        )}
+      </CardBody>
+    </Card>
+  );
+}
+
+/** „14 października" — termin celu jest datą, nie chwilą, więc bez godziny. */
+function formatDue(isoDate: string) {
+  const date = new Date(`${isoDate}T00:00:00`);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString("pl-PL", {
+    day: "numeric",
+    month: "long",
+    year: sameYear ? undefined : "numeric",
+  });
 }
 
 /**

@@ -469,17 +469,23 @@ export function StageScreen({
               key={item.key}
               title={item.title}
               subtitle={
-                item.skipped
+                item.waitingOn
+                  ? item.waitingOn
+                  : item.skipped
                   ? "Pominięte"
-                  : item.isComplete
-                  ? "Uzupełnione"
-                  : readOnly
-                    ? "Jeszcze nieuzupełnione"
-                    : item.isOptional
-                      ? "Opcjonalne"
-                      : `${item.fields.length} ${
-                          item.fields.length === 1 ? "pytanie" : "pytania"
-                        } do uzupełnienia`
+                  : item.goalConditions.length > 0
+                    ? item.goalConditions
+                        .map((condition) => `${condition.label} ${condition.done}/${condition.minCount}`)
+                        .join(" · ")
+                    : item.isComplete
+                      ? "Uzupełnione"
+                      : readOnly
+                        ? "Jeszcze nieuzupełnione"
+                        : item.isOptional
+                          ? "Opcjonalne"
+                          : `${item.fields.length} ${
+                              item.fields.length === 1 ? "pytanie" : "pytania"
+                            } do uzupełnienia`
               }
               complete={item.isComplete}
               active={false}

@@ -26,6 +26,24 @@ migrację, która usuwa też elementy usunięte z JSON-a.
 **Dlaczego tak:** zmiana pytania to jednolinijkowy diff, nie szukanie w SQL-u;
 nie wymaga deployu ani migracji pisanej ręcznie; treść jest wersjonowana.
 
+## Plik treści nie może wyprzedzać schematu
+
+Plik treści dostaje **niski numer** (Ambition 006, Idea 007), ale generator
+rośnie razem ze schematem. Po scaleniu Preparation i Execution ponowne
+`content:build -- idea-v1` dopisywało do każdego podpunktu Idei `skip_when`
+(powstaje w 021) i `depends_on` (026) — a na świeżej bazie 007 biegnie
+dwadzieścia migracji wcześniej i kończy się „column does not exist". Błąd nie
+wychodził przy generowaniu, tylko przy pierwszym stawianiu bazy od zera.
+
+Dlatego `COLUMN_SINCE` w `build-content.mjs` mówi, od której migracji istnieje
+każda kolumna, a generator wypisuje ją wyłącznie do plików z wyższym numerem.
+Użycie takiej kolumny w szablonie o niższym numerze (np. `skip_when` w Idei)
+**zatrzymuje generowanie** z komunikatem — wartość nie znika po cichu.
+
+**Nowa kolumna w generatorze = nowy wpis w `COLUMN_SINCE`**, z numerem
+migracji, która ją tworzy. Sprawdzian, że nic się nie rozjechało: ponowne
+wygenerowanie wszystkich czterech plików treści ma dać zerowy diff.
+
 ### Stabilny `answer_key`
 
 Odpowiedzi kluczujemy po `stage_fields.answer_key`, nie po `field_id`:

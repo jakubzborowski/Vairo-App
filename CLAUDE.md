@@ -98,9 +98,9 @@ Kolejność stała: **Ambition → Idea → Preparation → Execution → MVP**.
 |---|---|---|
 | **Ambition** | founder bez pomysłu | ✅ treść + UI |
 | **Idea** | każdy startup | ✅ treść (5 kategorii) + UI |
-| **Preparation** | każdy startup | ⏳ szkielet, brak treści |
-| **Execution** | odblokowuje tracker Goals | ⏳ szkielet, brak treści |
-| **MVP** | start produktu, pierwsi użytkownicy | ⏳ szkielet, brak treści |
+| **Preparation** | każdy startup | ✅ treść + narzędzia (bloczki, `skip_when`, biblioteka plików) |
+| **Execution** | odblokowuje tracker Goals | ✅ treść + tracker: cele, taski, dowody, Rozpiska |
+| **MVP** | start produktu, pierwsi użytkownicy | ⏳ treść na gałęzi `mvp-3102`, jeszcze nie scalona |
 
 ### Hierarchia treści — jeden model dla wszystkich etapów
 
@@ -132,6 +132,10 @@ a migrację SQL buduje z nich `npm run content:build -- <plik>`.
 
 Odpowiedzi kluczujemy po `stage_fields.answer_key`, **nie po `field_id`** —
 inaczej ponowny import osierociłby wszystko, co ludzie już wpisali.
+
+**Plik treści nie może wyprzedzać schematu.** Generator wypisuje kolumnę
+tylko do plików z numerem wyższym niż migracja, która ją tworzy
+(`COLUMN_SINCE`). Nowa kolumna w generatorze = nowy wpis tam.
 
 → [docs/content.md](docs/content.md), zanim dotkniesz treści albo importera.
 
@@ -254,6 +258,10 @@ src/
       notifications/        dzwonek: wszystkie zdarzenia w jednym miejscu
       program/              jak działa Vairo — pięć etapów, z bazy
       stage/summary/        wszystko, co zespół ustalił w jednym etapie
+      goals/ tasks/         tracker Execution: cele z dowodem i zadania pod nimi
+      workflows/            Rozpiska — schemat pracy z wersjami
+      calendar/             terminy celów i zadań
+      docs/ files/          wspólne notatki i biblioteka plików (od Preparation)
     onboarding/             ścieżka: path → name → idea → categories
   components/
     app/                    powłoka aplikacji: sidebar, switcher, profil
@@ -261,6 +269,7 @@ src/
     social/                 talia Odkrywaj (deck-frame, people/teams-deck),
                             karty, zgłoszenia, zaproszenia
     team/                   wiersz członka, otwarte role, profil teamu
+    goals/ workflows/       tracker celów, widok zadań, edytor Rozpiski
     ui/                     prymitywy (Button, Card, Input, Pill, Modal, StepWizard, …)
   lib/
     supabase/               klienci: browser / server / proxy (middleware)
@@ -270,6 +279,8 @@ src/
     messages.ts             zaczepki, rozmowy, liczniki nieprzeczytanych
     notifications.ts        skrzynka zdarzeń, brzmienie komunikatów
     next-actions.ts         co teraz i przeszkody na dashboardzie
+    goals.ts · proof.ts     cele, warunki Milestones, otwarta praca, reguła dowodu
+    storage-cleanup.ts      kasowanie plików przez API Storage przed usunięciem
     db-errors.ts            jeden tłumacz błędów bazy na polski
     profile-completeness.ts na ile profil nadaje się do pokazania obcym
     permissions.ts          role po stronie serwera + czytelne komunikaty
@@ -416,11 +427,16 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `018_notifications_realtime` | powiadomienia na żywo — tabela w publikacji `supabase_realtime` |
 | `019_chat_identity_and_realtime` | widok `contact_profiles` + wiadomości na żywo |
 | `020_storage_cleanup` | pliki znikają razem z etapem, startupem i kontem |
+| `021_preparation_tools` | bloczki, `skip_when`, wybór profili, biblioteka plików startupu |
+| `022`–`024_content_preparation_v1` | treść Preparation — trzy kolejne wygenerowania, obowiązuje 024 |
+| `025_execution_goals` | Goals, taski, dowód, warunki Milestones, Rozpiska |
+| `026_execution_content_rules` | cel „ustawiony" vs „ukończony", `depends_on`, dokumenty |
+| `027_content_execution_v1` | treść Execution (generowana) |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`020`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`027`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 
@@ -431,6 +447,25 @@ migracja 002; ma rekurencję w politykach RLS i nie wolno go odpalać.
 
 **Zasada:** każda zmiana schematu to **nowy numerowany plik**, nigdy edycja
 odpalonego. Wyjątek: pliki jeszcze nieodpalone u nikogo.
+
+**Numer migracji jest ostateczny dopiero po scaleniu do `dev`.** Trzy
+gałęzie (Social, Preparation, Execution) wzięły naraz te same „kolejne"
+numery i przy scalaniu powstały po dwa pliki `018`, `019` i `020`. Git tego
+nie zgłasza — nazwy plików są różne, więc nie ma konfliktu. Skutek wychodzi
+dopiero na świeżej bazie. Przy każdym scaleniu sprawdź dwie rzeczy:
+
+- **Kolejność zależności.** Migracja używająca tabeli albo kolumny z innej
+  musi mieć wyższy numer. Execution (025) korzysta z `startup_files`
+  i `skip_when` z Preparation (021).
+- **Kto ostatni definiuje funkcję.** `create or replace function` z wyższym
+  numerem nadpisuje wszystkie wcześniejsze — po cichu. `recalc_subpoint_progress()`
+  definiują 005, 015, 021 i 025; obowiązuje 025, bo jako jedyna łączy strażnika
+  kaskady z 015, `skip_when` z 021 i warunki celów. Gdyby 021 biegła później,
+  postęp etapu przestałby liczyć Goals bez żadnego błędu.
+
+Przenumerowanie odpalonej już migracji jest bezpieczne (wszystkie są
+idempotentne), ale **trzeba ją odpalić jeszcze raz**, żeby jej wersja funkcji
+znów była ostatnia.
 
 ---
 

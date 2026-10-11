@@ -185,9 +185,13 @@ Stan docelowy menu:
 
 | Grupa | Pozycje |
 |---|---|
-| **Twój team** (tylko gdy jesteś w teamie) | Start · Etap startupu · Team · Profil publiczny\* |
+| **Twój team** (tylko gdy jesteś w teamie) | Start · Etap startupu · Cele\*\* · Taski\*\* · Rozpiska\*\* · Terminy\*\* · Dokumenty · Pliki · Team · Profil publiczny\* |
 | **Social** | Szukam projektu · Szukam ludzi · Wiadomości · Zaproszenia · Mój profil publiczny |
 | **Stopka** | Powiadomienia · Jak to działa · Ustawienia |
+
+\*\* Tracker Execution: pozycje pojawiają się, gdy startup domknie
+Preparation decyzją „kontynuuj" (`requiresExecution`, kolumna
+`startups.execution_unlocked_at`). Ponowne otwarcie Preparation ich nie chowa.
 
 \* „Profil publiczny" widzą wyłącznie Founder i Admin — dla Członka strona
 i tak przekierowuje, a pozycja prowadząca pod zamknięte drzwi jest gorsza niż
@@ -211,6 +215,9 @@ mnie chce. Rozdział został w treści kart. `/app/social/connections` przekiero
 trzyma wtedy switcher teamów („Brak teamu → Stwórz startup"), a `/app` zostaje
 dostępny przez logo.
 
-Moduły, które wrócą razem z Execution Stage — Taski, Cele, Dokumenty, Workflow,
-Możliwości — mają swoje adresy i uczciwe ekrany, ale **nie są linkowane**.
-Wejdą do menu wtedy, gdy będą miały dane.
+**Pozycja w menu dopiero wtedy, gdy ma dane.** Cele, Taski, Rozpiska
+i Terminy weszły do menu razem z Execution, ale **warunkowo** — przed
+domknięciem Preparation nie ma w nich czego robić, więc ich tam nie ma.
+Dokumenty i Pliki są od Preparation, więc stoją zawsze. Jedynym modułem bez
+pozycji w menu zostały Możliwości: mają adres i uczciwy ekran, ale dane
+przyjdą dopiero po MVP Stage.
