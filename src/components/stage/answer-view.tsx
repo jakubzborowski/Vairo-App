@@ -1,6 +1,6 @@
 import { Check, ExternalLink, Minus, Paperclip } from "lucide-react";
 import { Pill } from "@/components/ui/pill";
-import { hasAnswer, type StageField } from "@/types/stage";
+import { asRecords, fieldAnswered, type StageField } from "@/types/stage";
 
 /**
  * Odpowiedź w trybie odczytu — dla osób, które mają w teamie rolę Członka.
@@ -22,7 +22,7 @@ export function AnswerView({
         {field.question}
       </p>
       <div className="mt-2.5">
-        {hasAnswer(value) ? (
+        {fieldAnswered(field, value) ? (
           <AnswerBody field={field} value={value} />
         ) : (
           <p className="inline-flex items-center gap-1.5 text-[13px] text-[var(--text-faint)]">
@@ -159,6 +159,50 @@ function AnswerBody({ field, value }: { field: StageField; value: unknown }) {
           <Check className="size-4" strokeWidth={2.5} />
           Podsumowanie potwierdzone
         </p>
+      );
+
+    case "records": {
+      const record = asRecords(value);
+      const columns = [
+        ...(field.config.columns ?? []),
+        ...(record.extra_columns ?? []),
+      ];
+      const filled = record.rows.filter((row) =>
+        Object.values(row).some((cell) => String(cell ?? "").trim().length > 0)
+      );
+      if (filled.length === 0) return <Plain>Nic nie brakuje.</Plain>;
+      return (
+        <ul className="flex flex-col gap-2">
+          {filled.map((row, index) => (
+            <li
+              key={index}
+              className="rounded-lg border border-white/10 px-3 py-2 text-[13.5px] text-[var(--text-muted)]"
+            >
+              {columns
+                .map((column) => row[column.key]?.trim())
+                .filter(Boolean)
+                .join(" · ") || "Pozycja bez treści"}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+
+    case "action":
+      return (
+        <p className="inline-flex items-center gap-2 text-[14px] text-[var(--success)]">
+          <Check className="size-4" strokeWidth={2.5} />
+          {field.config.confirm_label ?? "Zrobione"}
+        </p>
+      );
+
+    case "people":
+      return (
+        <Plain>
+          {asList(value).length === 1
+            ? "Wybrano 1 osobę z platformy"
+            : `Wybrano ${asList(value).length} osób z platformy`}
+        </Plain>
       );
 
     default:

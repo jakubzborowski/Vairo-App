@@ -2,6 +2,7 @@ import {
   Bell,
   Compass,
   HelpCircle,
+  FolderOpen,
   LayoutDashboard,
   Mail,
   MessageSquare,
@@ -52,6 +53,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { label: "Start", href: "/app", icon: LayoutDashboard },
       { label: "Etap startupu", href: "/app/stage", icon: Target },
+      { label: "Pliki", href: "/app/files", icon: FolderOpen },
       { label: "Team", href: "/app/team", icon: Users },
       // Profil publiczny teamu był dostępny wyłącznie przez przycisk
       // w nagłówku strony Team — czyli trzy kliknięcia do rzeczy, którą

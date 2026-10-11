@@ -5,7 +5,7 @@ import { AlertCircle, Check, Lock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { emptyValueFor, hasAnswer, type StageSubpoint, type StageTree } from "@/types/stage";
+import { emptyValueFor, fieldAnswered, type StageSubpoint, type StageTree } from "@/types/stage";
 import { AnswerView } from "./answer-view";
 import { FieldInput } from "./field-input";
 import { validateField } from "./field-inputs";
@@ -71,14 +71,25 @@ export function SubpointModal({
     [draft, initial]
   );
 
+  // Pusta lista przy `empty_ok` jest odpowiedzią („niczego nie brakuje”),
+  // ale wygląda identycznie jak brak zapisu. Bez tego „Zapisz” zostaje
+  // wyłączone i podpunktu nie da się domknąć.
+  const canConfirmEmpty = subpoint.fields.some(
+    (field) =>
+      field.config.empty_ok &&
+      field.isRequired &&
+      !fieldAnswered(field, answers[field.answerKey]) &&
+      fieldAnswered(field, draft[field.answerKey])
+  );
+
   const missing = subpoint.fields.filter(
-    (f) => f.isRequired && !hasAnswer(draft[f.answerKey])
+    (f) => f.isRequired && !fieldAnswered(f, draft[f.answerKey])
   );
 
   // Odpowiedzi krótsze niż sugerowane minimum. To wskazówka, nie blokada —
   // pokazujemy ją dopiero po kliknięciu „Zapisz" i nigdy nie zamykamy drogi.
   const tooShort = subpoint.fields.filter(
-    (f) => hasAnswer(draft[f.answerKey]) && validateField(f, draft[f.answerKey])
+    (f) => fieldAnswered(f, draft[f.answerKey]) && validateField(f, draft[f.answerKey])
   );
 
   // Focus tylko przy otwarciu. Wcześniej ten efekt zależał od `dirty`,
@@ -191,6 +202,7 @@ export function SubpointModal({
                 disabled={saving}
                 startupStageId={tree.startupStageId}
                 showErrors={attemptedSave}
+                returnTo={`/app/stage?stage=${tree.templateKey}&subpoint=${subpoint.id}`}
               />
             )
           )}
@@ -239,7 +251,7 @@ export function SubpointModal({
             <Button variant="ghost" onClick={tryClose} disabled={saving}>
               Anuluj
             </Button>
-            <Button onClick={trySave} loading={saving} disabled={!dirty}>
+            <Button onClick={trySave} loading={saving} disabled={!dirty && !canConfirmEmpty}>
               {showSoftHints ? "Zapisz mimo to" : "Zapisz"}
             </Button>
           </div>
