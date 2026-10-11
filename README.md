@@ -37,7 +37,9 @@ Pełna kolejność — razem ze schematem bazowym, który leży **poza** `migrat
 
 Execution Stage (cele, zadania, dowody, warunki Milestones, Rozpiska) jest w `025_execution_goals.sql`. Odpal go po `024` — korzysta z tabel Preparation (`021`). Jeśli wcześniej szedł pod numerem `018`, odpal `025`–`027` jeszcze raz.
 
-Tracker w menu (Cele, Taski, Rozpiska) pojawia się, gdy startup domknie Preparation decyzją „kontynuuj”. Wcześniejsze cele da się otworzyć wprost pod `/app/goals` — na przykład z podpunktu, który wymaga Goals. Ponowne otwarcie Preparation nie chowa trackera.
+Treść MVP Stage jest w `028_content_mvp_v1.sql` — odpal po `027`, bo jej warunki odwołują się do typów celów z Execution.
+
+Tracker w menu (Cele, Taski, Rozpiska) pojawia się, gdy startup domknie Preparation decyzją „kontynuuj”. Domknięcie MVP Stage prowadzi na `/app/stage/complete` (podsumowanie + kontakt w sprawie dalszej współpracy; bez płatności).
 
 Warunki liczby celów wjeżdżają z treści etapu. W JSON podpunktu:
 

@@ -116,6 +116,7 @@ export default async function AppPage() {
   // Pasek etapów czyta `stage_templates`, nie listę zaszytą w kodzie — dodanie
   // etapu to migracja, nie zmiana w trzech komponentach.
   const program = await loadStageProgram(supabase, active.id);
+  const programDone = program.some((item) => item.key === "mvp" && item.status === "completed");
   const current = currentProgramEntry(program);
   const stage = active.stage;
   const percent =
@@ -208,7 +209,7 @@ export default async function AppPage() {
         className="mt-6"
       />
 
-      {program.some((item) => item.key === "mvp" && item.status === "completed") ? (
+      {programDone ? (
         <Card className="mt-4">
           <CardBody className="pt-5">
             <h2 className="font-heading text-[18px] font-semibold text-white">
@@ -390,7 +391,14 @@ export default async function AppPage() {
         <LockedPanel
           icon={Sparkles}
           title="Możliwości"
-          note="Programy, konkursy i partnerzy dopasowani do etapu — po MVP Stage."
+          note={
+            // „Po MVP Stage" jest prawdą tylko do chwili, w której ktoś MVP
+            // domknie — a od scalenia z MVP da się to zrobić. Wtedy obietnica
+            // zamieniłaby się w nieprawdę, bo tej części Vairo jeszcze nie ma.
+            programDone
+              ? "Programy, konkursy i partnerzy dla startupów po MVP — tej części Vairo jeszcze nie ma."
+              : "Programy, konkursy i partnerzy dopasowani do etapu — po MVP Stage."
+          }
         />
       </div>
 

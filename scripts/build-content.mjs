@@ -38,7 +38,15 @@ const GOAL_PROOF_KINDS = new Set([
 const CATEGORY_KEYS = new Set(["general", "saas", "hardware", "b2b", "b2c"]);
 
 /** Numer migracji nadawany per szablon, żeby pliki nie kolidowały. */
-const MIGRATION_NUMBER = { ambition: "006", idea: "007", preparation: "024", execution: "027" };
+const MIGRATION_NUMBER = {
+  ambition: "006",
+  idea: "007",
+  preparation: "024",
+  execution: "027",
+  // MVP było na gałęzi pod 021 i zderzało się z 021_preparation_tools.
+  // Treść MVP odwołuje się do typów celów z 025, więc idzie po Execution.
+  mvp: "028",
+};
 
 /**
  * Od której migracji istnieje kolumna, którą generator umie wypełnić.

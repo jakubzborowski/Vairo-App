@@ -45,11 +45,19 @@ tabeli. Każdy plik jest idempotentny, więc ponowne odpalenie niczego nie psuje
 | 29 | `migrations/025_execution_goals.sql` | Execution: cele, taski, dowody, warunki Milestones, Rozpiska |
 | 30 | `migrations/026_execution_content_rules.sql` | reguły treści Execution, `depends_on`, dokumenty zespołu |
 | 31 | `migrations/027_content_execution_v1.sql` | treść Execution (generowana) |
+| 32 | `migrations/028_content_mvp_v1.sql` | treść MVP Stage (generowana) — wymaga 025 i 026 |
 
 > **022 i 023 to wcześniejsze wygenerowania tej samej treści co 024.** Każde
 > jest idempotentne i usuwa to, czego nie ma w swoim JSON-ie, więc odpalenie
 > wszystkich trzech po kolei kończy się stanem z 024. Można je pominąć na
 > świeżej bazie — szkodzić nie szkodzą.
+
+> **MVP miał na swojej gałęzi numer 021** — ten sam co `021_preparation_tools`.
+> Na bazie stawianej z tamtej gałęzi to działało, bo Execution miał tam 018
+> i biegł wcześniej. Problem jest tylko na świeżej bazie w kolejności z `dev`:
+> pod 021 treść MVP trafiłaby przed `stage_goal_conditions` (025) i cały plik
+> by się wywalił. Jeśli MVP już u kogoś szło, 028 nie trzeba odpalać ponownie
+> — ale nie zaszkodzi, jest idempotentna.
 
 > **Execution miał wcześniej numery 018–020** i kolidował z Social. Jeśli
 > u kogoś te pliki już szły pod starymi numerami, **trzeba odpalić 025–027

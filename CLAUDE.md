@@ -100,7 +100,7 @@ Kolejność stała: **Ambition → Idea → Preparation → Execution → MVP**.
 | **Idea** | każdy startup | ✅ treść (5 kategorii) + UI |
 | **Preparation** | każdy startup | ✅ treść + narzędzia (bloczki, `skip_when`, biblioteka plików) |
 | **Execution** | odblokowuje tracker Goals | ✅ treść + tracker: cele, taski, dowody, Rozpiska |
-| **MVP** | start produktu, pierwsi użytkownicy | ⏳ treść na gałęzi `mvp-3102`, jeszcze nie scalona |
+| **MVP** | start produktu, pierwsi użytkownicy | ✅ treść + ekran końca programu (`/app/stage/complete`) |
 
 ### Hierarchia treści — jeden model dla wszystkich etapów
 
@@ -258,6 +258,7 @@ src/
       notifications/        dzwonek: wszystkie zdarzenia w jednym miejscu
       program/              jak działa Vairo — pięć etapów, z bazy
       stage/summary/        wszystko, co zespół ustalił w jednym etapie
+      stage/complete/       koniec programu po MVP: wyniki i kontakt (bez płatności)
       goals/ tasks/         tracker Execution: cele z dowodem i zadania pod nimi
       workflows/            Rozpiska — schemat pracy z wersjami
       calendar/             terminy celów i zadań
@@ -432,11 +433,12 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `025_execution_goals` | Goals, taski, dowód, warunki Milestones, Rozpiska |
 | `026_execution_content_rules` | cel „ustawiony" vs „ukończony", `depends_on`, dokumenty |
 | `027_content_execution_v1` | treść Execution (generowana) |
+| `028_content_mvp_v1` | treść MVP Stage (generowana) — warunki celów z 025, `depends_on` z 026 |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`027`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`028`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 
@@ -462,6 +464,11 @@ dopiero na świeżej bazie. Przy każdym scaleniu sprawdź dwie rzeczy:
   definiują 005, 015, 021 i 025; obowiązuje 025, bo jako jedyna łączy strażnika
   kaskady z 015, `skip_when` z 021 i warunki celów. Gdyby 021 biegła później,
   postęp etapu przestałby liczyć Goals bez żadnego błędu.
+
+Ten sam błąd wrócił przy MVP: gałąź nadała treści MVP numer `021`, który
+`dev` miał już zajęty przez Preparation. Treść MVP zapisuje warunki do
+`stage_goal_conditions` (025), więc pod 021 biegłaby przed powstaniem tej
+tabeli. Teraz jest `028`.
 
 Przenumerowanie odpalonej już migracji jest bezpieczne (wszystkie są
 idempotentne), ale **trzeba ją odpalić jeszcze raz**, żeby jej wersja funkcji
