@@ -1,29 +1,36 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Kasowanie plików ze Storage przy usuwaniu startupu.
+ * Kasowanie plików ze Storage przy usuwaniu startupu i konta.
  *
- * **Dlaczego to jest w aplikacji, skoro migracja 020 ma triggery.**
- * Trigger w SQL-u kasuje wiersz w `storage.objects` — czyli to, co widzi
- * aplikacja, RLS i przeglądarka plików. Fizyczne bajty z backendu Storage
- * usuwa dopiero API Storage. Żeby zwolnić miejsce w projekcie, trzeba więc
- * wywołać `remove()`, a nie tylko skasować wiersz.
+ * **To jest JEDYNE miejsce, które kasuje pliki.** SQL nie może: Supabase
+ * blokuje każdy DELETE na tabelach Storage (`storage.protect_delete()`,
+ * „Use the Storage API instead"). Pierwsza wersja migracji 020 próbowała
+ * sprzątać triggerami i właśnie na tym się wywaliła — a gdyby triggery
+ * weszły, blokowałyby usuwanie startupów i kont. Szczegóły w samej 020.
+ *
+ * **Gdzie aplikacja zapisuje pliki** — i każde z tych miejsc jest tu obsłużone:
+ *
+ *   avatars        <profile_id>/avatar.<ext>                   (profil)
+ *   startup-logos  <startup_id>/logo.<ext>                     (team)
+ *   stage-files    <startup_stage_id>/<answer_key>/<plik>      (odpowiedzi w etapie)
+ *   stage-files    <startup_id>/library/<plik>                 (biblioteka, od Preparation)
+ *
+ * Nowe miejsce zapisu pliku = nowy wiersz w tej tabeli i nowa gałąź niżej.
+ * Biblioteka była przez chwilę poza tą listą: leży w tym samym buckecie co
+ * odpowiedzi, ale pod id startupu, więc sprzątanie po id etapów jej nie
+ * widziało.
  *
  * Kolejność jest istotna: **najpierw pliki, potem wiersz startupu.** Póki
  * startup istnieje, Founder jest jego członkiem i RLS na buckecie go
- * przepuszcza. Po usunięciu wiersza `can_access_stage()` nie ma już czego
- * znaleźć i ten sam człowiek nie ma prawa dotknąć własnych plików. Po
- * odwrotnej kolejności zostałyby sieroty, których nikt nigdy nie skasuje.
+ * przepuszcza. Po usunięciu wiersza `can_access_stage()` i
+ * `is_startup_member()` nie mają już czego znaleźć — ten sam człowiek traci
+ * prawo do własnych plików i zostają sieroty, których nikt nie skasuje
+ * inaczej niż ręcznie w panelu.
  *
- * Ścieżek NIE szukamy przez `storage.list()`. Lista jest jednopoziomowa, więc
- * dla układu `<etap>/<pytanie>/<plik>` znaczyłaby kilkadziesiąt wywołań.
- * Wszystkie ścieżki i tak leżą w `stage_answers.value` — to je zapisał
- * formularz załączników.
- *
- * **Błąd tutaj nie przerywa usuwania.** Nieusunięty plik to koszt; nieusunięty
- * startup po kliknięciu „usuń" to złamana obietnica. Trigger z migracji 020
- * i tak posprząta wiersze, więc najgorsze, co zostaje, to bajty bez żadnego
- * odwołania.
+ * **Błąd tutaj nie przerywa usuwania.** Nieusunięty plik to koszt i wiersz
+ * w liście sierot (`SPRAWDZ_MIGRACJE.sql`); nieusunięty startup po kliknięciu
+ * „usuń" to złamana obietnica.
  */
 export async function purgeStartupFiles(
   supabase: SupabaseClient,
@@ -32,13 +39,22 @@ export async function purgeStartupFiles(
   try {
     await Promise.all([
       purgeStageFiles(supabase, startupId),
-      purgeLogo(supabase, startupId),
+      purgeFolder(supabase, "stage-files", `${startupId}/library`),
+      purgeFolder(supabase, "startup-logos", startupId),
     ]);
   } catch (error) {
     console.error("[storage] sprzątanie plików startupu", startupId, error);
   }
 }
 
+/**
+ * Załączniki z odpowiedzi w etapach.
+ *
+ * Ścieżek NIE szukamy przez `storage.list()`. Układ ma dwa poziomy
+ * (`<etap>/<pytanie>/<plik>`), a lista jest jednopoziomowa, więc znaczyłoby to
+ * osobne wywołanie na każde pytanie. Wszystkie ścieżki i tak leżą
+ * w `stage_answers.value` — zapisał je formularz załączników.
+ */
 async function purgeStageFiles(supabase: SupabaseClient, startupId: string) {
   const { data: stages } = await supabase
     .from("startup_stages")
@@ -53,34 +69,68 @@ async function purgeStageFiles(supabase: SupabaseClient, startupId: string) {
     .select("value")
     .in("startup_stage_id", stageIds);
 
-  const paths: string[] = [];
+  const prefixes = stageIds.map((id) => `${id}/`);
+  const paths = new Set<string>();
   for (const row of answers ?? []) {
-    // Pole plikowe zapisuje tablicę `{ path, name, size }`. Każdy inny typ
-    // odpowiedzi ma w `value` cokolwiek innego, więc filtrujemy po kształcie,
-    // a nie po nazwie pytania.
-    const value = (row as { value: unknown }).value;
-    if (!Array.isArray(value)) continue;
-    for (const item of value) {
-      if (
-        item &&
-        typeof item === "object" &&
-        typeof (item as { path?: unknown }).path === "string"
-      ) {
-        paths.push((item as { path: string }).path);
-      }
-    }
+    collectPaths((row as { value: unknown }).value, prefixes, paths);
   }
 
-  await removeInChunks(supabase, "stage-files", paths);
+  await removeInChunks(supabase, "stage-files", [...paths]);
 }
 
-async function purgeLogo(supabase: SupabaseClient, startupId: string) {
-  // Logo to jeden plik o stałej nazwie, ale rozszerzenie zależy od formatu,
-  // a po zmianie formatu w buckecie zostaje też stary. Jedno wylistowanie
-  // folderu jest tu tańsze i pewniejsze niż zgadywanie z `logo_url`.
-  const { data } = await supabase.storage.from("startup-logos").list(startupId);
-  const paths = (data ?? []).map((file) => `${startupId}/${file.name}`);
-  await removeInChunks(supabase, "startup-logos", paths);
+/**
+ * Wszystkie `path` z odpowiedzi — na DOWOLNEJ głębokości.
+ *
+ * Zwykłe pole plikowe zapisuje tablicę `{ path, name, size }`, ale bloczki
+ * z Preparation trzymają pole plikowe wewnątrz powtarzanej pozycji, więc
+ * ścieżka siedzi poziom albo dwa niżej. Czytanie tylko najwyższego poziomu
+ * gubiło takie pliki po cichu.
+ *
+ * Bierzemy wyłącznie ścieżki pod id etapów tego startupu. Tekst z polem
+ * `path` w odpowiedzi, który akurat nie jest plikiem, nie trafi do `remove()`.
+ */
+function collectPaths(value: unknown, prefixes: string[], out: Set<string>) {
+  if (Array.isArray(value)) {
+    for (const item of value) collectPaths(item, prefixes, out);
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+
+  const path = (value as { path?: unknown }).path;
+  if (typeof path === "string" && prefixes.some((prefix) => path.startsWith(prefix))) {
+    out.add(path);
+  }
+  for (const nested of Object.values(value)) collectPaths(nested, prefixes, out);
+}
+
+/**
+ * Wszystkie pliki z jednego folderu (bez podfolderów).
+ *
+ * `list()` oddaje domyślnie 100 pozycji, więc bez stronicowania biblioteka
+ * ze 101 plikami zostawiałaby jeden w buckecie. Logo i avatar mają po kilka
+ * plików (stare rozszerzenia po zmianie formatu), ale idą tą samą drogą —
+ * jedno wylistowanie jest pewniejsze niż zgadywanie rozszerzenia z adresu.
+ */
+async function purgeFolder(supabase: SupabaseClient, bucket: string, folder: string) {
+  const PAGE = 1000;
+  const paths: string[] = [];
+
+  for (let offset = 0; ; offset += PAGE) {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .list(folder, { limit: PAGE, offset });
+    if (error) {
+      console.error(`[storage] ${bucket}/${folder}`, error.message);
+      break;
+    }
+    // Podfoldery wracają jako wpisy bez `id` — tu ich nie ma czego kasować.
+    for (const entry of data ?? []) {
+      if (entry.id) paths.push(`${folder}/${entry.name}`);
+    }
+    if (!data || data.length < PAGE) break;
+  }
+
+  await removeInChunks(supabase, bucket, paths);
 }
 
 /** API Storage przyjmuje ograniczoną listę naraz — stąd porcje po 100. */
@@ -100,11 +150,10 @@ async function removeInChunks(
  * To samo przy usuwaniu konta.
  *
  * `delete_own_account()` kasuje profil, a kaskada zabiera startupy, w których
- * ta osoba była jedynym Founderem. Triggery z migracji 020 posprzątają wiersze
- * w `storage.objects`, ale bajty zwalnia dopiero API — a po wywołaniu RPC ten
- * człowiek nie ma już ani sesji, ani praw do niczego. Dlatego kasujemy tutaj,
- * ZANIM zniknie konto, i tylko to, co i tak zniknie razem z nim: własny
- * avatar oraz startupy z jedynym Founderem.
+ * ta osoba była jedynym Founderem. Po wywołaniu RPC ten człowiek nie ma już
+ * ani sesji, ani praw do niczego — a SQL plików skasować nie może. Dlatego
+ * kasujemy tutaj, ZANIM zniknie konto, i tylko to, co i tak zniknie razem
+ * z nim: własny avatar oraz startupy z jedynym Founderem.
  */
 export async function purgeOwnAccountFiles(
   supabase: SupabaseClient,
@@ -114,14 +163,7 @@ export async function purgeOwnAccountFiles(
   try {
     await Promise.all([
       ...soloFounderStartupIds.map((id) => purgeStartupFiles(supabase, id)),
-      (async () => {
-        const { data } = await supabase.storage.from("avatars").list(userId);
-        await removeInChunks(
-          supabase,
-          "avatars",
-          (data ?? []).map((file) => `${userId}/${file.name}`)
-        );
-      })(),
+      purgeFolder(supabase, "avatars", userId),
     ]);
   } catch (error) {
     console.error("[storage] sprzątanie plików konta", userId, error);

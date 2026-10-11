@@ -37,7 +37,7 @@ tabeli. Każdy plik jest idempotentny, więc ponowne odpalenie niczego nie psuje
 | 21 | `migrations/017_join_as_member.sql` | przyjęcie zaproszenia tworzy członkostwo zawsze jako Member |
 | 22 | `migrations/018_notifications_realtime.sql` | powiadomienia na żywo — tabela w publikacji `supabase_realtime` |
 | 23 | `migrations/019_chat_identity_and_realtime.sql` | widok `contact_profiles` (imię rozmówcy spoza teamu) + wiadomości na żywo |
-| 24 | `migrations/020_storage_cleanup.sql` | pliki znikają razem z etapem, startupem i kontem |
+| 24 | `migrations/020_storage_cleanup.sql` | usuwa triggery ze swojej pierwszej wersji (Supabase blokuje kasowanie z tabel Storage w SQL-u) |
 | 25 | `migrations/021_preparation_tools.sql` | narzędzia Preparation: bloczki, `skip_when`, wybór profili, biblioteka plików |
 | 26 | `migrations/022_content_preparation_v1.sql` | treść Preparation (starsze wygenerowanie) |
 | 27 | `migrations/023_content_preparation_v1.sql` | treść Preparation (starsze wygenerowanie) |
@@ -78,10 +78,11 @@ Wszystkie trzy powstają z migracji:
 
 | Plik | Do czego |
 |---|---|
-| `DIAGNOSTYKA.sql` | sprawdza, co faktycznie wjechało do bazy — odpal, gdy coś nie działa |
+| `SPRAWDZ_MIGRACJE.sql` | **odpal po każdym scaleniu gałęzi.** Tylko odczyt. Sprawdza rzeczy, które zła kolejność psuje po cichu — m.in. czy `recalc_subpoint_progress()` jest wersją z celami (025), a nie z 021 |
+| `DIAGNOSTYKA.sql` | sprawdza, co faktycznie wjechało do bazy — odpal, gdy coś nie działa (obejmuje tylko stan sprzed 005) |
 | `BACKUP_export.sql` | zrzut danych bez `pg_dump` |
 | `CLEANUP_puste_etapy.sql` | kasuje puste wiersze `startup_stages` (najpierw `select`, dopiero potem odkomentowany `delete`) |
-| `ROLLBACK_003_007.sql` | cofa migracje 003–007 |
+| `ROLLBACK_003_007.sql` | cofa migracje 003–007. **Linie kasujące z `storage.objects` i `storage.buckets` już nie zadziałają** — Supabase blokuje to w SQL-u; bucket `stage-files` trzeba opróżnić i usunąć w panelu |
 | `profile_social.sql` | **NIE URUCHAMIAĆ** — zastąpiony przez `migrations/002`, ma rekurencję w politykach RLS |
 
 ## Zmiana schematu

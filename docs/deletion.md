@@ -25,24 +25,43 @@ wiersz nadrzędny jeszcze istnieje, a jeśli nie, przepuść kaskadę.
 cokolwiek blokuje albo dopisuje, musi na wejściu sprawdzić, czy jego rodzic
 jeszcze żyje. Inaczej zablokuje własną kaskadę.
 
+## Pliki
+
 **Storage nie jest częścią kaskady.** `storage.objects` nie ma klucza obcego
 do niczego z `public` — ścieżka pliku to zwykły tekst — więc usunięcie
 startupu zabierało odpowiedzi, a załączniki, logo i avatary zostawały
 w bucketach na zawsze. „Nie da się otworzyć" (bo `can_access_stage()` nie ma
 już czego znaleźć) to nie to samo co „nie ma".
 
-Wszystkie trzy buckety trzymają pliki pod `<uuid-właściciela>/…`
-(`avatars/<profile_id>`, `startup-logos/<startup_id>`,
-`stage-files/<startup_stage_id>/<answer_key>`), więc sprzątanie to zawsze to
-samo pytanie. **Każdy nowy bucket ma się do tej konwencji stosować** —
-inaczej trzeba będzie napisać trzeci wariant tego samego kodu.
+Aplikacja zapisuje pliki w czterech miejscach, każde pod uuid właściciela:
 
-Sprzątanie jest DWUCZĘŚCIOWE i to nie jest nadmiarowość:
-
-| Gdzie | Co kasuje | Po co |
+| Bucket | Ścieżka | Właściciel |
 |---|---|---|
-| triggery (migracja 020) | wiersz w `storage.objects` | spójność: aplikacja, RLS i przeglądarka plików przestają go widzieć; łapie każdą drogę, także usunięcie konta |
-| `purgeStartupFiles()` w akcji | plik przez API Storage | zwolnienie bajtów — **SQL tego nie robi** |
+| `avatars` | `<profile_id>/avatar.<ext>` | profil |
+| `startup-logos` | `<startup_id>/logo.<ext>` | startup |
+| `stage-files` | `<startup_stage_id>/<answer_key>/<plik>` | etap (odpowiedzi) |
+| `stage-files` | `<startup_id>/library/<plik>` | startup (biblioteka, od Preparation) |
+
+**Uwaga na `stage-files`: dwa układy w jednym buckecie.** Kto sprawdza
+„czy pierwszy segment ścieżki to istniejący etap", uzna każdy plik
+biblioteki za sierotę — bo tam pierwszym segmentem jest id startupu.
+Pierwsza wersja migracji 020 miała dokładnie ten błąd i skasowałaby całą
+bibliotekę, gdyby Supabase nie zablokował jej wcześniej z innego powodu.
+
+**Sprzątanie robi WYŁĄCZNIE aplikacja, przez API Storage.** Supabase blokuje
+każdy DELETE na tabelach Storage (`storage.protect_delete()`, „Use the
+Storage API instead") — także w triggerach. Trigger kasujący z
+`storage.objects` nie tylko nie zadziała: wywali kaskadę, w której się
+odpali, czyli zablokuje usunięcie startupu albo konta.
+
+`purgeStartupFiles()` i `purgeOwnAccountFiles()` w
+[storage-cleanup.ts](../src/lib/storage-cleanup.ts) obsługują wszystkie
+cztery miejsca z tabeli. **Nowe miejsce zapisu pliku = nowy wiersz w tabeli
+i nowa gałąź w tym pliku.**
+
+Pliki, które mimo to zostaną bez właściciela (usunięcie z pominięciem
+aplikacji), pokazuje `supabase/SPRAWDZ_MIGRACJE.sql` jako `plik-sierota`.
+Kasuje się je ręcznie w panelu: Supabase → Storage.
 
 Kolejność w aplikacji jest istotna: **najpierw pliki, potem wiersz.** Póki
 startup istnieje, Founder jest jego członkiem i RLS na buckecie go

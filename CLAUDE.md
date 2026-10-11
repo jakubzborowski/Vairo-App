@@ -352,11 +352,15 @@ triggerach naraz (naprawione w 014 i 015), więc wniosek jest twardy:
 dopisuje, musi na wejściu sprawdzić, czy jego rodzic jeszcze żyje.** Inaczej
 zablokuje własną kaskadę.
 
-**Storage nie jest częścią kaskady.** `storage.objects` nie ma klucza obcego
-do niczego z `public`, więc pliki trzeba kasować osobno. Wszystkie buckety
-trzymają je pod `<uuid-właściciela>/…` i **każdy nowy bucket ma się do tej
-konwencji stosować**. Trigger kasuje wiersz, ale bajty zwalnia dopiero API
-Storage — stąd `purgeStartupFiles()` w akcji, wołane PRZED usunięciem wiersza.
+**Storage nie jest częścią kaskady — i SQL nie może go sprzątać.**
+`storage.objects` nie ma klucza obcego do niczego z `public`, a Supabase
+blokuje każdy DELETE na tabelach Storage (`storage.protect_delete()`).
+**Żaden trigger ani migracja nie może kasować z `storage.objects`** — taki
+trigger zablokowałby kaskadę, w której się odpali (pierwsza wersja 020
+zablokowałaby tak usuwanie startupów i kont). Pliki kasuje wyłącznie
+aplikacja przez API Storage: `purgeStartupFiles()` / `purgeOwnAccountFiles()`,
+wołane PRZED usunięciem wiersza, póki RLS jeszcze wpuszcza. Każde nowe
+miejsce zapisu pliku = nowa gałąź w `storage-cleanup.ts`.
 
 → [docs/deletion.md](docs/deletion.md): co dokładnie kasuje usunięcie konta,
 potwierdzenia, `delete_own_account()`.
@@ -427,7 +431,7 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `017_join_as_member` | przyjęcie zaproszenia tworzy członkostwo zawsze jako Member |
 | `018_notifications_realtime` | powiadomienia na żywo — tabela w publikacji `supabase_realtime` |
 | `019_chat_identity_and_realtime` | widok `contact_profiles` + wiadomości na żywo |
-| `020_storage_cleanup` | pliki znikają razem z etapem, startupem i kontem |
+| `020_storage_cleanup` | usuwa triggery ze swojej pierwszej wersji — pliki kasuje wyłącznie aplikacja przez API |
 | `021_preparation_tools` | bloczki, `skip_when`, wybór profili, biblioteka plików startupu |
 | `022`–`024_content_preparation_v1` | treść Preparation — trzy kolejne wygenerowania, obowiązuje 024 |
 | `025_execution_goals` | Goals, taski, dowód, warunki Milestones, Rozpiska |
@@ -442,7 +446,7 @@ taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 
-Pomocnicze: `DIAGNOSTYKA.sql` (co faktycznie wjechało), `BACKUP_export.sql`
+Pomocnicze: `SPRAWDZ_MIGRACJE.sql` (**po każdym scaleniu** — wyłapuje złą kolejność, która nie daje błędu), `DIAGNOSTYKA.sql` (co faktycznie wjechało), `BACKUP_export.sql`
 (zrzut danych bez `pg_dump`), `CLEANUP_puste_etapy.sql`, `ROLLBACK_003_007.sql`.
 `profile_social.sql` w katalogu `supabase/` jest **wycofany** — zastąpiła go
 migracja 002; ma rekurencję w politykach RLS i nie wolno go odpalać.
