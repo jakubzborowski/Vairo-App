@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   StartupContext,
@@ -20,8 +21,14 @@ type MemberRow = {
  * Wszystkie startupy zalogowanego usera wraz z rolą, kategoriami i postępem
  * bieżącego etapu. Jedno zapytanie na listę członkostw + po jednym na
  * kategorie i etapy — bez N+1.
+ *
+ * `cache()` jest na żądanie: layout `/app` i strona wołają to równolegle,
+ * a klient Supabase jest jeden na żądanie, więc drugie wywołanie dostaje
+ * wynik pierwszego zamiast powtarzać pięć zapytań.
  */
-export async function getUserStartups(
+export const getUserStartups = cache(loadUserStartups);
+
+async function loadUserStartups(
   supabase: SupabaseClient,
   userId: string
 ): Promise<StartupContext[]> {
@@ -56,7 +63,7 @@ export async function getUserStartups(
     supabase
       .from("startup_stages")
       .select(
-        "id, startup_id, status, stage_templates(key, title, position)"
+        "id, startup_id, template_id, status, stage_templates(key, title, position)"
       )
       .in("startup_id", ids),
   ]);
@@ -72,6 +79,7 @@ export async function getUserStartups(
   type StageRow = {
     id: string;
     startup_id: string;
+    template_id: string;
     status: "in_progress" | "completed";
     stage_templates: { key: string; title: string; position: number } | null;
   };
@@ -82,13 +90,8 @@ export async function getUserStartups(
     stagesByStartup.set(row.startup_id, list);
   }
 
-  const progressByStage = await countProgress(
-    supabase,
-    (stageRows ?? []) as unknown as StageRow[],
-    categoriesByStartup
-  );
-
-  return startups.map((startup) => {
+  const currentByStartup = new Map<string, StageRow | undefined>();
+  for (const startup of startups) {
     const stages = (stagesByStartup.get(startup.id) ?? []).sort(
       (a, b) => (a.stage_templates?.position ?? 0) - (b.stage_templates?.position ?? 0)
     );
@@ -96,10 +99,23 @@ export async function getUserStartups(
     // rozpoczęty etap. Powrót do wcześniejszego nie cofa całego programu.
     const started = stages.filter((s) => s.status === "in_progress" || s.status === "completed");
     const furthest = started.at(-1);
-    const current =
+    currentByStartup.set(
+      startup.id,
       furthest && furthest.status === "completed"
         ? (stages[stages.indexOf(furthest) + 1] ?? furthest)
-        : (furthest ?? stages.at(-1));
+        : (furthest ?? stages.at(-1))
+    );
+  }
+
+  // Postęp liczymy tylko dla bieżących etapów — tylko one są pokazywane.
+  const progressByStage = await countProgress(
+    supabase,
+    [...currentByStartup.values()].filter((stage): stage is StageRow => Boolean(stage)),
+    categoriesByStartup
+  );
+
+  return startups.map((startup) => {
+    const current = currentByStartup.get(startup.id);
 
     return {
       id: startup.id,
@@ -138,7 +154,7 @@ async function countProgress(
   stages: {
     id: string;
     startup_id: string;
-    template_id?: string;
+    template_id: string;
   }[],
   categoriesByStartup: Map<string, ValidationCategory[]>
 ) {
@@ -146,24 +162,22 @@ async function countProgress(
   if (stages.length === 0) return result;
 
   const stageIds = stages.map((s) => s.id);
+  const templateIds = [...new Set(stages.map((s) => s.template_id))];
 
-  const [{ data: progressRows }, { data: stageRows }, { data: subpointRows }] =
-    await Promise.all([
-      supabase
-        .from("stage_subpoint_progress")
-        .select("startup_stage_id, subpoint_id, is_complete")
-        .in("startup_stage_id", stageIds),
-      supabase
-        .from("startup_stages")
-        .select("id, startup_id, template_id")
-        .in("id", stageIds),
-      supabase
-        .from("stage_subpoints")
-        .select(
-          "id, shared_key, stage_points!inner(stage_categories!inner(key, template_id))"
-        )
-        .eq("is_optional", false),
-    ]);
+  const [{ data: progressRows }, { data: subpointRows }] = await Promise.all([
+    supabase
+      .from("stage_subpoint_progress")
+      .select("startup_stage_id, subpoint_id, is_complete")
+      .in("startup_stage_id", stageIds)
+      .eq("is_complete", true),
+    supabase
+      .from("stage_subpoints")
+      .select(
+        "id, shared_key, stage_points!inner(stage_categories!inner(key, template_id))"
+      )
+      .eq("is_optional", false)
+      .in("stage_points.stage_categories.template_id", templateIds),
+  ]);
 
   type SubpointRow = {
     id: string;
@@ -197,11 +211,7 @@ async function countProgress(
     completedBy.set(row.startup_stage_id, set);
   }
 
-  for (const stage of (stageRows ?? []) as {
-    id: string;
-    startup_id: string;
-    template_id: string;
-  }[]) {
+  for (const stage of stages) {
     const active = new Set(categoriesByStartup.get(stage.startup_id) ?? ["general"]);
     const subpoints = (byTemplate.get(stage.template_id) ?? []).filter((s) =>
       active.has(s.category)

@@ -2,15 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Check,
-  Eye,
-  EyeOff,
-  ImagePlus,
-  Pause,
-  Play,
-  Target,
-} from "lucide-react";
+import { ChevronDown, EyeOff, ImagePlus, Pause, Play } from "lucide-react";
 import {
   saveTeamProfile,
   setStartupStatus,
@@ -22,6 +14,8 @@ import { DeleteStartupButton } from "./delete-startup-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Field, Input, Textarea } from "@/components/ui/input";
+import { SaveBar } from "@/components/ui/save-bar";
+import { scoreTeamProfile } from "@/lib/profile-completeness";
 import { cn } from "@/lib/utils";
 import type { StartupStatus } from "@/types/startup";
 
@@ -127,7 +121,8 @@ export function TeamProfileEditor({
   const [logoError, setLogoError] = useState<string | null>(null);
   const [sideError, setSideError] = useState<string | null>(null);
 
-  const [saved, setSaved] = useState(false);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
   const [busy, startBusy] = useTransition();
 
   const dirty =
@@ -138,7 +133,7 @@ export function TeamProfileEditor({
 
   const save = () => {
     setFormError(null);
-    setSaved(false);
+    setSavedAt(null);
     startBusy(async () => {
       const result = await saveTeamProfile({
         startupId,
@@ -153,7 +148,7 @@ export function TeamProfileEditor({
         setFormError(result.error);
         return;
       }
-      setSaved(true);
+      setSavedAt(Date.now());
       router.refresh();
     });
   };
@@ -215,321 +210,367 @@ export function TeamProfileEditor({
     });
   };
 
-  return (
-    <div className="flex flex-col gap-6">
-      {/* 1. Rzecz, o którą tu chodzi — karta, którą zobaczą obcy. */}
-      <section>
-        <p className="mb-2.5 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-          Tak widzą Was w Odkrywaj
+  const readiness = scoreTeamProfile({
+    logo_url: logo,
+    public_tagline: tagline,
+    public_description: description,
+    location,
+    openRoleCount: openRoles.length,
+  });
+  const readyCount = 5 - readiness.missing.length;
+
+  const discard = () => {
+    setTagline(initialTagline);
+    setDescription(initialDescription);
+    setLocation(initialLocation);
+    setWebsite(initialWebsite);
+    setFormError(null);
+  };
+
+  const focusField = (key: string) => {
+    if (key === "avatar") {
+      fileRef.current?.click();
+      return;
+    }
+    if (key === "skills") {
+      router.push("/app/team");
+      return;
+    }
+    const id = key === "headline" ? "pole-tagline" : key === "focus" ? "pole-opis" : "pole-lokalizacja";
+    document.getElementById(id)?.focus();
+  };
+
+  const preview = (
+    <div className="flex flex-col gap-3">
+      <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+        Podgląd karty w Odkrywaj
+      </p>
+      <TeamPreviewCard
+        name={name}
+        logoUrl={logo}
+        tagline={tagline}
+        location={location}
+        memberCount={memberCount}
+        stageLabel={stagePublic ? stageLabel : null}
+        openRoles={openRoles}
+      />
+      {!discoverable ? (
+        <p className="flex items-start gap-2 rounded-xl border border-[var(--warning)]/25 bg-[var(--warning)]/8 px-4 py-3 text-[12.5px] leading-relaxed text-[var(--warning)]">
+          <EyeOff className="mt-0.5 size-4 shrink-0" />
+          <span>
+            Ta karta nie pojawia się teraz w Odkrywaj — team ma wyłączoną widoczność.
+          </span>
         </p>
+      ) : null}
+    </div>
+  );
 
-        <TeamPreviewCard
-          name={name}
-          logoUrl={logo}
-          tagline={tagline}
-          location={location}
-          memberCount={memberCount}
-          stageLabel={stagePublic ? stageLabel : null}
-          openRoles={openRoles}
-        />
-
-        {/* Logo stoi przy karcie, bo jest jej całym kadrem — nie osobną
-            sekcją dwa pudełka niżej. */}
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) upload(file);
-              event.target.value = "";
-            }}
-          />
-          <Button
-            variant="secondary"
-            size="sm"
-            loading={busy}
-            onClick={() => fileRef.current?.click()}
+  return (
+    <div className="flex flex-col gap-6 pb-4">
+      {/* Telefon: edycja i podgląd to dwie zakładki — na 390 px nie zmieszczą
+          się obok siebie, a przełącznik jest zawsze pod kciukiem. */}
+      <div
+        role="tablist"
+        aria-label="Widok"
+        className="inline-flex w-fit rounded-xl border border-white/[0.08] bg-[var(--surface)] p-1 lg:hidden"
+      >
+        {(
+          [
+            ["edit", "Edycja"],
+            ["preview", "Podgląd"],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === id}
+            onClick={() => setMobileTab(id)}
+            className={cn(
+              "inline-flex h-11 items-center rounded-lg px-4 text-[13px] font-medium",
+              mobileTab === id ? "bg-[var(--surface-3)] text-white" : "text-[var(--text-muted)]"
+            )}
           >
-            <ImagePlus className="size-4" />
-            {logo ? "Zmień logo" : "Dodaj logo"}
-          </Button>
-          <p className="text-[12.5px] text-[var(--text-subtle)]">
-            Logo wypełnia całe zdjęcie karty. JPG, PNG albo WebP, do 15 MB;
-            kwadrat wygląda najlepiej.
-          </p>
-        </div>
+            {label}
+          </button>
+        ))}
+      </div>
 
-        {logoError ? (
-          <p className="mt-2 rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-3 py-2 text-[13px] text-[var(--danger)]">
-            {logoError}
-          </p>
-        ) : null}
-
-        {!discoverable ? (
-          <p className="mt-3 flex items-start gap-2 rounded-xl border border-[var(--warning)]/25 bg-[var(--warning)]/8 px-4 py-3 text-[12.5px] leading-relaxed text-[var(--warning)]">
-            <EyeOff className="mt-0.5 size-4 shrink-0" />
-            <span>
-              Ta karta nie pojawia się teraz w Odkrywaj — team ma wyłączoną
-              widoczność. Włącz ją obok, gdy uznacie, że jest gotowa.
-            </span>
-          </p>
-        ) : null}
-      </section>
-
-      {/* 2. Co piszecie (szeroko) i kto to widzi (wąsko). */}
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,320px)] lg:items-start">
-        <Card>
-          <CardBody className="flex flex-col gap-5 pt-6">
-            <Field
-              label="Jedno zdanie o Was"
-              hint="To widać na karcie w Odkrywaj. Co robicie i dla kogo."
-              counter={{ value: tagline.length, max: 160 }}
-            >
-              {({ id }) => (
-                <Input
-                  id={id}
-                  value={tagline}
-                  onChange={(event) => setTagline(event.target.value)}
-                  maxLength={160}
-                  placeholder="np. Rezerwacje dla małych gabinetów kosmetycznych"
-                />
-              )}
-            </Field>
-
-            <Field
-              label="O projekcie"
-              hint="Dłuższy opis na stronie teamu — nie na karcie. Tyle, ile chcecie pokazać obcym."
-              counter={{ value: description.length, max: 1200 }}
-            >
-              {({ id }) => (
-                <Textarea
-                  id={id}
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  rows={6}
-                  maxLength={1200}
-                  placeholder="Nad czym pracujecie, na jakim jesteście etapie, kogo szukacie i czego oczekujecie."
-                />
-              )}
-            </Field>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Lokalizacja" hint="Miasto albo „zdalnie”.">
-                {({ id }) => (
-                  <Input
-                    id={id}
-                    value={location}
-                    onChange={(event) => setLocation(event.target.value)}
-                    maxLength={80}
-                    placeholder="np. Wrocław / zdalnie"
-                  />
-                )}
-              </Field>
-
-              <Field label="Strona" hint="Opcjonalna. Wystarczy sam adres.">
-                {({ id }) => (
-                  <Input
-                    id={id}
-                    value={website}
-                    onChange={(event) => setWebsite(event.target.value)}
-                    maxLength={200}
-                    placeholder="np. mojprojekt.pl"
-                  />
-                )}
-              </Field>
-            </div>
-
-            {formError ? (
-              <p className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-3 py-2 text-[13px] text-[var(--danger)]">
-                {formError}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] lg:items-start">
+        <div className={cn("flex flex-col gap-5", mobileTab === "preview" && "hidden lg:flex")}>
+          {/* Gotowość profilu — licznik mówi, czego brakuje, i prowadzi do pola. */}
+          <section className="rounded-[18px] border border-white/[0.07] bg-[var(--surface)] px-5 py-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="text-[15px] font-medium text-white">
+                Profil gotowy w {readiness.score}%
               </p>
-            ) : null}
-
-            <div className="flex items-center gap-3">
-              <Button onClick={save} loading={busy} disabled={!dirty}>
-                Zapisz
-              </Button>
-              {saved && !dirty ? (
-                <span className="inline-flex items-center gap-1.5 text-[13px] text-[var(--success)]">
-                  <Check className="size-4" />
-                  Zapisane
-                </span>
-              ) : null}
+              <span className="tabular text-[12.5px] text-[var(--text-subtle)]">{readyCount} z 5</span>
             </div>
-          </CardBody>
-        </Card>
-
-        <div className="flex flex-col gap-5">
-          <Card>
-            <CardBody className="flex flex-col gap-3 pt-6">
-              <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-                Kto Was widzi
-              </p>
-
-              <button
-                type="button"
-                onClick={() =>
-                  toggleVisibility({
-                    isDiscoverable: !discoverable,
-                    showStagePublicly: stagePublic,
-                  })
-                }
-                aria-pressed={discoverable}
-                disabled={busy}
-                className={cn(
-                  "flex items-start gap-3 rounded-xl border px-4 py-3.5 text-left transition-colors disabled:opacity-60",
-                  discoverable
-                    ? "border-[var(--success)]/35 bg-[var(--success)]/8"
-                    : "border-white/10 bg-[var(--surface-2)]"
-                )}
-              >
-                {discoverable ? (
-                  <Eye className="mt-0.5 size-4 shrink-0 text-[var(--success)]" />
-                ) : (
-                  <EyeOff className="mt-0.5 size-4 shrink-0 text-[var(--text-faint)]" />
-                )}
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[14px] font-medium text-white">
-                    {discoverable
-                      ? "Team jest widoczny w Odkrywaj"
-                      : "Team jest ukryty"}
-                  </span>
-                  <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-                    {discoverable
-                      ? "Ludzie mogą Was znaleźć i wysłać zgłoszenie. Pełny opis pomysłu z Idea Stage zostaje prywatny."
-                      : "Nie pojawiacie się w wyszukiwarce. Nadal możecie zapraszać ludzi sami."}
-                  </span>
-                </span>
-              </button>
-
-              {/* Etap pokazujemy dopiero po świadomym włączeniu — i pytanie
-                  o to ma sens tylko wtedy, gdy team w ogóle jest widoczny.
-
-                  Powód, dla którego to w ogóle jest wybór: etapu nikt nie
-                  pisał dla obcych. Wyliczył się z postępu zespołu, a „Idea
-                  Stage" da się przeczytać jako „dopiero zaczynają, pewnie nic
-                  z tego nie będzie" — i zespół nie ma jak tego sprostować, bo
-                  nawet nie wie, że to widać. */}
-              {discoverable && stageConsentAvailable ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    toggleVisibility({
-                      isDiscoverable: discoverable,
-                      showStagePublicly: !stagePublic,
-                    })
-                  }
-                  aria-pressed={stagePublic}
-                  disabled={busy}
+            <span className="mt-2.5 flex gap-1" aria-hidden="true">
+              {Array.from({ length: 5 }, (_, index) => (
+                <span
+                  key={index}
                   className={cn(
-                    "flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition-colors disabled:opacity-60",
-                    stagePublic
-                      ? "border-white/15 bg-[var(--surface-2)]"
-                      : "border-white/8 bg-transparent hover:border-white/15"
+                    "h-1.5 flex-1 rounded-full",
+                    index < readyCount ? "bg-[var(--success)]" : "bg-white/10"
                   )}
-                >
-                  <Target
-                    className={cn(
-                      "mt-0.5 size-4 shrink-0",
-                      stagePublic ? "text-[var(--vairo)]" : "text-[var(--text-faint)]"
-                    )}
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[13.5px] font-medium text-white">
-                      {stagePublic
-                        ? "Pokazujecie, na którym etapie jesteście"
-                        : "Etap walidacji zostaje prywatny"}
-                    </span>
-                    <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-                      {stagePublic
-                        ? "Na karcie widać nazwę etapu. Same odpowiedzi zostają w teamie."
-                        : "Nikt z zewnątrz nie widzi, jak daleko jesteście."}
-                    </span>
+                />
+              ))}
+            </span>
+            {readiness.missing.length > 0 ? (
+              <p className="mt-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
+                Brakuje:{" "}
+                {readiness.missing.map((piece, index) => (
+                  <span key={piece.key}>
+                    {index > 0 ? ", " : ""}
+                    <button
+                      type="button"
+                      onClick={() => focusField(piece.key)}
+                      className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white"
+                    >
+                      {piece.label.replace(/^(Dodaj|Napisz|Opisz) /, "").replace(/^co najmniej /, "")}
+                    </button>
                   </span>
-                </button>
-              ) : null}
-            </CardBody>
-          </Card>
+                ))}
+                .
+              </p>
+            ) : (
+              <p className="mt-3 text-[13px] text-[var(--success)]">Komplet — karta mówi wszystko, co powinna.</p>
+            )}
+          </section>
 
-          {/* Pauzę i archiwum ustawia decyzja kończąca etap — tutaj jest droga
-              powrotna, żeby „Wstrzymaj" nie było ślepą uliczką. */}
           <Card>
-            <CardBody className="pt-6">
-              <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-                Status startupu
-              </p>
-              <p className="mt-2 text-[13.5px] text-white">
-                {STATUS_COPY[status].label}
-              </p>
-              <p className="mt-0.5 text-[13px] leading-relaxed text-[var(--text-subtle)]">
-                {STATUS_COPY[status].description}
-              </p>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {status !== "active" ? (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    loading={busy}
-                    onClick={() => changeStatus("active")}
-                  >
-                    <Play className="size-4" />
-                    Wznów prace
-                  </Button>
-                ) : (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    loading={busy}
-                    onClick={() => changeStatus("paused")}
-                  >
-                    <Pause className="size-4" />
-                    Wstrzymaj
-                  </Button>
-                )}
-                {status !== "archived" && canArchive ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={busy}
-                    onClick={() => changeStatus("archived")}
-                  >
-                    Przenieś do archiwum
-                  </Button>
+            <CardBody className="flex flex-col gap-5 pt-6">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) upload(file);
+                    event.target.value = "";
+                  }}
+                />
+                <Button variant="secondary" size="sm" loading={busy} onClick={() => fileRef.current?.click()}>
+                  <ImagePlus className="size-4" />
+                  {logo ? "Zmień logo" : "Dodaj logo"}
+                </Button>
+                <p className="text-[12.5px] text-[var(--text-subtle)]">
+                  Kwadrat, JPG, PNG albo WebP do 15 MB. Bez logo karta pokazuje pierwszą literę nazwy.
+                </p>
+                {logoError ? (
+                  <p className="w-full rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-3 py-2 text-[13px] text-[var(--danger)]">
+                    {logoError}
+                  </p>
                 ) : null}
+              </div>
+
+              <Field
+                label="Jedno zdanie o Was"
+                hint="To widać na karcie w Odkrywaj. Co robicie i dla kogo."
+                counter={{ value: tagline.length, max: 160 }}
+              >
+                {({ invalid }) => (
+                  <Input
+                    id="pole-tagline"
+                    aria-invalid={invalid}
+                    value={tagline}
+                    onChange={(event) => setTagline(event.target.value)}
+                    maxLength={160}
+                    placeholder="np. Rezerwacje dla małych gabinetów kosmetycznych"
+                  />
+                )}
+              </Field>
+
+              <Field
+                label="O projekcie"
+                hint="Dłuższy opis na stronie teamu — nie na karcie. Tyle, ile chcecie pokazać obcym."
+                counter={{ value: description.length, max: 1200 }}
+              >
+                {() => (
+                  <Textarea
+                    id="pole-opis"
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    rows={6}
+                    maxLength={1200}
+                    placeholder="Nad czym pracujecie, na jakim jesteście etapie, kogo szukacie i czego oczekujecie."
+                  />
+                )}
+              </Field>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Lokalizacja" hint="Miasto albo „zdalnie”.">
+                  {() => (
+                    <Input
+                      id="pole-lokalizacja"
+                      value={location}
+                      onChange={(event) => setLocation(event.target.value)}
+                      maxLength={80}
+                      placeholder="np. Wrocław / zdalnie"
+                    />
+                  )}
+                </Field>
+
+                <Field label="Strona · opcjonalnie" hint="Wystarczy sam adres.">
+                  {({ id }) => (
+                    <Input
+                      id={id}
+                      value={website}
+                      onChange={(event) => setWebsite(event.target.value)}
+                      maxLength={200}
+                      placeholder="np. mojprojekt.pl"
+                    />
+                  )}
+                </Field>
               </div>
             </CardBody>
           </Card>
 
-          {sideError ? (
-            <p className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-3 py-2 text-[13px] text-[var(--danger)]">
-              {sideError}
+          {/* Zgody — przełączniki z jednym zdaniem skutku. Zapisują się od razu. */}
+          <section className="flex flex-col gap-2.5">
+            <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+              Kto Was widzi
             </p>
-          ) : null}
+            <Toggle
+              on={discoverable}
+              disabled={busy}
+              title="Team widoczny w Odkrywaj"
+              effect={
+                discoverable
+                  ? "Ludzie mogą Was znaleźć i wysłać zgłoszenie. Opis pomysłu z Idea Stage zostaje prywatny."
+                  : "Nie pojawiacie się w wyszukiwarce. Nadal możecie zapraszać ludzi sami."
+              }
+              onChange={() => toggleVisibility({ isDiscoverable: !discoverable, showStagePublicly: stagePublic })}
+            />
+            {discoverable && stageConsentAvailable ? (
+              <Toggle
+                on={stagePublic}
+                disabled={busy}
+                title="Pokazujcie, na którym etapie jesteście"
+                effect={
+                  stagePublic
+                    ? "Na karcie widać nazwę etapu. Same odpowiedzi zostają w teamie."
+                    : "Nikt z zewnątrz nie widzi, jak daleko jesteście."
+                }
+                onChange={() => toggleVisibility({ isDiscoverable: discoverable, showStagePublicly: !stagePublic })}
+              />
+            ) : null}
+            {sideError ? (
+              <p className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-3 py-2 text-[13px] text-[var(--danger)]">
+                {sideError}
+              </p>
+            ) : null}
+          </section>
+
+          {/* Archiwizacja i usunięcie schowane na dole — nie sąsiadują
+              z polami, które poprawia się co tydzień. */}
+          <details className="group rounded-[18px] border border-white/[0.07] bg-[var(--surface)]">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-5 text-[13.5px] font-medium text-[var(--text-muted)] hover:text-white">
+              <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+              Zaawansowane: status, archiwizacja i usunięcie teamu
+            </summary>
+            <div className="flex flex-col gap-5 border-t border-white/[0.06] px-5 py-5">
+              <div>
+                <p className="text-[13.5px] text-white">{STATUS_COPY[status].label}</p>
+                <p className="mt-0.5 text-[13px] leading-relaxed text-[var(--text-subtle)]">
+                  {STATUS_COPY[status].description}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {status !== "active" ? (
+                    <Button variant="secondary" size="sm" loading={busy} onClick={() => changeStatus("active")}>
+                      <Play className="size-4" />
+                      Wznów prace
+                    </Button>
+                  ) : (
+                    <Button variant="secondary" size="sm" loading={busy} onClick={() => changeStatus("paused")}>
+                      <Pause className="size-4" />
+                      Wstrzymaj
+                    </Button>
+                  )}
+                  {status !== "archived" && canArchive ? (
+                    <Button variant="ghost" size="sm" disabled={busy} onClick={() => changeStatus("archived")}>
+                      Przenieś do archiwum
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+              {canDelete ? (
+                <div className="rounded-xl border border-[var(--danger)]/25 p-4">
+                  <p className="text-[13.5px] font-medium text-[var(--danger-text)]">Nieodwracalne</p>
+                  <p className="mt-1 max-w-xl text-[13px] leading-relaxed text-[var(--text-muted)]">
+                    Usunięcie startupu kasuje wszystko: odpowiedzi z etapów, otwarte role,
+                    zgłoszenia i skład zespołu. Nie ma kosza ani cofnięcia.
+                  </p>
+                  <div className="mt-3">
+                    <DeleteStartupButton startupId={startupId} name={name} />
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </details>
         </div>
+
+        <aside className={cn("lg:sticky lg:top-6", mobileTab === "edit" && "hidden lg:block")}>
+          {preview}
+        </aside>
       </div>
 
-      {/* 3. Nieodwracalne osobno, na końcu i z inną ramką — żeby nie
-          sąsiadowało z przyciskami, które da się cofnąć. */}
-      {canDelete ? (
-        <Card className="border-[var(--danger)]/25">
-          <CardBody className="pt-6">
-            <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--danger)]">
-              Nieodwracalne
-            </p>
-            <p className="mt-2 max-w-xl text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-              Usunięcie startupu kasuje wszystko: odpowiedzi z etapów, otwarte
-              role, zgłoszenia i skład zespołu. Nie ma kosza ani cofnięcia.
-            </p>
-            <div className="mt-4">
-              <DeleteStartupButton startupId={startupId} name={name} />
-            </div>
-          </CardBody>
-        </Card>
-      ) : null}
+      <SaveBar
+        dirty={dirty}
+        saving={busy}
+        error={formError}
+        savedAt={savedAt}
+        onSave={save}
+        onDiscard={discard}
+      />
     </div>
+  );
+}
+
+/** Przełącznik zgody: tytuł, jedno zdanie skutku i stan, który widać kątem oka. */
+function Toggle({
+  on,
+  disabled,
+  title,
+  effect,
+  onChange,
+}: {
+  on: boolean;
+  disabled?: boolean;
+  title: string;
+  effect: string;
+  onChange: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      disabled={disabled}
+      onClick={onChange}
+      className="flex items-start gap-3.5 rounded-[18px] border border-white/[0.07] bg-[var(--surface)] px-4 py-3.5 text-left transition-colors hover:border-white/15 disabled:opacity-60"
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block text-[14px] font-medium text-white">{title}</span>
+        <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[var(--text-subtle)]">{effect}</span>
+      </span>
+      <span
+        aria-hidden="true"
+        className={cn(
+          "relative mt-0.5 inline-flex h-6 w-10 shrink-0 rounded-full transition-colors",
+          on ? "bg-[var(--success)]" : "bg-white/15"
+        )}
+      >
+        <span
+          className={cn(
+            "absolute top-0.5 size-5 rounded-full bg-white transition-transform",
+            on ? "translate-x-[18px]" : "translate-x-0.5"
+          )}
+        />
+      </span>
+    </button>
   );
 }

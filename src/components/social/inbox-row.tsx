@@ -10,6 +10,8 @@ import {
   CircleSlash,
   MessageSquare,
   UserPlus,
+  UserRound,
+  Users,
   X,
 } from "lucide-react";
 import {
@@ -40,9 +42,15 @@ import { TeamLogo } from "./team-logo";
  * wiersza na pół ekranu. Pełna treść jest na rozwinięciu.
  */
 
+/**
+ * `quiet` — akcja „Przyjmij" jest szara, nie pomarańczowa. Na liście kilku
+ * spraw pomarańcz dostaje tylko pierwsza, żeby na ekranie był jeden akcent.
+ */
 type Props =
-  | { kind: "signal"; signal: ContactSignal; conversationId?: string | null }
-  | { kind: "request"; request: JoinRequest };
+  | { kind: "signal"; signal: ContactSignal; conversationId?: string | null; quiet?: boolean }
+  | { kind: "request"; request: JoinRequest; quiet?: boolean };
+
+type AcceptVariant = "primary" | "secondary";
 
 export function InboxRow(props: Props) {
   const router = useRouter();
@@ -81,7 +89,17 @@ export function InboxRow(props: Props) {
           {view.stateIcon}
         </span>
 
-        {view.avatar}
+        {/* Znaczek rodzaju na awatarze: osoba (zaczepka) albo team (zgłoszenie,
+            zaproszenie) — żeby odróżnić sprawy bez czytania zdania. */}
+        <span className="relative shrink-0">
+          {view.avatar}
+          <span
+            className="absolute -bottom-1 -right-1 inline-flex size-5 items-center justify-center rounded-full border-2 border-[var(--surface)] bg-[var(--surface-3)] text-white"
+            aria-label={props.kind === "signal" ? "Kontakt od osoby" : "Sprawa teamu"}
+          >
+            {props.kind === "signal" ? <UserRound className="size-2.5" /> : <Users className="size-2.5" />}
+          </span>
+        </span>
 
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-baseline gap-x-1.5 text-[13.5px] leading-snug">
@@ -119,8 +137,8 @@ export function InboxRow(props: Props) {
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
-          {view.actions(run, busy)}
-          <span className="tabular hidden w-16 text-right text-[11.5px] text-[var(--text-faint)] sm:block">
+          {view.actions(run, busy, props.quiet ? "secondary" : "primary")}
+          <span className="tabular hidden w-16 text-right text-[11.5px] text-[var(--text-subtle)] sm:block">
             {formatAge(view.createdAt)}
           </span>
         </div>
@@ -144,7 +162,7 @@ type RowView = {
   message: string | null;
   note: string | null;
   createdAt: string;
-  actions: (run: Runner, busy: boolean) => React.ReactNode;
+  actions: (run: Runner, busy: boolean, accept: AcceptVariant) => React.ReactNode;
 };
 
 const ICON = {
@@ -188,12 +206,13 @@ function describeSignal({
       ? `Kontakt w imieniu teamu ${signal.contextStartupName}. Odpowiadasz zespołowi, nie osobie prywatnie.`
       : null,
     createdAt: signal.createdAt,
-    actions: (run, busy) => (
+    actions: (run, busy, accept) => (
       <>
         {signal.canRespond ? (
           <>
             <Button
               size="sm"
+              variant={accept}
               loading={busy}
               onClick={() => run(() => respondToContact(signal.id, "accept"), "Kontakt przyjęty — rozmowa otwarta")}
             >
@@ -270,12 +289,13 @@ function describeRequest({ request }: { request: JoinRequest }): RowView {
       ? "Dołączasz jako Członek: czytasz wszystko, co zespół uzupełnił. Wyższe uprawnienia nadaje później Founder albo Admin."
       : null,
     createdAt: request.createdAt,
-    actions: (run, busy) => (
+    actions: (run, busy, accept) => (
       <>
         {request.canRespond ? (
           <>
             <Button
               size="sm"
+              variant={accept}
               loading={busy}
               onClick={() => run(
                   () => respondToJoinRequest(request.id, "accept", request.direction),

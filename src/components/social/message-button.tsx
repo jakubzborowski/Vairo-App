@@ -34,6 +34,12 @@ type Props = {
   trigger?: (open: () => void) => React.ReactNode;
 };
 
+const STARTERS = [
+  "Szukamy kogoś do… ",
+  "Na Twoim profilu jest, że pracujesz nad… ",
+  "Masz chwilę na krótką rozmowę o… ",
+];
+
 /**
  * „Napisz" — pierwszy krok kontaktu w Social.
  *
@@ -205,6 +211,23 @@ export function MessageButton({
               />
             )}
           </Field>
+
+          {/* Gotowe początki — najtrudniejsze jest pierwsze zdanie. Klik
+              wstawia początek, resztę dopisuje się samemu. */}
+          {message.trim().length === 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {STARTERS.map((starter) => (
+                <button
+                  key={starter}
+                  type="button"
+                  onClick={() => setMessage(starter)}
+                  className="inline-flex min-h-9 items-center rounded-[10px] bg-[var(--surface-2)] px-3 text-[13px] text-[var(--text-muted)] lift-1 transition-colors hover:text-white"
+                >
+                  {starter}
+                </button>
+              ))}
+            </div>
+          ) : null}
 
           {error ? (
             <p className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-3 py-2 text-[13px] text-[var(--danger)]">

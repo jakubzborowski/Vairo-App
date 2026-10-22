@@ -95,6 +95,10 @@
   --warning: #e0a33a;
   --danger: #e5484d;
   --info: #5b8def;
+  /* Tekst na tle 15% tych samych kolorów. Pełne --info i --danger mają tam
+     za mały kontrast, więc plakietki statusów biorą jaśniejszy odcień. */
+  --info-text: #7ea6f3;
+  --danger-text: #ef7478;
 
   /* shadcn / baza */
   --background: #08090c;
@@ -350,6 +354,12 @@
     animation: toast-in 0.28s var(--ease-out) both;
   }
 
+  /* Panel boczny wjeżdża z tej strony, z której jest — ruch mówi, że lista
+     została na miejscu, a to jest warstwa nad nią. */
+  .drawer-in {
+    animation: drawer-in 0.24s var(--ease-out) both;
+  }
+
   /* --- Wejście ekranu ---
      Trzy warianty jednego pomysłu: rzeczy pojawiają się w tej kolejności,
      w której trzeba je przeczytać. To nie jest ozdoba — **ruch jest tu
@@ -436,6 +446,17 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    opacity: 0;
+    transform: translate3d(24px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
   }
 }
 

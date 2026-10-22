@@ -14,8 +14,13 @@ export type TeamSummary = {
   name: string;
   logoUrl: string | null;
   stageLabel?: string | null;
+  /** Klucz bieżącego etapu — pięć kresek pod nazwą teamu. */
+  stageKey?: string | null;
   progressLabel?: string | null;
 };
+
+/** Kolejność etapów jest stała (CLAUDE.md), więc pasek nie pyta bazy. */
+const STAGE_ORDER = ["ambition", "idea", "preparation", "execution", "mvp"] as const;
 
 type Props = {
   teams: TeamSummary[];
@@ -112,6 +117,7 @@ export function TeamSwitcher({ teams, activeTeamId }: Props) {
               {active.progressLabel ? ` · ${active.progressLabel}` : ""}
             </span>
           ) : null}
+          <StageTicks stageKey={active.stageKey ?? null} />
         </span>
         <ChevronsUpDown
           className="size-3.5 shrink-0 text-[var(--text-faint)]"
@@ -168,5 +174,32 @@ export function TeamSwitcher({ teams, activeTeamId }: Props) {
         </div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Gdzie w programie jest team — pięć kresek: za Wami zielone, bieżący
+ * pomarańczowy, przed Wami szare. Liczby stoją w linijce wyżej; kreski
+ * mówią to samo kątem oka, bez czytania.
+ */
+function StageTicks({ stageKey }: { stageKey: string | null }) {
+  const current = STAGE_ORDER.indexOf(stageKey as (typeof STAGE_ORDER)[number]);
+  if (current < 0) return null;
+  return (
+    <span className="mt-1.5 flex gap-1" aria-hidden="true">
+      {STAGE_ORDER.map((key, index) => (
+        <span
+          key={key}
+          className={
+            "h-[3px] flex-1 rounded-full " +
+            (index < current
+              ? "bg-[var(--success)]"
+              : index === current
+                ? "bg-[var(--vairo)]"
+                : "bg-white/14")
+          }
+        />
+      ))}
+    </span>
   );
 }

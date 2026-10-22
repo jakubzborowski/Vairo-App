@@ -140,6 +140,37 @@ with checks(nr, migracja, co, ok, napraw) as (
     and to_regclass('public.startup_documents') is not null,
     'odpal 026_execution_content_rules'),
 
+  -- --- Redesign (029–032) -----------------------------------------------------
+  -- Aplikacja działa bez 029–031 (chowa pola, których nie ma gdzie zapisać),
+  -- więc `false` tu nie psuje ekranów — tylko wyłącza nowe funkcje.
+  (45, '029', 'zadania: notatka, powód blokady, completed_at + tabela task_events',
+    exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'tasks'
+               and column_name = 'blocker_note')
+    and to_regclass('public.task_events') is not null,
+    'odpal 029_task_details (po 028)'),
+
+  (46, '030', 'foldery w Plikach: startup_file_folders + startup_files.folder_id',
+    to_regclass('public.startup_file_folders') is not null
+    and exists (select 1 from information_schema.columns
+                 where table_schema = 'public' and table_name = 'startup_files'
+                   and column_name = 'folder_id'),
+    'odpal 030_file_folders (po 029)'),
+
+  (47, '031', 'startup_documents.updated_by (kto zmieniał ostatnio)',
+    exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'startup_documents'
+               and column_name = 'updated_by'),
+    'odpal 031_document_editor (po 030)'),
+
+  -- Bez tego usunięcie konta osoby, która prowadziła cel albo zadanie
+  -- w teamie, który zostaje, wywala się na kluczu obcym w historii.
+  (48, '032', 'historia celów i zadań nie blokuje usuwania konta',
+    exists (select 1 from pg_trigger where tgname = 'goal_events_drop_missing_actor')
+    and (to_regclass('public.task_events') is null
+         or exists (select 1 from pg_trigger where tgname = 'task_events_drop_missing_actor')),
+    'odpal 032_events_actor_guard (po 031; jeśli 029 doszła później — odpal 032 jeszcze raz)'),
+
   -- --- Treść etapów ---------------------------------------------------------
   (50, '006–028', 'wszystkie 5 etapów ma opublikowaną treść',
     (select count(distinct key) = 5 from public.stage_templates

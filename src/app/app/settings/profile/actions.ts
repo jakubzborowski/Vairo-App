@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { AVATAR_MAX_BYTES, AVATAR_MAX_MB } from "@/types/profile";
+import { translateDbError } from "@/lib/db-errors";
 
 const LIMITS = {
   fullName: { min: 2, max: 120 },
@@ -47,7 +48,7 @@ async function requireUser() {
  */
 export async function saveProfile(draft: ProfileDraft): Promise<ActionResult> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const fullName = draft.fullName.trim();
   const headline = draft.headline.trim();
@@ -114,7 +115,7 @@ export async function createCustomSkill(label: string) {
   if (!slug) return { error: "Nieprawidłowa nazwa.", skill: null };
 
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany.", skill: null };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie.", skill: null };
 
   const columns = "id, slug, label, is_suggested, created_by, created_at";
 
@@ -133,13 +134,13 @@ export async function createCustomSkill(label: string) {
     .select(columns)
     .single();
 
-  if (error) return { error: error.message, skill: null };
+  if (error) return { error: translateDbError(error.message), skill: null };
   return { error: null, skill: data };
 }
 
 export async function uploadAvatar(formData: FormData) {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany.", avatarUrl: null };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie.", avatarUrl: null };
 
   const file = formData.get("avatar");
   if (!(file instanceof File) || file.size === 0) {
@@ -170,7 +171,7 @@ export async function uploadAvatar(formData: FormData) {
     .from("avatars")
     .upload(path, file, { upsert: true, contentType: file.type });
 
-  if (uploadError) return { error: uploadError.message, avatarUrl: null };
+  if (uploadError) return { error: translateDbError(uploadError.message), avatarUrl: null };
 
   const { data } = supabase.storage.from("avatars").getPublicUrl(path);
   // Cache-buster: ścieżka jest stała, więc bez niego przeglądarka pokaże stare zdjęcie.
@@ -181,7 +182,7 @@ export async function uploadAvatar(formData: FormData) {
     .update({ avatar_url: avatarUrl })
     .eq("id", user.id);
 
-  if (error) return { error: error.message, avatarUrl: null };
+  if (error) return { error: translateDbError(error.message), avatarUrl: null };
 
   revalidatePath("/app/settings/profile");
   return { error: null, avatarUrl };

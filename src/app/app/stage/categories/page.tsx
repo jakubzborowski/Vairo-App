@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { loadCategoryQuestionCounts } from "@/lib/stage";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { getActiveStartupId } from "@/lib/active-team";
@@ -19,9 +19,7 @@ export const dynamic = "force-dynamic";
  */
 export default async function StageCategoriesPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/register?next=/app/stage/categories");

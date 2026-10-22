@@ -27,7 +27,8 @@ function revalidateSocial() {
   revalidatePath("/app/social/people");
   revalidatePath("/app/social/teams");
   revalidatePath("/app/team");
-  revalidatePath("/app");
+  // Layout: lista teamów w przełączniku i liczniki w menu bocznym.
+  revalidatePath("/app", "layout");
 }
 
 function revalidateContacts() {
@@ -35,7 +36,8 @@ function revalidateContacts() {
   revalidatePath("/app/social/messages");
   revalidatePath("/app/social/people");
   revalidatePath("/app/social/teams");
-  revalidatePath("/app");
+  // Liczniki nieprzeczytanych są w menu bocznym, czyli w layoucie.
+  revalidatePath("/app", "layout");
 }
 
 /**
@@ -52,7 +54,7 @@ export async function applyToStartup(input: {
   message?: string;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const message = input.message?.trim();
   if (message && message.length > 600) {
@@ -86,7 +88,7 @@ export async function inviteToStartup(input: {
   message?: string;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const role = await getStartupRole(supabase, input.startupId, user.id);
   if (!role || !canManageTeam(role)) {
@@ -132,7 +134,7 @@ export async function respondToJoinRequest(
   direction?: "application" | "invite"
 ): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const { error } = await supabase.rpc("respond_join_request", {
     p_request_id: requestId,
@@ -171,7 +173,7 @@ export async function saveSocialPreferences(input: {
   isDiscoverable: boolean;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const lookingFor =
     input.lookingFor &&
@@ -199,7 +201,7 @@ export async function saveSocialPreferences(input: {
     })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: translateDbError(error.message) };
 
   revalidatePath("/app/social/me");
   revalidatePath("/app/settings/profile");
@@ -225,7 +227,7 @@ export async function saveSocialProfile(input: {
   isDiscoverable: boolean;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const fullName = input.fullName.trim();
   if (fullName.length < 2 || fullName.length > 120) {
@@ -315,10 +317,10 @@ export async function startContact(input: {
   contextStartupId?: string | null;
 }): Promise<Result & { conversationId?: string | null }> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   if (input.recipientId === user.id) {
-    return { error: "Nie napiszesz sam do siebie." };
+    return { error: "Nie da się napisać do siebie." };
   }
 
   const message = input.message.trim();
@@ -363,7 +365,7 @@ export async function respondToContact(
   action: "accept" | "decline" | "withdraw"
 ): Promise<Result & { conversationId?: string | null }> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const { data, error } = await supabase.rpc("respond_contact_signal", {
     p_signal_id: signalId,
@@ -384,7 +386,7 @@ export async function sendMessage(input: {
   body: string;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const body = input.body.trim();
   if (body.length < 1) return { error: "Wiadomość nie może być pusta." };
@@ -410,7 +412,7 @@ export async function markConversationRead(
   conversationId: string
 ): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const { error } = await supabase
     .from("conversation_participants")
@@ -418,7 +420,7 @@ export async function markConversationRead(
     .eq("conversation_id", conversationId)
     .eq("profile_id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: translateDbError(error.message) };
 
   revalidateContacts();
   return { error: null };
@@ -440,7 +442,7 @@ export async function passCandidate(input: {
   startupId?: string;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const hasPerson = Boolean(input.profileId);
   const hasTeam = Boolean(input.startupId);
@@ -498,7 +500,7 @@ export async function passCandidate(input: {
 /** Cofnięcie ostatniej decyzji — najczęstsza potrzeba po pomyłce w kliknięciu. */
 export async function undoLastPass(kind: "person" | "team"): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const column = kind === "person" ? "target_profile_id" : "target_startup_id";
 
@@ -519,7 +521,7 @@ export async function undoLastPass(kind: "person" | "team"): Promise<Result> {
     .eq("id", last.id)
     .eq("actor_id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: translateDbError(error.message) };
 
   revalidatePath("/app/social/people");
   revalidatePath("/app/social/teams");
@@ -529,7 +531,7 @@ export async function undoLastPass(kind: "person" | "team"): Promise<Result> {
 /** Wyczyszczenie całej listy pominiętych — „pokaż mi wszystko od nowa". */
 export async function clearPasses(kind: "person" | "team"): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const column = kind === "person" ? "target_profile_id" : "target_startup_id";
 
@@ -539,7 +541,7 @@ export async function clearPasses(kind: "person" | "team"): Promise<Result> {
     .eq("actor_id", user.id)
     .not(column, "is", null);
 
-  if (error) return { error: error.message };
+  if (error) return { error: translateDbError(error.message) };
 
   revalidatePath("/app/social/people");
   revalidatePath("/app/social/teams");

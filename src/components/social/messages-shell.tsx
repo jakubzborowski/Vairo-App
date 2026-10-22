@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { Building2, MessageSquare } from "lucide-react";
+import { MessageSquare, Search } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { ConversationSummary } from "@/types/social";
@@ -34,14 +35,41 @@ export function MessagesShell({
   const pathname = usePathname();
   const openId = pathname.split("/app/social/messages/")[1]?.split("/")[0] ?? null;
   const isThread = Boolean(openId);
+  const [query, setQuery] = useState("");
+  const needle = query.trim().toLowerCase();
+  const shown = needle
+    ? conversations.filter((conversation) =>
+        [conversation.otherName, conversation.contextStartupName, conversation.lastBody]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(needle))
+      )
+    : conversations;
+  const unread = conversations.filter((conversation) => conversation.unreadCount > 0).length;
 
   return (
     <div className="page-wide">
       <div className="grid gap-5 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] md:items-start">
         <aside className={cn("min-w-0", isThread && "hidden md:block")}>
-          <h1 className="mb-3 font-heading text-[1.35rem] font-semibold tracking-tight text-white">
+          <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
             Wiadomości
           </h1>
+          <p className="mb-3 mt-1 text-[14px] text-[var(--text-muted)]">
+            {unread > 0
+              ? `${unread} ${unread === 1 ? "nieprzeczytana rozmowa" : unread % 10 >= 2 && unread % 10 <= 4 && (unread % 100 < 12 || unread % 100 > 14) ? "nieprzeczytane rozmowy" : "nieprzeczytanych rozmów"}.`
+              : "Wszystko przeczytane."}
+          </p>
+          {conversations.length > 3 ? (
+            <label className="mb-3 flex h-10 items-center gap-2 rounded-xl border border-white/14 bg-[var(--bg)] px-3 text-[13.5px] text-[var(--text-muted)] focus-within:border-[var(--vairo)]/45">
+              <Search className="size-4 shrink-0" aria-hidden="true" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Szukaj osoby"
+                aria-label="Szukaj w rozmowach"
+                className="min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-[var(--text-subtle)]"
+              />
+            </label>
+          ) : null}
 
           {error ? (
             <p className="rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/8 px-3.5 py-3 text-[13px] text-[var(--warning)]">
@@ -57,7 +85,7 @@ export function MessagesShell({
 
           {conversations.length > 0 ? (
             <ul className="flex flex-col gap-1">
-              {conversations.map((conversation) => {
+              {shown.map((conversation) => {
                 const active = conversation.id === openId;
                 return (
                   <li key={conversation.id}>
@@ -82,11 +110,16 @@ export function MessagesShell({
                           <span className="truncate text-[14px] font-medium text-white">
                             {conversation.otherName ?? "Bez imienia"}
                           </span>
-                          <span className="tabular shrink-0 text-[11px] text-[var(--text-faint)]">
+                          <span className="tabular shrink-0 text-[11.5px] text-[var(--text-muted)]">
                             {formatWhen(conversation.lastMessageAt)}
                           </span>
                         </span>
 
+                        {conversation.contextStartupName ? (
+                          <span className="mt-0.5 block truncate text-[12px] text-[var(--text-muted)]">
+                            {conversation.contextStartupName}
+                          </span>
+                        ) : null}
                         <span
                           className={cn(
                             "mt-0.5 block truncate text-[12.5px]",
@@ -95,18 +128,18 @@ export function MessagesShell({
                               : "text-[var(--text-subtle)]"
                           )}
                         >
-                          {conversation.contextStartupName ? (
-                            <Building2 className="mr-1 inline size-3 align-[-1px] text-[var(--vairo)]" />
-                          ) : null}
                           {conversation.lastFromMe ? "Ty: " : ""}
                           {conversation.lastBody ?? "Brak wiadomości"}
                         </span>
                       </span>
 
+                      {/* Biała kropka zamiast pomarańczowego licznika —
+                          pomarańcz na tym ekranie należy do „Wyślij". */}
                       {conversation.unreadCount > 0 ? (
-                        <span className="tabular inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-[var(--vairo)] text-[11px] font-semibold text-white">
-                          {conversation.unreadCount > 9 ? "9" : conversation.unreadCount}
-                        </span>
+                        <span
+                          className="size-2 shrink-0 rounded-full bg-white"
+                          aria-label={`Nieprzeczytane: ${conversation.unreadCount}`}
+                        />
                       ) : null}
                     </Link>
                   </li>

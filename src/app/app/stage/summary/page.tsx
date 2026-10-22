@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, FileText } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { currentProgramEntry, loadStageProgram, loadStageTree } from "@/lib/stage";
@@ -29,9 +29,7 @@ export default async function StageSummaryPage({
   const { stage: requestedStage, next } = await searchParams;
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect("/register?next=/app/stage/summary");
 

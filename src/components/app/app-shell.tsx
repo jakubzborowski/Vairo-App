@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { ChevronDown, LogOut, Menu } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Bell, ChevronDown, HelpCircle, LogOut, Menu as MenuIcon, Settings } from "lucide-react";
 import { signOut } from "@/app/app/actions";
 import { Avatar } from "@/components/ui/avatar";
+import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { cn } from "@/lib/utils";
-import { footerNav, isActivePath, navGroups, type NavItem } from "./nav-config";
+import { ROLE_LABELS, type StartupRole } from "@/types/startup";
+import { isActivePath, navGroups, type NavItem } from "./nav-config";
 import { AppBackdrop } from "./app-backdrop";
 import { NavRow } from "./nav-item";
 import { TeamSwitcher, type TeamSummary } from "./team-switcher";
@@ -38,6 +40,8 @@ type AppShellProps = {
   activeTeamId: string | null;
   /** Czy w aktywnym teamie user jest Founderem albo Adminem. */
   canManageActiveTeam: boolean;
+  /** Rola w aktywnym teamie — podpis pod imieniem w stopce menu. */
+  activeRole?: StartupRole | null;
   /**
    * Liczniki przy pozycjach nawigacji. Zawsze prawdziwe dane z bazy —
    * licznik, który kłamie, jest gorszy niż brak licznika.
@@ -53,11 +57,14 @@ export function AppShell({
   teams,
   activeTeamId,
   canManageActiveTeam,
+  activeRole = null,
   badges,
   executionUnlocked = false,
   children,
 }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [signingOut, startSigningOut] = useTransition();
   const hasTeam = teams.length > 0;
   // Nagłówek grupy nosi NAZWĘ startupu, nie słowo „team".
   //
@@ -129,13 +136,25 @@ export function AppShell({
 
       <TeamSwitcher teams={teams} activeTeamId={activeTeamId} />
 
-      <nav className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Maska u dołu mówi, że menu ciągnie się dalej — przy rozwiniętym
+          Social na niższym ekranie ostatnie pozycje chowały się pod stopką
+          bez żadnego śladu. */}
+      <nav className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pb-6 [mask-image:linear-gradient(to_bottom,black_calc(100%-28px),transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {/* Wytyczne (ścieżka Joinera): ikona dashboardu zostaje widoczna
+            także bez teamu. Kliknięcie prowadzi do „Dołącz do teamu albo
+            stwórz własny startup" — nie do pustego ekranu. */}
+        {!hasTeam ? (
+          <ul className="flex flex-col gap-0.5">
+            {renderItem(navGroups[0]!.items[0]!)}
+          </ul>
+        ) : null}
+
         {navGroups.map((group) => {
           const collapsed = group.collapsible && !socialOpen;
 
           // User bez teamu ma wyłącznie warstwę Social — grupa workspace'u
           // nie jest wyszarzona, tylko w ogóle się nie pojawia.
-          if (group.id === "team" && !hasTeam) return null;
+          if ((group.id === "team" || group.id === "work") && !hasTeam) return null;
 
           return (
             <div key={group.id}>
@@ -176,31 +195,84 @@ export function AppShell({
         })}
       </nav>
 
+      {/* Stopka to OSOBA, nie lista linków. Trzy pozycje, które tu stały
+          (Powiadomienia, Jak to działa, Ustawienia), zabierały miejsce
+          menu, a używa się ich rzadko — poza dzwonkiem, który ma licznik
+          i dlatego zostaje na wierzchu. */}
       <div className="border-t border-white/[0.06] pt-3">
-        <ul className="mb-2 flex flex-col gap-0.5">
-          {footerNav.map(renderItem)}
-        </ul>
+        <div className="flex items-center gap-1">
+          <Link
+            href="/app/settings/profile"
+            className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-white/[0.05]"
+          >
+            <Avatar src={user.avatarUrl} name={user.name} size="sm" />
+            <span className="min-w-0">
+              <span className="block truncate text-[13px] font-medium text-white">
+                {user.name}
+              </span>
+              <span className="block truncate text-[11.5px] text-[var(--text-subtle)]">
+                {activeRole ? ROLE_LABELS[activeRole] : "Bez teamu"}
+              </span>
+            </span>
+          </Link>
 
-        <div className="flex items-center gap-2.5 rounded-lg px-2 py-1.5">
-          <Avatar src={user.avatarUrl} name={user.name} size="sm" />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium text-white">
-              {user.name}
-            </p>
-            <p className="truncate text-[11px] text-[var(--text-subtle)]">
-              {user.email}
-            </p>
-          </div>
-          <form action={signOut}>
-            <button
-              type="submit"
-              aria-label="Wyloguj się"
-              title="Wyloguj się"
-              className="inline-flex size-8 items-center justify-center rounded-lg text-[var(--text-faint)] transition-colors hover:bg-white/[0.06] hover:text-white"
-            >
-              <LogOut className="size-4" strokeWidth={1.75} />
-            </button>
-          </form>
+          <Link
+            href="/app/notifications"
+            aria-label={
+              badges?.notifications
+                ? `Powiadomienia, nowe: ${badges.notifications}`
+                : "Powiadomienia"
+            }
+            aria-current={isActivePath(pathname, "/app/notifications") ? "page" : undefined}
+            className={cn(
+              "relative inline-flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors sm:size-8",
+              isActivePath(pathname, "/app/notifications")
+                ? "bg-[var(--vairo)]/12 text-[var(--vairo)]"
+                : "text-[var(--text-muted)] hover:bg-white/[0.06] hover:text-white"
+            )}
+          >
+            <Bell className="size-4" strokeWidth={1.75} />
+            {badges?.notifications ? (
+              <span className="tabular absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--vairo-strong)] px-1 text-[10px] font-semibold text-white ring-2 ring-[var(--sidebar)]">
+                {badges.notifications > 9 ? "9+" : badges.notifications}
+              </span>
+            ) : null}
+          </Link>
+
+          <Menu label="Konto i pomoc">
+            {(close) => (
+              <>
+                <MenuItem
+                  icon={HelpCircle}
+                  onClick={() => {
+                    close();
+                    setMobileOpen(false);
+                    router.push("/app/program");
+                  }}
+                >
+                  Jak to działa
+                </MenuItem>
+                <MenuItem
+                  icon={Settings}
+                  onClick={() => {
+                    close();
+                    setMobileOpen(false);
+                    router.push("/app/settings/profile");
+                  }}
+                >
+                  Ustawienia
+                </MenuItem>
+                <MenuSeparator />
+                <MenuItem
+                  icon={LogOut}
+                  disabled={signingOut}
+                  onClick={() => startSigningOut(() => signOut())}
+                >
+                  {signingOut ? "Wylogowuję…" : "Wyloguj się"}
+                </MenuItem>
+              </>
+            )}
+          </Menu>
         </div>
       </div>
     </div>
@@ -243,7 +315,7 @@ export function AppShell({
             aria-label="Otwórz menu"
             className="inline-flex size-9 items-center justify-center rounded-lg border border-white/10 text-[var(--text-muted)]"
           >
-            <Menu className="size-4" />
+            <MenuIcon className="size-4" />
           </button>
           <Link href="/app" className="inline-flex items-center gap-2">
             <Image

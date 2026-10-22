@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { RotateCcw, Sparkles, Undo2, X } from "lucide-react";
+import { PartyPopper, RotateCcw, Sparkles, Undo2, X } from "lucide-react";
 import type { MatchReason } from "@/lib/match";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +33,13 @@ type Props = {
   /** Link do pełnego profilu — jedno zdanie na dole prawej kolumny. */
   footer?: React.ReactNode;
   passLabel: string;
+  /** Podpis akcji głównej do skrótu klawiszowego i gestu („Zaczep", „Zgłoś się"). */
+  primaryLabel?: string;
+  /** „osób" / „teamów" — w liczniku pod talią. */
+  unit?: string;
 };
+
+const SWIPE_RATIO = 0.5;
 
 /**
  * Karta w Odkrywaj: **duże pionowe zdjęcie po lewej, treść po prawej,
@@ -75,65 +82,198 @@ export function DeckFrame({
   extraAction,
   footer,
   passLabel,
+  primaryLabel = "Zaczep",
+  unit = "",
 }: Props) {
+  const primaryRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLElement>(null);
+  const [drag, setDrag] = useState(0);
+  const dragStart = useRef<{ x: number; y: number; id: number } | null>(null);
+
+  // Akcja główna to komponent z zewnątrz (z własnym oknem i logiką), więc
+  // skrót i gest „klikają" jej przycisk — jedna droga do tej samej akcji.
+  const firePrimary = () => {
+    const target = primaryRef.current?.querySelector<HTMLElement>("button, a");
+    target?.click();
+  };
+
+  // Skróty jak w talii: ← „Nie teraz", → akcja główna. Nie działają, gdy
+  // ktoś pisze w polu albo jest otwarte okno.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const el = event.target as HTMLElement | null;
+      if (el?.closest("input, textarea, [contenteditable], [role=dialog]")) return;
+      if (busy) return;
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        onPass();
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        firePrimary();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [busy, onPass]);
+
+  // Gest tylko na dotyku: na desktopie przeciąganie kolidowałoby z
+  // zaznaczaniem tekstu w opisie.
+  const onPointerDown = (event: React.PointerEvent) => {
+    if (event.pointerType !== "touch" || busy) return;
+    dragStart.current = { x: event.clientX, y: event.clientY, id: event.pointerId };
+  };
+  const onPointerMove = (event: React.PointerEvent) => {
+    const start = dragStart.current;
+    if (!start || start.id !== event.pointerId) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    // Ruch głównie w pionie to przewijanie strony — nie przejmujemy go.
+    if (Math.abs(dy) > Math.abs(dx) && Math.abs(drag) < 8) {
+      dragStart.current = null;
+      setDrag(0);
+      return;
+    }
+    setDrag(dx);
+  };
+  const onPointerEnd = () => {
+    const width = cardRef.current?.offsetWidth ?? 320;
+    const passed = Math.abs(drag) > width * SWIPE_RATIO * 0.6;
+    if (passed && drag > 0) firePrimary();
+    if (passed && drag < 0) onPass();
+    dragStart.current = null;
+    setDrag(0);
+  };
+
+  const intent = drag > 40 ? "primary" : drag < -40 ? "pass" : null;
+
   return (
     <div className="mx-auto flex w-full max-w-[880px] flex-col">
-      <article className="overflow-hidden rounded-[28px] border border-white/[0.08] bg-[var(--surface)] lift-3 md:grid md:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
-        {cover}
-
-        <div className="flex min-w-0 flex-col gap-4 px-5 py-5 sm:px-6 lg:max-h-[520px] lg:overflow-y-auto">
-          {/* Powód stoi na samej górze prawej kolumny: to jedno zdanie
-              decyduje, czy warto czytać resztę. */}
-          {reasons.length > 0 ? (
-            <p className="flex items-start gap-2 rounded-xl bg-[var(--vairo)]/[0.07] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-[var(--text-muted)]">
-              <Sparkles
-                className="mt-[3px] size-3.5 shrink-0 text-[var(--vairo)]"
-                aria-hidden="true"
-              />
-              <span>
-                <span className="sr-only">Dlaczego to widzisz: </span>
-                {reasons.map((reason) => reason.text).join(" · ")}
-              </span>
-            </p>
-          ) : null}
-
-          <div className="min-w-0 flex-1">{body}</div>
-
-          {footer ? (
-            <div className="text-[12.5px] text-[var(--text-faint)]">{footer}</div>
-          ) : null}
-        </div>
-      </article>
-
-      {/* Rząd akcji. „Cofnij" jest tu jednym z przycisków, nie linkiem obok —
-          to ta sama klasa decyzji co reszta i zasługuje na ten sam kształt. */}
-      {/* Na telefonie cztery przyciski po 96 px z odstępami po 20 px dają
-          444 px przy 343 px dostępnych — zawijały się do dwóch rzędów, przez
-          co „Zaproś" lądowało samo pod spodem i wyglądało na coś innego niż
-          reszta. Węższe pole podpisu i mniejszy odstęp mieszczą wszystkie
-          cztery w jednym rzędzie. */}
-      <div className="mt-5 flex flex-wrap items-start justify-center gap-3 sm:gap-7">
-        {canUndo ? (
-          <DeckAction
-            variant="quiet"
-            label="Cofnij"
-            icon={<Undo2 className="size-5" />}
-            onClick={onUndo}
-            disabled={busy}
-            title="Przywróć ostatnio pominiętą kartę"
-          />
+      {/* Krawędzie dwóch następnych kart — talia wygląda jak talia. */}
+      <div className="relative pt-4">
+        {total - position >= 2 ? (
+          <div className="absolute inset-x-10 top-0 h-10 rounded-[28px] bg-[var(--surface)] opacity-45" aria-hidden="true" />
+        ) : null}
+        {total - position >= 1 ? (
+          <div className="absolute inset-x-5 top-2 h-10 rounded-[28px] bg-[var(--surface-2)] opacity-75" aria-hidden="true" />
         ) : null}
 
-        <DeckAction
-          variant="pass"
-          label={passLabel}
-          icon={<X className="size-6" strokeWidth={2.5} />}
-          onClick={onPass}
-          disabled={busy}
-        />
+        <article
+          ref={cardRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerEnd}
+          onPointerCancel={onPointerEnd}
+          style={
+            drag
+              ? { transform: `translateX(${drag}px) rotate(${drag / 22}deg)`, transformOrigin: "50% 120%" }
+              : undefined
+          }
+          className={cn(
+            "relative touch-pan-y overflow-hidden rounded-[28px] border border-white/[0.08] bg-[var(--surface)] lift-3 md:grid md:grid-cols-[minmax(0,360px)_minmax(0,1fr)]",
+            !drag && "transition-transform duration-200"
+          )}
+        >
+          {intent ? (
+            <span
+              aria-hidden="true"
+              className={cn(
+                "pointer-events-none absolute top-10 z-10 rounded-xl border-[3px] px-3.5 py-1.5 font-heading text-[24px] font-bold uppercase tracking-wide",
+                intent === "primary"
+                  ? "left-5 -rotate-12 border-[var(--vairo)] bg-black/35 text-[var(--vairo-soft)]"
+                  : "right-5 rotate-12 border-white/70 bg-black/35 text-white"
+              )}
+            >
+              {intent === "primary" ? primaryLabel : passLabel}
+            </span>
+          ) : null}
 
-        {action}
-        {extraAction}
+          {cover}
+
+          <div className="flex min-w-0 flex-col gap-4 px-5 py-5 sm:px-6 lg:max-h-[520px] lg:overflow-y-auto">
+            {/* Powód to zdanie z ikoną — bez pomarańczowej ramki. Pomarańcz
+                na tym ekranie ma tylko akcja główna. */}
+            {reasons.length > 0 ? (
+              <p className="flex items-start gap-2.5 text-[14px] leading-relaxed text-[var(--text-muted)]">
+                <Sparkles className="mt-[3px] size-4 shrink-0 text-[var(--vairo-soft)]" aria-hidden="true" />
+                <span>
+                  <span className="sr-only">Dlaczego to widzisz: </span>
+                  {reasons.map((reason) => reason.text).join(" · ")}
+                </span>
+              </p>
+            ) : null}
+
+            <div className="min-w-0 flex-1">{body}</div>
+
+            {footer ? <div className="text-[13px] text-[var(--text-muted)]">{footer}</div> : null}
+          </div>
+        </article>
+      </div>
+
+      {/* Jeden pasek przyklejony do talii: po lewej ile zostało, w środku
+          przyciski, po prawej skróty. Przyciski stoją zawsze w tym samym
+          miejscu, pod kciukiem. */}
+      <div className="mt-3 grid items-center gap-4 rounded-[24px] bg-[var(--surface)] px-4 py-3.5 lift-1 sm:px-5 md:grid-cols-[1fr_auto_1fr]">
+        <div className="hidden flex-col gap-2 md:flex">
+          <p className="text-[13.5px] text-[var(--text-muted)]">
+            <span className="tabular font-heading text-[18px] font-semibold text-white">{position}</span> z {total}
+            {unit ? ` ${unit}` : ""}
+          </p>
+          <span className="flex w-[180px] gap-[3px]" aria-hidden="true">
+            {Array.from({ length: Math.min(total, 24) }, (_, index) => {
+              const at = total <= 24 ? index + 1 : Math.round(((index + 1) / 24) * total);
+              return (
+                <span
+                  key={index}
+                  className={cn(
+                    "h-[5px] flex-1 rounded-full",
+                    at < position ? "bg-white/70" : at === position ? "bg-white" : "bg-white/10"
+                  )}
+                />
+              );
+            })}
+          </span>
+        </div>
+
+        <div className="flex items-start justify-center gap-3 sm:gap-5">
+          {canUndo ? (
+            <DeckAction
+              variant="quiet"
+              label="Cofnij"
+              icon={<Undo2 className="size-[18px]" />}
+              onClick={onUndo}
+              disabled={busy}
+              title="Przywróć ostatnio pominiętą kartę"
+            />
+          ) : null}
+          <DeckAction
+            variant="pass"
+            label={passLabel}
+            icon={<X className="size-6" strokeWidth={2.25} />}
+            onClick={onPass}
+            disabled={busy}
+          />
+          <div ref={primaryRef} className="contents">
+            {action}
+          </div>
+          {extraAction}
+        </div>
+
+        <div className="hidden flex-col items-end gap-1.5 text-[12.5px] text-[var(--text-muted)] md:flex">
+          <p className="flex items-center gap-1.5">
+            <Kbd>←</Kbd>
+            {passLabel}
+          </p>
+          <p className="flex items-center gap-1.5">
+            <Kbd>→</Kbd>
+            {primaryLabel}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:hidden">
+        <span className="tabular text-[12.5px] text-[var(--text-subtle)]">
+          <span className="font-semibold text-white">{position}</span> z {total}
+        </span>
       </div>
 
       {error ? (
@@ -142,31 +282,51 @@ export function DeckFrame({
         </p>
       ) : null}
 
-      {/* Licznik drobnym drukiem na samym dole — informacja porządkowa ma być
-          dostępna, a nie widoczna. */}
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-        <span className="tabular inline-flex items-center gap-2 text-[12.5px] text-[var(--text-subtle)]">
-          <span className="font-semibold text-white">{position}</span>
-          <span>z {total}</span>
-          <span className="flex h-1 w-20 overflow-hidden rounded-full bg-white/8">
-            <span
-              className="h-full rounded-full bg-[var(--vairo)] transition-[width] duration-300"
-              style={{ width: `${(position / Math.max(total, 1)) * 100}%` }}
-            />
-          </span>
-        </span>
+      {passedCount > 0 ? (
+        <button
+          type="button"
+          onClick={onRestoreAll}
+          disabled={busy}
+          className="mx-auto mt-4 inline-flex min-h-11 items-center gap-1.5 text-[12.5px] text-[var(--text-subtle)] transition-colors hover:text-white"
+        >
+          <RotateCcw className="size-3.5" />
+          Przywróć pominięte ({passedCount})
+        </button>
+      ) : null}
+    </div>
+  );
+}
 
-        {passedCount > 0 ? (
-          <button
-            type="button"
-            onClick={onRestoreAll}
-            disabled={busy}
-            className="inline-flex items-center gap-1.5 text-[12.5px] text-[var(--text-subtle)] transition-colors hover:text-white"
-          >
-            <RotateCcw className="size-3.5" />
-            Przywróć pominięte ({passedCount})
-          </button>
-        ) : null}
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="inline-flex h-6 min-w-6 items-center justify-center rounded-[7px] bg-[var(--surface-3)] px-1.5 font-sans text-[12px] text-white shadow-[inset_0_1px_0_rgba(255,255,255,.08)]">
+      {children}
+    </kbd>
+  );
+}
+
+/**
+ * Koniec talii — zielone miejsce na to, co już zrobione, i dwie drogi dalej:
+ * przywrócić pominiętych albo poluzować filtry. Wzór warstwicowy tylko tutaj.
+ */
+export function DeckEnd({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="topo-brand mx-auto flex w-full max-w-[880px] items-center justify-center rounded-[28px] bg-[var(--surface)] px-4 py-12">
+      <div className="flex w-full max-w-sm flex-col items-center rounded-[22px] bg-[var(--bg)]/90 px-5 py-7 text-center">
+        <span className="inline-flex size-14 items-center justify-center rounded-[18px] bg-[var(--success)]/14 text-[var(--success)]">
+          <PartyPopper className="size-6" strokeWidth={1.75} />
+        </span>
+        <p className="mt-3.5 font-heading text-[21px] font-semibold text-white">{title}</p>
+        <p className="mt-1.5 text-[14.5px] leading-relaxed text-[var(--text-muted)]">{description}</p>
+        {children ? <div className="mt-5 flex w-full flex-col items-center gap-2.5">{children}</div> : null}
       </div>
     </div>
   );
@@ -330,7 +490,7 @@ export function DeckBlock({
 }) {
   return (
     <section className={cn("min-w-0", className)}>
-      <p className="text-[11.5px] font-medium text-[var(--text-subtle)]">{label}</p>
+      <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-[var(--text-subtle)]">{label}</p>
       <div className="mt-1.5">{children}</div>
     </section>
   );

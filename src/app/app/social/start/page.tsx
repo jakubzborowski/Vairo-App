@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { SocialProfileWizard } from "@/components/social/social-profile-wizard";
 import type { LookingFor } from "@/types/social";
 
@@ -15,9 +15,7 @@ export const dynamic = "force-dynamic";
  */
 export default async function SocialStartPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect("/register?next=/app/social/start");
 

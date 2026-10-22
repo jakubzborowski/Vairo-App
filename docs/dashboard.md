@@ -92,3 +92,10 @@ komunikatu składa [notifications.ts](../src/lib/notifications.ts), nie baza:
 zmiana brzmienia to jedna linijka, a zmiana imienia nadawcy nie zostawia
 w skrzynce starej wersji. Kolejna wiadomość w tej samej, nieprzeczytanej
 rozmowie **podmienia** wpis — jedna zmiana to jedno powiadomienie.
+
+**Kliknięcie w powiadomienie idzie przez `/app/notifications/open?id=`**
+([route.ts](../src/app/app/notifications/open/route.ts)), nie prosto pod
+`href`. Ekrany celu i zadania szukają rekordu w AKTYWNYM teamie, więc ktoś
+w dwóch teamach trafiał na 404 przy zdarzeniu z drugiego. Trasa sprawdza
+członkostwo, przełącza team, oznacza wpis jako przeczytany i dopiero
+przekierowuje — wyłącznie pod adres zaczynający się od `/app`.

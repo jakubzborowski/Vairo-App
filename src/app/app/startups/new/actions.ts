@@ -11,6 +11,7 @@ import {
   VALIDATION_CATEGORIES,
   type ValidationCategory,
 } from "@/types/startup";
+import { translateDbError } from "@/lib/db-errors";
 
 /**
  * Tworzy startup poza onboardingiem — dla Joinera, który zmienił zdanie,
@@ -22,7 +23,7 @@ export async function createStartup(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const name = String(formData.get("startup_name") ?? "").trim();
   const idea = String(formData.get("idea_description") ?? "").trim();
@@ -62,7 +63,7 @@ export async function createStartup(formData: FormData) {
         error: `Masz już ${MAX_STARTUPS} teamy — to maksimum na jedno konto. Opuść któryś, żeby założyć nowy.`,
       };
     }
-    return { error: error.message };
+    return { error: translateDbError(error.message) };
   }
 
   if (categories.length > 0) {

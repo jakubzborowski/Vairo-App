@@ -26,11 +26,13 @@ export function NavRow({ item, active, count }: Props) {
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative inline-flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2",
+        "group relative inline-flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5",
         "text-[13px] font-medium transition-colors duration-150",
+        // Spoczynek to `--text-muted`, nie `--text-subtle`: menu czyta się
+        // kilka razy dziennie, a przygaszone pozycje wyglądały na wyłączone.
         active
           ? "bg-[var(--vairo)]/12 text-[var(--vairo)]"
-          : "text-[var(--text-subtle)] hover:bg-white/[0.05] hover:text-white"
+          : "text-[var(--text-muted)] hover:bg-white/[0.05] hover:text-white"
       )}
     >
       {/* Znacznik bieżącej pozycji: **pastylka wewnątrz kafelka**, nie kreska
@@ -48,7 +50,7 @@ export function NavRow({ item, active, count }: Props) {
           wystarcza — znacznik widać kątem oka, bez czytania. */}
       {active ? (
         <span
-          className="absolute left-0.5 top-1/2 h-[18px] w-[3px] -translate-y-1/2 rounded-full bg-[var(--vairo)]"
+          className="absolute left-0.5 top-[7px] h-[18px] w-[3px] rounded-full bg-[var(--vairo)]"
           aria-hidden="true"
         />
       ) : null}

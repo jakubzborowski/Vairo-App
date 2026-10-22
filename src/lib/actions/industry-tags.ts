@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { translateDbError } from "@/lib/db-errors";
 
 /**
  * Tworzenie własnej branży. Wspólne dla onboardingu i zakładania startupu
@@ -25,7 +26,7 @@ export async function createIndustryTag(label: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Musisz być zalogowany.", tag: null };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie.", tag: null };
 
   const columns = "id, slug, label, is_suggested";
 
@@ -44,6 +45,6 @@ export async function createIndustryTag(label: string) {
     .select(columns)
     .single();
 
-  if (error) return { error: error.message, tag: null };
+  if (error) return { error: translateDbError(error.message), tag: null };
   return { error: null, tag: data };
 }

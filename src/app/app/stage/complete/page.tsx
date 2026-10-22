@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight, CheckCircle2, Flag, ListTodo, MessageCircle } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { loadOpenWork } from "@/lib/goals";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
@@ -19,9 +19,7 @@ export const dynamic = "force-dynamic";
  */
 export default async function StageCompletePage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/register?next=/app/stage/complete");
 
   const [startups, activeTeamId] = await Promise.all([

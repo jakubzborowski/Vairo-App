@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { ProfileEditor } from "@/components/app/profile-editor";
 import { SettingsTabs } from "@/components/app/settings-tabs";
 import type { Skill } from "@/types/profile";
@@ -12,9 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ProfileSettingsPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/register?next=/app/settings/profile");

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { purgeOwnAccountFiles } from "@/lib/storage-cleanup";
 import { ACTIVE_TEAM_COOKIE } from "@/lib/active-team";
+import { translateDbError } from "@/lib/db-errors";
 
 type Result = { error: string | null };
 
@@ -24,7 +25,7 @@ export async function deleteOwnAccount(confirmEmail: string): Promise<Result> {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const expected = (user.email ?? "").trim().toLowerCase();
   if (!expected) {
@@ -70,7 +71,7 @@ export async function deleteOwnAccount(confirmEmail: string): Promise<Result> {
           "Baza nie pozwala usunąć konta z aplikacji. Konto trzeba skasować w panelu: Supabase → Authentication → Users.",
       };
     }
-    return { error: error.message };
+    return { error: translateDbError(error.message) };
   }
 
   // Token jeszcze chwilę żyje, więc czyścimy sesję od razu. Bez tego user

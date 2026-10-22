@@ -1,14 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, Eye } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { getOpenRoles } from "@/lib/social";
 import { loadStageProgram } from "@/lib/stage";
 import { TeamProfileEditor } from "@/components/team/team-profile-editor";
-import { ProfileNudge } from "@/components/social/profile-nudge";
-import { scoreTeamProfile } from "@/lib/profile-completeness";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { canManageTeam, canTransferOwnership, type StartupStatus } from "@/types/startup";
@@ -18,9 +16,7 @@ export const dynamic = "force-dynamic";
 
 export default async function TeamProfilePage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect("/register?next=/app/team/profile");
 
@@ -113,7 +109,6 @@ export default async function TeamProfilePage() {
   ]);
 
   const visibleRoles = openRoles.filter((role) => role.isOpen);
-  const openRoleCount = visibleRoles.length;
 
   // Ten sam etap, który wystawia widok `public_startups`: NAJDALSZY
   // rozpoczęty, nie pierwszy otwarty. Gdyby podgląd liczył to inaczej,
@@ -121,13 +116,6 @@ export default async function TeamProfilePage() {
   const started = program.filter((entry) => entry.status !== "not_started");
   const stageLabel = started.at(-1)?.title ?? null;
 
-  const completeness = scoreTeamProfile({
-    logo_url: startup.logo_url,
-    public_tagline: startup.public_tagline,
-    public_description: startup.public_description,
-    location: startup.location,
-    openRoleCount,
-  });
 
   return (
     <div className="page-wide">
@@ -142,7 +130,7 @@ export default async function TeamProfilePage() {
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
-            Profil publiczny teamu
+            Profil publiczny
           </h1>
           <p className="mt-1 max-w-xl text-[14px] leading-relaxed text-[var(--text-subtle)]">
             Tak widzą Was ludzie, którzy szukają projektu.
@@ -150,36 +138,9 @@ export default async function TeamProfilePage() {
         </div>
         <Button href={`/app/social/teams/${active.id}`} variant="secondary" size="sm">
           <Eye className="size-4" />
-          Podgląd
+          Otwórz w Odkrywaj
         </Button>
       </header>
-
-      {/* Team widoczny, ale bez logo, opisu i otwartych ról nie daje nikomu
-          powodu, żeby się zgłosić — i nic mu tego nie mówiło. */}
-      {startup.is_discoverable ? (
-        <div className="mb-5">
-          <ProfileNudge
-            score={completeness.score}
-            missing={completeness.missing}
-            variant="panel"
-            subject="team"
-            showFix={false}
-          />
-          <p className="mt-2 px-1 text-[12.5px] text-[var(--text-subtle)]">
-            {/* „Logo, opis i lokalizację uzupełnisz poniżej" opisywało pola,
-                które są dwadzieścia pikseli niżej. Zostaje sama informacja
-                nieoczywista: gdzie są otwarte role. */}
-            Otwarte role dodajesz{" "}
-            <Link
-              href="/app/team"
-              className="text-[var(--vairo)] underline-offset-2 hover:underline"
-            >
-              na stronie teamu
-            </Link>
-            .
-          </p>
-        </div>
-      ) : null}
 
       <TeamProfileEditor
         startupId={active.id}

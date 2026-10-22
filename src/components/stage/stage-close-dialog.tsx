@@ -15,6 +15,11 @@ import {
 
 type Props = {
   tree: StageTree;
+  /**
+   * Archiwum to decyzja Foundera — Admin widzi ją wyłączoną z powodem.
+   * Domyślnie włączone: rozstrzyga i tak serwer (`closeStage`).
+   */
+  canArchive?: boolean;
   saving: boolean;
   error: string | null;
   onClose: () => void;
@@ -34,6 +39,7 @@ type Props = {
  */
 export function StageCloseDialog({
   tree,
+  canArchive = true,
   saving,
   error,
   onClose,
@@ -104,7 +110,7 @@ export function StageCloseDialog({
                     className="text-[12.5px] text-[var(--text-muted)]"
                   >
                     {item.title}
-                    <span className="text-[var(--text-faint)]"> · {item.point}</span>
+                    <span className="text-[var(--text-subtle)]"> · {item.point}</span>
                   </li>
                 ))}
               </ul>
@@ -119,7 +125,7 @@ export function StageCloseDialog({
             Przeczytaj wszystkie odpowiedzi
           </Link>
 
-          <p className="text-[12.5px] leading-relaxed text-[var(--text-faint)]">
+          <p className="text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
             Vairo nie ocenia pomysłu i nie mówi, czy jest dobry. Zapisujemy to,
             co zdecydujesz, razem ze zdjęciem Twoich odpowiedzi.
           </p>
@@ -137,14 +143,18 @@ export function StageCloseDialog({
           {STAGE_DECISIONS.map((key) => {
             const copy = STAGE_DECISION_COPY[key];
             const selected = decision === key;
+            const locked = key === "archive" && !canArchive;
             return (
               <button
                 key={key}
                 type="button"
                 onClick={() => setDecision(key)}
+                disabled={locked}
+                title={locked ? "Do archiwum może przenieść tylko Founder." : undefined}
                 aria-pressed={selected}
                 className={cn(
                   "rounded-2xl border px-5 py-4 text-left transition-colors",
+                  locked && "cursor-not-allowed opacity-50",
                   selected
                     ? "border-[var(--vairo)]/60 bg-[var(--vairo)]/8"
                     : "border-white/10 bg-[var(--surface)] hover:border-white/22"
@@ -176,7 +186,7 @@ export function StageCloseDialog({
                   </span>
                 </span>
                 <span className="mt-1.5 block pl-[26px] text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-                  {copy.description}
+                  {locked ? "Tę decyzję podejmuje Founder." : copy.description}
                 </span>
               </button>
             );
@@ -240,7 +250,7 @@ export function StageCloseDialog({
                             <span className="block text-[13.5px] leading-snug text-white">
                               {subpoint.title}
                             </span>
-                            <span className="mt-0.5 block truncate text-[12px] text-[var(--text-faint)]">
+                            <span className="mt-0.5 block truncate text-[12px] text-[var(--text-subtle)]">
                               {point.title}
                             </span>
                           </span>
@@ -261,7 +271,7 @@ export function StageCloseDialog({
     key: "note",
     title: "Zapisz to na później",
     description:
-      "Kilka zdań o tym, dlaczego tak zdecydowałeś. Za pół roku to będzie najcenniejsza notatka w całym projekcie.",
+      "Kilka zdań o tym, skąd ta decyzja. Za pół roku to będzie najcenniejsza notatka w całym projekcie.",
     optional: true,
     help:
       decision === "archive"

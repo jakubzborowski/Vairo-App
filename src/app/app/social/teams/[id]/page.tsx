@@ -8,7 +8,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getPublicStartup } from "@/lib/social";
 import { getUserStartups } from "@/lib/startup";
 import { ApplyButton } from "@/components/social/apply-button";
@@ -51,9 +51,7 @@ export default async function PublicTeamPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect(`/register?next=/app/social/teams/${id}`);
 

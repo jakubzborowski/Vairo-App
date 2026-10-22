@@ -35,7 +35,9 @@ export function Modal({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
+    // Na telefonie okno jest arkuszem od dołu — w zasięgu kciuka i bez
+    // „okna w oknie". Od `sm` wraca na środek.
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto sm:items-start sm:p-8">
       <button
         type="button"
         aria-label="Zamknij"
@@ -55,7 +57,8 @@ export function Modal({
           onClose();
         }}
         className={cn(
-          "relative my-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-white/10 bg-[var(--surface)]",
+          "relative w-full max-w-[520px] overflow-x-hidden rounded-t-[22px] border border-white/10 bg-[var(--surface)] sm:my-auto sm:rounded-2xl",
+          "max-h-[92svh] overflow-y-auto sm:max-h-none",
           "lift-3 edge-accent outline-none",
           className
         )}

@@ -8,6 +8,16 @@ import {
 import { getProfileGate, resolvePostAuthPath } from "@/lib/profile";
 import { onboardingPathForStep, type OnboardingStep } from "@/types/profile";
 
+const ONBOARDED_COOKIE = "vairo-onboarded";
+
+const onboardedCookieOptions = {
+  path: "/",
+  httpOnly: true,
+  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production",
+  maxAge: 60 * 60 * 24 * 365,
+};
+
 function isPublicAssetPath(path: string) {
   return (
     path.startsWith("/brand/") ||
@@ -93,6 +103,14 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  // Onboarding się nie cofa, więc raz potwierdzony nie wymaga pytania bazy
+  // przy każdym żądaniu. Ciasteczko jest przypięte do id z JWT — inne konto
+  // w tej samej przeglądarce przejdzie normalne sprawdzenie. To tylko bramka
+  // UX: każda strona i tak weryfikuje sesję, a RLS dane.
+  if (isApp && userId && request.cookies.get(ONBOARDED_COOKIE)?.value === userId) {
+    return supabaseResponse;
+  }
+
   if (isAuthenticated && userId && (isAuthPage || isProtected)) {
     const profile = await getProfileGate(supabase, userId);
     const postAuthPath = resolvePostAuthPath(
@@ -122,7 +140,13 @@ export async function updateSession(request: NextRequest) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/app";
       redirectUrl.search = "";
-      return NextResponse.redirect(redirectUrl);
+      const redirect = NextResponse.redirect(redirectUrl);
+      redirect.cookies.set(ONBOARDED_COOKIE, userId, onboardedCookieOptions);
+      return redirect;
+    }
+
+    if (isApp && isComplete) {
+      supabaseResponse.cookies.set(ONBOARDED_COOKIE, userId, onboardedCookieOptions);
     }
   }
 

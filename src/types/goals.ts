@@ -18,7 +18,7 @@ export const GOAL_STATUS_LABELS: Record<GoalStatus, string> = {
   todo: "Do zrobienia",
   in_progress: "W trakcie",
   blocked: "Zablokowany",
-  awaiting_proof: "Czeka na proof",
+  awaiting_proof: "Czeka na dowód",
   completed: "Ukończony",
 };
 
@@ -29,7 +29,7 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   todo: "Do zrobienia",
   in_progress: "W trakcie",
-  blocked: "Zablokowany",
+  blocked: "Zablokowane",
   done: "Zrobione",
 };
 
@@ -98,7 +98,7 @@ export type ProofSnapshot = {
 };
 
 export type ProofDraft =
-  | { kind: "sentence" | "long_text"; text: string }
+  | { kind: "sentence" | "long_text"; text: string; /** Tekst wzięty z Dokumentów. */ docId?: string }
   | { kind: "select"; option: string }
   | { kind: "scale"; scale: number }
   | { kind: "link"; url: string; note: string }
@@ -126,6 +126,20 @@ export type GoalTask = {
   status: TaskStatus;
   dueDate: string | null;
   needsReassign: boolean;
+  createdBy: string | null;
+  createdAt: string;
+  /** Z migracją 029. `undefined` = kolumny nie ma w bazie. */
+  note?: string | null;
+  blockerNote?: string | null;
+  completedAt?: string | null;
+};
+
+export type TaskEvent = {
+  id: string;
+  kind: "created" | "status" | "owner" | "deadline";
+  createdAt: string;
+  actorName: string | null;
+  payload: Record<string, unknown>;
 };
 
 export type GoalMaterial = {
@@ -189,6 +203,19 @@ export type MilestoneCondition = {
   minCount: number;
   done: number;
   proofKind: ProofKind | null;
+  /** Etap, do którego należy warunek — lista celów pokazuje bieżący. */
+  stageTitle: string;
+  /** Klucz szablonu etapu — do linku „wróć do podpunktu". */
+  stageKey: string | null;
+  stagePosition: number;
+  /** Kolejność w treści etapu (kategoria → punkt → podpunkt). */
+  order: number;
+  /** Cele podpięte pod warunek, także te, które jeszcze się nie liczą. */
+  linkedGoalIds: string[];
+  /** Warunek przyjmuje cel dowolnego typu (026). */
+  matchAnyType: boolean;
+  /** „defined" — cel liczy się już po ustawieniu, bez dowodu (026). */
+  countsWhen: "completed" | "defined";
 };
 
 export type SubpointGoalCondition = {

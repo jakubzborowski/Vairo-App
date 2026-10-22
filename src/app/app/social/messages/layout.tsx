@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { loadConversations } from "@/lib/messages";
 import { MessagesShell } from "@/components/social/messages-shell";
 
@@ -18,9 +18,7 @@ export default async function MessagesLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect("/register?next=/app/social/messages");
 

@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { loadGoalsWorkspace } from "@/lib/goals";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { TasksView } from "@/components/goals/tasks-view";
+import { GoalsUnavailable } from "@/components/goals/goals-unavailable";
 
 export const metadata = { title: "Taski — Vairo" };
 export const dynamic = "force-dynamic";
@@ -15,9 +16,7 @@ export default async function TasksPage({
 }) {
   const { task } = await searchParams;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/register?next=/app/tasks");
 
   const [startups, activeTeamId] = await Promise.all([
@@ -29,16 +28,7 @@ export default async function TasksPage({
 
   const workspace = await loadGoalsWorkspace(supabase, active.id);
   if (!workspace.ready || workspace.loadError) {
-    return (
-      <div className="mx-auto w-full max-w-xl">
-        <h1 className="font-heading text-[1.6rem] font-semibold text-white">Taski</h1>
-        <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-muted)]">
-          {workspace.ready
-            ? "Nie udało się wczytać zadań. Odśwież stronę."
-            : "Brakuje migracji 025. Odpal ją w Supabase → SQL Editor."}
-        </p>
-      </div>
-    );
+    return <GoalsUnavailable missingMigration={!workspace.ready} title="Taski" href="/app/tasks" />;
   }
 
   return (

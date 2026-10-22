@@ -29,11 +29,24 @@ export function Badge({
   );
 }
 
-/** Licznik przy pozycji nawigacji. Powyżej 9 pokazuje 9+. */
-export function CountBadge({ count }: { count: number }) {
+/**
+ * Licznik przy pozycji nawigacji. Powyżej 9 pokazuje 9+.
+ *
+ * Neutralny, nie pomarańczowy: w menu stoją naraz dwa–trzy liczniki, a każdy
+ * w kolorze marki odbierał akcentowi znaczenie „tu patrz". Pomarańcz dostaje
+ * tylko dzwonek w stopce (`tone="brand"`) — jedno miejsce na całe menu.
+ */
+export function CountBadge({ count, tone = "neutral" }: { count: number; tone?: "neutral" | "brand" }) {
   if (count <= 0) return null;
   return (
-    <span className="tabular ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--vairo)] px-1.5 text-[11px] font-semibold text-white">
+    <span
+      className={cn(
+        "tabular ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
+        tone === "brand"
+          ? "bg-[var(--vairo-strong)] text-white"
+          : "bg-[var(--surface-3)] text-[var(--text-muted)]"
+      )}
+    >
       {count > 9 ? "9+" : count}
     </span>
   );

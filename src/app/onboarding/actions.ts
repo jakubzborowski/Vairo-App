@@ -11,6 +11,7 @@ import {
   type ValidationCategory,
 } from "@/types/startup";
 import type { OnboardingPath } from "@/types/profile";
+import { translateDbError } from "@/lib/db-errors";
 
 const DEFAULT_PROJECT_NAME = "Mój pierwszy projekt";
 
@@ -41,7 +42,7 @@ export async function chooseOnboardingPath(path: OnboardingPath) {
     .update({ onboarding_path: path, onboarding_step: "name" })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: translateDbError(error.message) };
 
   redirect("/onboarding/name");
 }
@@ -78,7 +79,7 @@ export async function saveOnboardingName(formData: FormData) {
     })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: translateDbError(error.message) };
 
   if (path === "founder_idea") {
     redirect("/onboarding/idea");
@@ -124,7 +125,7 @@ export async function saveOnboardingIdea(formData: FormData) {
       .from("startups")
       .update({ name, idea_description: idea })
       .eq("id", existing);
-    if (error) return { error: error.message };
+    if (error) return { error: translateDbError(error.message) };
   } else {
     const result = await createStartupForUser(supabase, user.id, {
       name,
@@ -139,7 +140,7 @@ export async function saveOnboardingIdea(formData: FormData) {
     .update({ idea_description: idea, onboarding_step: "categories" })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: translateDbError(error.message) };
 
   redirect("/onboarding/categories");
 }
@@ -176,7 +177,7 @@ export async function completeOnboardingWithStartup(formData: FormData) {
     const { error } = await supabase
       .from("startup_categories")
       .insert(categories.map((category) => ({ startup_id: startupId, category })));
-    if (error) return { error: error.message };
+    if (error) return { error: translateDbError(error.message) };
   }
 
   await supabase.from("startup_tags").delete().eq("startup_id", startupId);
@@ -197,7 +198,7 @@ export async function completeOnboardingWithStartup(formData: FormData) {
     })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: translateDbError(error.message) };
 
   redirect("/app/stage");
 }
@@ -250,7 +251,7 @@ async function createStartupForUser(
     if (isStartupLimitError(error.message)) {
       return { error: "Masz już 3 teamy — to maksimum na jedno konto." };
     }
-    return { error: error.message };
+    return { error: translateDbError(error.message) };
   }
 
   const extraCategories = (input.categories ?? []).filter((c) => c !== "general");

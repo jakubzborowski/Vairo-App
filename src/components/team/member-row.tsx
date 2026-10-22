@@ -43,6 +43,8 @@ type Props = {
   viewerRole: StartupRole;
   /** Liczba Founderów — ostatniego nie da się zdegradować ani usunąć. */
   founderCount: number;
+  /** Otwarta praca tej osoby (wytyczne, sekcja 7). `null` = bez trackera. */
+  work?: { goals: number; tasks: number } | null;
 };
 
 /**
@@ -59,6 +61,7 @@ export function MemberRow({
   viewerId,
   viewerRole,
   founderCount,
+  work = null,
 }: Props) {
   const router = useRouter();
   const [editingTitle, setEditingTitle] = useState(false);
@@ -176,13 +179,20 @@ export function MemberRow({
           )}
 
           {member.headline ? (
-            <p className="mt-1 text-[12.5px] text-[var(--text-faint)]">
+            <p className="mt-1 text-[12.5px] text-[var(--text-subtle)]">
               {member.headline}
             </p>
           ) : null}
           {member.email ? (
-            <p className="mt-0.5 text-[12px] text-[var(--text-faint)]">
+            <p className="mt-0.5 text-[12px] text-[var(--text-subtle)]">
               {member.email}
+            </p>
+          ) : null}
+          {work ? (
+            <p className="mt-1.5 text-[12.5px] text-[var(--text-muted)]">
+              {work.goals === 0 && work.tasks === 0
+                ? "Nie prowadzi teraz otwartych celów ani zadań."
+                : `Prowadzi: ${work.goals} ${work.goals === 1 ? "cel" : work.goals % 10 >= 2 && work.goals % 10 <= 4 && (work.goals % 100 < 12 || work.goals % 100 > 14) ? "cele" : "celów"} · ${work.tasks} ${work.tasks === 1 ? "zadanie" : work.tasks % 10 >= 2 && work.tasks % 10 <= 4 && (work.tasks % 100 < 12 || work.tasks % 100 > 14) ? "zadania" : "zadań"}`}
             </p>
           ) : null}
 

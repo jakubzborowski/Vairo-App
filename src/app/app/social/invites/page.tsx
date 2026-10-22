@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Compass, Inbox } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getUserStartups } from "@/lib/startup";
 import { loadJoinRequests } from "@/lib/social";
 import { loadContactSignals, loadConversationPartners } from "@/lib/messages";
@@ -40,9 +40,7 @@ export default async function InvitesPage({
   const params = await searchParams;
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect("/register?next=/app/social/invites");
 
@@ -150,14 +148,15 @@ export default async function InvitesPage({
             </p>
           ) : (
             <ul className="divide-y divide-white/[0.06]">
-              {rows.map((item) =>
+              {rows.map((item, index) =>
                 isRequest(item) ? (
-                  <InboxRow key={item.id} kind="request" request={item} />
+                  <InboxRow key={item.id} kind="request" request={item} quiet={index > 0} />
                 ) : (
                   <InboxRow
                     key={item.id}
                     kind="signal"
                     signal={item}
+                    quiet={index > 0}
                     conversationId={conversationByProfile[item.otherId] ?? null}
                   />
                 )
@@ -207,7 +206,7 @@ function Count({ value, highlight }: { value: number; highlight?: boolean }) {
       className={cn(
         "tabular inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
         highlight
-          ? "bg-[var(--vairo)] text-white"
+          ? "bg-white text-[var(--bg)]"
           : "bg-white/10 text-[var(--text-muted)]"
       )}
     >

@@ -24,7 +24,7 @@ export async function switchTeam(startupId: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const { data: membership } = await supabase
     .from("startup_members")

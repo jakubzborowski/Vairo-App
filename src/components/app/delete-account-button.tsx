@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { deleteOwnAccount } from "@/app/app/settings/account/actions";
@@ -47,9 +48,13 @@ export function DeleteAccountButton({ email, soleFounderOf, teamCount }: Props) 
 
   return (
     <>
-      <Button variant="danger" size="sm" onClick={() => setOpen(true)}>
-        <Trash2 className="size-4" />
-        Usuń konto
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => setOpen(true)}
+        className="text-[var(--danger-text)] hover:text-[var(--danger-text)]"
+      >
+        Usuń konto…
       </Button>
 
       {open ? (
@@ -59,6 +64,11 @@ export function DeleteAccountButton({ email, soleFounderOf, teamCount }: Props) 
           onClose={() => setOpen(false)}
           footer={
             <>
+              {!matches ? (
+                <p className="mr-auto text-[12.5px] text-[var(--text-subtle)]">
+                  {typed.length === 0 ? "Najpierw wpisz swój adres." : "Adres jeszcze się nie zgadza."}
+                </p>
+              ) : null}
               <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>
                 Anuluj
               </Button>
@@ -69,7 +79,7 @@ export function DeleteAccountButton({ email, soleFounderOf, teamCount }: Props) 
                 onClick={confirm}
               >
                 <Trash2 className="size-4" />
-                Usuwam konto
+                {soleFounderOf.length === 1 ? `Usuń konto i ${soleFounderOf[0]}` : "Usuń konto"}
               </Button>
             </>
           }
@@ -103,7 +113,10 @@ export function DeleteAccountButton({ email, soleFounderOf, teamCount }: Props) 
             <p className="rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/8 px-4 py-3 text-[12.5px] leading-relaxed text-[var(--warning)]">
               Jeśli ten projekt ma żyć dalej, najpierw przekaż komuś rolę
               Foundera w składzie teamu. Wtedy startup zostanie, a Ty tylko
-              z niego wyjdziesz.
+              z niego wyjdziesz.{" "}
+              <Link href="/app/team" className="font-medium text-white underline underline-offset-4">
+                Przekaż rolę Foundera w Team
+              </Link>
             </p>
           ) : null}
 

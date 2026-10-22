@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Clock, MapPin, UserRound, Users } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getPublicProfile } from "@/lib/social";
 import { getUserStartups } from "@/lib/startup";
 import { loadConversationPartners } from "@/lib/messages";
@@ -42,9 +42,7 @@ export default async function PublicProfilePage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect(`/register?next=/app/social/people/${id}`);
   if (id === user.id) redirect("/app/social/me");

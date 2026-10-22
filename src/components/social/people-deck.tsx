@@ -12,7 +12,7 @@ import { Pill } from "@/components/ui/pill";
 import { reasonsForPerson, type MatchContext } from "@/lib/match";
 import { MAX_STARTUPS } from "@/types/startup";
 import { LOOKING_FOR_LABELS, type PublicProfile } from "@/types/social";
-import { DeckAction, DeckBlock, DeckFrame } from "./deck-frame";
+import { DeckAction, DeckBlock, DeckEnd, DeckFrame } from "./deck-frame";
 import { MessageButton, type ContactContext } from "./message-button";
 import { PersonCover } from "./person-cover";
 import { InviteButton, type InvitableTeam } from "./invite-button";
@@ -98,6 +98,29 @@ export function PeopleDeck({
     });
   };
 
+  if (!person && people.length > 0) {
+    const passed = passedCount + deck.passedHere;
+    return (
+      <DeckEnd
+        title="To już wszyscy na dziś"
+        description={`${
+          deck.sentHere > 0
+            ? `Wysłane wiadomości: ${deck.sentHere}. Odpowiedzi znajdziesz w Zaproszeniach. `
+            : ""
+        }Nowe profile pojawią się, gdy ktoś dołączy do Vairo.`}
+      >
+        {passed > 0 ? (
+          <Button variant="secondary" block size="lg" loading={busy} onClick={restoreAll}>
+            Przywróć pominiętych ({passed})
+          </Button>
+        ) : null}
+        <Button href={resetHref} variant="ghost">
+          Poluzuj filtry
+        </Button>
+      </DeckEnd>
+    );
+  }
+
   if (!person) {
     return (
       <EmptyState
@@ -143,6 +166,8 @@ export function PeopleDeck({
       onUndo={undo}
       onRestoreAll={restoreAll}
       passLabel="Nie teraz"
+      primaryLabel={conversationByProfile[person.id] ? "Otwórz rozmowę" : "Napisz"}
+      unit="osób"
       cover={<PersonCover person={person} facts={false} />}
       reasons={reasonsForPerson(person, matchContext)}
       // „Napisz" jest akcją główną dla KAŻDEGO — także dla kogoś bez teamu.

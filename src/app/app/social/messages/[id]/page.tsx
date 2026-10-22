@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Building2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { loadConversation } from "@/lib/messages";
 import { MessageThread } from "@/components/social/message-thread";
 import { Avatar } from "@/components/ui/avatar";
@@ -17,9 +17,7 @@ export default async function ConversationPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect(`/register?next=/app/social/messages/${id}`);
 
@@ -60,13 +58,30 @@ export default async function ConversationPage({
               {conversation.other.headline}
             </p>
           ) : null}
+          {/* Skąd ta rozmowa — rozmowa powstaje dopiero po przyjęciu zaczepki,
+              więc pierwsza wiadomość to dzień, w którym się zaczęła. */}
+          {conversation.messages[0] ? (
+            <p className="mt-0.5 text-[12.5px] text-[var(--text-subtle)]">
+              Rozmowa od{" "}
+              {new Date(conversation.messages[0].createdAt).toLocaleDateString("pl-PL", {
+                day: "numeric",
+                month: "long",
+              })}
+            </p>
+          ) : null}
           {conversation.contextStartupName ? (
-            <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-md bg-[var(--vairo)]/12 px-2 py-0.5 text-[12px] text-[var(--vairo)]">
-              <Building2 className="size-3" />
+            <p className="mt-1 inline-flex items-center gap-1.5 text-[12.5px] text-[var(--text-muted)]">
+              <Building2 className="size-3.5" />
               Rozmowa w sprawie {conversation.contextStartupName}
             </p>
           ) : null}
         </div>
+        <Link
+          href={`/app/social/people/${conversation.other.id}`}
+          className="hidden h-9 shrink-0 items-center rounded-xl bg-[var(--surface-2)] px-3 text-[13px] text-[var(--text-muted)] transition-colors hover:text-white sm:inline-flex"
+        >
+          Zobacz profil
+        </Link>
       </header>
 
       <MessageThread

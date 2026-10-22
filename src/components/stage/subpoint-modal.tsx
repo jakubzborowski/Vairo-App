@@ -224,7 +224,7 @@ export function SubpointModal({
                   Otwórz powiązane cele
                 </Button>
                 <Button
-                  href={`/app/goals?condition=${subpoint.goalConditions[0]?.id ?? ""}&new=1`}
+                  href={`/app/goals/new?condition=${subpoint.goalConditions[0]?.id ?? ""}`}
                   size="sm"
                 >
                   Dodaj cel

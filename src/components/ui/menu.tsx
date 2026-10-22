@@ -61,10 +61,20 @@ export function Menu({
   label = "Więcej",
   children,
   align = "right",
+  trigger,
+  triggerClassName,
+  disabled,
 }: {
   label?: string;
   children: (close: () => void) => React.ReactNode;
   align?: "left" | "right";
+  /**
+   * Własna zawartość wyzwalacza — np. plakietka statusu ze strzałką.
+   * Bez niej wyzwalaczem jest ⋮.
+   */
+  trigger?: React.ReactNode;
+  triggerClassName?: string;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState<Coords | null>(null);
@@ -142,14 +152,20 @@ export function Menu({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={label}
+        disabled={disabled}
         className={cn(
-          "inline-flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors sm:size-8",
-          open
-            ? "bg-white/10 text-white"
-            : "text-[var(--text-subtle)] hover:bg-white/[0.06] hover:text-white"
+          trigger
+            ? "inline-flex shrink-0 items-center rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--vairo)] disabled:cursor-not-allowed disabled:opacity-60"
+            : cn(
+                "inline-flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors sm:size-8",
+                open
+                  ? "bg-white/10 text-white"
+                  : "text-[var(--text-subtle)] hover:bg-white/[0.06] hover:text-white"
+              ),
+          triggerClassName
         )}
       >
-        <MoreVertical className="size-4" />
+        {trigger ?? <MoreVertical className="size-4" />}
       </button>
 
       {open && typeof document !== "undefined"
@@ -186,6 +202,7 @@ export function MenuItem({
   tone = "default",
   disabled,
   title,
+  hint,
 }: {
   onClick: () => void;
   icon?: React.ComponentType<{ className?: string }>;
@@ -193,6 +210,8 @@ export function MenuItem({
   tone?: "default" | "danger";
   disabled?: boolean;
   title?: string;
+  /** Jedno zdanie skutku albo powodu wyłączenia — widać je bez najeżdżania. */
+  hint?: string;
 }) {
   return (
     <button
@@ -210,8 +229,17 @@ export function MenuItem({
             : "text-[var(--text-muted)] hover:bg-white/[0.06] hover:text-white"
       )}
     >
-      {Icon ? <Icon className="size-4 shrink-0" /> : null}
-      {children}
+      {Icon ? <Icon className={cn("size-4 shrink-0", hint && "mt-0.5 self-start")} /> : null}
+      {hint ? (
+        <span className="flex min-w-0 flex-col">
+          <span>{children}</span>
+          <span className="mt-0.5 max-w-[260px] text-[12px] leading-snug text-[var(--text-subtle)]">
+            {hint}
+          </span>
+        </span>
+      ) : (
+        children
+      )}
     </button>
   );
 }

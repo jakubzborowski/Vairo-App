@@ -1,662 +1,657 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { MenuSelect } from "@/components/ui/menu-select";
+import {
+  ArrowLeft,
+  Check,
+  History,
+  Lock,
+  MousePointerClick,
+  Plus,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import { completeGoal } from "@/app/app/goals/actions";
 import {
+  deleteWorkflow,
   saveWorkflow,
   type RozpiskaEdge,
   type RozpiskaNode,
 } from "@/app/app/workflows/actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
+import { MenuSelect } from "@/components/ui/menu-select";
+import { Modal } from "@/components/ui/modal";
+import { useToast } from "@/components/ui/toast";
+import { formatMoment } from "@/components/goals/goal-format";
+import { cn } from "@/lib/utils";
+import { orderedSteps, type RozpiskaRecord, type RozpiskaVersion } from "@/lib/workflows";
 import type { GoalItem } from "@/types/goals";
+import { RozpiskaBoard } from "./rozpiska-board";
 
-const fieldClass =
-  "h-10 w-full rounded-xl border border-white/10 bg-[var(--surface-2)] px-3 text-[14px] text-white outline-none focus:border-[var(--vairo)]/70";
-
-export type RozpiskaRecord = {
-  id: string;
+type Draft = {
   title: string;
-  goalId: string | null;
-  version: number;
+  goalId: string;
   nodes: RozpiskaNode[];
   edges: RozpiskaEdge[];
 };
 
-export type RozpiskaVersion = {
-  workflowId: string;
-  version: number;
-  title: string;
-  nodes: RozpiskaNode[];
-  edges: RozpiskaEdge[];
-  createdAt: string;
-};
-
-function formatSaved(iso: string) {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("pl", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+function snapshotOf(draft: Draft) {
+  return JSON.stringify(draft);
 }
 
+/**
+ * Płótno jednej Rozpiski — na całą szerokość, z cienkim paskiem na górze.
+ *
+ * Pasek czyta się od lewej: wróć → co to → dla jakiego celu → stan → zapisz.
+ * Zapis jest jeden: „Zapisz wersję". Ciepła karta pojawia się tylko wtedy,
+ * gdy podpięty cel oczekuje właśnie Rozpiski — wtedy „Użyj jako dowód" staje
+ * się akcją główną ekranu. W innym wypadku ta akcja mieszka w menu wersji,
+ * wyłączona i z powodem napisanym wprost.
+ */
 export function RozpiskaEditor({
   startupId,
-  diagrams,
+  record,
   versions,
   goals,
-  initialId,
+  canDelete = false,
 }: {
   startupId: string;
-  diagrams: RozpiskaRecord[];
+  record: RozpiskaRecord | null;
   versions: RozpiskaVersion[];
   goals: GoalItem[];
-  initialId: string | null;
+  /** Autor, Founder albo Admin. */
+  canDelete?: boolean;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [pending, start] = useTransition();
+  const isNew = !record;
+
+  const initial: Draft = useMemo(
+    () =>
+      record
+        ? { title: record.title, goalId: record.goalId ?? "", nodes: record.nodes, edges: record.edges }
+        : {
+            title: "Nowa rozpiska",
+            goalId: "",
+            nodes: [{ id: crypto.randomUUID(), x: 48, y: 48, label: "" }],
+            edges: [],
+          },
+    [record]
+  );
+  const [draft, setDraft] = useState<Draft>(initial);
+  const [baseline, setBaseline] = useState(() => snapshotOf(initial));
+  const [viewingVersion, setViewingVersion] = useState<number | null>(null);
+  const [showCanvasOnPhone, setShowCanvasOnPhone] = useState(false);
+  const [starterClosed, setStarterClosed] = useState(!isNew);
   const [error, setError] = useState<string | null>(null);
-  const current = diagrams.find((item) => item.id === initialId) ?? diagrams[0] ?? null;
-  const [id, setId] = useState<string | null>(current?.id ?? null);
-  const [title, setTitle] = useState(current?.title ?? "Pierwsza rozpiska");
-  const [goalId, setGoalId] = useState(current?.goalId ?? "");
-  const [nodes, setNodes] = useState<RozpiskaNode[]>(current?.nodes ?? []);
-  const [edges, setEdges] = useState<RozpiskaEdge[]>(current?.edges ?? []);
-  const [version, setVersion] = useState(current?.version ?? 1);
-  const [pinnedVersion, setPinnedVersion] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  const open = (record: RozpiskaRecord) => {
-    setId(record.id);
-    setTitle(record.title);
-    setGoalId(record.goalId ?? "");
-    setNodes(record.nodes);
-    setEdges(record.edges);
-    setVersion(record.version);
-    setPinnedVersion(null);
-    setError(null);
-  };
+  // Po zapisie serwer odsyła nowy `record` — wtedy to jest nowy punkt odniesienia.
+  const [seenRecord, setSeenRecord] = useState(record);
+  if (seenRecord !== record) {
+    setSeenRecord(record);
+    setDraft(initial);
+    setBaseline(snapshotOf(initial));
+    setViewingVersion(null);
+  }
 
-  const fresh = () => {
-    setId(null);
-    setTitle("Nowa rozpiska");
-    setGoalId("");
-    setNodes([{ id: crypto.randomUUID(), x: 32, y: 32, label: "Start" }]);
-    setEdges([]);
-    setVersion(1);
-    setPinnedVersion(null);
-  };
+  const dirty = snapshotOf(draft) !== baseline;
+  const changes = dirty ? countChanges(JSON.parse(baseline) as Draft, draft) : 0;
+  const goal = goals.find((item) => item.id === draft.goalId) ?? null;
+  const goalAwaits = Boolean(
+    goal &&
+      goal.proofRequirement.kind === "module_result" &&
+      goal.status !== "completed" &&
+      !goal.archivedAt
+  );
+  const proofBlockedReason = !goal
+    ? "Wybierz cel, który oczekuje Rozpiski jako dowodu."
+    : goal.status === "completed"
+      ? "Ten cel jest już ukończony."
+      : goal.proofRequirement.kind !== "module_result"
+        ? "Ten cel oczekuje innego dowodu. Zmienisz to w szczególe celu."
+        : null;
 
-  const showSnapshot = (record: RozpiskaRecord, snapshot: RozpiskaVersion) => {
-    setId(record.id);
-    setGoalId(record.goalId ?? "");
-    setTitle(snapshot.title);
-    setNodes(snapshot.nodes);
-    setEdges(snapshot.edges);
-    setVersion(snapshot.version);
-    setPinnedVersion(snapshot.version === record.version ? null : snapshot.version);
-    setError(null);
-  };
+  const set = (patch: Partial<Draft>) => setDraft((current) => ({ ...current, ...patch }));
 
-  const save = () => {
+  const persist = (then?: (id: string) => Promise<string | null> | void) => {
     setError(null);
     start(async () => {
       const result = await saveWorkflow({
         startupId,
-        id,
-        title,
-        goalId: goalId || null,
-        nodes,
-        edges,
+        id: record?.id ?? null,
+        title: draft.title,
+        goalId: draft.goalId || null,
+        nodes: draft.nodes,
+        edges: draft.edges,
       });
-      if (result.error) {
-        setError(result.error);
+      if (result.error || !result.id) {
+        setError(result.error ?? "Nie udało się zapisać.");
+        toast({ tone: "error", title: "Nie udało się zapisać wersji", description: result.error ?? undefined });
         return;
       }
-      if (result.id) setId(result.id);
-      setPinnedVersion(null);
-      router.refresh();
+      setBaseline(snapshotOf(draft));
+      const id = result.id;
+      if (then) {
+        const followError = await then(id);
+        if (followError) {
+          toast({ tone: "error", title: "Wersja zapisana, ale dowód nie przeszedł", description: followError });
+        }
+      } else {
+        toast({
+          title: isNew ? "Rozpiska zapisana" : "Nowa wersja zapisana",
+          action: goalAwaits && goal ? { label: "Użyj jako dowód", onClick: () => applyAsProof(id) } : undefined,
+        });
+      }
+      if (isNew) router.replace(`/app/workflows/${id}`);
     });
   };
 
-  const useAsProof = () => {
-    if (!id || !goalId) return;
-    setError(null);
-    start(async () => {
-      const saved = await saveWorkflow({
-        startupId,
-        id,
-        title,
-        goalId,
-        nodes,
-        edges,
-      });
-      if (saved.error || !saved.id) {
-        setError(saved.error ?? "Najpierw zapisz rysunek.");
-        return;
-      }
+  const applyAsProof = (savedId?: string) => {
+    if (!goal) return;
+    const finish = async (id: string) => {
       const result = await completeGoal({
         startupId,
-        goalId,
-        proof: { kind: "module_result", workflowId: saved.id },
+        goalId: goal.id,
+        proof: { kind: "module_result", workflowId: id },
       });
-      if (result.error) setError(result.error);
-      else {
-        setPinnedVersion(null);
-        router.refresh();
-      }
+      if (result.error) return result.error;
+      toast({ title: "Cel ukończony", description: `Rozpiska jest dowodem celu „${goal.title}”.` });
+      return null;
+    };
+    if (dirty || !savedId) {
+      persist(finish);
+      return;
+    }
+    start(async () => {
+      const problem = await finish(savedId);
+      if (problem) toast({ tone: "error", title: "Dowód nie przeszedł", description: problem });
     });
   };
 
-  const goal = goals.find((item) => item.id === goalId) ?? null;
-  const proofReady = Boolean(
-    id && goal && goal.proofRequirement.kind === "module_result" && goal.status !== "completed" && !goal.archivedAt
-  );
+  const removeNode = (nodeId: string) => {
+    const node = draft.nodes.find((item) => item.id === nodeId);
+    const lostEdges = draft.edges.filter((edge) => edge.from === nodeId || edge.to === nodeId);
+    set({
+      nodes: draft.nodes.filter((item) => item.id !== nodeId),
+      edges: draft.edges.filter((edge) => edge.from !== nodeId && edge.to !== nodeId),
+    });
+    if (node) {
+      toast({
+        tone: "info",
+        title: "Bloczek usunięty",
+        description: node.label || undefined,
+        action: {
+          label: "Cofnij",
+          onClick: () =>
+            setDraft((current) => ({
+              ...current,
+              nodes: [...current.nodes, node],
+              edges: [...current.edges, ...lostEdges],
+            })),
+        },
+      });
+    }
+  };
+
+  const addNode = () => {
+    const count = draft.nodes.length;
+    set({
+      nodes: [
+        ...draft.nodes,
+        {
+          id: crypto.randomUUID(),
+          x: 48 + ((count * 176) % 704),
+          y: 48 + Math.floor(count / 4) * 88,
+          label: "Krok",
+        },
+      ],
+    });
+  };
+
+  const connect = (from: string, to: string) =>
+    setDraft((current) =>
+      current.edges.some((edge) => edge.from === from && edge.to === to)
+        ? current
+        : { ...current, edges: [...current.edges, { id: crypto.randomUUID(), from, to }] }
+    );
+
+  const openVersion = (snapshot: RozpiskaVersion) => {
+    setDraft((current) => ({
+      ...current,
+      title: snapshot.title,
+      nodes: snapshot.nodes,
+      edges: snapshot.edges,
+    }));
+    setViewingVersion(snapshot.version === record?.version ? null : snapshot.version);
+  };
+
+  const starter = [
+    { done: draft.nodes.some((node) => node.label.trim().length > 0), label: "Nazwij pierwszy krok" },
+    { done: draft.nodes.length >= 2, label: "Dodaj kolejny bloczek" },
+    { done: draft.edges.length >= 1, label: "Pociągnij kropkę z prawej strony bloczka na następny" },
+  ];
+  const showStarter = !starterClosed && draft.edges.length < 2;
+
+  const state = pending
+    ? "Zapisuję…"
+    : dirty
+      ? isNew
+        ? "Jeszcze niezapisana"
+        : `${changes} ${changes === 1 ? "zmiana" : changes % 10 >= 2 && changes % 10 <= 4 && (changes % 100 < 12 || changes % 100 > 14) ? "zmiany" : "zmian"} od wersji ${record?.version ?? 1}`
+      : record
+        ? `Zapisano · wersja ${record.version}`
+        : "";
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
-      <h1 className="font-heading text-[1.6rem] font-semibold text-white">Rozpiska</h1>
-      <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-[var(--text-muted)]">
-        Bloczki i strzałki układają plan. Strzałka nie zmienia statusu celu,
-        nie tworzy zadania i nie ustawia terminu. Zapisana wersja może być
-        dowodem, jeśli cel właśnie tego oczekuje.
-      </p>
-
-      <div className="mt-5 grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <div className="flex flex-col gap-2">
-          <Button variant="secondary" onClick={fresh}>
-            Nowa
-          </Button>
-          {diagrams.map((item) => {
-            const selected = item.id === id;
-            const history = versions.filter((snapshot) => snapshot.workflowId === item.id);
-            return (
-              <div key={item.id} className="flex flex-col gap-1">
-                <button
-                  type="button"
-                  onClick={() => open(item)}
-                  className={
-                    selected
-                      ? "rounded-xl bg-[var(--vairo)]/12 px-3 py-2 text-left text-[13px] text-[var(--vairo)]"
-                      : "rounded-xl px-3 py-2 text-left text-[13px] text-[var(--text-muted)] hover:bg-white/5"
-                  }
-                >
-                  {item.title}
-                  {!selected ? (
-                    <span className="mt-0.5 block text-[11px] text-[var(--text-faint)]">
-                      {history.length > 1 ? `${history.length} zapisy` : `wersja ${item.version}`}
-                    </span>
-                  ) : null}
-                </button>
-                {selected && history.length > 0 ? (
-                  <ul className="mb-1 flex flex-col gap-0.5 pl-2">
-                    {history.map((snapshot) => {
-                      const live = pinnedVersion === null && snapshot.version === item.version;
-                      const looking = pinnedVersion === snapshot.version;
-                      return (
-                        <li key={snapshot.version}>
-                          <button
-                            type="button"
-                            onClick={() => showSnapshot(item, snapshot)}
-                            className={
-                              live || looking
-                                ? "w-full rounded-lg px-2 py-1.5 text-left text-[12.5px] text-white"
-                                : "w-full rounded-lg px-2 py-1.5 text-left text-[12.5px] text-[var(--text-subtle)] hover:bg-white/5 hover:text-white"
-                            }
-                          >
-                            Wersja {snapshot.version}
-                            {snapshot.version === item.version ? " · aktualna" : ""}
-                            <span className="mt-0.5 block text-[11px] text-[var(--text-faint)]">
-                              {formatSaved(snapshot.createdAt)}
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <div className="grid gap-2 sm:grid-cols-2">
-            <input className={fieldClass} value={title} onChange={(e) => setTitle(e.target.value)} aria-label="Nazwa rozpiski" />
-            <MenuSelect
-              ariaLabel="Powiązany cel"
-              value={goalId}
-              onChange={setGoalId}
-              options={[
-                { value: "", label: "Bez powiązanego celu" },
-                ...goals
-                  .filter((item) => !item.archivedAt)
-                  .map((item) => ({ value: item.id, label: item.title })),
-              ]}
-            />
-          </div>
-
-          <RozpiskaBoard
-            nodes={nodes}
-            edges={edges}
-            onMove={(nodeId, x, y) =>
-              setNodes((prev) =>
-                prev.map((item) => (item.id === nodeId ? { ...item, x, y } : item))
-              )
-            }
-            onRename={(nodeId, label) =>
-              setNodes((prev) =>
-                prev.map((item) => (item.id === nodeId ? { ...item, label } : item))
-              )
-            }
-            onConnect={(fromId, toId) =>
-              setEdges((prev) =>
-                prev.some((edge) => edge.from === fromId && edge.to === toId)
-                  ? prev
-                  : [...prev, { id: crypto.randomUUID(), from: fromId, to: toId }]
-              )
-            }
-            onRemoveEdge={(edgeId) => setEdges((prev) => prev.filter((edge) => edge.id !== edgeId))}
-            onRemoveNode={(nodeId) => {
-              setNodes((prev) => prev.filter((item) => item.id !== nodeId));
-              setEdges((prev) => prev.filter((edge) => edge.from !== nodeId && edge.to !== nodeId));
-            }}
-          />
-
-          {pinnedVersion !== null ? (
-            <p className="text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-              Oglądasz zapis wersji {pinnedVersion}. Zapisanie zrobi z tego rysunku nową, aktualną wersję.{" "}
-              <button
-                type="button"
-                className="text-[var(--text-muted)] underline-offset-2 hover:text-white hover:underline"
+    <div className="flex w-full flex-col">
+      {/* Pasek */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <Link
+          href="/app/workflows"
+          aria-label="Wróć do listy rozpisek"
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[var(--text-subtle)] transition-colors hover:border-white/22 hover:text-white"
+        >
+          <ArrowLeft className="size-4" />
+        </Link>
+        <input
+          value={draft.title}
+          onChange={(event) => set({ title: event.target.value })}
+          aria-label="Nazwa rozpiski"
+          maxLength={140}
+          className="min-w-0 flex-1 rounded-lg bg-transparent px-1.5 py-1 font-heading text-[1.35rem] font-semibold text-white outline-none hover:bg-white/[0.04] focus:bg-white/[0.06]"
+        />
+        <span
+          className={cn(
+            "text-[12.5px]",
+            dirty ? "text-[var(--warning)]" : "text-[var(--text-subtle)]"
+          )}
+          aria-live="polite"
+        >
+          {state}
+        </span>
+        <Menu
+          label="Wersje i dowód"
+          trigger={
+            <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/10 px-2.5 text-[13px] text-[var(--text-muted)] hover:text-white sm:h-8">
+              <History className="size-3.5" />
+              Wersje
+            </span>
+          }
+        >
+          {(close) => (
+            <>
+              {versions.length === 0 ? (
+                <p className="px-3.5 py-2.5 text-[12.5px] text-[var(--text-subtle)]">
+                  Pierwsza wersja powstanie po zapisaniu.
+                </p>
+              ) : (
+                versions.map((snapshot) => (
+                  <MenuItem
+                    key={snapshot.version}
+                    onClick={() => {
+                      close();
+                      openVersion(snapshot);
+                    }}
+                    hint={formatMoment(snapshot.createdAt)}
+                  >
+                    Wersja {snapshot.version}
+                    {snapshot.version === record?.version ? " · aktualna" : ""}
+                  </MenuItem>
+                ))
+              )}
+              <MenuSeparator />
+              <MenuItem
+                icon={ShieldCheck}
+                disabled={!goalAwaits || pending}
+                hint={proofBlockedReason ?? `Zapisze wersję i ukończy cel „${goal?.title ?? ""}”.`}
                 onClick={() => {
-                  const live = diagrams.find((item) => item.id === id);
-                  if (live) open(live);
+                  close();
+                  applyAsProof(record?.id);
                 }}
               >
-                Wróć do aktualnej
-              </button>
-            </p>
-          ) : (
-            <p className="text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-              Pociągnij kropkę na inny bloczek, żeby dodać strzałkę. Kliknięcie strzałki ją usuwa, krzyżyk usuwa bloczek.
-            </p>
+                Użyj jako dowód
+              </MenuItem>
+              {goal && !goalAwaits && goal.status !== "completed" ? (
+                <MenuItem
+                  hint="Cel oczekuje dziś innego dowodu. Zmienisz to w jego edycji."
+                  onClick={() => {
+                    close();
+                    router.push(`/app/goals/${goal.id}`);
+                  }}
+                >
+                  Zmień oczekiwany dowód w celu
+                </MenuItem>
+              ) : null}
+              {record && canDelete ? (
+                <>
+                  <MenuSeparator />
+                  <MenuItem
+                    icon={Trash2}
+                    tone="danger"
+                    onClick={() => {
+                      close();
+                      setDeleting(true);
+                    }}
+                  >
+                    Usuń rozpiskę
+                  </MenuItem>
+                </>
+              ) : null}
+            </>
           )}
+        </Menu>
+        <Button
+          variant={goalAwaits ? "secondary" : "primary"}
+          size="sm"
+          loading={pending}
+          disabled={!dirty}
+          title={dirty ? undefined : "Nie ma zmian od ostatniej wersji."}
+          onClick={() => persist()}
+        >
+          {dirty ? <Check className="size-3.5" /> : <Lock className="size-3.5" />}
+          Zapisz wersję
+        </Button>
+      </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="secondary"
-              onClick={() =>
-                setNodes((prev) => [
-                  ...prev,
-                  {
-                    id: crypto.randomUUID(),
-                    x: 24 + prev.length * 16,
-                    y: 24 + prev.length * 12,
-                    label: "Krok",
-                  },
-                ])
-              }
-            >
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 pl-0 sm:pl-12">
+        <span className="text-[13px] text-[var(--text-subtle)]">Dla celu</span>
+        <MenuSelect
+          size="sm"
+          className="w-auto min-w-[200px] max-w-[320px]"
+          ariaLabel="Dla celu"
+          value={draft.goalId}
+          onChange={(goalId) => set({ goalId })}
+          options={[
+            { value: "", label: "Bez celu" },
+            ...goals
+              .filter((item) => !item.archivedAt)
+              .map((item) => ({ value: item.id, label: item.title })),
+          ]}
+        />
+        <span className="text-[12.5px] text-[var(--text-subtle)]">
+          Zapisana wersja może być dowodem, jeśli cel jej oczekuje.
+        </span>
+      </div>
+
+      {viewingVersion !== null ? (
+        <p className="mt-3 rounded-xl border border-white/[0.08] bg-[var(--surface)] px-4 py-2.5 text-[13px] text-[var(--text-muted)]">
+          Oglądasz wersję {viewingVersion}. Zapisanie zrobi z niej nową, aktualną wersję.{" "}
+          <button
+            type="button"
+            className="font-medium text-white underline decoration-white/30 underline-offset-4"
+            onClick={() => {
+              setDraft(initial);
+              setViewingVersion(null);
+            }}
+          >
+            Wróć do aktualnej
+          </button>
+        </p>
+      ) : null}
+
+      {goalAwaits && goal ? (
+        <section className="edge-accent mt-3 flex flex-wrap items-center gap-3 rounded-[18px] border border-[var(--vairo)]/25 bg-[var(--vairo)]/[0.06] px-4 py-3">
+          <p className="min-w-0 flex-1 text-[13.5px] text-[var(--text-muted)]">
+            <span className="font-medium text-white">Ta rozpiska może zamknąć cel „{goal.title}”.</span>{" "}
+            Cel oczekuje zapisanej wersji Rozpiski jako dowodu.
+          </p>
+          <Button size="sm" loading={pending} onClick={() => applyAsProof(record?.id)}>
+            <ShieldCheck className="size-3.5" />
+            Użyj jako dowód
+          </Button>
+        </section>
+      ) : null}
+
+      {error ? (
+        <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
+          {error}
+        </p>
+      ) : null}
+
+      {/* Telefon: plan jako lista kroków w kolejności strzałek. */}
+      <div className={cn("mt-4 md:hidden", showCanvasOnPhone && "hidden")}>
+        <StepList
+          nodes={draft.nodes}
+          edges={draft.edges}
+          onRename={(id, label) =>
+            set({ nodes: draft.nodes.map((node) => (node.id === id ? { ...node, label } : node)) })
+          }
+          onToggleEdge={(from, to) =>
+            setDraft((current) =>
+              current.edges.some((edge) => edge.from === from && edge.to === to)
+                ? { ...current, edges: current.edges.filter((edge) => !(edge.from === from && edge.to === to)) }
+                : { ...current, edges: [...current.edges, { id: crypto.randomUUID(), from, to }] }
+            )
+          }
+          onRemove={removeNode}
+          onAdd={addNode}
+        />
+        <Button variant="ghost" size="sm" className="mt-3" onClick={() => setShowCanvasOnPhone(true)}>
+          Pokaż płótno
+        </Button>
+      </div>
+
+      <div className={cn("mt-4", showCanvasOnPhone ? "block" : "hidden md:block")}>
+        <RozpiskaBoard
+          className="h-[calc(100svh-260px)] min-h-[440px]"
+          nodes={draft.nodes}
+          edges={draft.edges}
+          onMove={(id, x, y) =>
+            setDraft((current) => ({
+              ...current,
+              nodes: current.nodes.map((node) => (node.id === id ? { ...node, x, y } : node)),
+            }))
+          }
+          onRename={(id, label) =>
+            setDraft((current) => ({
+              ...current,
+              nodes: current.nodes.map((node) => (node.id === id ? { ...node, label } : node)),
+            }))
+          }
+          onConnect={connect}
+          onRemoveEdge={(edgeId) =>
+            setDraft((current) => ({ ...current, edges: current.edges.filter((edge) => edge.id !== edgeId) }))
+          }
+          onRemoveNode={removeNode}
+        >
+          <div className="absolute bottom-3 left-3 z-10 flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="secondary" onClick={addNode}>
+              <Plus className="size-3.5" />
               Dodaj bloczek
             </Button>
-            <Button onClick={save} loading={pending}>
-              Zapisz
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={!proofReady}
-              title={
-                proofReady
-                  ? `Użyje wersji ${version} jako dowodu`
-                  : "Cel musi oczekiwać Rozpiski jako dowodu i nie może być już ukończony."
-              }
-              onClick={useAsProof}
-            >
-              Użyj tej wersji jako dowód
-            </Button>
+            <span className="hidden items-center gap-1.5 rounded-lg bg-[var(--bg)]/70 px-2.5 py-1.5 text-[12px] text-[var(--text-subtle)] backdrop-blur sm:inline-flex">
+              <MousePointerClick className="size-3.5" aria-hidden="true" />
+              Kropka z prawej łączy bloczki · klik w strzałkę ją usuwa · strzałki nie zmieniają celów ani zadań
+            </span>
           </div>
-          {error ? <p className="text-[13px] text-[var(--danger)]">{error}</p> : null}
-        </div>
+
+          {showStarter ? (
+            <div className="absolute right-3 top-3 z-10 w-[260px] rounded-2xl border border-white/10 bg-[var(--surface-2)]/95 p-4 backdrop-blur lift-2">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-[13.5px] font-medium text-white">Jak zacząć</p>
+                <button
+                  type="button"
+                  onClick={() => setStarterClosed(true)}
+                  className="text-[12px] text-[var(--text-subtle)] hover:text-white"
+                >
+                  Ukryj
+                </button>
+              </div>
+              <ol className="mt-2.5 flex flex-col gap-2">
+                {starter.map((step, index) => (
+                  <li key={step.label} className="flex items-start gap-2 text-[12.5px] leading-snug">
+                    <span
+                      className={cn(
+                        "tabular mt-px inline-flex size-[18px] shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
+                        step.done
+                          ? "bg-[var(--success)]/20 text-[var(--success)]"
+                          : "bg-white/10 text-[var(--text-muted)]"
+                      )}
+                    >
+                      {step.done ? <Check className="size-3" /> : index + 1}
+                    </span>
+                    <span className={step.done ? "text-[var(--text-subtle)] line-through" : "text-[var(--text-muted)]"}>
+                      {step.label}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
+        </RozpiskaBoard>
       </div>
+      {deleting && record ? (
+        <Modal
+          title="Usunąć tę rozpiskę?"
+          description="Zniknie razem ze wszystkimi wersjami. Cele, które użyły jej jako dowodu, zachowują swoją kopię."
+          onClose={() => setDeleting(false)}
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setDeleting(false)}>
+                Zostaw
+              </Button>
+              <Button
+                variant="danger"
+                loading={pending}
+                onClick={() =>
+                  start(async () => {
+                    const result = await deleteWorkflow(startupId, record.id);
+                    if (result.error) {
+                      toast({ tone: "error", title: "Nie udało się usunąć", description: result.error });
+                      return;
+                    }
+                    toast({ title: "Rozpiska usunięta", description: record.title });
+                    router.push("/app/workflows");
+                  })
+                }
+              >
+                Usuń rozpiskę
+              </Button>
+            </>
+          }
+        >
+          <p className="text-[14px] text-white">{record.title}</p>
+        </Modal>
+      ) : null}
     </div>
   );
 }
 
-const NODE_W = 140;
-const NODE_H = 40;
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
+/** Ile rzeczy różni szkic od zapisanej wersji — bloczki, strzałki, nazwa. */
+function countChanges(before: Draft, after: Draft) {
+  let count = before.title !== after.title ? 1 : 0;
+  if (before.goalId !== after.goalId) count += 1;
+  const oldNodes = new Map(before.nodes.map((node) => [node.id, node]));
+  for (const node of after.nodes) {
+    const old = oldNodes.get(node.id);
+    if (!old) count += 1;
+    else if (old.label !== node.label || old.x !== node.x || old.y !== node.y) count += 1;
+    oldNodes.delete(node.id);
+  }
+  count += oldNodes.size;
+  const key = (edge: RozpiskaEdge) => `${edge.from}>${edge.to}`;
+  const oldEdges = new Set(before.edges.map(key));
+  const newEdges = new Set(after.edges.map(key));
+  for (const edge of newEdges) if (!oldEdges.has(edge)) count += 1;
+  for (const edge of oldEdges) if (!newEdges.has(edge)) count += 1;
+  return Math.max(count, 1);
 }
 
 /**
- * Bloczek jedzie na warstwie kompozytora. W trakcie ruchu nie czytamy układu
- * strony i nie wołamy setState — stąd poprzednie zacięcia.
+ * Plan jako lista kroków — na telefonie przeciąganie strzałek palcem na 390 px
+ * jest zawodne. Połączenia ustawia się w menu bloczka („Prowadzi do…");
+ * funkcja zostaje, zmienia się tylko gest.
  */
-function RozpiskaBoard({
+function StepList({
   nodes,
   edges,
-  onMove,
   onRename,
-  onConnect,
-  onRemoveEdge,
-  onRemoveNode,
+  onToggleEdge,
+  onRemove,
+  onAdd,
 }: {
   nodes: RozpiskaNode[];
   edges: RozpiskaEdge[];
-  onMove: (id: string, x: number, y: number) => void;
   onRename: (id: string, label: string) => void;
-  onConnect: (fromId: string, toId: string) => void;
-  onRemoveEdge: (edgeId: string) => void;
-  onRemoveNode: (nodeId: string) => void;
+  onToggleEdge: (from: string, to: string) => void;
+  onRemove: (id: string) => void;
+  onAdd: () => void;
 }) {
-  const boardRef = useRef<HTMLDivElement>(null);
-  const positions = useRef(new Map<string, { x: number; y: number }>());
-  const sizes = useRef(new Map<string, { w: number; h: number }>());
-  const nodeEls = useRef(new Map<string, HTMLDivElement>());
-  const lineEls = useRef(new Map<string, { wide: SVGLineElement | null; thin: SVGLineElement | null }>());
-  const edgesRef = useRef(edges);
-  const nodesRef = useRef(nodes);
-  const previewRef = useRef<SVGLineElement>(null);
-  const link = useRef<{ fromId: string; x: number; y: number; left: number; top: number } | null>(null);
-  const hoverRef = useRef<string | null>(null);
-  const drag = useRef<{ id: string } | null>(null);
-  const frame = useRef(0);
-
-  const paint = () => {
-    frame.current = 0;
-    for (const [id, pos] of positions.current) {
-      const el = nodeEls.current.get(id);
-      if (!el) continue;
-      el.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
-    }
-    for (const edge of edgesRef.current) {
-      const pair = lineEls.current.get(edge.id);
-      const from = positions.current.get(edge.from);
-      const to = positions.current.get(edge.to);
-      if (!pair?.wide || !pair.thin || !from || !to) continue;
-      const fromSize = sizes.current.get(edge.from);
-      const toSize = sizes.current.get(edge.to);
-      const x1 = String(from.x + (fromSize?.w ?? NODE_W) / 2);
-      const y1 = String(from.y + (fromSize?.h ?? NODE_H) / 2);
-      const x2 = String(to.x + (toSize?.w ?? NODE_W) / 2);
-      const y2 = String(to.y + (toSize?.h ?? NODE_H) / 2);
-      for (const line of [pair.wide, pair.thin]) {
-        line.setAttribute("x1", x1);
-        line.setAttribute("y1", y1);
-        line.setAttribute("x2", x2);
-        line.setAttribute("y2", y2);
-      }
-    }
-
-    const preview = previewRef.current;
-    const active = link.current;
-    if (preview) {
-      if (!active) {
-        preview.setAttribute("visibility", "hidden");
-      } else {
-        const from = positions.current.get(active.fromId);
-        const fromSize = sizes.current.get(active.fromId);
-        preview.setAttribute("visibility", "visible");
-        preview.setAttribute("x1", String((from?.x ?? 0) + (fromSize?.w ?? NODE_W)));
-        preview.setAttribute("y1", String((from?.y ?? 0) + (fromSize?.h ?? NODE_H) / 2));
-        preview.setAttribute("x2", String(active.x));
-        preview.setAttribute("y2", String(active.y));
-      }
-    }
-
-    const nextHover = active ? hitNode(active.x, active.y, active.fromId) : null;
-    if (nextHover !== hoverRef.current) {
-      const previous = hoverRef.current ? nodeEls.current.get(hoverRef.current) : null;
-      if (previous) previous.style.boxShadow = "";
-      const next = nextHover ? nodeEls.current.get(nextHover) : null;
-      if (next) next.style.boxShadow = "0 0 0 1px var(--vairo)";
-      hoverRef.current = nextHover;
-    }
-  };
-
-  const hitNode = (x: number, y: number, ignore: string) => {
-    let found: string | null = null;
-    for (const node of nodesRef.current) {
-      if (node.id === ignore) continue;
-      const pos = positions.current.get(node.id);
-      if (!pos) continue;
-      const size = sizes.current.get(node.id);
-      const width = size?.w ?? NODE_W;
-      const height = size?.h ?? NODE_H;
-      if (x >= pos.x && x <= pos.x + width && y >= pos.y && y <= pos.y + height) found = node.id;
-    }
-    return found;
-  };
-
-  const schedule = () => {
-    if (frame.current) return;
-    frame.current = requestAnimationFrame(paint);
-  };
-
-  useLayoutEffect(() => {
-    edgesRef.current = edges;
-    nodesRef.current = nodes;
-    if (!drag.current) {
-      const live = new Set(nodes.map((node) => node.id));
-      for (const id of positions.current.keys()) {
-        if (!live.has(id)) positions.current.delete(id);
-      }
-      for (const node of nodes) positions.current.set(node.id, { x: node.x, y: node.y });
-    }
-    for (const node of nodes) {
-      const el = nodeEls.current.get(node.id);
-      if (!el) continue;
-      sizes.current.set(node.id, { w: el.offsetWidth, h: el.offsetHeight });
-    }
-    paint();
-  });
-
-  const startConnect = (event: React.PointerEvent<HTMLButtonElement>, node: RozpiskaNode) => {
-    if (event.button !== 0) return;
-    const board = boardRef.current;
-    if (!board) return;
-    event.stopPropagation();
-    event.preventDefault();
-
-    const handle = event.currentTarget;
-    handle.setPointerCapture(event.pointerId);
-    const rect = board.getBoundingClientRect();
-    const left = rect.left + board.clientLeft;
-    const top = rect.top + board.clientTop;
-    link.current = {
-      fromId: node.id,
-      x: event.clientX - left,
-      y: event.clientY - top,
-      left,
-      top,
-    };
-    schedule();
-
-    const move = (ev: PointerEvent) => {
-      if (!link.current) return;
-      link.current = {
-        ...link.current,
-        x: ev.clientX - link.current.left,
-        y: ev.clientY - link.current.top,
-      };
-      schedule();
-    };
-    const end = (ev: PointerEvent) => {
-      handle.removeEventListener("pointermove", move);
-      handle.removeEventListener("pointerup", end);
-      handle.removeEventListener("pointercancel", end);
-      const current = link.current;
-      link.current = null;
-      if (!current) return;
-      const target = hitNode(ev.clientX - current.left, ev.clientY - current.top, current.fromId);
-      schedule();
-      if (!target) return;
-      if (edgesRef.current.some((edge) => edge.from === current.fromId && edge.to === target)) return;
-      onConnect(current.fromId, target);
-    };
-
-    handle.addEventListener("pointermove", move);
-    handle.addEventListener("pointerup", end);
-    handle.addEventListener("pointercancel", end);
-  };
-
-  const startDrag = (event: React.PointerEvent<HTMLDivElement>, node: RozpiskaNode) => {
-    if (event.button !== 0) return;
-    const target = event.target as HTMLElement;
-    if (target.closest("[data-connect], [data-remove]")) return;
-    if (target.closest("input") && document.activeElement === target) return;
-
-    const el = event.currentTarget;
-    const board = boardRef.current;
-    event.preventDefault();
-    el.setPointerCapture(event.pointerId);
-    drag.current = { id: node.id };
-
-    const origin = positions.current.get(node.id) ?? { x: node.x, y: node.y };
-    const width = el.offsetWidth;
-    const height = el.offsetHeight;
-    sizes.current.set(node.id, { w: width, h: height });
-    const min = 8;
-    const maxX = Math.max(min, (board?.clientWidth ?? width) - width);
-    const maxY = Math.max(min, (board?.clientHeight ?? height) - height);
-    const startX = event.clientX;
-    const startY = event.clientY;
-    let moved = false;
-
-    const move = (ev: PointerEvent) => {
-      const dx = ev.clientX - startX;
-      const dy = ev.clientY - startY;
-      if (!moved && dx * dx + dy * dy < 9) return;
-      if (!moved) el.querySelector("input")?.blur();
-      moved = true;
-      positions.current.set(node.id, {
-        x: clamp(origin.x + dx, min, maxX),
-        y: clamp(origin.y + dy, min, maxY),
-      });
-      schedule();
-    };
-
-    const end = () => {
-      el.removeEventListener("pointermove", move);
-      el.removeEventListener("pointerup", end);
-      el.removeEventListener("pointercancel", end);
-      const pos = positions.current.get(node.id) ?? origin;
-      drag.current = null;
-      if (moved) onMove(node.id, pos.x, pos.y);
-      else {
-        const input = el.querySelector("input");
-        input?.focus();
-        input?.select();
-      }
-    };
-
-    el.addEventListener("pointermove", move);
-    el.addEventListener("pointerup", end);
-    el.addEventListener("pointercancel", end);
-  };
-
+  const steps = orderedSteps(nodes, edges);
   return (
-    <div
-      ref={boardRef}
-      className="relative h-[440px] overflow-hidden rounded-2xl border border-white/10 bg-[var(--surface)]"
-      style={{ contain: "layout paint" }}
-    >
-      <svg className="pointer-events-none absolute inset-0 h-full w-full">
-        {edges.map((edge) => (
-          <g
-            key={edge.id}
-            className="group pointer-events-auto cursor-pointer"
-            onClick={() => onRemoveEdge(edge.id)}
-          >
-            <line
-              ref={(element) => {
-                const pair = lineEls.current.get(edge.id) ?? { wide: null, thin: null };
-                pair.wide = element;
-                if (!pair.wide && !pair.thin) lineEls.current.delete(edge.id);
-                else lineEls.current.set(edge.id, pair);
-              }}
-              stroke="transparent"
-              strokeWidth="14"
-              style={{ pointerEvents: "stroke" }}
-            >
-              <title>Usuń strzałkę</title>
-            </line>
-            <line
-              ref={(element) => {
-                const pair = lineEls.current.get(edge.id) ?? { wide: null, thin: null };
-                pair.thin = element;
-                if (!pair.wide && !pair.thin) lineEls.current.delete(edge.id);
-                else lineEls.current.set(edge.id, pair);
-              }}
-              className="pointer-events-none stroke-white/45 group-hover:stroke-[var(--vairo)]"
-              strokeWidth="1.5"
-              markerEnd="url(#rozpiska-arrow)"
-            />
-          </g>
-        ))}
-        <line
-          ref={previewRef}
-          visibility="hidden"
-          className="pointer-events-none"
-          stroke="var(--vairo)"
-          strokeWidth="1.5"
-          markerEnd="url(#rozpiska-arrow-live)"
-        />
-        <defs>
-          <marker id="rozpiska-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6" fill="rgba(255,255,255,.55)" />
-          </marker>
-          <marker id="rozpiska-arrow-live" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6" fill="var(--vairo)" />
-          </marker>
-        </defs>
-      </svg>
-      {nodes.map((node) => (
-        <div
-          key={node.id}
-          ref={(element) => {
-            if (element) nodeEls.current.set(node.id, element);
-            else nodeEls.current.delete(node.id);
-          }}
-          className="absolute top-0 left-0 w-[140px] cursor-grab touch-none rounded-xl border border-white/15 bg-[var(--surface-2)] py-1.5 pr-6 pl-5 select-none will-change-transform"
-          onPointerDown={(event) => startDrag(event, node)}
-        >
-          <input
-            className="pointer-events-none w-full bg-transparent text-[13px] text-white outline-none focus:pointer-events-auto"
-            value={node.label}
-            aria-label="Nazwa bloczka"
-            onChange={(event) => onRename(node.id, event.target.value)}
-          />
-          <button
-            type="button"
-            data-remove
-            aria-label={`Usuń bloczek ${node.label || ""}`.trim()}
-            className="absolute top-1/2 left-0.5 flex size-4 -translate-y-1/2 items-center justify-center rounded-full text-[var(--text-faint)] hover:text-[var(--danger)]"
-            onPointerDown={(event) => {
-              event.stopPropagation();
-              event.preventDefault();
-            }}
-            onClick={() => onRemoveNode(node.id)}
-          >
-            <X className="size-3" strokeWidth={2} />
-          </button>
-          <button
-            type="button"
-            data-connect
-            aria-label="Pociągnij strzałkę do innego bloczka"
-            className="absolute top-1/2 right-0 flex size-6 -translate-y-1/2 cursor-crosshair items-center justify-center"
-            onPointerDown={(event) => startConnect(event, node)}
-          >
-            <span className="size-2.5 rounded-full bg-white/55" />
-          </button>
-        </div>
-      ))}
+    <div>
+      <ol className="flex flex-col gap-2">
+        {steps.map((node, index) => {
+          const targets = edges
+            .filter((edge) => edge.from === node.id)
+            .map((edge) => nodes.find((item) => item.id === edge.to)?.label || "bez nazwy");
+          return (
+            <li key={node.id} className="rounded-2xl bg-[var(--surface)] p-3 lift-1">
+              <div className="flex items-center gap-2">
+                <span className="tabular inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--surface-3)] text-[12px] font-semibold text-white">
+                  {index + 1}
+                </span>
+                <Input
+                  aria-label="Nazwa kroku"
+                  value={node.label}
+                  placeholder="Nazwij krok"
+                  onChange={(event) => onRename(node.id, event.target.value)}
+                  className="h-10"
+                />
+                <Menu label={`Akcje kroku ${node.label}`}>
+                  {(close) => (
+                    <>
+                      <p className="px-3.5 pb-1 pt-2 text-[12px] text-[var(--text-subtle)]">Prowadzi do…</p>
+                      {nodes
+                        .filter((item) => item.id !== node.id)
+                        .map((item) => {
+                          const on = edges.some((edge) => edge.from === node.id && edge.to === item.id);
+                          return (
+                            <MenuItem
+                              key={item.id}
+                              icon={on ? Check : Plus}
+                              onClick={() => {
+                                close();
+                                onToggleEdge(node.id, item.id);
+                              }}
+                            >
+                              {item.label || "bez nazwy"}
+                            </MenuItem>
+                          );
+                        })}
+                      <MenuSeparator />
+                      <MenuItem
+                        tone="danger"
+                        onClick={() => {
+                          close();
+                          onRemove(node.id);
+                        }}
+                      >
+                        Usuń krok
+                      </MenuItem>
+                    </>
+                  )}
+                </Menu>
+              </div>
+              {targets.length > 0 ? (
+                <p className="mt-1.5 pl-8 text-[12.5px] text-[var(--text-subtle)]">
+                  → {targets.join(", ")}
+                </p>
+              ) : null}
+            </li>
+          );
+        })}
+      </ol>
+      <Button variant="secondary" size="sm" className="mt-3" onClick={onAdd}>
+        <Plus className="size-3.5" />
+        Dodaj krok
+      </Button>
     </div>
   );
 }

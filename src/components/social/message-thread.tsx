@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw, SendHorizontal } from "lucide-react";
+import { SendHorizontal } from "lucide-react";
 import { markConversationRead, sendMessage } from "@/app/app/social/actions";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/ui/avatar";
@@ -90,6 +90,12 @@ export function MessageThread({
   // Rozmowa na żywo. Świadomie NIE doklejamy wiersza z payloadu — pobranie
   // z serwera kosztuje jeden przelot, a w zamian nie trzeba godzić dwóch
   // źródeł prawdy o zawartości wątku.
+  // Stan połączenia na żywo. Gdy kanał padnie (uśpiony laptop, zerwana sieć),
+  // nad polem pojawia się pasek z „Połącz ponownie" — zamiast przycisku
+  // odświeżania, który stał tam na stałe „na wszelki wypadek".
+  const [live, setLive] = useState<"connecting" | "ok" | "lost">("connecting");
+  const [attempt, setAttempt] = useState(0);
+
   useEffect(() => {
     if (!conversationId) return;
 
@@ -114,12 +120,17 @@ export function MessageThread({
           router.refresh();
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status === "SUBSCRIBED") setLive("ok");
+        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          setLive((current) => (current === "ok" || current === "connecting" ? "lost" : current));
+        }
+      });
 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [conversationId, viewerId, router]);
+  }, [conversationId, viewerId, router, attempt]);
 
   const submit = () => {
     const trimmed = body.trim();
@@ -197,8 +208,11 @@ export function MessageThread({
                     className={cn(
                       "max-w-[min(78%,460px)] px-3.5 py-2",
                       "text-[14px] leading-relaxed",
+                      // Moje dymki są jaśniejszą szarością, nie pomarańczem:
+                      // przy dwudziestu wiadomościach pół ekranu świeciło
+                      // kolorem akcji, a akcją jest tu tylko „Wyślij".
                       mine
-                        ? "bg-[var(--vairo-strong)] text-white"
+                        ? "bg-[var(--surface-3)] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
                         : "bg-[var(--surface-2)] text-[var(--text)]",
                       // Róg „przy sobie" jest ostry w środku grupy i zaokrąglony
                       // na jej końcach — stąd wrażenie jednego dymka, a nie
@@ -223,7 +237,7 @@ export function MessageThread({
                 {endsGroup ? (
                   <p
                     className={cn(
-                      "tabular mb-2 text-[11px] text-[var(--text-faint)]",
+                      "tabular mb-2 text-[11.5px] text-[var(--text-muted)]",
                       mine ? "pr-1 text-right" : "pl-10"
                     )}
                   >
@@ -244,6 +258,26 @@ export function MessageThread({
         <p className="mt-3 rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-3 py-2 text-[13px] text-[var(--danger)]">
           {error}
         </p>
+      ) : null}
+
+      {live === "lost" ? (
+        <div
+          role="status"
+          className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--warning)]/25 bg-[var(--warning)]/[0.07] px-3.5 py-2.5 text-[13px] text-[var(--text-muted)]"
+        >
+          <span className="min-w-0 flex-1">Połączenie z rozmową zerwane — nowe wiadomości nie dochodzą same.</span>
+          <button
+            type="button"
+            onClick={() => {
+              setLive("connecting");
+              setAttempt((value) => value + 1);
+              router.refresh();
+            }}
+            className="font-medium text-white underline decoration-white/30 underline-offset-4"
+          >
+            Połącz ponownie
+          </button>
+        </div>
       ) : null}
 
       {/* Pole jako jeden obiekt: pigułka z tekstem w środku i dwoma okrągłymi
@@ -268,16 +302,6 @@ export function MessageThread({
 
         <button
           type="button"
-          onClick={() => router.refresh()}
-          title="Wiadomości dochodzą same — kliknij, jeśli połączenie się zgubiło"
-          aria-label="Odśwież rozmowę"
-          className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-[var(--text-faint)] transition-colors hover:bg-white/[0.06] hover:text-white"
-        >
-          <RefreshCw className="size-4" />
-        </button>
-
-        <button
-          type="button"
           onClick={submit}
           disabled={body.trim().length === 0 || sending}
           aria-label="Wyślij wiadomość"
@@ -291,6 +315,9 @@ export function MessageThread({
           <SendHorizontal className="size-4" />
         </button>
       </div>
+      <p className="mt-1.5 pl-4 text-[12px] text-[var(--text-subtle)]">
+        Enter wysyła, Shift+Enter robi nową linię. Wiadomości dochodzą same.
+      </p>
     </div>
   );
 }

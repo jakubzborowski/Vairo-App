@@ -66,6 +66,8 @@ export function useDeckQueue<T extends { id: string }>(items: T[]) {
     position: items.length - queue.length + 1,
     total: items.length,
     passedHere: passed.length,
+    /** Obsłużone w tej wizycie, ale nie pominięte — czyli wysłane. */
+    sentHere: handled.length - passed.length,
     handle,
     markPassed,
     undoLastLocal,

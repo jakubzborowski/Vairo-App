@@ -160,29 +160,28 @@ export async function loadStageTree(
     } | null;
   };
 
-  const { data: stageRow } = await supabase
-    .from("startup_stages")
-    .select(
-      "id, startup_id, status, last_subpoint_id, template_id, " +
-        "stage_templates(key, title, subtitle, intro, finish_label)"
-    )
-    .eq("id", params.startupStageId)
-    .maybeSingle();
+  // Odpowiedzi zależą tylko od id instancji, więc jadą razem z jej wierszem.
+  // Reszta potrzebuje `startup_id` i `template_id` — idzie w jednej fali
+  // zaraz potem, zamiast w dwóch kolejnych.
+  const [{ data: stageRow }, { data: answerRows }] = await Promise.all([
+    supabase
+      .from("startup_stages")
+      .select(
+        "id, startup_id, status, last_subpoint_id, template_id, " +
+          "stage_templates(key, title, subtitle, intro, finish_label)"
+      )
+      .eq("id", params.startupStageId)
+      .maybeSingle(),
+    supabase
+      .from("stage_answers")
+      .select("answer_key, value")
+      .eq("startup_stage_id", params.startupStageId),
+  ]);
 
   const stage = stageRow as unknown as StageRow | null;
   if (!stage) return null;
 
   const template = stage.stage_templates;
-  const [goalConditions, { data: progressRows }] = await Promise.all([
-    loadSubpointGoalConditions(supabase, stage.startup_id, stage.id),
-    supabase
-      .from("stage_subpoint_progress")
-      .select("subpoint_id, is_complete")
-      .eq("startup_stage_id", stage.id),
-  ]);
-  const storedComplete = new Map(
-    (progressRows ?? []).map((row) => [row.subpoint_id as string, Boolean(row.is_complete)])
-  );
 
   const treeSelect = (withSkip: boolean, withDepends = withSkip) =>
     supabase
@@ -206,13 +205,17 @@ export async function loadStageTree(
       .eq("template_id", stage.template_id)
       .in("key", params.activeCategories);
 
-  const [categoryResult, { data: answerRows }] = await Promise.all([
-    treeSelect(true),
+  const [goalConditions, { data: progressRows }, categoryResult] = await Promise.all([
+    loadSubpointGoalConditions(supabase, stage.startup_id, stage.id),
     supabase
-      .from("stage_answers")
-      .select("answer_key, value")
-      .eq("startup_stage_id", params.startupStageId),
+      .from("stage_subpoint_progress")
+      .select("subpoint_id, is_complete")
+      .eq("startup_stage_id", stage.id),
+    treeSelect(true),
   ]);
+  const storedComplete = new Map(
+    (progressRows ?? []).map((row) => [row.subpoint_id as string, Boolean(row.is_complete)])
+  );
 
   // Kolumna skip_when powstaje w migracji 021. Zanim ktoś ją odpali,
   // etapy Ambition i Idea mają się dalej otwierać.
@@ -376,7 +379,14 @@ export async function loadStageTree(
       const counted = point.subpoints.filter((subpoint) => !subpoint.isOptional && !subpoint.skipped);
       point.done = counted.filter((subpoint) => subpoint.isComplete).length;
       point.total = counted.length;
-      point.isComplete = counted.length > 0 && point.done === counted.length;
+      // Punkt z samymi pytaniami dodatkowymi (np. „Zamknij Execution") nie ma
+      // czego wymagać. Wcześniej wisiał na zawsze jako „0/0, do zrobienia",
+      // nawet po uzupełnieniu — teraz domyka się, gdy uzupełniono to, co w nim jest.
+      point.isComplete =
+        counted.length > 0
+          ? point.done === counted.length
+          : point.subpoints.some((subpoint) => subpoint.isComplete) &&
+            point.subpoints.every((subpoint) => subpoint.isComplete || subpoint.skipped);
       categoryDone += point.done;
       categoryTotal += point.total;
     }

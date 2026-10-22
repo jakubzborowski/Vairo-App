@@ -20,7 +20,20 @@ export type WizardStep = {
   optional?: boolean;
   /** Blokuje „Dalej", dopóki nie jest spełnione. Ignorowane przy `optional`. */
   canContinue?: boolean;
-  render: () => React.ReactNode;
+  /**
+   * Sprawdzenie DOPIERO po kliknięciu „Dalej". Zwraca zdanie błędu albo null.
+   * Przycisk zostaje aktywny, a błąd trafia do kroku przez `api.error` —
+   * krok sam pokazuje go przy polu, którego dotyczy.
+   */
+  validate?: () => string | null;
+  render: (api: WizardApi) => React.ReactNode;
+};
+
+export type WizardApi = {
+  /** Skok do dowolnego kroku — „Zmień" w podsumowaniu. */
+  goTo: (index: number) => void;
+  /** Błąd z `validate` po ostatnim kliknięciu „Dalej". */
+  error: string | null;
 };
 
 type Props = {
@@ -40,6 +53,13 @@ type Props = {
    */
   stepOffset?: number;
   overallTotal?: number;
+  /** Jedna linijka nad pytaniem — mówi, czemu ten kreator służy. */
+  crumb?: React.ReactNode;
+  /**
+   * „Wstecz" obok „Dalej" w jednym rzędzie, zamiast samej strzałki u góry.
+   * Widać wtedy zawsze, że da się wrócić.
+   */
+  footerBack?: boolean;
 };
 
 /**
@@ -59,8 +79,15 @@ export function StepWizard({
   exitLabel = "Wróć",
   stepOffset = 0,
   overallTotal,
+  crumb,
+  footerBack = false,
 }: Props) {
-  const [index, setIndex] = useState(0);
+  const [index, setIndexState] = useState(0);
+  const [stepError, setStepError] = useState<string | null>(null);
+  const setIndex = (next: number) => {
+    setStepError(null);
+    setIndexState(Math.max(0, Math.min(next, steps.length - 1)));
+  };
   const step = steps[index]!;
   const isLast = index === steps.length - 1;
   // Krok opcjonalny zawsze przepuszcza dalej. Wyszarzony przycisk główny
@@ -73,6 +100,17 @@ export function StepWizard({
   const goBack = () => {
     if (index > 0) setIndex(index - 1);
     else onExit?.();
+  };
+
+  const goForward = () => {
+    const problem = step.validate?.() ?? null;
+    if (problem) {
+      setStepError(problem);
+      return;
+    }
+    setStepError(null);
+    if (isLast) onFinish();
+    else setIndex(index + 1);
   };
 
   return (
@@ -96,8 +134,10 @@ export function StepWizard({
                 key={i}
                 className={cn(
                   "h-1 flex-1 rounded-full transition-colors duration-300",
+                  // Za Tobą — zielone, bieżący — pomarańczowy, przed Tobą — szare.
+                  // Dwie różne barwy mówią „to już zrobione", nie „to ważne".
                   i < current
-                    ? "bg-[var(--vairo)]/50"
+                    ? "bg-[var(--success)]/70"
                     : i === current
                       ? "bg-[var(--vairo)]"
                       : "bg-white/12"
@@ -112,6 +152,9 @@ export function StepWizard({
       </div>
 
       <div key={step.key} className="app-enter">
+        {crumb ? (
+          <p className="mb-3 text-[13px] text-[var(--text-subtle)]">{crumb}</p>
+        ) : null}
         <h1 className="font-heading text-[1.7rem] font-semibold leading-tight tracking-tight text-white sm:text-[1.95rem]">
           {step.title}
         </h1>
@@ -121,7 +164,7 @@ export function StepWizard({
           </p>
         ) : null}
 
-        <div className="mt-7">{step.render()}</div>
+        <div className="mt-7">{step.render({ goTo: setIndex, error: stepError })}</div>
 
         {step.help ? (
           <p className="mt-4 rounded-xl border border-white/8 bg-[var(--surface)] px-4 py-3 text-[13px] leading-relaxed text-[var(--text-subtle)]">
@@ -136,13 +179,26 @@ export function StepWizard({
         </p>
       ) : null}
 
-      <div className="mt-9 flex items-center gap-3">
+      <div
+        className={cn(
+          "mt-9 flex items-center gap-3",
+          // Na telefonie przyciski przypięte do dołu, w zasięgu kciuka.
+          footerBack &&
+            "sticky bottom-0 -mx-4 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)] to-transparent px-4 pb-4 pt-6 sm:static sm:mx-0 sm:bg-none sm:p-0"
+        )}
+      >
+        {footerBack && (index > 0 || onExit) ? (
+          <Button size="lg" variant="secondary" onClick={goBack} className="sm:min-w-[120px]">
+            <ArrowLeft className="size-4" />
+            {index > 0 ? "Wstecz" : exitLabel}
+          </Button>
+        ) : null}
         <Button
           size="lg"
           block
           disabled={!canContinue}
           loading={isLast ? finishing : false}
-          onClick={() => (isLast ? onFinish() : setIndex(index + 1))}
+          onClick={goForward}
         >
           {isLast ? (
             <>

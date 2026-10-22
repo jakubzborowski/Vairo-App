@@ -15,7 +15,7 @@ const TABS = [
 
 export function SettingsTabs({ active }: { active: "profile" | "account" }) {
   return (
-    <nav className="mb-6 inline-flex rounded-xl border border-white/10 bg-[var(--surface)] p-1">
+    <nav className="mb-6 inline-flex rounded-xl border border-white/10 bg-[var(--surface)] p-1" aria-label="Ustawienia">
       {TABS.map((tab) => {
         const isActive = tab.href.endsWith(active);
         return (
@@ -24,10 +24,12 @@ export function SettingsTabs({ active }: { active: "profile" | "account" }) {
             href={tab.href}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "inline-flex h-9 items-center rounded-lg px-4 text-[13.5px] font-medium transition-colors",
+              "inline-flex h-11 items-center rounded-lg px-4 text-[13.5px] font-medium transition-colors sm:h-8",
+              // Neutralnie, nie pomarańczem: na ekranie ustawień nie ma akcji
+              // głównej, więc nie ma czego wyróżniać kolorem marki.
               isActive
-                ? "bg-[var(--vairo)]/12 text-[var(--vairo)]"
-                : "text-[var(--text-subtle)] hover:text-white"
+                ? "bg-[var(--surface-3)] text-white"
+                : "text-[var(--text-muted)] hover:text-white"
             )}
           >
             {tab.label}

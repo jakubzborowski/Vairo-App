@@ -19,11 +19,23 @@ import { LOOKING_FOR_LABELS, type PublicProfile } from "@/types/social";
  * do zaczepiania samego siebie. Jeśli karta w Odkrywaj kiedyś się zmieni,
  * zmieni się i tutaj, bo to są te same elementy.
  */
-export function PersonPreviewCard({ person }: { person: PublicProfile }) {
+export function PersonPreviewCard({
+  person,
+  compact = false,
+}: {
+  person: PublicProfile;
+  /** W wąskiej kolumnie obok formularza — zdjęcie nad treścią, nie obok. */
+  compact?: boolean;
+}) {
   const skills = person.skills ?? [];
 
   return (
-    <article className="overflow-hidden rounded-[28px] border border-white/[0.08] bg-[var(--surface)] lift-2 md:grid md:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
+    <article
+      className={
+        "overflow-hidden rounded-[28px] border border-white/[0.08] bg-[var(--surface)] lift-2 " +
+        (compact ? "" : "md:grid md:grid-cols-[minmax(0,300px)_minmax(0,1fr)]")
+      }
+    >
       <DeckCover
         image={person.avatar_url}
         fallback={
@@ -73,7 +85,13 @@ export function PersonPreviewCard({ person }: { person: PublicProfile }) {
         ) : null}
 
         {person.weekly_focus ? (
-          <DeckBlock label="Nad czym teraz pracujesz">
+          <DeckBlock
+            label={
+              person.weekly_focus_updated_at
+                ? `W tym tygodniu · ${new Date(person.weekly_focus_updated_at).toLocaleDateString("pl-PL", { day: "numeric", month: "short" })}`
+                : "Nad czym teraz pracujesz"
+            }
+          >
             <p className="whitespace-pre-line text-[14px] leading-relaxed text-[var(--text-muted)]">
               {person.weekly_focus}
             </p>
@@ -94,7 +112,7 @@ export function PersonPreviewCard({ person }: { person: PublicProfile }) {
             pustych sekcjach byłoby nieprawdą, a cisza w tym miejscu czyta się
             jak „tak ma być". */}
         {!person.weekly_focus && skills.length === 0 ? (
-          <p className="text-[13px] italic leading-relaxed text-[var(--text-faint)]">
+          <p className="text-[13px] italic leading-relaxed text-[var(--text-subtle)]">
             Prawa kolumna jest pusta — obcy zobaczą samo zdjęcie i imię.
             Uzupełnij „nad czym pracujesz” i umiejętności.
           </p>

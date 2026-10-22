@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { goalQualifies, parseRequirement, parseSnapshot } from "@/lib/proof";
 import type {
@@ -24,7 +25,8 @@ function missingRelation(message: string) {
   );
 }
 
-export async function isExecutionUnlocked(
+/** `cache()`: layout (menu) i dashboard pytają o to samo w jednym żądaniu. */
+export const isExecutionUnlocked = cache(async function isExecutionUnlocked(
   supabase: SupabaseClient,
   startupId: string
 ) {
@@ -36,7 +38,7 @@ export async function isExecutionUnlocked(
 
   if (error) return false;
   return Boolean(data?.execution_unlocked_at);
-}
+});
 
 export async function loadGoalTypes(
   supabase: SupabaseClient
@@ -103,6 +105,11 @@ type GoalRow = {
     status: TaskStatus;
     due_date: string | null;
     needs_reassign: boolean;
+    created_by: string | null;
+    created_at: string;
+    note?: string | null;
+    blocker_note?: string | null;
+    completed_at?: string | null;
     profiles: { full_name: string | null } | null;
   }[];
   goal_materials: {
@@ -177,11 +184,11 @@ export async function loadGoalsWorkspace(
     console.error("[ensure_goal_condition_snapshots]", ensureError.message);
   }
 
-  const [types, members, goalsResult, conditionsResult, filesResult, flowsResult] =
-    await Promise.all([
-      loadGoalTypes(supabase),
-      loadTeamMembers(supabase, startupId),
-      supabase
+  // Szczegóły zadań (notatka, powód blokady, data ukończenia) przychodzą
+  // z migracją 029. Bez niej `select` z tymi kolumnami kończy się błędem —
+  // wtedy pytamy jeszcze raz bez nich, zamiast wywracać cały tracker.
+  const selectGoals = (withTaskDetails: boolean) =>
+    supabase
         .from("goals")
         .select(
           `id, title, description, goal_type_id, owner_id, due_date, status,
@@ -189,7 +196,7 @@ export async function loadGoalsWorkspace(
            archived_at, completed_at, created_by,
            goal_types(label),
            profiles!goals_owner_id_fkey(full_name),
-           tasks(id, title, owner_id, status, due_date, needs_reassign, profiles!tasks_owner_id_fkey(full_name)),
+           tasks(id, title, owner_id, created_by, status, due_date, needs_reassign, created_at${withTaskDetails ? ", note, blocker_note, completed_at" : ""}, profiles!tasks_owner_id_fkey(full_name)),
            goal_materials(id, kind, file_name, file_path, url, body),
            goal_events(id, kind, payload, created_at, actor_id),
            goal_condition_links(
@@ -201,13 +208,20 @@ export async function loadGoalsWorkspace(
            )`
         )
         .eq("startup_id", startupId)
-        .order("due_date", { ascending: true }),
+        .order("due_date", { ascending: true });
+
+  const [types, members, goalsFirst, conditionsResult, filesResult, flowsResult] =
+    await Promise.all([
+      loadGoalTypes(supabase),
+      loadTeamMembers(supabase, startupId),
+      selectGoals(true),
       supabase
         .from("startup_goal_conditions")
         .select(
           `id, subpoint_id, goal_type_id, min_count, proof_kind, counts_when, match_any_type, startup_id,
            goal_types(label),
-           stage_subpoints(title),
+           startup_stages(stage_templates(key, title, position)),
+           stage_subpoints(title, position, stage_points(position, stage_categories(position))),
            goal_condition_links(
              goal_id,
              goals(
@@ -229,6 +243,10 @@ export async function loadGoalsWorkspace(
         .order("updated_at", { ascending: false }),
     ]);
 
+  let goalsResult = goalsFirst;
+  if (goalsResult.error && goalsResult.error.message.includes("column")) {
+    goalsResult = await selectGoals(false);
+  }
   if (goalsResult.error && missingRelation(goalsResult.error.message)) {
     return empty;
   }
@@ -249,7 +267,15 @@ export async function loadGoalsWorkspace(
     match_any_type?: boolean | null;
     startup_id: string;
     goal_types: { label: string } | null;
-    stage_subpoints: { title: string } | null;
+    startup_stages: { stage_templates: { key: string; title: string; position: number } | null } | null;
+    stage_subpoints: {
+      title: string;
+      position: number | null;
+      stage_points: {
+        position: number | null;
+        stage_categories: { position: number | null } | null;
+      } | null;
+    } | null;
     goal_condition_links: {
       goal_id: string;
       goals: {
@@ -299,8 +325,21 @@ export async function loadGoalsWorkspace(
     }
     const label = row.goal_types?.label ?? row.goal_type_id;
     const subpoint = row.stage_subpoints?.title ?? "Podpunkt";
+    const point = row.stage_subpoints?.stage_points;
     conditionDone.set(row.id, { done: ids.size, label, subpoint });
     conditions.push({
+      stageTitle: row.startup_stages?.stage_templates?.title ?? "Etap",
+      stageKey: row.startup_stages?.stage_templates?.key ?? null,
+      stagePosition: row.startup_stages?.stage_templates?.position ?? 0,
+      order:
+        (point?.stage_categories?.position ?? 0) * 1_000_000 +
+        (point?.position ?? 0) * 1_000 +
+        (row.stage_subpoints?.position ?? 0),
+      matchAnyType: "match_any_type" in row && Boolean(row.match_any_type),
+      countsWhen: "counts_when" in row && row.counts_when === "defined" ? "defined" : "completed",
+      linkedGoalIds: linked
+        .map((link) => link.goals?.id ?? link.goal_id)
+        .filter((id): id is string => Boolean(id)),
       id: row.id,
       subpointId: row.subpoint_id,
       subpointTitle: subpoint,
@@ -355,6 +394,12 @@ export async function loadGoalsWorkspace(
       status: task.status,
       dueDate: task.due_date,
       needsReassign: task.needs_reassign,
+      createdBy: task.created_by,
+      createdAt: task.created_at,
+      // `undefined` = kolumny nie ma (brak 029) — UI chowa wtedy te pola.
+      note: task.note,
+      blockerNote: task.blocker_note,
+      completedAt: task.completed_at,
     }));
 
     const materials: GoalMaterial[] = (row.goal_materials ?? []).map((item) => ({
@@ -418,6 +463,10 @@ export async function loadGoalsWorkspace(
     title: flow.title as string,
     version: flow.version as number,
   }));
+
+  conditions.sort(
+    (a, b) => a.stagePosition - b.stagePosition || a.order - b.order
+  );
 
   return {
     ready: true,
@@ -586,6 +635,90 @@ export async function loadNearestGoal(
   };
 }
 
+export type DeadlineRow = {
+  id: string;
+  kind: "goal" | "task";
+  title: string;
+  due: string;
+  ownerName: string | null;
+  overdue: boolean;
+  href: string;
+};
+
+/**
+ * Najbliższe terminy zespołu (cele i zadania) — panel na dashboardzie.
+ * Spóźnione otwarte terminy są na górze, bo to one wymagają ruchu.
+ */
+export async function loadUpcomingDeadlines(
+  supabase: SupabaseClient,
+  startupId: string,
+  limit = 4
+): Promise<DeadlineRow[]> {
+  const [goals, tasks] = await Promise.all([
+    supabase
+      .from("goals")
+      .select("id, title, due_date, profiles!goals_owner_id_fkey(full_name)")
+      .eq("startup_id", startupId)
+      .is("archived_at", null)
+      .neq("status", "completed")
+      .order("due_date", { ascending: true })
+      .limit(limit),
+    supabase
+      .from("tasks")
+      .select("id, title, due_date, goals!inner(archived_at), profiles!tasks_owner_id_fkey(full_name)")
+      .eq("startup_id", startupId)
+      .neq("status", "done")
+      .not("due_date", "is", null)
+      .is("goals.archived_at", null)
+      .order("due_date", { ascending: true })
+      .limit(limit),
+  ]);
+  const today = todayIso();
+  type Row = { id: string; title: string; due_date: string; profiles: { full_name: string | null } | null };
+  const rows: DeadlineRow[] = [
+    ...((goals.data ?? []) as unknown as Row[]).map((row) => ({
+      id: row.id,
+      kind: "goal" as const,
+      title: row.title,
+      due: row.due_date,
+      ownerName: row.profiles?.full_name ?? null,
+      overdue: row.due_date < today,
+      href: `/app/goals/${row.id}`,
+    })),
+    ...((tasks.data ?? []) as unknown as Row[]).map((row) => ({
+      id: row.id,
+      kind: "task" as const,
+      title: row.title,
+      due: row.due_date,
+      ownerName: row.profiles?.full_name ?? null,
+      overdue: row.due_date < today,
+      href: `/app/tasks?task=${row.id}`,
+    })),
+  ];
+  return rows.sort((a, b) => a.due.localeCompare(b.due)).slice(0, limit);
+}
+
+/** Ostatnio ukończone cele — zielone miejsce na sukcesy na dashboardzie. */
+export async function loadRecentlyCompleted(
+  supabase: SupabaseClient,
+  startupId: string,
+  limit = 3
+): Promise<{ id: string; title: string; completedAt: string | null }[]> {
+  const { data } = await supabase
+    .from("goals")
+    .select("id, title, completed_at")
+    .eq("startup_id", startupId)
+    .eq("status", "completed")
+    .is("archived_at", null)
+    .order("completed_at", { ascending: false, nullsFirst: false })
+    .limit(limit);
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    title: row.title as string,
+    completedAt: (row.completed_at as string | null) ?? null,
+  }));
+}
+
 export type OpenWork = {
   goals: { id: string; title: string; status: GoalStatus; dueDate: string; ownerId: string | null }[];
   tasks: { id: string; title: string; goalId: string; ownerId: string | null; dueDate: string | null }[];
@@ -635,5 +768,137 @@ export async function loadOpenWork(
       ownerId: (row.owner_id as string | null) ?? null,
       dueDate: (row.due_date as string | null) ?? null,
     })),
+  };
+}
+
+export type ActivityItem = {
+  id: string;
+  text: string;
+  actorName: string | null;
+  createdAt: string;
+  href: string;
+};
+
+// Bezosobowo: polszczyzna odmienia czasownik przez rodzaj, a my go nie znamy.
+const GOAL_EVENT_TEXT: Record<string, string> = {
+  created: "Nowy cel",
+  proof: "Cel ukończony z dowodem",
+  reopened: "Cel otwarty ponownie",
+  archived: "Cel zarchiwizowany",
+  deadline: "Nowy termin celu",
+  owner: "Nowy właściciel celu",
+  status: "Zmiana statusu celu",
+};
+
+/**
+ * Ostatnia aktywność zespołu — z prawdziwych zdarzeń: historii celów (025)
+ * i zadań (029, jeśli jest). Nie ma tu nic wyliczonego ani zgadywanego;
+ * przy pustej historii panel mówi, że jeszcze nic się nie wydarzyło.
+ */
+export async function loadTeamActivity(
+  supabase: SupabaseClient,
+  startupId: string,
+  limit = 5
+): Promise<ActivityItem[]> {
+  const [goalEvents, taskEvents, members] = await Promise.all([
+    supabase
+      .from("goal_events")
+      .select("id, kind, created_at, actor_id, goal_id, goals(title)")
+      .eq("startup_id", startupId)
+      .order("created_at", { ascending: false })
+      .limit(limit),
+    supabase
+      .from("task_events")
+      .select("id, kind, created_at, actor_id, task_id, tasks(title)")
+      .eq("startup_id", startupId)
+      .order("created_at", { ascending: false })
+      .limit(limit),
+    loadTeamMembers(supabase, startupId),
+  ]);
+  const name = (id: string | null) =>
+    id ? (members.find((member) => member.id === id)?.name ?? "Była osoba z teamu") : null;
+
+  type GoalRow = { id: string; kind: string; created_at: string; actor_id: string | null; goal_id: string; goals: { title: string } | null };
+  type TaskRow = { id: string; kind: string; created_at: string; actor_id: string | null; task_id: string; tasks: { title: string } | null };
+
+  const items: ActivityItem[] = [
+    ...((goalEvents.data ?? []) as unknown as GoalRow[]).map((row) => ({
+      id: `g-${row.id}`,
+      text: `${GOAL_EVENT_TEXT[row.kind] ?? "Zmiana w celu"}: „${row.goals?.title ?? "cel"}”`,
+      actorName: name(row.actor_id),
+      createdAt: row.created_at,
+      href: `/app/goals/${row.goal_id}`,
+    })),
+    // Bez migracji 029 tabeli nie ma — zapytanie zwraca błąd i pomijamy je.
+    ...(taskEvents.error ? [] : ((taskEvents.data ?? []) as unknown as TaskRow[])).map((row) => ({
+      id: `t-${row.id}`,
+      text:
+        row.kind === "created"
+          ? `Nowe zadanie: „${row.tasks?.title ?? "zadanie"}”`
+          : `Zmiana w zadaniu: „${row.tasks?.title ?? "zadanie"}”`,
+      actorName: name(row.actor_id),
+      createdAt: row.created_at,
+      href: `/app/tasks?task=${row.task_id}`,
+    })),
+  ];
+  return items.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)).slice(0, limit);
+}
+
+export type StartupStatusCounts = {
+  goalsDone: number;
+  openBlockers: number;
+  overdueTasks: number;
+  /** Pierwsza otwarta przeszkoda — „główna przeszkoda" na dashboardzie. */
+  mainBlocker: { title: string; note: string | null; href: string } | null;
+};
+
+/**
+ * Stan startupu (wytyczne, sekcja 3): ukończone cele z dowodem, otwarte
+ * przeszkody i zadania po terminie — każda liczba z zapytania, każda prowadzi
+ * do rekordów źródłowych. Bez oceny „kondycji" i bez wyliczonego wyniku.
+ * Przed migracją 025 zwraca `null` — wtedy pasek się nie pokazuje.
+ */
+export async function loadStartupStatus(
+  supabase: SupabaseClient,
+  startupId: string
+): Promise<StartupStatusCounts | null> {
+  const today = todayIso();
+  const [done, blockedGoals, blockedTasks, overdue] = await Promise.all([
+    supabase
+      .from("goals")
+      .select("id", { count: "exact", head: true })
+      .eq("startup_id", startupId)
+      .eq("status", "completed")
+      .is("archived_at", null),
+    supabase
+      .from("goals")
+      .select("id, title, blocker_note")
+      .eq("startup_id", startupId)
+      .eq("status", "blocked")
+      .is("archived_at", null)
+      .order("due_date", { ascending: true }),
+    supabase
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("startup_id", startupId)
+      .eq("status", "blocked"),
+    supabase
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("startup_id", startupId)
+      .neq("status", "done")
+      .lt("due_date", today),
+  ]);
+  if (done.error && missingRelation(done.error.message)) return null;
+  const firstBlocked = (blockedGoals.data ?? [])[0] as
+    | { id: string; title: string; blocker_note: string | null }
+    | undefined;
+  return {
+    goalsDone: done.count ?? 0,
+    openBlockers: (blockedGoals.data?.length ?? 0) + (blockedTasks.count ?? 0),
+    overdueTasks: overdue.count ?? 0,
+    mainBlocker: firstBlocked
+      ? { title: firstBlocked.title, note: firstBlocked.blocker_note, href: `/app/goals/${firstBlocked.id}` }
+      : null,
   };
 }

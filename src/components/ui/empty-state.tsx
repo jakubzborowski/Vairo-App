@@ -14,6 +14,30 @@ type EmptyStateProps = {
  * Mówi trzy rzeczy: co to jest, dlaczego warto, jeden przycisk.
  * Używamy go wszędzie tam, gdzie kusi wstawienie zmyślonych danych.
  */
+/**
+ * Mały pusty stan: jedno zdanie w przerywanej ramce. Do miejsc wewnątrz
+ * ekranu, gdzie pełny pusty stan zagłuszyłby resztę (pusta kolumna,
+ * pusta lista zadań pod celem).
+ */
+export function EmptyNote({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <p
+      className={cn(
+        "rounded-xl border border-dashed border-white/10 px-4 py-3.5 text-[13px] leading-relaxed text-[var(--text-subtle)]",
+        className
+      )}
+    >
+      {children}
+    </p>
+  );
+}
+
 export function EmptyState({
   icon: Icon,
   title,

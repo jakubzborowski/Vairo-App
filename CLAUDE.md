@@ -260,6 +260,7 @@ src/
       stage/summary/        wszystko, co zespół ustalił w jednym etapie
       stage/complete/       koniec programu po MVP: wyniki i kontakt (bez płatności)
       goals/ tasks/         tracker Execution: cele z dowodem i zadania pod nimi
+      goals/[id] goals/new  szczegół celu (strona, nie modal) i kreator w 5 krokach
       workflows/            Rozpiska — schemat pracy z wersjami
       calendar/             terminy celów i zadań
       docs/ files/          wspólne notatki i biblioteka plików (od Preparation)
@@ -438,11 +439,15 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `026_execution_content_rules` | cel „ustawiony" vs „ukończony", `depends_on`, dokumenty |
 | `027_content_execution_v1` | treść Execution (generowana) |
 | `028_content_mvp_v1` | treść MVP Stage (generowana) — warunki celów z 025, `depends_on` z 026 |
+| `029_task_details` | notatka, powód blokady, `completed_at` zadania, historia `task_events` (redesign Tasków) |
+| `030_file_folders` | foldery w Plikach, zmiana nazwy i przenoszenie (redesign Plików) |
+| `031_document_editor` | `updated_by` w Dokumentach |
+| `032_events_actor_guard` | historia celów i zadań nie blokuje usuwania konta |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`028`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`032`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 

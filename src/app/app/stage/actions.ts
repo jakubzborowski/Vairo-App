@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { ensureStartupStage } from "@/lib/stage";
+import {
+  currentProgramEntry,
+  ensureStartupStage,
+  loadStageProgram,
+  loadStageTree,
+} from "@/lib/stage";
 import { getActiveStartupId } from "@/lib/active-team";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import {
@@ -13,7 +18,11 @@ import {
 } from "@/lib/permissions";
 import { translateDbError } from "@/lib/db-errors";
 import { fieldAnswered, hasAnswer, type FieldConfig, type FieldKind, type StageDecision } from "@/types/stage";
-import { VALIDATION_CATEGORIES, type ValidationCategory } from "@/types/startup";
+import {
+  VALIDATION_CATEGORIES,
+  canTransferOwnership,
+  type ValidationCategory,
+} from "@/types/startup";
 
 type Result = { error: string | null };
 
@@ -54,15 +63,18 @@ export async function saveSubpointAnswers(input: {
   answers: Record<string, unknown>;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
-  const denied = await guardStageWrite(supabase, input.startupStageId, user.id);
+  // Uprawnienia i definicje pól nie zależą od siebie — jedna fala zamiast dwóch.
+  const [{ role, startupId }, { data: fieldRows }] = await Promise.all([
+    getStageRole(supabase, input.startupStageId, user.id),
+    supabase
+      .from("stage_fields")
+      .select("answer_key, kind, config")
+      .eq("subpoint_id", input.subpointId),
+  ]);
+  const denied = stageWriteError(role);
   if (denied) return { error: denied };
-
-  const { data: fieldRows } = await supabase
-    .from("stage_fields")
-    .select("answer_key, kind, config")
-    .eq("subpoint_id", input.subpointId);
 
   const byKey = new Map(
     (fieldRows ?? []).map((row) => [
@@ -80,6 +92,22 @@ export async function saveSubpointAnswers(input: {
   };
 
   const entries = Object.entries(input.answers);
+
+  // Pliki usunięte z pola znikają ze Storage dopiero po zapisie odpowiedzi.
+  // Wcześniej „Usuń" w modalu kasował plik od razu — po anulowaniu okna
+  // odpowiedź wskazywała plik, którego już nie było.
+  const fileKeys = entries
+    .map(([key]) => key)
+    .filter((key) => byKey.get(key)?.kind === "files");
+  const { data: previousFiles } =
+    fileKeys.length > 0
+      ? await supabase
+          .from("stage_answers")
+          .select("answer_key, value")
+          .eq("startup_stage_id", input.startupStageId)
+          .in("answer_key", fileKeys)
+      : { data: [] as { answer_key: string; value: unknown }[] };
+
   const toUpsert = entries.filter(([key, value]) => isFilled(key, value));
   const toDelete = entries
     .filter(([key, value]) => !isFilled(key, value))
@@ -107,14 +135,34 @@ export async function saveSubpointAnswers(input: {
     if (error) return { error: translateDbError(error.message) };
   }
 
-  // Zapamiętujemy, gdzie user skończył — wejście w /app wraca dokładnie tutaj.
-  await supabase
-    .from("startup_stages")
-    .update({ last_subpoint_id: input.subpointId })
-    .eq("id", input.startupStageId);
+  const filePaths = (value: unknown) =>
+    Array.isArray(value)
+      ? value
+          .map((item) => (item as { path?: unknown })?.path)
+          .filter((path): path is string => typeof path === "string")
+      : [];
+  const kept = new Set(fileKeys.flatMap((key) => filePaths(input.answers[key])));
+  const orphaned = (previousFiles ?? [])
+    .flatMap((row) => filePaths(row.value))
+    // Tylko pliki tego etapu — ścieżka zaczyna się od id instancji.
+    .filter((path) => !kept.has(path) && path.startsWith(`${input.startupStageId}/`));
+  if (orphaned.length > 0) {
+    await supabase.storage.from("stage-files").remove(orphaned);
+  }
 
-  await syncStartupName(supabase, input.startupStageId, input.answers);
+  await Promise.all([
+    // Zapamiętujemy, gdzie user skończył — wejście w /app wraca dokładnie tutaj.
+    supabase
+      .from("startup_stages")
+      .update({ last_subpoint_id: input.subpointId })
+      .eq("id", input.startupStageId),
+    startupId
+      ? syncStartupName(supabase, startupId, byKey, input.answers)
+      : Promise.resolve(),
+  ]);
 
+  // Odpowiedź akcji niesie już przerenderowaną stronę — klient nie musi
+  // dodatkowo wołać `router.refresh()`.
   revalidatePath("/app/stage");
   revalidatePath("/app");
   return { error: null };
@@ -123,40 +171,30 @@ export async function saveSubpointAnswers(input: {
 /**
  * Pole z `syncs_startup_name` nadaje nazwę startupowi — w Ambition Stage
  * robi to punkt „Nadaj projektowi roboczą nazwę".
+ *
+ * Definicje pól i `startup_id` przychodzą od wywołującego — wcześniej ta
+ * funkcja pobierała je drugi raz, dwa zapytania po kolei przy każdym zapisie.
  */
 async function syncStartupName(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  startupStageId: string,
+  startupId: string,
+  fields: Map<string, { config: FieldConfig }>,
   answers: Record<string, unknown>
 ) {
-  const keys = Object.keys(answers);
-  if (keys.length === 0) return;
-
-  const { data: fields } = await supabase
-    .from("stage_fields")
-    .select("answer_key, config")
-    .in("answer_key", keys);
-
-  const syncField = (fields ?? []).find(
-    (f) => (f.config as { syncs_startup_name?: boolean })?.syncs_startup_name
+  const syncKey = Object.keys(answers).find(
+    (key) =>
+      (fields.get(key)?.config as { syncs_startup_name?: boolean } | undefined)
+        ?.syncs_startup_name
   );
-  if (!syncField) return;
+  if (!syncKey) return;
 
-  const value = answers[syncField.answer_key];
+  const value = answers[syncKey];
   if (typeof value !== "string" || value.trim().length < 2) return;
-
-  const { data: stage } = await supabase
-    .from("startup_stages")
-    .select("startup_id")
-    .eq("id", startupStageId)
-    .maybeSingle();
-
-  if (!stage) return;
 
   await supabase
     .from("startups")
     .update({ name: value.trim().slice(0, 80) })
-    .eq("id", stage.startup_id);
+    .eq("id", startupId);
 }
 
 /** Zapamiętuje ostatnio otwarty podpunkt (bez zapisu odpowiedzi). */
@@ -191,11 +229,60 @@ export async function closeStage(input: {
   note?: string;
   reopenSubpointIds?: string[];
 }): Promise<Result & { next?: string }> {
-  const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  return runCloseStage(input, { requireReady: true });
+}
 
-  const denied = await guardStageWrite(supabase, input.startupStageId, user.id);
+/**
+ * Czy wszystkie wymagane podpunkty są domknięte — liczone tym samym drzewem,
+ * które rysuje ekran etapu. `close_stage` w bazie tego nie sprawdza, więc bez
+ * tej bramki wystarczyło wywołać akcję z pominięciem przycisku, żeby zamknąć
+ * niedokończony etap i odblokować kolejny.
+ */
+async function stageReadyToFinish(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  startupStageId: string,
+  startupId: string
+) {
+  const { data: rows } = await supabase
+    .from("startup_categories")
+    .select("category")
+    .eq("startup_id", startupId);
+  const categories = Array.from(
+    new Set<ValidationCategory>([
+      "general",
+      ...((rows ?? []).map((row) => row.category) as ValidationCategory[]),
+    ])
+  );
+  const tree = await loadStageTree(supabase, {
+    startupStageId,
+    activeCategories: categories,
+    role: null,
+  });
+  return Boolean(tree?.canFinish);
+}
+
+// Nieeksportowana: flaga `requireReady` nie może przyjść od klienta.
+// Pomija ją wyłącznie domknięcie szkieletu etapu bez treści.
+async function runCloseStage(
+  input: {
+    startupStageId: string;
+    decision: StageDecision;
+    note?: string;
+    reopenSubpointIds?: string[];
+  },
+  options: { requireReady: boolean }
+): Promise<Result & { next?: string }> {
+  const { supabase, user } = await requireUser();
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+
+  const { role } = await getStageRole(supabase, input.startupStageId, user.id);
+  const denied = stageWriteError(role);
   if (denied) return { error: denied };
+  // Archiwum to decyzja Foundera (CLAUDE.md, tabela ról) — tak samo jak
+  // w ustawieniach teamu. `close_stage` w bazie wpuszcza też Admina.
+  if (input.decision === "archive" && (!role || !canTransferOwnership(role))) {
+    return { error: "Do archiwum może przenieść tylko Founder." };
+  }
 
   const { data: stage } = await supabase
     .from("startup_stages")
@@ -208,6 +295,19 @@ export async function closeStage(input: {
   const templateKey =
     (stage.stage_templates as unknown as { key: string } | null)?.key ?? "";
 
+  // Pauza, archiwum i pivot to decyzje, które da się podjąć w każdej chwili.
+  // „Idziemy dalej" wymaga domkniętych wymagań etapu.
+  if (
+    options.requireReady &&
+    input.decision === "continue" &&
+    !(await stageReadyToFinish(supabase, input.startupStageId, stage.startup_id))
+  ) {
+    return {
+      error:
+        "Ten etap ma jeszcze nieuzupełnione podpunkty. Odśwież stronę — lista pokaże, czego brakuje.",
+    };
+  }
+
   const { error } = await supabase.rpc("close_stage", {
     p_startup_stage_id: input.startupStageId,
     p_decision: input.decision,
@@ -218,9 +318,9 @@ export async function closeStage(input: {
 
   if (error) return { error: translateStageError(error.message) };
 
-  revalidatePath("/app/stage");
-  revalidatePath("/app");
-  revalidatePath("/app/team");
+  // Cały layout: menu boczne pokazuje Cele, Taski i Rozpiskę dopiero po
+  // domknięciu Preparation, a przełącznik teamu rysuje kreski etapów.
+  revalidatePath("/app", "layout");
 
   if (input.decision !== "continue") {
     // Pivot zostawia etap otwarty, pauza i archiwum nie otwierają kolejnego.
@@ -230,15 +330,24 @@ export async function closeStage(input: {
   // Ambition prowadzi przez podsumowanie, a nie prosto do wyboru kategorii.
   // Bez tego nikt nie pokazywał człowiekowi, co właśnie ustalił przez pół godziny.
   if (templateKey === "ambition") {
+    // Wybór kategorii tylko na wejściu w Idea. Startup, który zaczął od
+    // gotowego pomysłu i uzupełnił Ambition później, ma Idea za sobą —
+    // pytanie o kategorie w środku programu zmieniałoby mu wymagania.
+    const { count: ideaStarted } = await supabase
+      .from("startup_stages")
+      .select("id, stage_templates!inner(key)", { count: "exact", head: true })
+      .eq("startup_id", stage.startup_id)
+      .eq("stage_templates.key", "idea");
     return {
       error: null,
-      next: "/app/stage/summary?stage=ambition&next=categories",
+      next: ideaStarted
+        ? "/app/stage/summary?stage=ambition"
+        : "/app/stage/summary?stage=ambition&next=categories",
     };
   }
 
   // MVP Stage kończy program ekranem z wynikami i prostą ofertą dalszej współpracy (§1C).
   if (templateKey === "mvp") {
-    revalidatePath("/app/stage/complete");
     return { error: null, next: "/app/stage/complete" };
   }
 
@@ -261,25 +370,30 @@ function translateStageError(message: string) {
   if (message.includes("close_stage") && message.includes("does not exist")) {
     return "Brakuje migracji 010 — odpal ją w Supabase → SQL Editor.";
   }
-  return message;
+  return translateDbError(message) ?? "Nie udało się zapisać decyzji. Spróbuj jeszcze raz.";
 }
 
 /** Ponowne otwarcie domkniętego etapu — user może wrócić i poprawić. */
 export async function reopenStage(startupStageId: string): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const denied = await guardStageWrite(supabase, startupStageId, user.id);
   if (denied) return { error: denied };
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("startup_stages")
     .update({ status: "in_progress", completed_at: null })
-    .eq("id", startupStageId);
+    .eq("id", startupStageId)
+    .select("id");
 
-  if (error) return { error: error.message };
+  if (error) return { error: translateDbError(error.message) };
+  // RLS przy braku uprawnień nie zwraca błędu, tylko zero wierszy.
+  if (!data || data.length === 0) {
+    return { error: "Nie udało się otworzyć etapu. Odśwież stronę i spróbuj ponownie." };
+  }
 
-  revalidatePath("/app/stage");
+  revalidatePath("/app", "layout");
   return { error: null };
 }
 
@@ -294,7 +408,7 @@ export async function chooseCategoriesAfterAmbition(
   formData: FormData
 ): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Musisz być zalogowany." };
+  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const startupId = String(formData.get("startup_id") ?? "");
   if (!startupId) return { error: "Brak kontekstu teamu." };
@@ -315,24 +429,46 @@ export async function chooseCategoriesAfterAmbition(
     .map((t) => t.trim())
     .filter(Boolean);
 
-  await supabase
-    .from("startup_categories")
-    .delete()
-    .eq("startup_id", startupId)
-    .neq("category", "general");
-
+  // Najpierw dopisujemy wybrane, potem usuwamy odznaczone. Odwrotna kolejność
+  // przy błędzie zapisu zostawiała startup bez żadnej kategorii poza general.
   if (categories.length > 0) {
     const { error } = await supabase
       .from("startup_categories")
-      .insert(categories.map((category) => ({ startup_id: startupId, category })));
+      .upsert(
+        categories.map((category) => ({ startup_id: startupId, category })),
+        { onConflict: "startup_id,category", ignoreDuplicates: true }
+      );
+    if (error) return { error: translateDbError(error.message) };
+  }
+  {
+    let removal = supabase
+      .from("startup_categories")
+      .delete()
+      .eq("startup_id", startupId)
+      .neq("category", "general");
+    if (categories.length > 0) {
+      removal = removal.not("category", "in", `(${categories.join(",")})`);
+    }
+    const { error } = await removal;
     if (error) return { error: translateDbError(error.message) };
   }
 
-  await supabase.from("startup_tags").delete().eq("startup_id", startupId);
   if (tagIds.length > 0) {
-    await supabase
+    const { error } = await supabase
       .from("startup_tags")
-      .insert(tagIds.map((tag_id) => ({ startup_id: startupId, tag_id })));
+      .upsert(
+        tagIds.map((tag_id) => ({ startup_id: startupId, tag_id })),
+        { onConflict: "startup_id,tag_id", ignoreDuplicates: true }
+      );
+    if (error) return { error: translateDbError(error.message) };
+  }
+  {
+    let removal = supabase.from("startup_tags").delete().eq("startup_id", startupId);
+    if (tagIds.length > 0) {
+      removal = removal.not("tag_id", "in", `(${tagIds.join(",")})`);
+    }
+    const { error } = await removal;
+    if (error) return { error: translateDbError(error.message) };
   }
 
   const stageId = await ensureStartupStage(supabase, startupId, "idea");
@@ -340,8 +476,7 @@ export async function chooseCategoriesAfterAmbition(
     return { error: "Treść Idea Stage nie jest jeszcze wgrana do bazy." };
   }
 
-  revalidatePath("/app/stage");
-  revalidatePath("/app");
+  revalidatePath("/app", "layout");
 
   // Bez tego formularz dostawał „zapisane" i nic się nie działo — user zostawał
   // na ekranie kategorii, bo jedyną informacją zwrotną był brak błędu.
@@ -384,13 +519,11 @@ export async function advanceSkeletonStage(formData: FormData) {
   const stageId = await ensureStartupStage(supabase, active.id, stageKey);
   if (!stageId) return;
 
-  await closeStage({
-    startupStageId: stageId,
-    decision: "continue",
-  });
+  await runCloseStage(
+    { startupStageId: stageId, decision: "continue" },
+    { requireReady: false }
+  );
 
-  revalidatePath("/app/stage");
-  revalidatePath("/app");
   // Po szkielecie zawsze wracamy do etapu — bieżący program powinien wskazać
   // kolejny z treścią (np. MVP), a nie dashboard.
   redirect("/app/stage");
@@ -421,9 +554,18 @@ export async function openStage(formData: FormData) {
   const denied = stageWriteError(active.role);
   if (denied) return;
 
+  // Otworzyć da się tylko etap pominięty — czyli leżący przed bieżącym.
+  // Założenie instancji etapu z przyszłości przesuwałoby program do przodu
+  // z pominięciem wszystkiego po drodze.
+  const program = await loadStageProgram(supabase, active.id);
+  const current = currentProgramEntry(program);
+  const target = program.find((item) => item.key === stageKey);
+  if (!target || !current || target.position >= current.position) {
+    redirect("/app/stage");
+  }
+
   await ensureStartupStage(supabase, active.id, stageKey);
 
-  revalidatePath("/app/stage");
-  revalidatePath("/app");
+  revalidatePath("/app", "layout");
   redirect(`/app/stage?stage=${stageKey}`);
 }

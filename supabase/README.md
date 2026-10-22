@@ -46,6 +46,10 @@ tabeli. Każdy plik jest idempotentny, więc ponowne odpalenie niczego nie psuje
 | 30 | `migrations/026_execution_content_rules.sql` | reguły treści Execution, `depends_on`, dokumenty zespołu |
 | 31 | `migrations/027_content_execution_v1.sql` | treść Execution (generowana) |
 | 32 | `migrations/028_content_mvp_v1.sql` | treść MVP Stage (generowana) — wymaga 025 i 026 |
+| 33 | `migrations/029_task_details.sql` | notatka, powód blokady i data ukończenia zadania, historia `task_events` |
+| 34 | `migrations/030_file_folders.sql` | własne foldery w Plikach, zmiana nazwy i przenoszenie pliku |
+| 35 | `migrations/031_document_editor.sql` | `updated_by` w Dokumentach — kto zmieniał ostatnio |
+| 36 | `migrations/032_events_actor_guard.sql` | historia celów i zadań nie blokuje usuwania konta (autor bez profilu → pusty) |
 
 > **022 i 023 to wcześniejsze wygenerowania tej samej treści co 024.** Każde
 > jest idempotentne i usuwa to, czego nie ma w swoim JSON-ie, więc odpalenie

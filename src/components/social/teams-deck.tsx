@@ -13,7 +13,7 @@ import { reasonsForTeam, type MatchContext } from "@/lib/match";
 import { MAX_STARTUPS } from "@/types/startup";
 import type { PublicStartup } from "@/types/social";
 import { ApplyButton } from "./apply-button";
-import { DeckAction, DeckBlock, DeckCover, DeckFrame } from "./deck-frame";
+import { DeckAction, DeckBlock, DeckCover, DeckEnd, DeckFrame } from "./deck-frame";
 import { useDeckQueue } from "./use-deck-queue";
 import { plural } from "@/lib/utils";
 
@@ -83,6 +83,29 @@ export function TeamsDeck({
     });
   };
 
+  if (!team && teams.length > 0) {
+    const passed = passedCount + deck.passedHere;
+    return (
+      <DeckEnd
+        title="To już wszystkie projekty"
+        description={`${
+          deck.sentHere > 0
+            ? `Wysłane zgłoszenia: ${deck.sentHere}. Odpowiedzi znajdziesz w Zaproszeniach. `
+            : ""
+        }Widoczne są tylko aktywne startupy z włączonym profilem publicznym.`}
+      >
+        {passed > 0 ? (
+          <Button variant="secondary" block size="lg" loading={busy} onClick={restoreAll}>
+            Przywróć pominięte ({passed})
+          </Button>
+        ) : null}
+        <Button href={resetHref} variant="ghost">
+          Poluzuj filtry
+        </Button>
+      </DeckEnd>
+    );
+  }
+
   if (!team) {
     return (
       <EmptyState
@@ -124,6 +147,8 @@ export function TeamsDeck({
       onUndo={undo}
       onRestoreAll={restoreAll}
       passLabel="Nie ten projekt"
+      primaryLabel="Zgłoś się"
+      unit="teamów"
       reasons={reasonsForTeam(team, matchContext)}
       cover={
         <DeckCover

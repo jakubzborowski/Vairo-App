@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, Check, ChevronRight, Circle, Minus } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { currentProgramEntry, loadStageProgram } from "@/lib/stage";
@@ -23,9 +23,7 @@ export const dynamic = "force-dynamic";
  */
 export default async function ProgramPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect("/register?next=/app/program");
 

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { AppShell } from "@/components/app/app-shell";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { getActiveStartupId } from "@/lib/active-team";
@@ -23,13 +23,19 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/register?next=/app");
   }
+
+  // Liczniki nie zależą od listy teamów, więc ruszają od razu — zamiast czekać,
+  // aż `getUserStartups` przejdzie swoje trzy kroki.
+  const countersPromise = Promise.all([
+    countUnreadMessages(supabase, user.id),
+    countPendingSignals(supabase, user.id),
+    countUnreadNotifications(supabase, user.id),
+  ]);
 
   const [{ data: profile }, startups, activeTeamId] = await Promise.all([
     supabase
@@ -48,6 +54,7 @@ export default async function AppLayout({
     name: startup.name,
     logoUrl: startup.logoUrl,
     stageLabel: startup.stage?.title ?? null,
+    stageKey: startup.stage?.key ?? null,
     progressLabel: startup.stage
       ? `${startup.stage.done}/${startup.stage.total}`
       : null,
@@ -74,9 +81,7 @@ export default async function AppLayout({
 
   const [
     { count: pendingInvites },
-    unreadMessages,
-    pendingContacts,
-    unreadNotifications,
+    [unreadMessages, pendingContacts, unreadNotifications],
     executionUnlocked,
   ] = await Promise.all([
     supabase
@@ -84,9 +89,7 @@ export default async function AppLayout({
       .select("id", { count: "exact", head: true })
       .eq("status", "pending")
       .or(orFilter),
-    countUnreadMessages(supabase, user.id),
-    countPendingSignals(supabase, user.id),
-    countUnreadNotifications(supabase, user.id),
+    countersPromise,
     active ? isExecutionUnlocked(supabase, active.id) : Promise.resolve(false),
   ]);
 
@@ -101,6 +104,7 @@ export default async function AppLayout({
       teams={teams}
       activeTeamId={active?.id ?? null}
       canManageActiveTeam={active ? canManageTeam(active.role) : false}
+      activeRole={active?.role ?? null}
       badges={{
         inbox: (pendingInvites ?? 0) + pendingContacts,
         messages: unreadMessages,

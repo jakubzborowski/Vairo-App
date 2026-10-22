@@ -43,7 +43,7 @@ export type NavItem = {
 };
 
 export type NavGroup = {
-  id: "team" | "social";
+  id: "team" | "work" | "social";
   label: string;
   collapsible: boolean;
   items: NavItem[];
@@ -52,19 +52,14 @@ export type NavGroup = {
 export const navGroups: NavGroup[] = [
   {
     // Cała grupa znika, gdy user nie należy do żadnego startupu — wtedy ma
-    // wyłącznie warstwę Social i nie ma czego wyszarzać.
+    // wyłącznie warstwę Social i nie ma czego wyszarzać. Nagłówek nosi nazwę
+    // startupu (app-shell), nie słowo „team".
     id: "team",
     label: "Twój team",
     collapsible: false,
     items: [
       { label: "Start", href: "/app", icon: LayoutDashboard },
       { label: "Etap startupu", href: "/app/stage", icon: Target },
-      { label: "Cele", href: "/app/goals", icon: Flag, requiresExecution: true },
-      { label: "Taski", href: "/app/tasks", icon: ListTodo, requiresExecution: true },
-      { label: "Rozpiska", href: "/app/workflows", icon: Waypoints, requiresExecution: true },
-      { label: "Terminy", href: "/app/calendar", icon: CalendarDays, requiresExecution: true },
-      { label: "Dokumenty", href: "/app/docs", icon: FileText },
-      { label: "Pliki", href: "/app/files", icon: FolderOpen },
       { label: "Team", href: "/app/team", icon: Users },
       // Profil publiczny teamu był dostępny wyłącznie przez przycisk
       // w nagłówku strony Team — czyli trzy kliknięcia do rzeczy, którą
@@ -78,6 +73,23 @@ export const navGroups: NavGroup[] = [
         icon: Globe,
         requiresManage: true,
       },
+    ],
+  },
+  {
+    // Narzędzia, w których zespół pracuje na co dzień. Osobna grupa, bo to
+    // inny rodzaj miejsca niż „gdzie jesteśmy" (Start, Etap, Team): tu się
+    // wraca kilka razy dziennie, więc pozycje nie mogą ginąć w jednej
+    // długiej liście dziesięciu wierszy.
+    id: "work",
+    label: "Praca zespołu",
+    collapsible: false,
+    items: [
+      { label: "Cele", href: "/app/goals", icon: Flag, requiresExecution: true },
+      { label: "Taski", href: "/app/tasks", icon: ListTodo, requiresExecution: true },
+      { label: "Rozpiska", href: "/app/workflows", icon: Waypoints, requiresExecution: true },
+      { label: "Terminy", href: "/app/calendar", icon: CalendarDays, requiresExecution: true },
+      { label: "Dokumenty", href: "/app/docs", icon: FileText },
+      { label: "Pliki", href: "/app/files", icon: FolderOpen },
     ],
   },
   {
@@ -130,6 +142,11 @@ export const navGroups: NavGroup[] = [
   },
 ];
 
+/**
+ * Adresy ze stopki menu. Same pozycje nie są już listą — dzwonek stoi obok
+ * osoby, reszta w jej menu ⋮ — ale muszą być tu, żeby `isActivePath` znał
+ * wszystkie miejsca w aplikacji.
+ */
 export const footerNav: NavItem[] = [
   {
     label: "Powiadomienia",

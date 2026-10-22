@@ -7,7 +7,7 @@ import {
   SlidersHorizontal,
   Square,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getUserStartups } from "@/lib/startup";
 import {
   discoverPeople,
@@ -85,9 +85,7 @@ export async function DiscoverScreen({
   const basePath = DISCOVER_PATHS[tab];
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect(`/register?next=${basePath}`);
 
@@ -179,13 +177,13 @@ export async function DiscoverScreen({
           talii: co oglądam, jak to wyświetlić i czego szukam. */}
       <header className="mx-auto flex max-w-[880px] flex-wrap items-center justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
-          <h1 className="font-heading text-[1.5rem] font-semibold tracking-tight text-white">
+          <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
             {tab === "people" ? "Szukam ludzi" : "Szukam projektu"}
           </h1>
-          <p className="mt-0.5 text-[13.5px] text-[var(--text-subtle)]">
+          <p className="mt-1 text-[14px] text-[var(--text-muted)]">
             {tab === "people"
-              ? "Jedna osoba na ekran."
-              : "Jeden projekt na ekran."}
+              ? "Jedna osoba na ekran. „Napisz” zaczyna rozmowę, „Nie teraz” odkłada kartę."
+              : "Jeden projekt na ekran. „Zgłoś się” wysyła prośbę o dołączenie."}
           </p>
         </div>
 
@@ -255,10 +253,18 @@ export async function DiscoverScreen({
         </div>
 
         <details open={hasNarrowingFilter(params)} className="group mt-2">
-          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 px-1 text-[12.5px] text-[var(--text-subtle)] transition-colors hover:text-white">
-            <SlidersHorizontal className="size-3.5" />
-            Zawęź
-            <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" />
+          {/* Filtry zwinięte do jednego przycisku z liczbą aktywnych — widać,
+              że coś zawęża wynik, zanim ktoś zacznie się dziwić, czemu talia
+              jest krótka. */}
+          <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-xl border border-white/14 bg-[var(--surface-2)] px-3.5 text-[13.5px] text-white transition-colors hover:border-white/25">
+            <SlidersHorizontal className="size-4" />
+            Filtry
+            {narrowingCount(params, tab) > 0 ? (
+              <span className="tabular inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[11.5px] font-semibold text-[var(--bg)]">
+                {narrowingCount(params, tab)}
+              </span>
+            ) : null}
+            <ChevronDown className="size-3.5 text-[var(--text-muted)] transition-transform group-open:rotate-180" />
           </summary>
 
           <div className="mt-2 flex flex-wrap items-end gap-2.5 rounded-xl border border-white/[0.07] bg-[var(--surface)] p-3.5">
@@ -668,4 +674,16 @@ function Checkbox({
       {label}
     </label>
   );
+}
+
+/** Ile zawężeń jest włączonych — liczba na przycisku „Filtry". */
+function narrowingCount(
+  params: { skill?: string; looking?: string; room?: string; category?: string; hiring?: string },
+  tab: "people" | "teams"
+) {
+  const keys =
+    tab === "people"
+      ? [params.skill, params.looking, params.room === "1" ? "1" : ""]
+      : [params.category, params.hiring === "1" ? "1" : ""];
+  return keys.filter(Boolean).length;
 }

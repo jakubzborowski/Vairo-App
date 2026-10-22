@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { Globe, LogOut } from "lucide-react";
 import { leaveTeam } from "@/app/app/team/actions";
 import { Button } from "@/components/ui/button";
+import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { Modal } from "@/components/ui/modal";
 import { MAX_STARTUPS } from "@/types/startup";
 
@@ -15,9 +16,18 @@ import { MAX_STARTUPS } from "@/types/startup";
 export function LeaveTeamButton({
   startupId,
   teamName,
+  asMenu = false,
+  canManage = false,
 }: {
   startupId: string;
   teamName: string;
+  /**
+   * Menu ⋮ w nagłówku teamu: „Profil publiczny" (dla Foundera i Admina)
+   * i „Opuść team" na końcu, oddzielone kreską. Okno potwierdzenia żyje
+   * tutaj, nie w menu — inaczej zniknęłoby razem z nim.
+   */
+  asMenu?: boolean;
+  canManage?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -40,15 +50,46 @@ export function LeaveTeamButton({
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
-        <LogOut className="size-4" />
-        Opuść team
-      </Button>
+      {asMenu ? (
+        <Menu label="Więcej akcji teamu">
+          {(close) => (
+            <>
+              {canManage ? (
+                <MenuItem
+                  icon={Globe}
+                  onClick={() => {
+                    close();
+                    router.push("/app/team/profile");
+                  }}
+                >
+                  Profil publiczny
+                </MenuItem>
+              ) : null}
+              {canManage ? <MenuSeparator /> : null}
+              <MenuItem
+                icon={LogOut}
+                tone="danger"
+                onClick={() => {
+                  close();
+                  setOpen(true);
+                }}
+              >
+                Opuść team
+              </MenuItem>
+            </>
+          )}
+        </Menu>
+      ) : (
+        <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
+          <LogOut className="size-4" />
+          Opuść team
+        </Button>
+      )}
 
       {open ? (
         <Modal
           title={`Opuścić ${teamName}?`}
-          description="Stracisz dostęp do etapów, dokumentów i wszystkiego, co należy do tego teamu. To, co już wypełniłeś, zostaje z zespołem."
+          description="Stracisz dostęp do etapów, dokumentów i wszystkiego, co należy do tego teamu. To, co już zostało wypełnione, zostaje z zespołem."
           onClose={() => setOpen(false)}
           footer={
             <>

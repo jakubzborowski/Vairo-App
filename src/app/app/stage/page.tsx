@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { CalendarClock, Database, Rocket, SkipForward } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { getActiveStartupId } from "@/lib/active-team";
 import {
@@ -30,9 +30,7 @@ export default async function StagePage({
 }) {
   const { stage: requestedStage, subpoint } = await searchParams;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/register?next=/app/stage");
@@ -67,10 +65,21 @@ export default async function StagePage({
     );
   }
 
+  const current = currentProgramEntry(program);
+  // Wolno wejść w etap rozpoczęty albo leżący PRZED bieżącym (pominięty).
+  // Etap z przyszłości z ręcznie wpisanego `?stage=` pokazywał ekran
+  // „pominięty" z „Uzupełnij mimo to" — a to zakładało instancję i program
+  // przeskakiwał etapy po drodze. Taki adres prowadzi do bieżącego.
   const requested = requestedStage
-    ? program.find((item) => item.key === requestedStage && item.hasContent)
+    ? (program.find(
+        (item) =>
+          item.key === requestedStage &&
+          item.hasContent &&
+          (item.startupStageId !== null ||
+            (current !== null && item.position < current.position))
+      ) ?? null)
     : null;
-  const entry = requested ?? currentProgramEntry(program);
+  const entry = requested ?? current;
 
   // Etap bez treści = szkielet. Mówimy to wprost, zamiast pokazywać puste
   // kolumny. Gdy poprzedni etap jest domknięty, Founder/Admin może przejść
@@ -157,7 +166,6 @@ export default async function StagePage({
   // w pominięty Ambition zakładało instancję i program „cofał się" do niego.
   // Otwarcie etapu to decyzja, więc pytamy o nią wprost.
   if (requested && !requested.startupStageId) {
-    const current = currentProgramEntry(program);
     const canOpen = canEditStageData(active.role);
 
     return (
@@ -251,8 +259,6 @@ export default async function StagePage({
       </div>
     );
   }
-
-  const current = currentProgramEntry(program);
 
   return (
     <StageScreen

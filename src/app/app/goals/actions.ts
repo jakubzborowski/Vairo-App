@@ -13,6 +13,7 @@ import type {
   ProofDraft,
   ProofRequirement,
   ProofSnapshot,
+  TaskEvent,
   TaskStatus,
 } from "@/types/goals";
 
@@ -20,9 +21,10 @@ type Result = { error: string | null; id?: string };
 
 function refresh() {
   revalidatePath("/app");
-  revalidatePath("/app/goals");
+  // `layout` obejmuje też podstrony: szczegół celu i kreator.
+  revalidatePath("/app/goals", "layout");
   revalidatePath("/app/tasks");
-  revalidatePath("/app/workflows");
+  revalidatePath("/app/workflows", "layout");
   revalidatePath("/app/stage");
 }
 
@@ -35,7 +37,7 @@ async function context(startupId: string): Promise<Gate> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Musisz być zalogowany." };
+  if (!user) return { ok: false, error: "Sesja wygasła — zaloguj się ponownie." };
 
   const active = await getActiveStartupId();
   if (active && active !== startupId) {
@@ -308,7 +310,20 @@ async function buildSnapshot(
   const base = { kind: requirement.kind, captured_at: new Date().toISOString(), captured_by: userId };
 
   if (proof.kind === "sentence" || proof.kind === "long_text") {
-    const snapshot = { ...base, text: proof.text.trim() };
+    // Tekst wstawiony z Dokumentów pamięta, skąd przyszedł (`ref_id`) —
+    // półka pokaże przy nim znacznik dowodu. Sama kopia tekstu i tak jest
+    // w dowodzie, więc późniejsza edycja dokumentu niczego nie podmienia.
+    let source: { ref_id: string; title: string; module: string } | null = null;
+    if (proof.docId) {
+      const { data: doc } = await supabase
+        .from("startup_documents")
+        .select("id, title")
+        .eq("id", proof.docId)
+        .eq("startup_id", startupId)
+        .maybeSingle();
+      if (doc) source = { ref_id: doc.id as string, title: doc.title as string, module: "document" };
+    }
+    const snapshot = { ...base, text: proof.text.trim(), ...(source ?? {}) };
     return proofMatches(requirement, snapshot)
       ? { snapshot }
       : { error: proof.kind === "sentence" ? "Wpisz jedno zdanie, bez enteru." : "Opisz wynik." };
@@ -469,6 +484,24 @@ export async function archiveGoal(startupId: string, goalId: string): Promise<Re
   return { error: null };
 }
 
+/** Przywrócenie z archiwum — cel wraca na listy i znów może się liczyć. */
+export async function unarchiveGoal(startupId: string, goalId: string): Promise<Result> {
+  const ctx = await context(startupId);
+  if (!ctx.ok) return { error: ctx.error };
+  const { supabase, user, role } = ctx;
+
+  const goal = await loadGoal(supabase, startupId, goalId);
+  if (!goal) return { error: "Nie ma takiego celu." };
+  if (!canChangeOwnWork(role, user.id, goal.owner_id)) {
+    return { error: "Przywraca właściciel, Founder albo Admin." };
+  }
+
+  const { error } = await supabase.from("goals").update({ archived_at: null }).eq("id", goalId);
+  if (error) return { error: translateDbError(error.message) };
+  refresh();
+  return { error: null, id: goalId };
+}
+
 export async function linkGoal(
   startupId: string,
   goalId: string,
@@ -578,6 +611,9 @@ export async function updateTask(input: {
   ownerId?: string;
   status?: TaskStatus;
   dueDate?: string | null;
+  /** Z migracją 029. */
+  note?: string | null;
+  blockerNote?: string | null;
 }): Promise<Result> {
   const ctx = await context(input.startupId);
   if (!ctx.ok) return { error: ctx.error };
@@ -603,6 +639,10 @@ export async function updateTask(input: {
   }
   if (input.status) patch.status = input.status;
   if (input.dueDate !== undefined) patch.due_date = input.dueDate || null;
+  if (input.note !== undefined) patch.note = input.note?.trim().slice(0, 2000) || null;
+  if (input.blockerNote !== undefined) {
+    patch.blocker_note = input.blockerNote?.trim().slice(0, 300) || null;
+  }
   if (input.ownerId) {
     if (input.ownerId !== task.owner_id && !canAssignToOthers(role)) {
       return { error: "Przypisać zadanie komuś innemu może Founder albo Admin." };
@@ -611,6 +651,80 @@ export async function updateTask(input: {
   }
 
   const { error } = await supabase.from("tasks").update(patch).eq("id", task.id);
+  if (error) {
+    if (error.message.includes("note") && error.message.includes("column")) {
+      return { error: "Notatka i powód blokady zadania potrzebują migracji 029. Odpal ją w Supabase → SQL Editor." };
+    }
+    return { error: translateDbError(error.message) };
+  }
+  refresh();
+  return { error: null };
+}
+
+/**
+ * Historia jednego zadania (029). Bez migracji — pusta lista i `available:
+ * false`, żeby panel nie pokazywał sekcji, której nie ma czym wypełnić.
+ */
+export async function loadTaskEvents(
+  startupId: string,
+  taskId: string
+): Promise<{ available: boolean; events: TaskEvent[] }> {
+  const ctx = await context(startupId);
+  if (!ctx.ok) return { available: false, events: [] };
+  const { data, error } = await ctx.supabase
+    .from("task_events")
+    .select("id, kind, payload, created_at, actor_id, profiles!task_events_actor_id_fkey(full_name)")
+    .eq("task_id", taskId)
+    .eq("startup_id", startupId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  if (error) return { available: false, events: [] };
+  type Row = {
+    id: string;
+    kind: TaskEvent["kind"];
+    payload: Record<string, unknown> | null;
+    created_at: string;
+    profiles: { full_name: string | null } | null;
+  };
+  return {
+    available: true,
+    events: ((data ?? []) as unknown as Row[]).map((row) => ({
+      id: row.id,
+      kind: row.kind,
+      createdAt: row.created_at,
+      actorName: row.profiles?.full_name ?? null,
+      payload: row.payload ?? {},
+    })),
+  };
+}
+
+/**
+ * Usunięcie zadania. Ta sama reguła co polityka `tasks_delete` (025):
+ * Founder albo Admin, autor zadania albo osoba, która je prowadzi.
+ * Zadanie nie ma nic pod sobą, więc nie ma czego kaskadować ani sprzątać.
+ */
+export async function deleteTask(startupId: string, taskId: string): Promise<Result> {
+  const ctx = await context(startupId);
+  if (!ctx.ok) return { error: ctx.error };
+  const { supabase, user, role } = ctx;
+
+  const { data: task } = await supabase
+    .from("tasks")
+    .select("id, owner_id, created_by")
+    .eq("id", taskId)
+    .eq("startup_id", startupId)
+    .maybeSingle();
+
+  if (!task) return { error: "Nie ma takiego zadania." };
+  if (
+    !canAssignToOthers(role) &&
+    task.owner_id !== user.id &&
+    task.created_by !== user.id
+  ) {
+    return { error: "Usunąć cudze zadanie może Founder albo Admin." };
+  }
+
+  const { error } = await supabase.from("tasks").delete().eq("id", task.id);
   if (error) return { error: translateDbError(error.message) };
   refresh();
   return { error: null };

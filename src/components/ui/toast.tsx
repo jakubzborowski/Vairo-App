@@ -35,15 +35,28 @@ import { cn } from "@/lib/utils";
 
 export type ToastTone = "success" | "error" | "info";
 
+/**
+ * Jeden ruch, który ma sens DOKŁADNIE w chwili potwierdzenia: „Cofnij" po
+ * usunięciu, „Użyj jako dowód" po zapisaniu wersji. Toast z akcją żyje
+ * dłużej, żeby zdążyć kliknąć.
+ */
+type ToastAction = { label: string; onClick: () => void };
+
 type Toast = {
   id: number;
   tone: ToastTone;
   title: string;
   description?: string;
+  action?: ToastAction;
 };
 
 type ToastContextValue = {
-  toast: (input: { tone?: ToastTone; title: string; description?: string }) => void;
+  toast: (input: {
+    tone?: ToastTone;
+    title: string;
+    description?: string;
+    action?: ToastAction;
+  }) => void;
 };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -64,12 +77,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toast = useCallback<ToastContextValue["toast"]>(
-    ({ tone = "success", title, description }) => {
+    ({ tone = "success", title, description, action }) => {
       const id = nextId.current++;
       setToasts((current) => {
         // Trzy naraz to maksimum. Kolejka dziesięciu powiadomień zasłania
         // ekran i przestaje być potwierdzeniem, a staje się przeszkodą.
-        const next = [...current, { id, tone, title, description }];
+        const next = [...current, { id, tone, title, description, action }];
         return next.slice(-3);
       });
     },
@@ -103,11 +116,12 @@ function ToastCard({
   onDismiss: () => void;
 }) {
   useEffect(() => {
-    const life = LIFETIME[toast.tone];
-    if (life === null) return;
+    const base = LIFETIME[toast.tone];
+    if (base === null) return;
+    const life = toast.action ? Math.max(base, 8000) : base;
     const id = window.setTimeout(onDismiss, life);
     return () => window.clearTimeout(id);
-  }, [toast.tone, onDismiss]);
+  }, [toast.tone, toast.action, onDismiss]);
 
   const Icon =
     toast.tone === "success" ? Check : toast.tone === "error" ? AlertTriangle : Info;
@@ -135,6 +149,18 @@ function ToastCard({
           <p className="mt-0.5 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
             {toast.description}
           </p>
+        ) : null}
+        {toast.action ? (
+          <button
+            type="button"
+            onClick={() => {
+              toast.action?.onClick();
+              onDismiss();
+            }}
+            className="mt-2 inline-flex min-h-9 items-center rounded-lg bg-white/[0.07] px-3 text-[12.5px] font-medium text-white transition-colors hover:bg-white/[0.12]"
+          >
+            {toast.action.label}
+          </button>
         ) : null}
       </div>
 

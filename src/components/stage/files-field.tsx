@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { FileText, Loader2, Paperclip, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { translateDbError } from "@/lib/db-errors";
 import type { FieldInputProps } from "./field-inputs";
 
 type StoredFile = { path: string; name: string; size: number };
@@ -57,7 +58,7 @@ export function StageFilesInput({
         .upload(path, file, { upsert: false, contentType: file.type });
 
       if (uploadError) {
-        setError(uploadError.message);
+        setError(translateDbError(uploadError.message));
         continue;
       }
       uploaded.push({ path, name: file.name, size: file.size });
@@ -70,9 +71,9 @@ export function StageFilesInput({
     if (inputRef.current) inputRef.current.value = "";
   };
 
-  const remove = async (target: StoredFile) => {
-    const supabase = createClient();
-    await supabase.storage.from("stage-files").remove([target.path]);
+  // Tylko z odpowiedzi w modalu. Sam plik kasuje zapis podpunktu
+  // (`saveSubpointAnswers`) — po anulowaniu okna plik musi dalej istnieć.
+  const remove = (target: StoredFile) => {
     onChange(files.filter((f) => f.path !== target.path));
   };
 
@@ -115,7 +116,7 @@ export function StageFilesInput({
               </span>
               <button
                 type="button"
-                onClick={() => void remove(file)}
+                onClick={() => remove(file)}
                 disabled={disabled}
                 aria-label={`Usuń ${file.name}`}
                 className="rounded-md p-1 text-[var(--text-faint)] transition-colors hover:bg-white/6 hover:text-white"

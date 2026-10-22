@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Lokalne plany i eksporty z Claude Design (w .gitignore) — nie kod aplikacji.
+    "_plan/**",
   ]),
 ]);
 

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { DISCOVER_PATHS } from "@/components/social/discover-screen";
 
 export const dynamic = "force-dynamic";
@@ -30,9 +30,7 @@ export default async function DiscoverRedirectPage({
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect("/register?next=/app/social/teams");
 

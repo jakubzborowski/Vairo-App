@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { loadCategoryQuestionCounts } from "@/lib/stage";
 import { getUserStartups } from "@/lib/startup";
 import { CreateStartupForm } from "@/components/app/create-startup-form";
@@ -10,9 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NewStartupPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/register?next=/app/startups/new");

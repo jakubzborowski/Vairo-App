@@ -27,9 +27,20 @@ export type NextAction = {
   why: string;
   href: string;
   tone: "brand" | "warning" | "neutral";
+  /** Dla kogo i do kiedy — „Ty · do 24 paź", „Founder i Admin". */
+  meta?: string;
 };
 
-export type Blocker = { title: string; why: string } | null;
+const DAY = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "short" });
+function dueMeta(dueDate: string | null | undefined) {
+  if (!dueDate) return "Ty · bez terminu";
+  const date = new Date(`${dueDate}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date < today ? `Ty · termin minął ${DAY.format(date)}` : `Ty · do ${DAY.format(date)}`;
+}
+
+export type Blocker = { title: string; why: string; href?: string } | null;
 
 const MAX_ACTIONS = 5;
 const MAX_STAGE_ACTIONS = 3;
@@ -47,12 +58,16 @@ export async function loadNextActions(
   const canEdit = canEditStageData(active.role);
   const canManage = canManageTeam(active.role);
 
+  // Wszystko naraz: liczniki, drzewo etapu i otwarta praca nie zależą od
+  // siebie, a każda fala to osobna podróż do bazy.
   const [
     { count: pendingApplications },
     { count: pendingContacts },
     { count: pendingInvites },
     { data: profileRow },
     { count: skillCount },
+    tree,
+    openWork,
   ] = await Promise.all([
     canManage
       ? supabase
@@ -82,20 +97,17 @@ export async function loadNextActions(
       .from("profile_skills")
       .select("skill_id", { count: "exact", head: true })
       .eq("profile_id", userId),
-  ]);
-
-  // Drzewo etapu ładujemy tylko wtedy, gdy etap ma treść — dla Preparation
-  // i dalszych nie ma czego z niego wyciągnąć.
-  const tree =
+    // Drzewo etapu ładujemy tylko wtedy, gdy etap ma treść — dla Preparation
+    // i dalszych nie ma czego z niego wyciągnąć.
     current?.hasContent && current.startupStageId
-      ? await loadStageTree(supabase, {
+      ? loadStageTree(supabase, {
           startupStageId: current.startupStageId,
           activeCategories: active.categories,
           role: active.role,
         })
-      : null;
-
-  const openWork = await loadOpenWork(supabase, active.id, userId);
+      : Promise.resolve(null),
+    loadOpenWork(supabase, active.id, userId),
+  ]);
 
   const actions: NextAction[] = [];
 
@@ -109,6 +121,7 @@ export async function loadNextActions(
           : `Odpowiedz na ${pendingInvites} zaproszenia do teamu`,
       why: "Ktoś czeka na Twoją decyzję.",
       href: "/app/social/invites",
+      meta: "Ty · ktoś czeka na odpowiedź",
       tone: "brand",
     });
   }
@@ -122,6 +135,7 @@ export async function loadNextActions(
           : `Rozpatrz ${pendingApplications} zgłoszenia do teamu`,
       why: "Dopóki nie odpowiesz, te osoby czekają.",
       href: "/app/team",
+      meta: "Ty · ktoś czeka na odpowiedź",
       tone: "brand",
     });
   }
@@ -135,6 +149,7 @@ export async function loadNextActions(
           : `${pendingContacts} osoby chcą się z Tobą skontaktować`,
       why: "Rozmowa otworzy się, gdy przyjmiesz kontakt.",
       href: "/app/social/invites",
+      meta: "Ty · ktoś czeka na odpowiedź",
       tone: "brand",
     });
   }
@@ -157,14 +172,19 @@ export async function loadNextActions(
           why: item.point.title,
           href: "/app/stage",
           tone: "neutral",
+          meta: "Founder i Admin",
         });
       }
     }
   }
 
   const shownGoalIds = new Set<string>();
+  // Wytyczne 10.6: gdy konkretne zadanie jest już następnym działaniem, nie
+  // dokładamy drugiej pozycji z celem nadrzędnym opisującej tę samą pracę.
+  const goalsWithMyTask = new Set(openWork.tasks.map((task) => task.goalId));
   for (const goal of openWork.goals) {
     if (actions.length >= MAX_ACTIONS) break;
+    if (goalsWithMyTask.has(goal.id)) continue;
     shownGoalIds.add(goal.id);
     const why =
       goal.status === "awaiting_proof"
@@ -176,8 +196,9 @@ export async function loadNextActions(
       key: `goal-${goal.id}`,
       title: goal.title,
       why,
-      href: `/app/goals?goal=${goal.id}`,
+      href: `/app/goals/${goal.id}`,
       tone: goal.status === "blocked" ? "warning" : "neutral",
+      meta: dueMeta(goal.dueDate),
     });
   }
 
@@ -190,6 +211,7 @@ export async function loadNextActions(
       why: "Zadanie przypisane do Ciebie.",
       href: `/app/tasks?task=${task.id}`,
       tone: "neutral",
+      meta: dueMeta(task.dueDate),
     });
   }
 
@@ -294,7 +316,7 @@ function findBlocker(params: {
 }
 
 /** Kilka pierwszych nieukończonych podpunktów, w kolejności programu. */
-function findNextSubpoints(tree: StageTree, limit: number) {
+export function findNextSubpoints(tree: StageTree, limit: number) {
   const found: { point: { title: string }; subpoint: { id: string; title: string } }[] =
     [];
 

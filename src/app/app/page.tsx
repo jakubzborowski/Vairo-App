@@ -8,20 +8,37 @@ import {
   Eye,
   HelpCircle,
   History,
-  Lock,
+  CalendarDays,
+  CircleCheck,
+  Flag,
   Plus,
+  SquareCheck,
   Rocket,
   Sparkles,
   Target,
   Users,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { getActiveStartupId } from "@/lib/active-team";
 import { currentProgramEntry, loadStageProgram } from "@/lib/stage";
-import { loadNextActions, type Blocker, type NextAction } from "@/lib/next-actions";
-import { isExecutionUnlocked, loadNearestGoal, type NearestGoal } from "@/lib/goals";
-import { GOAL_STATUS_LABELS } from "@/types/goals";
+import {
+  findNextSubpoints,
+  loadNextActions,
+  type Blocker,
+  type NextAction,
+} from "@/lib/next-actions";
+import {
+  isExecutionUnlocked,
+  loadNearestGoal,
+  loadRecentlyCompleted,
+  loadStartupStatus,
+  type NearestGoal,
+  loadTeamActivity,
+  type ActivityItem,
+  loadUpcomingDeadlines,
+  type DeadlineRow,
+} from "@/lib/goals";
 import { getTeamMembers } from "@/lib/social";
 import { StageProgress } from "@/components/app/stage-progress";
 import { Button } from "@/components/ui/button";
@@ -38,27 +55,27 @@ export const dynamic = "force-dynamic";
 
 export default async function AppPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/register?next=/app");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, avatar_url, headline, weekly_focus, looking_for")
-    .eq("id", user.id)
-    .maybeSingle();
+  // `getUserStartups` dzieli wynik z layoutem (cache na żądanie), więc tu
+  // nie kosztuje nic ponad to, co layout i tak robi.
+  const [{ data: profile }, startups, activeTeamId] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, avatar_url, headline, weekly_focus, looking_for")
+      .eq("id", user.id)
+      .maybeSingle(),
+    getUserStartups(supabase, user.id),
+    getActiveStartupId(),
+  ]);
 
   const firstName =
     profile?.full_name?.trim().split(/\s+/)[0] || user.email?.split("@")[0] || "";
 
-  const [startups, activeTeamId] = await Promise.all([
-    getUserStartups(supabase, user.id),
-    getActiveStartupId(),
-  ]);
   const active = resolveActiveStartup(startups, activeTeamId);
 
   const greeting = firstName ? `Cześć, ${firstName}` : "Cześć";
@@ -113,9 +130,46 @@ export default async function AppPage() {
     );
   }
 
+  // Jedna fala zamiast siedmiu: nic z tego nie zależy od programu etapów.
   // Pasek etapów czyta `stage_templates`, nie listę zaszytą w kodzie — dodanie
   // etapu to migracja, nie zmiana w trzech komponentach.
-  const program = await loadStageProgram(supabase, active.id);
+  const [
+    program,
+    trackerOpen,
+    { count: memberCount },
+    { count: waitingCount },
+    { count: skillCount },
+    members,
+    { error: dueError },
+  ] = await Promise.all([
+    loadStageProgram(supabase, active.id),
+    isExecutionUnlocked(supabase, active.id),
+    supabase
+      .from("startup_members")
+      .select("profile_id", { count: "exact", head: true })
+      .eq("startup_id", active.id),
+    canManageTeam(active.role)
+      ? supabase
+          .from("startup_join_requests")
+          .select("id", { count: "exact", head: true })
+          .eq("startup_id", active.id)
+          .eq("status", "pending")
+          .eq("direction", "application")
+      : Promise.resolve({ count: 0 }),
+    supabase
+      .from("profile_skills")
+      .select("skill_id", { count: "exact", head: true })
+      .eq("profile_id", user.id),
+    // Skład zespołu — „kto za co odpowiada" z guidelines, sekcja 9. Na razie
+    // odpowiedzialność wyraża rola i stanowisko; przypisania pracy dojdą razem
+    // z Goals w Execution.
+    getTeamMembers(supabase, active.id),
+    supabase.rpc("notify_upcoming_deadlines", { p_startup_id: active.id }),
+  ]);
+  if (dueError && !dueError.message.includes("notify_upcoming_deadlines")) {
+    console.error("[notify_upcoming_deadlines]", dueError.message);
+  }
+
   const programDone = program.some((item) => item.key === "mvp" && item.status === "completed");
   const current = currentProgramEntry(program);
   const stage = active.stage;
@@ -127,52 +181,41 @@ export default async function AppPage() {
   const stepNumber = program.findIndex((item) => item.key === current?.key) + 1;
   const canEdit = canEditStageData(active.role);
 
-  const { error: dueError } = await supabase.rpc("notify_upcoming_deadlines", {
-    p_startup_id: active.id,
-  });
-  if (dueError && !dueError.message.includes("notify_upcoming_deadlines")) {
-    console.error("[notify_upcoming_deadlines]", dueError.message);
-  }
+  const [{ actions, blocker: stageBlocker, tree }, deadlines, recent, activity, nearestGoal, status] = await Promise.all([
+    loadNextActions(supabase, {
+      userId: user.id,
+      active,
+      program,
+      current,
+    }),
+    // Panel celu stoi w tym samym miejscu przez cały program (guidelines,
+    // sekcja 9). Dane dostaje dopiero, gdy tracker jest otwarty — wcześniej
+    // pytanie o cele nie ma sensu, bo nikt nie mógł ich jeszcze założyć.
+    trackerOpen ? loadUpcomingDeadlines(supabase, active.id) : Promise.resolve([] as DeadlineRow[]),
+    trackerOpen ? loadRecentlyCompleted(supabase, active.id) : Promise.resolve([]),
+    trackerOpen ? loadTeamActivity(supabase, active.id) : Promise.resolve([] as ActivityItem[]),
+    trackerOpen ? loadNearestGoal(supabase, active.id) : Promise.resolve(null),
+    // Goals i zadania mogą być używane przed Execution (wytyczne, sekcja 9),
+    // więc stan startupu liczymy zawsze, gdy tabele istnieją.
+    loadStartupStatus(supabase, active.id),
+  ]);
+  // Główna przeszkoda: najpierw ta wynikająca z etapu, potem zapisana ręcznie
+  // przy zablokowanym celu (wytyczne, sekcja 2).
+  const blocker =
+    stageBlocker ??
+    (status?.mainBlocker
+      ? {
+          title: `Zablokowany cel: ${status.mainBlocker.title}`,
+          why: status.mainBlocker.note ?? "Przy celu nie opisano jeszcze, co blokuje pracę.",
+          href: status.mainBlocker.href,
+        }
+      : null);
+  // „Następny podpunkt" w karcie etapu — ten sam wybór co na ekranie etapu.
+  const nextSubpoint = tree && tree.status !== "completed" ? findNextSubpoints(tree, 1)[0] ?? null : null;
 
-  const { actions, blocker } = await loadNextActions(supabase, {
-    userId: user.id,
-    active,
-    program,
-    current,
-  });
-  const trackerOpen = await isExecutionUnlocked(supabase, active.id);
-  // Panel celu stoi w tym samym miejscu przez cały program (guidelines,
-  // sekcja 9). Dane dostaje dopiero, gdy tracker jest otwarty — wcześniej
-  // pytanie o cele nie ma sensu, bo nikt nie mógł ich jeszcze założyć.
-  const nearestGoal = trackerOpen ? await loadNearestGoal(supabase, active.id) : null;
-
-  // Liczby do paneli. Każda pochodzi z bazy — panel z wymyśloną metryką
-  // („wynik gotowości: 72") wyglądałby mądrze i nie znaczyłby nic.
-  const [{ count: memberCount }, { count: waitingCount }, { count: skillCount }] =
-    await Promise.all([
-      supabase
-        .from("startup_members")
-        .select("profile_id", { count: "exact", head: true })
-        .eq("startup_id", active.id),
-      canManageTeam(active.role)
-        ? supabase
-            .from("startup_join_requests")
-            .select("id", { count: "exact", head: true })
-            .eq("startup_id", active.id)
-            .eq("status", "pending")
-            .eq("direction", "application")
-        : Promise.resolve({ count: 0 }),
-      supabase
-        .from("profile_skills")
-        .select("skill_id", { count: "exact", head: true })
-        .eq("profile_id", user.id),
-    ]);
-
-  // Skład zespołu — „kto za co odpowiada" z guidelines, sekcja 9. Na razie
-  // odpowiedzialność wyraża rola i stanowisko; przypisania pracy dojdą razem
-  // z Goals w Execution.
-  const members = await getTeamMembers(supabase, active.id);
-
+  // Liczby do paneli (memberCount, waitingCount, skillCount) pochodzą z bazy —
+  // panel z wymyśloną metryką („wynik gotowości: 72") wyglądałby mądrze
+  // i nie znaczyłby nic.
   const completeness = scoreProfile({
     full_name: profile?.full_name,
     avatar_url: profile?.avatar_url,
@@ -183,6 +226,16 @@ export default async function AppPage() {
   });
 
   const doneStages = program.filter((item) => item.status === "completed").length;
+  // Jedno zdanie zamiast samej nazwy startupu: gdzie jesteście w programie.
+  const COUNTS = ["", "jeden etap", "dwa etapy", "trzy etapy", "cztery etapy", "pięć etapów"];
+  const ORDINALS = ["pierwszy", "drugi", "trzeci", "czwarty", "piąty"];
+  const whereLine = programDone
+    ? "program domknięty"
+    : doneStages === 0
+      ? "pierwszy etap w toku"
+      : `${COUNTS[doneStages] ?? `${doneStages} etapów`} za Wami${
+          stepNumber > doneStages ? `, ${ORDINALS[stepNumber - 1] ?? ""} w toku` : ""
+        }`;
 
   return (
     <div className="page-wide">
@@ -191,7 +244,9 @@ export default async function AppPage() {
           <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white sm:text-[1.85rem]">
             {greeting}
           </h1>
-          <p className="mt-1 text-[14px] text-[var(--text-subtle)]">{active.name}</p>
+          <p className="mt-1 text-[14px] text-[var(--text-muted)]">
+            {active.name} · {whereLine}.
+          </p>
         </div>
         <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white/6 px-3 py-1.5 text-[12.5px] text-[var(--text-muted)]">
           {canEdit ? (
@@ -269,6 +324,12 @@ export default async function AppPage() {
                       {current.subtitle}
                     </p>
                   ) : null}
+                  {nextSubpoint && canEdit ? (
+                    <p className="mt-2 text-[13px] text-[var(--text-subtle)]">
+                      Następny podpunkt:{" "}
+                      <span className="text-[var(--text-muted)]">{nextSubpoint.subpoint.title}</span>
+                    </p>
+                  ) : null}
                 </div>
                 <Button href="/app/stage">
                   {stage.status === "completed" || !canEdit ? "Przejrzyj" : "Kontynuuj"}
@@ -300,7 +361,7 @@ export default async function AppPage() {
           icon={Rocket}
           label="Program"
           value={`${doneStages} z ${program.length}`}
-          hint="etapów domkniętych"
+          hint={doneStages === 0 ? "etapów za Wami — dopiero start" : "etapów za Wami"}
         />
 
         <StatPanel
@@ -326,21 +387,48 @@ export default async function AppPage() {
           icon={Target}
           label="Twój profil publiczny"
           value={<CountUp value={completeness.score} suffix="%" delayMs={280} />}
-          hint={completeness.missing.length === 0 ? "komplet" : "gotowe"}
-          badge={
+          hint={completeness.missing.length === 0 ? "komplet — obcy widzą wszystko" : "gotowe"}
+          // Zamiast liczby braków: co konkretnie dodać. Liczba nie mówi,
+          // od czego zacząć; nazwa brakującej rzeczy mówi.
+          note={
             completeness.missing.length > 0
-              ? `${completeness.missing.length} ${plural(
-                  completeness.missing.length,
-                  "brak",
-                  "braki",
-                  "braków"
-                )}`
+              ? `${completeness.missing
+                  .slice()
+                  .sort((a, b) => b.weight - a.weight)
+                  .slice(0, 2)
+                  .map((piece) => piece.label)
+                  .join(" · ")}${completeness.missing.length > 2 ? " · …" : ""}`
               : undefined
           }
           progress={completeness.score}
         />
 
       </div>
+
+      {status ? (
+        <StatusStrip
+          items={[
+            {
+              label: "wymagania etapu",
+              value: stage ? `${stage.done}/${stage.total}` : "—",
+              href: "/app/stage",
+            },
+            { label: "cele z dowodem", value: String(status.goalsDone), href: "/app/goals?view=all" },
+            {
+              label: "otwarte przeszkody",
+              value: String(status.openBlockers),
+              href: status.mainBlocker?.href ?? "/app/tasks",
+              warn: status.openBlockers > 0,
+            },
+            {
+              label: "zadania po terminie",
+              value: String(status.overdueTasks),
+              href: "/app/calendar",
+              warn: status.overdueTasks > 0,
+            },
+          ]}
+        />
+      ) : null}
 
       {blocker ? <BlockerNote blocker={blocker} /> : null}
 
@@ -358,36 +446,41 @@ export default async function AppPage() {
         <NextActions actions={actions} />
 
         <div className="flex flex-col gap-3">
-          <TeamPanel members={members} canManage={canEdit} />
+          <TeamPanel members={members} canManage={canEdit} waiting={waitingCount ?? 0} />
           {/* Po scaleniu z Execution ten panel nie może już być zawsze
               zamknięty: przy otwartym trackerze mówiłby „odblokuje się
               w Execution" komuś, kto ma w Execution trzy cele. To dokładnie
               ten rodzaj nieprawdy, który CLAUDE.md nazywa fake UI. */}
           {trackerOpen ? (
-            <GoalPanel goal={nearestGoal} />
+            <DeadlinesPanel goal={nearestGoal} deadlines={deadlines} />
           ) : (
             <LockedPanel
-              icon={Target}
-              title="Najbliższy cel"
+              icon={CalendarDays}
+              title="Najbliższe terminy"
               note="Cele i ich terminy otworzą się po domknięciu Preparation."
             />
           )}
+          {recent.length > 0 ? <RecentPanel goals={recent} /> : null}
         </div>
       </div>
 
       <div className="panels mt-3 grid gap-3 md:grid-cols-2">
-        <LockedPanel
-          icon={History}
-          title="Ostatnia aktywność"
-          note={
-            // „Pojawi się razem z trackerem" przestało być prawdą w chwili,
-            // gdy tracker trafił do tej samej gałęzi. Wspólnego logu zespołu
-            // nadal nie ma — historia jest przy każdym celu z osobna.
-            trackerOpen
-              ? "Wspólnego logu zmian zespołu jeszcze nie ma. Historia każdego celu jest w trackerze, przy celu."
-              : "Wspólny log zmian zespołu jeszcze nie powstał."
-          }
-        />
+        {/* Aktywność składana z prawdziwych zdarzeń: historia celów (025)
+            i zadań (029). Przed Execution nie ma czego pokazać — wtedy
+            panel mówi, kiedy się zapełni. */}
+        {trackerOpen && activity.length > 0 ? (
+          <ActivityPanel items={activity} />
+        ) : (
+          <LockedPanel
+            icon={History}
+            title="Ostatnia aktywność"
+            note={
+              trackerOpen
+                ? "Jeszcze nic się nie wydarzyło. Pierwszy cel albo zadanie pojawi się tutaj."
+                : "Aktywność zespołu pojawi się razem z celami i zadaniami — po domknięciu Preparation."
+            }
+          />
+        )}
         <LockedPanel
           icon={Sparkles}
           title="Możliwości"
@@ -417,9 +510,11 @@ export default async function AppPage() {
 function TeamPanel({
   members,
   canManage,
+  waiting,
 }: {
   members: TeamMember[];
   canManage: boolean;
+  waiting: number;
 }) {
   // Rząd awatarów zamiast listy wierszy — tak jak na dostarczonych mockupach.
   // Przy zespole do sześciu osób (a limit i tak jest niski) rząd twarzy czyta
@@ -488,20 +583,35 @@ function TeamPanel({
             </li>
           ) : null}
         </ul>
+
+        {canManage && waiting > 0 ? (
+          <Link
+            href="/app/team"
+            className="mt-4 flex items-center gap-2 rounded-xl bg-[var(--surface-2)] px-3 py-2.5 text-[13px] text-[var(--text-muted)] transition-colors hover:text-white"
+          >
+            <span className="size-1.5 shrink-0 rounded-full bg-[var(--warning)]" aria-hidden="true" />
+            {waiting} {plural(waiting, "osoba chce", "osoby chcą", "osób chce")} dołączyć — decyzja
+            należy do Was
+            <ChevronRight className="ml-auto size-3.5" />
+          </Link>
+        ) : null}
       </CardBody>
     </Card>
   );
 }
 
 /**
- * Najbliższy cel zespołu — gdy tracker Execution jest otwarty.
+ * Najbliższe terminy zespołu — cele i zadania razem, spóźnione na górze.
  *
  * Odpowiada na pytanie z guidelines „czym zespół zajmuje się teraz i do
- * kiedy". Jeden cel, nie lista: lista celów jest w trackerze, a panel ma dać
- * odpowiedź w jednym spojrzeniu. Termin po czasie dostaje kolor ostrzeżenia
- * RAZEM ze słowem — sam kolor nie jest informacją.
+ * kiedy". Kilka wierszy, nie kalendarz: kalendarz jest w Terminach.
+ * Spóźnienie ma kolor ostrzeżenia RAZEM ze słowem — sam kolor nie jest
+ * informacją.
  */
-function GoalPanel({ goal }: { goal: NearestGoal | null }) {
+function DeadlinesPanel({ goal, deadlines }: { goal: NearestGoal | null; deadlines: DeadlineRow[] }) {
+  // Wytyczne, sekcja 9: „Po prawej: najbliższy Goal". Najbliższy cel stoi na
+  // górze, pod nim kolejne terminy (cele i zadania) — bez powtarzania go.
+  const rest = deadlines.filter((item) => !(item.kind === "goal" && item.id === goal?.id)).slice(0, 3);
   return (
     <Card className="overflow-hidden">
       <CardBody className="pt-5">
@@ -511,47 +621,125 @@ function GoalPanel({ goal }: { goal: NearestGoal | null }) {
             Najbliższy cel
           </p>
           <Link
-            href="/app/goals"
+            href="/app/calendar"
             className="inline-flex items-center gap-1 text-[12px] text-[var(--text-subtle)] underline-offset-2 transition-colors hover:text-white hover:underline"
           >
-            Tracker
+            Terminy
             <ChevronRight className="size-3.5" />
           </Link>
         </div>
 
         {goal ? (
           <Link
-            href={`/app/goals?goal=${goal.id}`}
+            href={`/app/goals/${goal.id}`}
             className="group mt-3 block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[var(--vairo)]"
           >
             <p className="line-clamp-2 text-[14.5px] font-medium leading-snug text-white group-hover:underline group-hover:underline-offset-2">
               {goal.title}
             </p>
-            <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[var(--text-subtle)]">
+            <p className="mt-1 text-[12.5px] text-[var(--text-subtle)]">
               <span className={cn(goal.overdue && "font-medium text-[var(--warning)]")}>
                 {goal.overdue ? "Po terminie · " : "do "}
                 {formatDue(goal.dueDate)}
               </span>
-              <span>{GOAL_STATUS_LABELS[goal.status]}</span>
-              {goal.ownerName ? <span>{goal.ownerName}</span> : null}
+              {goal.ownerName ? ` · odpowiada ${goal.ownerName}` : ""}
             </p>
           </Link>
-        ) : (
+        ) : null}
+        {rest.length > 0 ? (
+          <p className="mt-4 text-[11.5px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+            Kolejne terminy
+          </p>
+        ) : null}
+        {!goal && rest.length === 0 ? (
           <div className="mt-3">
             <p className="text-[13px] leading-relaxed text-[var(--text-subtle)]">
-              Zespół nie ma teraz otwartego celu.
+              Zespół nie ma teraz otwartych terminów.
             </p>
             <Link
-              href="/app/goals?new=1"
+              href="/app/goals/new"
               className="mt-2 inline-flex items-center gap-1 text-[12.5px] text-[var(--text-muted)] underline-offset-2 transition-colors hover:text-white hover:underline"
             >
               <Plus className="size-3.5" />
-              Dodaj cel
+              Załóż cel
             </Link>
           </div>
+        ) : (
+          <ul className="mt-2 flex flex-col">
+            {rest.map((item) => {
+              const date = new Date(`${item.due}T00:00:00`);
+              return (
+                <li key={`${item.kind}-${item.id}`}>
+                  <Link
+                    href={item.href}
+                    className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[0.04]"
+                  >
+                    <span className="w-9 shrink-0 text-center">
+                      <span
+                        className={cn(
+                          "block font-heading text-[16px] font-semibold leading-tight",
+                          item.overdue ? "text-[var(--warning)]" : "text-white"
+                        )}
+                      >
+                        {date.getDate()}
+                      </span>
+                      <span className="block text-[11px] text-[var(--text-subtle)]">
+                        {date.toLocaleDateString("pl-PL", { month: "short" })}
+                      </span>
+                    </span>
+                    {item.kind === "goal" ? (
+                      <Flag className="size-3.5 shrink-0 text-white" aria-label="Cel" />
+                    ) : (
+                      <SquareCheck className="size-3.5 shrink-0 text-[var(--text-muted)]" aria-label="Zadanie" />
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13.5px] font-medium text-white">{item.title}</span>
+                      <span className="block truncate text-[12px] text-[var(--text-subtle)]">
+                        {item.overdue ? (
+                          <span className="font-medium text-[var(--warning)]">Po terminie</span>
+                        ) : (
+                          formatDue(item.due)
+                        )}
+                        {item.ownerName ? ` · ${item.ownerName}` : ""}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </CardBody>
     </Card>
+  );
+}
+
+/** Zielone miejsce na to, co już zrobione — sukces widać, a nie tylko odhacza. */
+function RecentPanel({ goals }: { goals: { id: string; title: string; completedAt: string | null }[] }) {
+  return (
+    <div className="rounded-2xl border border-[var(--success)]/20 bg-[var(--success)]/[0.06] px-5 py-4">
+      <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--success)]">
+        <CircleCheck className="size-3.5" />
+        Ostatnio ukończone
+      </p>
+      <ul className="mt-2 flex flex-col">
+        {goals.map((goal) => (
+          <li key={goal.id}>
+            <Link
+              href={`/app/goals/${goal.id}`}
+              className="flex min-h-9 items-center gap-2 text-[13.5px] text-[var(--text-muted)] transition-colors hover:text-white"
+            >
+              <span className="min-w-0 flex-1 truncate">{goal.title}</span>
+              {goal.completedAt ? (
+                <span className="shrink-0 text-[12px] text-[var(--text-subtle)]">
+                  {new Date(goal.completedAt).toLocaleDateString("pl-PL", { day: "numeric", month: "short" })}
+                </span>
+              ) : null}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -585,13 +773,14 @@ function LockedPanel({
   note: string;
 }) {
   return (
+    // Cicha karta z powodem — bez kłódki-ozdobnika. Tekst to treść, więc
+    // --text-subtle, nie --text-faint (CLAUDE.md, design system).
     <div className="rounded-2xl border border-dashed border-white/[0.09] px-5 py-4">
       <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
         <Icon className="size-3.5" />
         {title}
-        <Lock className="ml-auto size-3.5 text-[var(--text-faint)]" />
       </p>
-      <p className="mt-2 text-[12.5px] leading-relaxed text-[var(--text-faint)]">
+      <p className="mt-2 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
         {note}
       </p>
     </div>
@@ -613,6 +802,7 @@ function StatPanel({
   value,
   hint,
   badge,
+  note,
   progress,
   action,
 }: {
@@ -622,6 +812,8 @@ function StatPanel({
   value: React.ReactNode;
   hint: string;
   badge?: string;
+  /** Jedno zdanie pod liczbą — co z nią zrobić. */
+  note?: string;
   progress?: number;
   /** Drugie wyjście z panelu — inne niż kliknięcie całego kafelka. */
   action?: { href: string; label: string };
@@ -637,7 +829,7 @@ function StatPanel({
         <span className="sr-only">{label}</span>
       </Link>
 
-      <p className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--text-faint)]">
+      <p className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--text-subtle)]">
         <Icon className="size-3.5" />
         {label}
       </p>
@@ -658,6 +850,10 @@ function StatPanel({
             style={{ width: `${progress}%` }}
           />
         </span>
+      ) : null}
+
+      {note ? (
+        <p className="mt-2.5 text-[12.5px] leading-snug text-[var(--text-muted)]">{note}</p>
       ) : null}
 
       {badge ? (
@@ -736,6 +932,9 @@ function NextActions({ actions }: { actions: NextAction[] }) {
                   <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
                     {action.why}
                   </span>
+                  {action.meta ? (
+                    <span className="mt-1 block text-[12px] text-[var(--text-muted)]">{action.meta}</span>
+                  ) : null}
                 </span>
                 <ChevronRight className="mt-1 size-4 shrink-0 text-[var(--text-faint)] opacity-0 transition-opacity group-hover:opacity-100" />
               </Link>
@@ -756,11 +955,80 @@ function BlockerNote({ blocker }: { blocker: NonNullable<Blocker> }) {
     <div className="mt-3 flex items-start gap-3 rounded-2xl border border-[var(--warning)]/25 bg-[var(--warning)]/8 px-5 py-4">
       <AlertTriangle className="mt-0.5 size-4 shrink-0 text-[var(--warning)]" />
       <div className="min-w-0">
-        <p className="text-[14px] font-medium text-white">{blocker.title}</p>
+        {blocker.href ? (
+          <Link href={blocker.href} className="text-[14px] font-medium text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
+            {blocker.title}
+          </Link>
+        ) : (
+          <p className="text-[14px] font-medium text-white">{blocker.title}</p>
+        )}
         <p className="mt-0.5 text-[13px] leading-relaxed text-[var(--text-muted)]">
           {blocker.why}
         </p>
       </div>
     </div>
+  );
+}
+
+/** Ostatnia aktywność zespołu — co, kto i kiedy, każdy wiersz prowadzi do miejsca. */
+function ActivityPanel({ items }: { items: ActivityItem[] }) {
+  return (
+    <div className="rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-5 py-4 lift-1">
+      <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+        <History className="size-3.5" />
+        Ostatnia aktywność
+      </p>
+      <ul className="mt-2 flex flex-col">
+        {items.map((item) => (
+          <li key={item.id}>
+            <Link
+              href={item.href}
+              className="-mx-2 flex items-baseline gap-2 rounded-lg px-2 py-1.5 text-[13px] transition-colors hover:bg-white/[0.04]"
+            >
+              <span className="min-w-0 flex-1 truncate text-[var(--text-muted)]">{item.text}</span>
+              <span className="shrink-0 text-[12px] text-[var(--text-subtle)]">
+                {item.actorName ? `${item.actorName} · ` : ""}
+                {new Date(item.createdAt).toLocaleDateString("pl-PL", { day: "numeric", month: "short" })}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * Stan startupu (wytyczne, sekcja 3): cztery liczby z bazy, każda prowadzi do
+ * rekordów, z których ją policzono. Bez wyniku „kondycji".
+ */
+function StatusStrip({
+  items,
+}: {
+  items: { label: string; value: string; href: string; warn?: boolean }[];
+}) {
+  return (
+    <nav
+      aria-label="Stan startupu"
+      className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.06] sm:grid-cols-4"
+    >
+      {items.map((item) => (
+        <Link
+          key={item.label}
+          href={item.href}
+          className="flex items-baseline gap-2 bg-[var(--surface)] px-4 py-3 transition-colors hover:bg-[var(--surface-2)]"
+        >
+          <span
+            className={cn(
+              "tabular font-heading text-[18px] font-semibold",
+              item.warn ? "text-[var(--warning)]" : "text-white"
+            )}
+          >
+            {item.value}
+          </span>
+          <span className="text-[12.5px] text-[var(--text-subtle)]">{item.label}</span>
+        </Link>
+      ))}
+    </nav>
   );
 }

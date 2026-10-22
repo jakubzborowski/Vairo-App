@@ -28,6 +28,7 @@ import {
 } from "@/app/app/stage/actions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import {
   STAGES_WITH_DECISION,
@@ -74,6 +75,13 @@ function locateSubpoint(tree: StageTree, subpointId?: string | null) {
  * Rola Członka daje pełny odczyt i zero zapisu: zamiast wyszarzonego formularza
  * ten sam ekran pokazuje odpowiedzi jako treść do przeczytania.
  */
+const DECISION_TOASTS: Record<StageDecision, string> = {
+  continue: "Etap domknięty",
+  pivot: "Zapisano pivot — wybrane podpunkty są otwarte",
+  pause: "Startup jest na pauzie",
+  archive: "Startup przeniesiony do archiwum",
+};
+
 export function StageScreen({
   tree,
   role,
@@ -82,6 +90,7 @@ export function StageScreen({
   initialSubpointId,
 }: Props) {
   const router = useRouter();
+  const { toast } = useToast();
   const located = locateSubpoint(tree, initialSubpointId);
   const [categoryKey, setCategoryKey] = useState(
     () =>
@@ -127,6 +136,19 @@ export function StageScreen({
     0
   );
 
+  // „Następny podpunkt" z toastu: klik przychodzi już po odświeżeniu drzewa,
+  // więc zamiast otwierać to, co było „następne" w chwili zapisu, zapisujemy
+  // prośbę i spełniamy ją przy pierwszym renderze ze świeżymi danymi.
+  const [nextRequested, setNextRequested] = useState(false);
+  if (nextRequested) {
+    setNextRequested(false);
+    if (next) {
+      setCategoryKey(next.categoryKey);
+      setPointKey(next.pointKey);
+      setOpenSubpoint(next.subpoint);
+    }
+  }
+
   const openNext = () => {
     if (!next) return;
     setCategoryKey(next.categoryKey);
@@ -158,7 +180,11 @@ export function StageScreen({
       }
       setAnswers((prev) => ({ ...prev, ...draft }));
       setOpenSubpoint(null);
-      router.refresh();
+      toast({
+        title: "Odpowiedź zapisana",
+        description: openSubpoint.title,
+        action: { label: "Następny podpunkt", onClick: () => setNextRequested(true) },
+      });
     });
   };
 
@@ -178,8 +204,8 @@ export function StageScreen({
         setError(result.error);
         return;
       }
+      toast({ title: "Etap domknięty", description: tree.title });
       router.push(result.next ?? "/app");
-      router.refresh();
     });
   };
 
@@ -199,8 +225,11 @@ export function StageScreen({
         return;
       }
       setClosing(false);
+      toast({
+        title: DECISION_TOASTS[input.decision],
+        description: tree.title,
+      });
       router.push(result.next ?? "/app");
-      router.refresh();
     });
   };
 
@@ -212,6 +241,10 @@ export function StageScreen({
         setError(result.error);
         return;
       }
+      toast({
+        title: "Etap otwarty ponownie",
+        description: "Odpowiedzi zostały — możesz je poprawić.",
+      });
       router.refresh();
     });
   };
@@ -375,7 +408,7 @@ export function StageScreen({
           raz, to nie jest oczywiste. Plus wyjście na podsumowanie, gdy jest
           już co podsumowywać. */}
       {!isFirstVisit && tree.done > 0 ? (
-        <p className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[var(--text-faint)]">
+        <p className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[var(--text-subtle)]">
           {tree.showCategories && !readOnly && !isCompleted ? (
             <span>
               Kategorie i punkty możesz robić w dowolnej kolejności. Każdy zapis
@@ -421,7 +454,8 @@ export function StageScreen({
               <ListRow
                 key={item.key}
                 title={item.title}
-                meta={`${item.done}/${item.total}`}
+                done={item.done}
+                total={item.total}
                 complete={item.isComplete}
                 active={item.key === categoryKey}
                 onClick={() => selectCategory(item.key)}
@@ -442,7 +476,8 @@ export function StageScreen({
               key={item.key}
               title={item.title}
               subtitle={item.durationHint}
-              meta={`${item.done}/${item.total}`}
+              done={item.done}
+              total={item.total}
               complete={item.isComplete}
               active={item.key === pointKey}
               onClick={() => setPointKey(item.key)}
@@ -594,6 +629,7 @@ export function StageScreen({
       {closing ? (
         <StageCloseDialog
           tree={tree}
+          canArchive={role === "founder"}
           saving={saving}
           error={error}
           onClose={() => {
@@ -612,31 +648,26 @@ function Column({
   title,
   subtitle,
   meta,
-  active,
   children,
 }: {
   icon: LucideIcon;
   title: string;
   subtitle?: string | null;
   meta?: React.ReactNode;
-  /** Kolumna, w której user właśnie działa — jedyna z pomarańczową ramką. */
+  /** Zostawione dla zgodności wywołań — kolumny nie mają już własnego akcentu. */
   active?: boolean;
   children: React.ReactNode;
 }) {
+  // Kolumny to karty bez obrysu, na równej wysokości. Pomarańczowa ramka
+  // kolumny „Do zrobienia" wyleciała: pomarańcz na tym ekranie ma jedno
+  // miejsce — pasek „Następny krok". Ścieżkę Kategoria → Punkt niesie
+  // jasny wybrany wiersz z kreską po lewej.
   return (
-    <section
-      className={cn(
-        "rounded-2xl border bg-[var(--surface)] p-4 lift-1",
-        "transition-colors duration-150",
-        active
-          ? "edge-accent overflow-hidden border-[var(--vairo)]/45"
-          : "border-white/[0.07]"
-      )}
-    >
+    <section className="flex h-full flex-col rounded-2xl bg-[var(--surface)] p-4 lift-1">
       <header className="mb-3 flex items-start justify-between gap-2 px-1">
         <div className="min-w-0">
-          <p className="flex items-center gap-2 text-[13px] font-semibold text-[var(--vairo)]">
-            <Icon className="size-4 shrink-0" strokeWidth={2} />
+          <p className="flex items-center gap-2 text-[13px] font-semibold text-white">
+            <Icon className="size-4 shrink-0 text-[var(--text-subtle)]" strokeWidth={2} />
             <span className="truncate">{title}</span>
           </p>
           {subtitle ? (
@@ -659,10 +690,16 @@ function Column({
   );
 }
 
+/**
+ * Wiersz listy etapu. Stan mówi ikona: zielone kółko z ptaszkiem — gotowe,
+ * pół kółka — w toku, puste kółko — do zrobienia. Postęp kategorii i punktów
+ * to kreski, nie ułamek do policzenia w głowie.
+ */
 function ListRow({
   title,
   subtitle,
-  meta,
+  done,
+  total,
   complete,
   active,
   chevron,
@@ -670,12 +707,14 @@ function ListRow({
 }: {
   title: string;
   subtitle?: string | null;
-  meta?: string;
+  done?: number;
+  total?: number;
   complete: boolean;
   active: boolean;
   chevron?: boolean;
   onClick: () => void;
 }) {
+  const partial = !complete && (done ?? 0) > 0;
   return (
     <li>
       <button
@@ -683,34 +722,39 @@ function ListRow({
         onClick={onClick}
         aria-current={active ? "true" : undefined}
         className={cn(
-          "group flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left",
+          "group relative flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left",
           "transition-colors duration-150",
-          active ? "bg-[var(--vairo)]/10" : "hover:bg-white/[0.05]"
+          active ? "bg-white/[0.08]" : "hover:bg-white/[0.05]"
         )}
       >
+        {active ? (
+          <span
+            className="absolute left-0.5 top-3 h-[18px] w-[3px] rounded-full bg-white/80"
+            aria-hidden="true"
+          />
+        ) : null}
         <span
           className={cn(
-            "mt-0.5 inline-flex size-[18px] shrink-0 items-center justify-center rounded-full border transition-colors",
+            "relative mt-0.5 inline-flex size-[18px] shrink-0 items-center justify-center overflow-hidden rounded-full border transition-colors",
             complete
               ? "border-[var(--success)] bg-[var(--success)] text-black"
-              : active
-                ? "border-[var(--vairo)]/70"
+              : partial
+                ? "border-[var(--info)]"
                 : "border-white/25 group-hover:border-white/45"
           )}
-          aria-hidden="true"
+          aria-label={complete ? "Gotowe" : partial ? "W toku" : "Do zrobienia"}
         >
           {complete ? <Check className="size-3" strokeWidth={3} /> : null}
+          {partial ? (
+            <span className="absolute inset-y-0 left-0 w-1/2 bg-[var(--info)]" aria-hidden="true" />
+          ) : null}
         </span>
 
         <span className="min-w-0 flex-1">
           <span
             className={cn(
               "block text-[13.5px] leading-snug",
-              active
-                ? "font-medium text-[var(--vairo)]"
-                : complete
-                  ? "text-[var(--text-subtle)]"
-                  : "text-white"
+              active ? "font-medium text-white" : complete ? "text-[var(--text-muted)]" : "text-white"
             )}
           >
             {title}
@@ -720,16 +764,33 @@ function ListRow({
               {subtitle}
             </span>
           ) : null}
+          {typeof total === "number" && total > 0 ? (
+            <span className="mt-1.5 flex max-w-[140px] gap-[3px]" aria-label={`${done ?? 0} z ${total}`}>
+              {Array.from({ length: Math.min(total, 12) }, (_, index) => {
+                const filled = total <= 12 ? index < (done ?? 0) : index < Math.round(((done ?? 0) / total) * 12);
+                return (
+                  <span
+                    key={index}
+                    className={cn(
+                      "h-[3px] flex-1 rounded-full",
+                      filled ? "bg-[var(--success)]" : "bg-white/12"
+                    )}
+                  />
+                );
+              })}
+            </span>
+          ) : null}
         </span>
 
-        {meta ? (
-          <span className="tabular mt-0.5 shrink-0 text-[12px] text-[var(--text-faint)]">
-            {meta}
+        {typeof total === "number" ? (
+          <span className="tabular mt-0.5 shrink-0 text-[12px] text-[var(--text-subtle)]">
+            {/* „0/0" czyta się jak błąd — punkt bez wymagań mówi wprost, że jest dodatkowy. */}
+            {total > 0 ? `${done ?? 0}/${total}` : "dodatkowe"}
           </span>
         ) : null}
 
         {chevron ? (
-          <ChevronRight className="mt-0.5 size-4 shrink-0 text-[var(--text-faint)] opacity-0 transition-opacity group-hover:opacity-100" />
+          <ChevronRight className="mt-0.5 size-4 shrink-0 text-[var(--text-subtle)] opacity-0 transition-opacity group-hover:opacity-100" />
         ) : null}
       </button>
     </li>
