@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Settings,
   Target,
+  Trophy,
   UserRound,
   Users,
   Waypoints,
@@ -96,6 +97,7 @@ export const navGroups: NavGroup[] = [
 ];
 
 export const footerNav: NavItem[] = [
+  { label: "SCORE", href: "/app/score", icon: Trophy },
   {
     label: "Powiadomienia",
     href: "/app/notifications",
