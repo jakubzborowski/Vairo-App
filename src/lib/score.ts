@@ -1,34 +1,36 @@
-/** Display rules; trusted awards and quotas live in migration 022. */
+/** Display rules; peer verification, queues and quotas live in migration 023. */
 export const SCORE_RULES = [
   {
     id: "task-small",
-    label: "Małe zadanie",
+    label: "Zadanie · standardowe",
     points: 5,
     track: "work",
     detail:
-      "Po ukończeniu celu z proof. Do 30 pkt za wszystkie zadania jednego celu.",
+      "Po niezależnej akceptacji celu powiązanego z programem. Wspólna pula zadań celu: do 30 pkt.",
   },
   {
     id: "task-large",
-    label: "Większe zadanie",
+    label: "Zadanie · wymagające",
     points: 15,
     track: "work",
     detail:
-      "Zakres ustalony przed rozpoczęciem. Łącznie do 30 pkt z zadań jednego celu.",
+      "Skala zatwierdzona przez inną osobę przed rozpoczęciem. Wspólna pula zadań celu: do 30 pkt.",
   },
   {
     id: "goal-small",
     label: "Cel z dowodem · standardowy",
     points: 40,
     track: "work",
-    detail: "Ukończony cel z poprawnym proof. Jednorazowo za dany cel.",
+    detail:
+      "Cel powiązany z programem, z treściwym proof i akceptacją drugiego Foundera/Admina. Jednorazowo.",
   },
   {
     id: "goal-large",
     label: "Cel z dowodem · wymagający",
     points: 80,
     track: "work",
-    detail: "Skalę ustala Founder/Admin przed rozpoczęciem pracy.",
+    detail:
+      "Skalę ustala inny Founder/Admin przed rozpoczęciem; ukończony wynik wymaga niezależnej akceptacji.",
   },
   {
     id: "document",
@@ -36,7 +38,7 @@ export const SCORE_RULES = [
     points: 10,
     track: "work",
     detail:
-      "Niepusty plik z biblioteki po raz pierwszy użyty jako proof ukończonego celu. Do 30 pkt dziennie.",
+      "Niepusty plik wykorzystany w zaakceptowanym celu. Sam upload nie punktuje. Do 30 pkt dziennie; nadwyżka w kolejce.",
   },
   {
     id: "point",
@@ -44,7 +46,7 @@ export const SCORE_RULES = [
     points: 25,
     track: "work",
     detail:
-      "Wszystkie wymagane podpunkty spełnione. Pominięte podpunkty nie punktują. Jednorazowo.",
+      "Pula 25 pkt dzielona między team. Rzeczywisty postęp i niezależna akceptacja każdej części. Osobisty bonus raz we wszystkich teamach.",
   },
   {
     id: "stage",
@@ -52,7 +54,7 @@ export const SCORE_RULES = [
     points: 150,
     track: "work",
     detail:
-      "Zamknięcie etapu po zdobyciu bonusów wszystkich aktywnych punktów. Jednorazowo.",
+      "Pula 150 pkt dzielona między team za faktycznie ukończony etap, także gdy praca zaczęła się przed wdrożeniem SCORE. Niezależna akceptacja.",
   },
   {
     id: "feedback",

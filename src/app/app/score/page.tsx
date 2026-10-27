@@ -3,8 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { rankProgress, SCORE_RANKS, SCORE_RULES } from "@/lib/score";
-import { ScoreControls } from "@/components/score/score-controls";
+import {
+  ScoreControls,
+  type ScoreReviews,
+} from "@/components/score/score-controls";
 import { Button } from "@/components/ui/button";
+import { ScoreRefresh } from "@/components/score/score-refresh";
 
 export const metadata = { title: "Twój SCORE · Vairo" };
 export const dynamic = "force-dynamic";
@@ -24,7 +28,7 @@ export default async function ScorePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/register?next=/app/score");
   const { data, error } = await supabase.rpc("score_overview");
-  if (error)
+  if (error || data?.rules_version !== 2)
     return (
       <div className="mx-auto max-w-xl">
         <h1 className="text-2xl text-white">SCORE</h1>
@@ -37,6 +41,16 @@ export default async function ScorePage() {
     work: number;
     reputation: number;
     events: ScoreRow[];
+    legacy: number;
+    pending: number;
+    queue: {
+      id: string;
+      label: string;
+      points: number;
+      state: string;
+      reason: string | null;
+    }[];
+    awaiting_review: { id: string; label: string; reason: string }[];
   };
   const progress = rankProgress(overview.work);
   const [startups, activeId] = await Promise.all([
@@ -45,58 +59,91 @@ export default async function ScorePage() {
   ]);
   const active = resolveActiveStartup(startups, activeId);
   const canAssess = active?.role === "founder" || active?.role === "admin";
-  const [goals, tasks, messages, assessments] = await Promise.all([
-    canAssess
-      ? supabase
-          .from("goals")
-          .select("id,title")
-          .eq("startup_id", active!.id)
-          .eq("status", "todo")
-          .is("archived_at", null)
-          .limit(50)
-      : Promise.resolve({ data: [] }),
-    canAssess
-      ? supabase
-          .from("tasks")
-          .select("id,title")
-          .eq("startup_id", active!.id)
-          .eq("status", "todo")
-          .limit(50)
-      : Promise.resolve({ data: [] }),
-    supabase.rpc("score_feedback_candidates"),
-    canAssess
-      ? supabase
-          .from("score_assessments")
-          .select("kind,source_id,weight,frozen")
-          .eq("startup_id", active!.id)
-      : Promise.resolve({ data: [] }),
-  ]);
+  const [goals, tasks, reviewResult, messages, assessments] = await Promise.all(
+    [
+      canAssess
+        ? supabase
+            .from("goals")
+            .select("id,title")
+            .neq("owner_id", user.id)
+            .eq("startup_id", active!.id)
+            .eq("status", "todo")
+            .is("archived_at", null)
+            .limit(50)
+        : Promise.resolve({ data: [] }),
+      canAssess
+        ? supabase
+            .from("tasks")
+            .select("id,title")
+            .neq("owner_id", user.id)
+            .eq("startup_id", active!.id)
+            .eq("status", "todo")
+            .limit(50)
+        : Promise.resolve({ data: [] }),
+      canAssess
+        ? supabase.rpc("score_review_candidates", { p_startup: active!.id })
+        : Promise.resolve({ data: { goals: [], program: [] } }),
+      supabase.rpc("score_feedback_candidates"),
+      canAssess
+        ? supabase
+            .from("score_assessments")
+            .select("kind,source_id,weight,frozen")
+            .eq("startup_id", active!.id)
+        : Promise.resolve({ data: [] }),
+    ],
+  );
   const work = [
     ...(goals.data ?? []).map((row) => ({ ...row, kind: "goal" as const })),
     ...(tasks.data ?? []).map((row) => ({ ...row, kind: "task" as const })),
-  ].filter((row) => !assessments.data?.some((a) => a.kind === row.kind && a.source_id === row.id && a.frozen)).map((row) => ({
-    ...row,
-    weight:
-      assessments.data?.find(
-        (a) => a.kind === row.kind && a.source_id === row.id,
-      )?.weight ?? "standard",
-  }));
+  ]
+    .filter(
+      (row) =>
+        !assessments.data?.some(
+          (a) => a.kind === row.kind && a.source_id === row.id && a.frozen,
+        ),
+    )
+    .map((row) => ({
+      ...row,
+      weight:
+        assessments.data?.find(
+          (a) => a.kind === row.kind && a.source_id === row.id,
+        )?.weight ?? "standard",
+    }));
+  const reviews = (reviewResult.data ?? {
+    goals: [],
+    program: [],
+  }) as ScoreReviews;
+  const reviewGoals = await Promise.all(
+    reviews.goals.map(async (goal) => {
+      const file = goal.proof_snapshot.file as { path?: unknown } | undefined;
+      if (goal.proof_snapshot.kind !== "file" || typeof file?.path !== "string")
+        return goal;
+      const { data: link } = await supabase.storage
+        .from("stage-files")
+        .createSignedUrl(file.path, 300);
+      return { ...goal, proof_url: link?.signedUrl ?? null };
+    }),
+  );
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 pb-10">
+      <ScoreRefresh />
       <header>
         <p className="text-xs uppercase tracking-widest text-[var(--vairo)]">
-          SCORE · wersja 1
+          SCORE · zweryfikowane wyniki
         </p>
         <h1 className="mt-3 font-heading text-3xl font-semibold text-white">
           Twoja praca. Twój postęp.
         </h1>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
-          Punkty pojawiają się automatycznie za wykonane działania. Twój
-          osobisty wynik ze wszystkich teamów, liczony od uruchomienia SCORE.
+          Punkty otrzymujesz za sprawdzone wyniki: ukończony cel powiązany z
+          programem i zaakceptowany przez drugiego Foundera/Admina. Sam status
+          „Ukończony” nie daje SCORE.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button href="/app/goals">Pracuj nad celem</Button>
-          <Button href="/app/stage" variant="secondary">Kontynuuj etap</Button>
+          <Button href="/app/stage" variant="secondary">
+            Kontynuuj etap
+          </Button>
         </div>
       </header>
       <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
@@ -138,6 +185,63 @@ export default async function ScorePage() {
           </p>
         </section>
       </div>
+      {overview.legacy > 0 && (
+        <section className={panel}>
+          <h2 className="text-lg text-white">Historia poprzednich zasad</h2>
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
+            Zachowaliśmy {overview.legacy} pkt naliczonych przed niezależną
+            weryfikacją. Są historią konta; nie podnoszą zweryfikowanej rangi
+            ani reputacji.
+          </p>
+        </section>
+      )}
+      {(overview.pending > 0 || overview.queue.length > 0) && (
+        <section className={panel}>
+          <h2 className="text-lg text-white">
+            Kolejka nagród · {overview.pending} pkt czeka
+          </h2>
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
+            Po przekroczeniu dziennego limitu nagroda zostaje zapisana.
+            Rozliczymy ją przy kolejnym wejściu do SCORE po odnowieniu limitu.
+            Nie otwieraj ponownie celu — to unieważnia oczekującą akceptację.
+          </p>
+          <ul className="mt-3 divide-y divide-white/5">
+            {overview.queue.map((entry) => (
+              <li key={entry.id} className="py-3 text-sm">
+                <p className="text-white">
+                  {entry.label} · {entry.points} pkt
+                </p>
+                <p className="mt-1 text-xs text-[var(--text-subtle)]">
+                  {entry.state === "cancelled"
+                    ? "Potrzebna nowa akceptacja. "
+                    : "Oczekuje. "}
+                  {entry.reason}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {overview.awaiting_review.length > 0 && (
+        <section className={panel}>
+          <h2 className="text-lg text-white">Twoje wyniki do akceptacji</h2>
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
+            Poproś drugiego Foundera/Admina w teamie o sprawdzenie wyniku w
+            SCORE. Jednoosobowy team może kontynuować pracę, ale nie zatwierdza
+            sobie punktów.
+          </p>
+          <ul className="mt-3 divide-y divide-white/5">
+            {overview.awaiting_review.map((entry, index) => (
+              <li key={`${entry.id}-${index}`} className="py-3 text-sm">
+                <p className="text-white">{entry.label}</p>
+                <p className="mt-1 text-xs text-[var(--text-subtle)]">
+                  {entry.reason}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <section className={panel}>
         <h2 className="text-lg text-white">Rangi</h2>
         <ol className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -154,7 +258,11 @@ export default async function ScorePage() {
           ))}
         </ol>
       </section>
-      <ScoreControls work={work} messages={messages.data ?? []} />
+      <ScoreControls
+        work={work}
+        messages={messages.data ?? []}
+        reviews={{ ...reviews, goals: reviewGoals }}
+      />
       <section className={panel}>
         <h2 className="text-lg text-white">Ostatnie 50 nagród</h2>
         {overview.events.length ? (
@@ -181,8 +289,9 @@ export default async function ScorePage() {
           </ol>
         ) : (
           <p className="mt-3 text-sm text-[var(--text-muted)]">
-            Jeszcze bez punktów. Ukończ cel z dowodem — otrzymasz punkty za cel
-            i ukończone zadania pod nim.
+            Jeszcze bez zweryfikowanych punktów. Ukończ cel z treściwym dowodem,
+            powiąż go z programem i poproś drugiego Foundera/Admina o
+            akceptację.
           </p>
         )}
       </section>
@@ -197,7 +306,12 @@ export default async function ScorePage() {
                   {rule.detail}
                 </p>
               </div>
-              <span className="text-[var(--vairo)]">+{rule.points}</span>
+              <span className="shrink-0 text-right text-[var(--vairo)]">
+                {rule.points}
+                {(rule.id === "point" || rule.id === "stage") && (
+                  <span className="block text-xs">pula teamu</span>
+                )}
+              </span>
             </li>
           ))}
         </ul>
@@ -205,17 +319,21 @@ export default async function ScorePage() {
       <section className={panel}>
         <h2 className="text-lg text-white">Uczciwe zasady</h2>
         <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">
-          Skip, sam upload, pusty plik, logowanie i swipe dają 0 pkt. Zadania
-          rozliczamy przy ukończeniu celu z proof, do 30 pkt na cel dla całego
-          teamu. Każdy rezultat nagradzamy raz, także po ponownym otwarciu.
-          Powtórne użycie tego samego proof w teamie nie daje nowego bonusu
-          celu. Limity nie odkładają nagród na kolejny dzień. Zadania: do 60 pkt
-          dziennie, cele: do 200. Dokument: do 30 pkt dziennie. Feedback: do 15,
-          pomoc: do 20; do 10 pkt od tej samej osoby w ciągu 7 dni, bez
-          wzajemnej wymiany ocen. Limity dzienne liczymy w Europe/Warsaw.
-          Punkty złożone wyłącznie z pominiętych podpunktów nie dają bonusu. Bonus
-          etapu wymaga nagrodzenia wszystkich aktywnych punktów. Cele i zadania
-          nagradzają właściciela; punkty i etapy osobę kończącą.
+          Skip, upload, pusty plik, logowanie i swipe dają 0 pkt. Cele i zadania
+          nagradzają właściciela po niezależnej akceptacji. Budżet zadań: do 30
+          pkt na cel dla całego teamu. Pula punktu (25) i etapu (150) jest
+          dzielona równo między członków teamu w chwili ukończenia; resztę
+          pojedynczych punktów przydzielamy w stałej kolejności identyfikatorów.
+          Zamykający nie otrzymuje dodatkowego bonusu. Każda osoba otrzyma bonus
+          danego punktu i etapu tylko raz, łącznie ze wszystkich teamów. Sam
+          skip nie daje nagrody. Bonus etapu sprawdza faktyczny postęp, także
+          sprzed wdrożenia SCORE. Dziennie: zadania 60, cele 200, dokumenty 30,
+          punkty programu 50, etapy 150; razem do 260 SCORE pracy. Nadwyżka
+          trafia do kolejki. Reputacja: feedback 15, pomoc 20 dziennie, do 10 od
+          jednej osoby w 7 dni, bez wzajemnej wymiany ocen. Reputacja świadomie
+          nie wpływa na rangę pracy. Dzień rozliczamy w Europe/Warsaw. Zmiana
+          kropki, odstępów lub wielkości liter nie tworzy nowego tekstowego
+          dowodu.
         </p>
       </section>
     </div>

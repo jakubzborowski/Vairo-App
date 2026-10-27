@@ -24,14 +24,28 @@ export async function scoreAction(
             p_message: String(form.get("source")),
             p_kind: String(form.get("kind")),
           })
-        : { error: { message: "Nieznana akcja." } };
+        : action === "review-goal"
+          ? await supabase.rpc("score_review_goal", {
+              p_goal: String(form.get("source")),
+              p_note: String(form.get("note")),
+              p_expected: String(form.get("expected")),
+            })
+          : action === "review-program"
+            ? await supabase.rpc("score_review_program", {
+                p_claim: String(form.get("source")),
+                p_note: String(form.get("note")),
+                p_expected: String(form.get("expected")),
+              })
+            : { error: { message: "Nieznana akcja." } };
   if (result.error) return { error: result.error.message, success: null };
   revalidatePath("/app/score");
   return {
     error: null,
     success:
       action === "assess"
-        ? "Skala zapisana. Punkty po ukończeniu celu z dowodem."
-        : "Potwierdzenie zapisane. Autor otrzymał reputację.",
+        ? "Skala zapisana. SCORE wymaga jeszcze niezależnej akceptacji ukończonej pracy."
+        : action === "thank"
+          ? "Potwierdzenie zapisane. Nagroda autora jest naliczona lub czeka w kolejce dziennego limitu."
+          : "Wynik zaakceptowany. Nagrody są naliczone lub widoczne w kolejce dziennego limitu.",
   };
 }

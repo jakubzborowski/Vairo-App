@@ -1,5 +1,8 @@
 # SCORE v1
 
+> Historyczny opis wersji 022. Aktualne zasady, niezależna akceptacja,
+> podział puli i kolejka: [SCORE-V2.md](SCORE-V2.md). Wdrażaj 023 po 022.
+
 Osobisty SCORE pracy i osobna reputacja społecznościowa. Wyniki pochodzą
 wyłącznie z nieedytowalnego rejestru `score_events`; klient może go czytać
 tylko dla zalogowanego użytkownika. Rangi to propozycja nowych nazw — Kuba

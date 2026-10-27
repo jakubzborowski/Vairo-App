@@ -1,8 +1,8 @@
 # Vairo App
 
-SCORE v1: po dotychczasowych migracjach uruchom `022_score.sql`.
-Punkty naliczają się automatycznie za rzeczywiste rezultaty; ekran: `/app/score`.
-Zasady, punktacja i uruchomienie testów: [docs/SCORE.md](docs/SCORE.md).
+SCORE v2: po `022_score.sql` uruchom `023_score_verification.sql`.
+Punkty wymagają niezależnej akceptacji wyniku; ekran: `/app/score`.
+Zasady, kolejka, punktacja i testy: [docs/SCORE-V2.md](docs/SCORE-V2.md).
 
 Aplikacja Vairo (Next.js, Supabase, TypeScript). Workspace startupu, pięć etapów programu i warstwa Social.
 
