@@ -566,7 +566,9 @@ export function StageScreen({
                 ? `Zespół uzupełnił ${tree.done} z ${tree.total} podpunktów.`
                 : tree.canFinish
                   ? "Wszystko uzupełnione — możesz domknąć etap."
-                  : `Zostało ${tree.total - tree.done} podpunktów do uzupełnienia.`}
+                  : // Bez liczby pozostałych podpunktów. „Zostało 54” czyta się
+                    // jak ankieta bez końca i zniechęca, zanim ktoś zacznie.
+                    "Postęp zapisuje się automatycznie."}
           </p>
           <p className="mt-0.5 text-[12.5px] text-[var(--text-subtle)]">
             {isCompleted
@@ -577,7 +579,7 @@ export function StageScreen({
                   ? needsDecision
                     ? "Zapytamy Cię, co dalej z tym pomysłem, i zapiszemy Twoją decyzję razem z odpowiedziami. Wrócić da się zawsze."
                     : "Zapiszemy Twoje odpowiedzi i przejdziemy do kolejnego kroku. Wrócić da się zawsze."
-                  : "Postęp zapisuje się automatycznie. Możesz wyjść i wrócić kiedy chcesz."}
+                  : "Etap domkniesz, gdy wymagane pytania będą uzupełnione albo pominięte. Możesz wyjść i wrócić, kiedy chcesz."}
           </p>
         </div>
 
