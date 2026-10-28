@@ -1,5 +1,8 @@
 # SCORE v2 — zweryfikowane wyniki
 
+> Aktualizacja: migracje 024/025 dodają limit `min_count`, ponowne recenzje
+> zadań, mentorów i rzeczywisty cron. Instrukcja: [SCORE-OPERATIONS.md](SCORE-OPERATIONS.md).
+
 Aktualne zasady zastępują naliczanie po zmianie statusu z wersji 1.
 Po migracji 022 zastosuj **023_score_verification.sql**. Nie uruchamiaj
 ponownie 022 po 023. Migracja 023 jest idempotentna.

@@ -5,7 +5,9 @@ import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { rankProgress, SCORE_RANKS, SCORE_RULES } from "@/lib/score";
 import {
   ScoreControls,
+  ScoreWorkspaceSelect,
   type ScoreReviews,
+  type ScoreWorkspace,
 } from "@/components/score/score-controls";
 import { Button } from "@/components/ui/button";
 import { ScoreRefresh } from "@/components/score/score-refresh";
@@ -21,14 +23,19 @@ type ScoreRow = {
   created_at: string;
 };
 
-export default async function ScorePage() {
+export default async function ScorePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reviewTeam?: string }>;
+}) {
+  const params = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/register?next=/app/score");
   const { data, error } = await supabase.rpc("score_overview");
-  if (error || data?.rules_version !== 2)
+  if (error || data?.rules_version !== 2 || data?.policy_revision !== 3)
     return (
       <div className="mx-auto max-w-xl">
         <h1 className="text-2xl text-white">SCORE</h1>
@@ -43,6 +50,7 @@ export default async function ScorePage() {
     events: ScoreRow[];
     legacy: number;
     pending: number;
+    queue_scheduled: boolean;
     queue: {
       id: string;
       label: string;
@@ -53,77 +61,73 @@ export default async function ScorePage() {
     awaiting_review: { id: string; label: string; reason: string }[];
   };
   const progress = rankProgress(overview.work);
-  const [startups, activeId] = await Promise.all([
+  const [startups, activeId, workspaceResult] = await Promise.all([
     getUserStartups(supabase, user.id),
     getActiveStartupId(),
+    supabase.rpc("score_review_workspaces"),
   ]);
   const active = resolveActiveStartup(startups, activeId);
-  const canAssess = active?.role === "founder" || active?.role === "admin";
-  const [goals, tasks, reviewResult, messages, assessments] = await Promise.all(
-    [
-      canAssess
-        ? supabase
-            .from("goals")
-            .select("id,title")
-            .neq("owner_id", user.id)
-            .eq("startup_id", active!.id)
-            .eq("status", "todo")
-            .is("archived_at", null)
-            .limit(50)
-        : Promise.resolve({ data: [] }),
-      canAssess
-        ? supabase
-            .from("tasks")
-            .select("id,title")
-            .neq("owner_id", user.id)
-            .eq("startup_id", active!.id)
-            .eq("status", "todo")
-            .limit(50)
-        : Promise.resolve({ data: [] }),
-      canAssess
-        ? supabase.rpc("score_review_candidates", { p_startup: active!.id })
-        : Promise.resolve({ data: { goals: [], program: [] } }),
-      supabase.rpc("score_feedback_candidates"),
-      canAssess
-        ? supabase
-            .from("score_assessments")
-            .select("kind,source_id,weight,frozen")
-            .eq("startup_id", active!.id)
-        : Promise.resolve({ data: [] }),
-    ],
-  );
-  const work = [
-    ...(goals.data ?? []).map((row) => ({ ...row, kind: "goal" as const })),
-    ...(tasks.data ?? []).map((row) => ({ ...row, kind: "task" as const })),
-  ]
-    .filter(
-      (row) =>
-        !assessments.data?.some(
-          (a) => a.kind === row.kind && a.source_id === row.id && a.frozen,
-        ),
-    )
-    .map((row) => ({
-      ...row,
-      weight:
-        assessments.data?.find(
-          (a) => a.kind === row.kind && a.source_id === row.id,
-        )?.weight ?? "standard",
-    }));
+  const workspaces = (workspaceResult.data ?? []) as ScoreWorkspace[];
+  const reviewTeam =
+    workspaces.find((workspace) => workspace.id === params.reviewTeam) ??
+    workspaces.find((workspace) => workspace.id === active?.id) ??
+    workspaces[0] ??
+    null;
+  const [reviewResult, messages, assessmentResult] = await Promise.all([
+    reviewTeam
+      ? supabase.rpc("score_review_candidates", { p_startup: reviewTeam.id })
+      : Promise.resolve({ data: { goals: [], program: [] } }),
+    supabase.rpc("score_feedback_candidates"),
+    reviewTeam
+      ? supabase.rpc("score_assessment_candidates", {
+          p_startup: reviewTeam.id,
+        })
+      : Promise.resolve({ data: [] }),
+  ]);
+  const work = (assessmentResult.data ?? []) as {
+    id: string;
+    title: string;
+    kind: "task" | "goal";
+    weight: string;
+  }[];
   const reviews = (reviewResult.data ?? {
     goals: [],
     program: [],
   }) as ScoreReviews;
-  const reviewGoals = await Promise.all(
-    reviews.goals.map(async (goal) => {
-      const file = goal.proof_snapshot.file as { path?: unknown } | undefined;
-      if (goal.proof_snapshot.kind !== "file" || typeof file?.path !== "string")
-        return goal;
-      const { data: link } = await supabase.storage
-        .from("stage-files")
-        .createSignedUrl(file.path, 300);
-      return { ...goal, proof_url: link?.signedUrl ?? null };
-    }),
-  );
+  const urls = new Map<string, Promise<string | null>>();
+  async function withProofUrl<
+    T extends { proof_snapshot: Record<string, unknown> },
+  >(goal: T): Promise<T & { proof_url?: string | null }> {
+    const file = goal.proof_snapshot.file as { path?: unknown } | undefined;
+    if (goal.proof_snapshot.kind !== "file" || typeof file?.path !== "string")
+      return goal;
+    const path = file.path;
+    if (!urls.has(path))
+      urls.set(
+        path,
+        supabase.storage
+          .from("stage-files")
+          .createSignedUrl(path, 300)
+          .then(({ data: link }) => link?.signedUrl ?? null),
+      );
+    return { ...goal, proof_url: await urls.get(path) };
+  }
+  const [reviewGoals, reviewProgram] = await Promise.all([
+    Promise.all(reviews.goals.map(withProofUrl)),
+    Promise.all(
+      reviews.program.map(async (claim) =>
+        claim.context
+          ? {
+              ...claim,
+              context: {
+                ...claim.context,
+                goals: await Promise.all(claim.context.goals.map(withProofUrl)),
+              },
+            }
+          : claim,
+      ),
+    ),
+  ]);
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 pb-10">
       <ScoreRefresh />
@@ -136,8 +140,8 @@ export default async function ScorePage() {
         </h1>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
           Punkty otrzymujesz za sprawdzone wyniki: ukończony cel powiązany z
-          programem i zaakceptowany przez drugiego Foundera/Admina. Sam status
-          „Ukończony” nie daje SCORE.
+          programem i zaakceptowany przez drugiego Foundera/Admina lub
+          przypisanego mentora programu. Sam status „Ukończony” nie daje SCORE.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button href="/app/goals">Pracuj nad celem</Button>
@@ -202,7 +206,9 @@ export default async function ScorePage() {
           </h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
             Po przekroczeniu dziennego limitu nagroda zostaje zapisana.
-            Rozliczymy ją przy kolejnym wejściu do SCORE po odnowieniu limitu.
+            {overview.queue_scheduled
+              ? "Harmonogram jest włączony i sprawdza kolejkę co 5 minut; wejście do SCORE może rozliczyć ją wcześniej."
+              : "Automatyczny harmonogram nie jest jeszcze włączony. Kolejkę rozliczamy przy wejściu do SCORE; poproś operatora Vairo o włączenie harmonogramu."}{" "}
             Nie otwieraj ponownie celu — to unieważnia oczekującą akceptację.
           </p>
           <ul className="mt-3 divide-y divide-white/5">
@@ -226,9 +232,9 @@ export default async function ScorePage() {
         <section className={panel}>
           <h2 className="text-lg text-white">Twoje wyniki do akceptacji</h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            Poproś drugiego Foundera/Admina w teamie o sprawdzenie wyniku w
-            SCORE. Jednoosobowy team może kontynuować pracę, ale nie zatwierdza
-            sobie punktów.
+            Poproś drugiego Foundera/Admina lub przypisanego mentora programu o
+            sprawdzenie wyniku w SCORE. Founder bez Admina może otrzymać
+            akceptację mentora; nie zatwierdza sobie punktów.
           </p>
           <ul className="mt-3 divide-y divide-white/5">
             {overview.awaiting_review.map((entry, index) => (
@@ -258,10 +264,26 @@ export default async function ScorePage() {
           ))}
         </ol>
       </section>
+      {reviewTeam && (
+        <section className={panel}>
+          <h2 className="mb-3 text-lg text-white">Team do recenzji</h2>
+          <ScoreWorkspaceSelect
+            workspaces={workspaces}
+            current={reviewTeam.id}
+          />
+          {reviewTeam.is_mentor && (
+            <p className="mt-3 text-xs text-[var(--text-muted)]">
+              Dostęp mentora: oceniasz przypisany team i jego dowody. Nie
+              zmieniasz członkostwa ani pracy zespołu.
+            </p>
+          )}
+        </section>
+      )}
       <ScoreControls
         work={work}
         messages={messages.data ?? []}
-        reviews={{ ...reviews, goals: reviewGoals }}
+        reviews={{ ...reviews, goals: reviewGoals, program: reviewProgram }}
+        canOpenWorkspace={active?.id === reviewTeam?.id}
       />
       <section className={panel}>
         <h2 className="text-lg text-white">Ostatnie 50 nagród</h2>
@@ -290,8 +312,8 @@ export default async function ScorePage() {
         ) : (
           <p className="mt-3 text-sm text-[var(--text-muted)]">
             Jeszcze bez zweryfikowanych punktów. Ukończ cel z treściwym dowodem,
-            powiąż go z programem i poproś drugiego Foundera/Admina o
-            akceptację.
+            powiąż go z programem i poproś drugiego Foundera/Admina lub
+            przypisanego mentora o akceptację.
           </p>
         )}
       </section>
@@ -320,20 +342,24 @@ export default async function ScorePage() {
         <h2 className="text-lg text-white">Uczciwe zasady</h2>
         <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">
           Skip, upload, pusty plik, logowanie i swipe dają 0 pkt. Cele i zadania
-          nagradzają właściciela po niezależnej akceptacji. Budżet zadań: do 30
-          pkt na cel dla całego teamu. Pula punktu (25) i etapu (150) jest
-          dzielona równo między członków teamu w chwili ukończenia; resztę
-          pojedynczych punktów przydzielamy w stałej kolejności identyfikatorów.
-          Zamykający nie otrzymuje dodatkowego bonusu. Każda osoba otrzyma bonus
-          danego punktu i etapu tylko raz, łącznie ze wszystkich teamów. Sam
-          skip nie daje nagrody. Bonus etapu sprawdza faktyczny postęp, także
-          sprzed wdrożenia SCORE. Dziennie: zadania 60, cele 200, dokumenty 30,
-          punkty programu 50, etapy 150; razem do 260 SCORE pracy. Nadwyżka
-          trafia do kolejki. Reputacja: feedback 15, pomoc 20 dziennie, do 10 od
-          jednej osoby w 7 dni, bez wzajemnej wymiany ocen. Reputacja świadomie
-          nie wpływa na rangę pracy. Dzień rozliczamy w Europe/Warsaw. Zmiana
-          kropki, odstępów lub wielkości liter nie tworzy nowego tekstowego
-          dowodu.
+          nagradzają właściciela po niezależnej akceptacji. Liczba punktowanych
+          celów jest ograniczona przez min_count warunku programu. Limit jest
+          wspólny dla teamu i obejmuje też oczekujące nagrody. Dodatkowe cele
+          nie dają punktów za siebie, zadania ani dokumenty. Ponowna recenzja
+          nowych zadań nie wymaga otwierania celu i nie nalicza ponownie jego
+          nagrody. Budżet zadań pozostaje do 30 pkt na cel dla całego teamu.
+          Pula punktu (25) i etapu (150) jest dzielona równo między członków
+          teamu w chwili ukończenia; resztę pojedynczych punktów przydzielamy w
+          stałej kolejności identyfikatorów. Zamykający nie otrzymuje
+          dodatkowego bonusu. Każda osoba otrzyma bonus danego punktu i etapu
+          tylko raz, łącznie ze wszystkich teamów. Sam skip nie daje nagrody.
+          Bonus etapu sprawdza faktyczny postęp, także sprzed wdrożenia SCORE.
+          Dziennie: zadania 60, cele 200, dokumenty 30, punkty programu 50,
+          etapy 150; razem do 260 SCORE pracy. Nadwyżka trafia do kolejki.
+          Reputacja: feedback 15, pomoc 20 dziennie, do 10 od jednej osoby w 7
+          dni, bez wzajemnej wymiany ocen. Reputacja świadomie nie wpływa na
+          rangę pracy. Dzień rozliczamy w Europe/Warsaw. Zmiana kropki, odstępów
+          lub wielkości liter nie tworzy nowego tekstowego dowodu.
         </p>
       </section>
     </div>

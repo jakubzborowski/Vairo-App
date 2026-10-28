@@ -1,4 +1,4 @@
-/** Display rules; peer verification, queues and quotas live in migration 023. */
+/** Display rules; verification/queue: 023, mentors/condition quotas: 024, cron: 025. */
 export const SCORE_RULES = [
   {
     id: "task-small",
@@ -22,7 +22,7 @@ export const SCORE_RULES = [
     points: 40,
     track: "work",
     detail:
-      "Cel powiązany z programem, z treściwym proof i akceptacją drugiego Foundera/Admina. Jednorazowo.",
+      "Cel powiązany z programem, z treściwym proof i akceptacją innego Foundera/Admina lub przypisanego mentora. Do min_count celów na warunek.",
   },
   {
     id: "goal-large",
@@ -30,7 +30,7 @@ export const SCORE_RULES = [
     points: 80,
     track: "work",
     detail:
-      "Skalę ustala inny Founder/Admin przed rozpoczęciem; ukończony wynik wymaga niezależnej akceptacji.",
+      "Skalę ustala inny Founder/Admin lub mentor przed rozpoczęciem; wynik wymaga niezależnej akceptacji i wolnego miejsca w limicie warunku.",
   },
   {
     id: "document",

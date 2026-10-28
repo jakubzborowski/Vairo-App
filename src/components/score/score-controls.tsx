@@ -1,7 +1,9 @@
 "use client";
 import { useActionState } from "react";
+import { useRouter } from "next/navigation";
 import { scoreAction } from "@/app/app/score/actions";
 import { Button } from "@/components/ui/button";
+import { MenuSelect } from "@/components/ui/menu-select";
 
 function ActionForm({
   children,
@@ -33,10 +35,12 @@ export function ScoreControls({
   work,
   messages,
   reviews,
+  canOpenWorkspace = true,
 }: {
   work: { id: string; title: string; kind: "task" | "goal"; weight: string }[];
   messages: { id: string; body: string; sender_name: string }[];
   reviews: ScoreReviews;
+  canOpenWorkspace?: boolean;
 }) {
   return (
     <div className="space-y-6">
@@ -57,6 +61,17 @@ export function ScoreControls({
                 <p className="text-sm text-white">
                   {goal.title} · {goal.owner_name ?? "Członek teamu"}
                 </p>
+                {goal.rereview && (
+                  <p className="mt-2 text-xs text-[var(--vairo)]">
+                    Ponowna recenzja zmienionych zadań. Cel zachowuje status;
+                    wcześniej przyznane punkty nie są naliczane drugi raz.
+                  </p>
+                )}
+                {typeof goal.proof_requirement?.label === "string" && (
+                  <p className="mt-2 text-xs text-[var(--text-muted)]">
+                    Wymagany rezultat: {goal.proof_requirement.label}
+                  </p>
+                )}
                 <Snapshot
                   proof={goal.proof_snapshot}
                   proofUrl={goal.proof_url}
@@ -70,13 +85,15 @@ export function ScoreControls({
                     ))}
                   </ul>
                 )}
-                <Button
-                  href={`/app/goals?goal=${goal.id}`}
-                  variant="ghost"
-                  size="sm"
-                >
-                  Otwórz cel i zadania
-                </Button>
+                {canOpenWorkspace && (
+                  <Button
+                    href={`/app/goals?goal=${goal.id}`}
+                    variant="ghost"
+                    size="sm"
+                  >
+                    Otwórz cel i zadania
+                  </Button>
+                )}
                 {goal.eligible ? (
                   <ReviewForm
                     key={goal.review_key}
@@ -86,10 +103,8 @@ export function ScoreControls({
                   />
                 ) : (
                   <p className="mt-3 text-xs text-[var(--text-muted)]">
-                    Ten cel nie spełnia warunków SCORE: potrzebuje jawnego
-                    powiązania z programem oraz treściwego proof. Zdanie:
-                    minimum 40 znaków i 8 słów; długi tekst: 80 znaków i 12
-                    słów. Puste pliki nie punktują.
+                    {goal.eligibility_reason ??
+                      "Cel potrzebuje jawnego powiązania z programem oraz treściwego proof. Zdanie: minimum 40 znaków i 8 słów; długi tekst: 80 znaków i 12 słów. Puste pliki nie punktują."}
                   </p>
                 )}
               </div>
@@ -105,13 +120,16 @@ export function ScoreControls({
                   {claim.points} pkt. Sprawdź odpowiedzi i dowody w programie
                   przed akceptacją.
                 </p>
-                <Button
-                  href={`/app/stage?stage=${claim.stage_key}`}
-                  variant="ghost"
-                  size="sm"
-                >
-                  Sprawdź etap
-                </Button>
+                {claim.context && <ReviewContext context={claim.context} />}
+                {canOpenWorkspace && (
+                  <Button
+                    href={`/app/stage?stage=${claim.stage_key}`}
+                    variant="ghost"
+                    size="sm"
+                  >
+                    Sprawdź etap
+                  </Button>
+                )}
                 <ReviewForm
                   key={claim.review_key}
                   action="review-program"
@@ -127,9 +145,10 @@ export function ScoreControls({
         <section className="rounded-2xl border border-white/10 bg-[var(--surface)] p-6">
           <h2 className="text-lg text-white">Ustal skalę pracy w teamie</h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            Founder/Admin ustala skalę przed rozpoczęciem pracy. Zadanie: 5 lub
-            15 pkt. Cel: 40 lub 80 pkt. Własną pracę przedstawiasz do oceny
-            drugiemu Founderowi/Adminowi — nie możesz podnieść sobie punktacji.
+            Inny Founder/Admin lub przypisany mentor ustala skalę przed
+            rozpoczęciem pracy. Zadanie: 5 lub 15 pkt. Cel: 40 lub 80 pkt.
+            Własną pracę przedstawiasz do oceny drugiemu Founderowi/Adminowi lub
+            mentorowi — nie możesz podnieść sobie punktacji.
           </p>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             {work.map((item) => (
@@ -227,6 +246,9 @@ export type ScoreReviews = {
     proof_snapshot: Record<string, unknown>;
     review_key: string;
     proof_url?: string | null;
+    proof_requirement?: { label?: string };
+    eligibility_reason?: string | null;
+    rereview?: boolean;
     tasks: { title: string; owner_name: string | null }[];
   }[];
   program: {
@@ -236,8 +258,83 @@ export type ScoreReviews = {
     points: number;
     stage_key: string;
     review_key: string;
+    context?: ProgramReviewContext;
   }[];
 };
+
+export type ProgramReviewContext = {
+  answers: { question: string; value: unknown }[];
+  goals: {
+    id: string;
+    title: string;
+    proof_requirement?: { label?: string };
+    proof_snapshot: Record<string, unknown>;
+    proof_url?: string | null;
+  }[];
+};
+export type ScoreWorkspace = { id: string; name: string; is_mentor: boolean };
+export function ScoreWorkspaceSelect({
+  workspaces,
+  current,
+}: {
+  workspaces: ScoreWorkspace[];
+  current: string;
+}) {
+  const router = useRouter();
+  return (
+    <MenuSelect
+      ariaLabel="Team do recenzji SCORE"
+      value={current}
+      onChange={(id) =>
+        router.push(`/app/score?reviewTeam=${encodeURIComponent(id)}`)
+      }
+      options={workspaces.map((workspace) => ({
+        value: workspace.id,
+        label: workspace.name + (workspace.is_mentor ? " · mentor" : ""),
+      }))}
+    />
+  );
+}
+function answerText(value: unknown): string {
+  if (value === null || value === undefined) return "Brak odpowiedzi";
+  if (typeof value === "boolean") return value ? "Tak" : "Nie";
+  if (typeof value === "string" || typeof value === "number")
+    return String(value);
+  if (Array.isArray(value)) return value.map(answerText).join("\n");
+  if (typeof value === "object")
+    return Object.entries(value)
+      .map(([key, item]) => `${key}: ${answerText(item)}`)
+      .join("\n");
+  return "";
+}
+function ReviewContext({ context }: { context: ProgramReviewContext }) {
+  return (
+    <details className="my-3 text-sm text-[var(--text-muted)]">
+      <summary className="cursor-pointer text-[var(--vairo)]">
+        Sprawdź odpowiedzi i dowody
+      </summary>
+      <dl className="mt-3 space-y-3">
+        {context.answers.map((answer, index) => (
+          <div key={index}>
+            <dt className="text-white">{answer.question}</dt>
+            <dd className="mt-1 whitespace-pre-wrap break-words">
+              {answerText(answer.value)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {context.goals.map((goal) => (
+        <div key={goal.id} className="mt-3">
+          <p className="text-white">{goal.title}</p>
+          {goal.proof_requirement?.label && (
+            <p className="text-xs">{goal.proof_requirement.label}</p>
+          )}
+          <Snapshot proof={goal.proof_snapshot} proofUrl={goal.proof_url} />
+        </div>
+      ))}
+    </details>
+  );
+}
 
 function ReviewForm({
   action,
@@ -277,6 +374,12 @@ function Snapshot({
   proof: Record<string, unknown>;
   proofUrl?: string | null;
 }) {
+  if (!proof || typeof proof.kind !== "string")
+    return (
+      <p className="my-3 text-sm text-[var(--text-subtle)]">
+        Dowód nie został jeszcze dostarczony.
+      </p>
+    );
   const text =
     typeof proof.text === "string"
       ? proof.text
