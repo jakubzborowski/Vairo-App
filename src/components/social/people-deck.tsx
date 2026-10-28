@@ -167,7 +167,6 @@ export function PeopleDeck({
       onRestoreAll={restoreAll}
       passLabel="Nie teraz"
       primaryLabel={conversationByProfile[person.id] ? "Otwórz rozmowę" : "Napisz"}
-      unit="osób"
       cover={<PersonCover person={person} facts={false} />}
       reasons={reasonsForPerson(person, matchContext)}
       // „Napisz" jest akcją główną dla KAŻDEGO — także dla kogoś bez teamu.

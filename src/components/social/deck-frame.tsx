@@ -7,7 +7,8 @@ import type { MatchReason } from "@/lib/match";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  /** Numer bieżącej karty (od 1) i długość talii — „3 z 12". */
+  /** Numer bieżącej karty (od 1) i długość talii. Nie są pokazywane jako
+   * liczba — decydują tylko, ile krawędzi kolejnych kart widać nad talią. */
   position: number;
   total: number;
   passedCount: number;
@@ -35,8 +36,6 @@ type Props = {
   passLabel: string;
   /** Podpis akcji głównej do skrótu klawiszowego i gestu („Zaczep", „Zgłoś się"). */
   primaryLabel?: string;
-  /** „osób" / „teamów" — w liczniku pod talią. */
-  unit?: string;
 };
 
 const SWIPE_RATIO = 0.5;
@@ -83,7 +82,6 @@ export function DeckFrame({
   footer,
   passLabel,
   primaryLabel = "Zaczep",
-  unit = "",
 }: Props) {
   const primaryRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLElement>(null);
@@ -209,30 +207,14 @@ export function DeckFrame({
         </article>
       </div>
 
-      {/* Jeden pasek przyklejony do talii: po lewej ile zostało, w środku
-          przyciski, po prawej skróty. Przyciski stoją zawsze w tym samym
-          miejscu, pod kciukiem. */}
+      {/* Jeden pasek przyklejony do talii: w środku przyciski, po prawej
+          skróty. Przyciski stoją zawsze w tym samym miejscu, pod kciukiem.
+          Licznika „1 z 3” i paska postępu tu nie ma: przy kilku profilach
+          w bazie liczba kart wyglądała jak pasek ładowania i mówiła tylko,
+          jak mało jest jeszcze ludzi. Lewa komórka zostaje pusta, żeby
+          przyciski trzymały środek. */}
       <div className="mt-3 grid items-center gap-4 rounded-[24px] bg-[var(--surface)] px-4 py-3.5 lift-1 sm:px-5 md:grid-cols-[1fr_auto_1fr]">
-        <div className="hidden flex-col gap-2 md:flex">
-          <p className="text-[13.5px] text-[var(--text-muted)]">
-            <span className="tabular font-heading text-[18px] font-semibold text-white">{position}</span> z {total}
-            {unit ? ` ${unit}` : ""}
-          </p>
-          <span className="flex w-[180px] gap-[3px]" aria-hidden="true">
-            {Array.from({ length: Math.min(total, 24) }, (_, index) => {
-              const at = total <= 24 ? index + 1 : Math.round(((index + 1) / 24) * total);
-              return (
-                <span
-                  key={index}
-                  className={cn(
-                    "h-[5px] flex-1 rounded-full",
-                    at < position ? "bg-white/70" : at === position ? "bg-white" : "bg-white/10"
-                  )}
-                />
-              );
-            })}
-          </span>
-        </div>
+        <div className="hidden md:block" aria-hidden="true" />
 
         <div className="flex items-start justify-center gap-3 sm:gap-5">
           {canUndo ? (
@@ -268,12 +250,6 @@ export function DeckFrame({
             {primaryLabel}
           </p>
         </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:hidden">
-        <span className="tabular text-[12.5px] text-[var(--text-subtle)]">
-          <span className="font-semibold text-white">{position}</span> z {total}
-        </span>
       </div>
 
       {error ? (

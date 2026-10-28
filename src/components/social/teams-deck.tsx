@@ -148,7 +148,6 @@ export function TeamsDeck({
       onRestoreAll={restoreAll}
       passLabel="Nie ten projekt"
       primaryLabel="Zgłoś się"
-      unit="teamów"
       reasons={reasonsForTeam(team, matchContext)}
       cover={
         <DeckCover
