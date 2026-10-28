@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/brand-logo";
 
 type OnboardingShellProps = {
   children: React.ReactNode;
@@ -46,17 +47,8 @@ export function OnboardingShell({
               <ArrowLeft className="size-4" />
             </Link>
           ) : null}
-          <Link href="/" className="inline-flex items-center gap-2">
-            <Image
-              src="/brand/logo-mark.png"
-              alt=""
-              width={28}
-              height={28}
-              className="size-7 object-contain"
-            />
-            <span className="font-heading text-[1.25rem] font-bold lowercase tracking-tight text-white">
-              vairo
-            </span>
+          <Link href="/" className="inline-flex items-center">
+            <BrandLogo height={28} />
           </Link>
         </div>
 

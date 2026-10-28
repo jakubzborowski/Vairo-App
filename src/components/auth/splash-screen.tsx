@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/brand-logo";
 
 type SplashScreenProps = {
   onComplete: () => void;
@@ -71,19 +72,7 @@ export function SplashScreen({
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
       <div className="relative z-10 flex w-full max-w-[280px] flex-col items-center px-6 splash-center">
-        <div className="flex items-center gap-3">
-          <Image
-            src="/brand/logo-mark.png"
-            alt=""
-            width={52}
-            height={52}
-            priority
-            className="size-[52px] object-contain"
-          />
-          <span className="font-heading text-[2.35rem] font-bold lowercase leading-none tracking-tight text-white">
-            vairo
-          </span>
-        </div>
+        <BrandLogo height={48} priority />
 
         <p className="mt-3 font-heading text-[15px] font-medium tracking-wide text-white/90">
           Build your startup

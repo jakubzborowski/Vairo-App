@@ -2,7 +2,6 @@
 
 import { useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, ChevronDown, HelpCircle, LogOut, Menu as MenuIcon, Settings } from "lucide-react";
 import { signOut } from "@/app/app/actions";
@@ -14,6 +13,7 @@ import { isActivePath, navGroups, type NavItem } from "./nav-config";
 import { AppBackdrop } from "./app-backdrop";
 import { NavRow } from "./nav-item";
 import { TeamSwitcher, type TeamSummary } from "./team-switcher";
+import { BrandLogo } from "@/components/brand-logo";
 
 const SOCIAL_OPEN_KEY = "vairo:nav:social-open";
 
@@ -122,16 +122,7 @@ export function AppShell({
         className="inline-flex items-center gap-2 px-2"
         aria-label="Vairo — dashboard"
       >
-        <Image
-          src="/brand/logo-mark.png"
-          alt=""
-          width={28}
-          height={28}
-          className="size-7 object-contain"
-        />
-        <span className="font-heading text-[1.2rem] font-bold lowercase tracking-tight">
-          vairo
-        </span>
+        <BrandLogo height={28} />
       </Link>
 
       <TeamSwitcher teams={teams} activeTeamId={activeTeamId} />
@@ -317,17 +308,8 @@ export function AppShell({
           >
             <MenuIcon className="size-4" />
           </button>
-          <Link href="/app" className="inline-flex items-center gap-2">
-            <Image
-              src="/brand/logo-mark.png"
-              alt=""
-              width={24}
-              height={24}
-              className="size-6 object-contain"
-            />
-            <span className="font-heading text-[1.05rem] font-bold lowercase">
-              vairo
-            </span>
+          <Link href="/app" className="inline-flex items-center" aria-label="Vairo — dashboard">
+            <BrandLogo height={24} />
           </Link>
           <Link href="/app/settings/profile" className="ml-auto">
             <Avatar src={user.avatarUrl} name={user.name} size="sm" />

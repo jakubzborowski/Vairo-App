@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SplashScreen } from "@/components/auth/splash-screen";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/brand-logo";
 
 const SPLASH_KEY = "vairo-splash-seen";
 
@@ -77,17 +78,8 @@ export function AuthShell({ children, showSplash = true }: AuthShellProps) {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(238,95,28,0.08),transparent_55%)]" />
 
         <header className="relative z-10 mx-auto flex w-full max-w-[440px] items-center px-5 pt-8 md:px-0 md:pt-10">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <Image
-              src="/brand/logo-mark.png"
-              alt=""
-              width={28}
-              height={28}
-              className="size-7 object-contain"
-            />
-            <span className="font-heading text-[1.25rem] font-bold lowercase tracking-tight text-white">
-              vairo
-            </span>
+          <Link href="/" className="inline-flex items-center">
+            <BrandLogo height={28} />
           </Link>
         </header>
 
