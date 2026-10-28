@@ -191,6 +191,16 @@ export function hasAnswer(value: unknown): boolean {
   return false;
 }
 
+/**
+ * Luka w szablonie zdania: `{kto}`, `{po-co}`. Nazwy luk w treści etapów
+ * mają też myślniki — wcześniejsza reguła `[a-z0-9_]` ich nie łapała, więc
+ * `{po-co}` zostawało w zdaniu dosłownie i trzeciego pola nie dało się wypełnić.
+ * Funkcja, nie stała: wyrażenie z flagą `g` trzyma stan (`lastIndex`).
+ */
+export function templateSlotPattern() {
+  return /\{([a-z0-9_-]+)\}/gi;
+}
+
 /** Pusta wartość startowa dla danego typu pola. */
 export function emptyValueFor(kind: FieldKind): unknown {
   switch (kind) {
@@ -265,8 +275,8 @@ export function matchesSkip(
 }
 
 /**
- * Decyzja konczaca etap (guidelines 10.5). System nie ocenia pomyslu —
- * zapisuje to, co zdecydowal czlowiek, razem ze snapshotem odpowiedzi.
+ * Decyzja kończąca etap (guidelines 10.5). System nie ocenia pomysłu —
+ * zapisuje to, co zdecydował człowiek, razem ze snapshotem odpowiedzi.
  */
 export const STAGE_DECISIONS = ["continue", "pivot", "pause", "archive"] as const;
 
@@ -279,28 +289,28 @@ export const STAGE_DECISION_COPY: Record<
   continue: {
     label: "Kontynuuj",
     description:
-      "Wyniki wystarczaja, zeby isc dalej. Etap zostaje domkniety, a kolejny sie otwiera.",
+      "Wyniki wystarczają, żeby iść dalej. Etap zostaje domknięty, a kolejny się otwiera.",
     tone: "brand",
   },
   pivot: {
-    label: "Zmien kierunek",
+    label: "Zmień kierunek",
     description:
-      "Cos sie nie potwierdzilo. Zapisujemy decyzje, etap zostaje otwarty, a Ty wybierasz, ktore podpunkty wypelnic na nowo. Poprzednie odpowiedzi zostaja w historii.",
+      "Coś się nie potwierdziło. Zapisujemy decyzję, etap zostaje otwarty, a Ty wybierasz, które podpunkty wypełnić na nowo. Poprzednie odpowiedzi zostają w historii.",
     tone: "warning",
   },
   pause: {
     label: "Wstrzymaj",
     description:
-      "Odkladasz ten startup na pozniej. Nic nie ginie, kolejny etap sie nie otwiera.",
+      "Odkładasz ten startup na później. Nic nie ginie, kolejny etap się nie otwiera.",
     tone: "warning",
   },
   archive: {
-    label: "Odrzuc pomysl",
+    label: "Odrzuć pomysł",
     description:
-      "Zamykasz ten pomysl. Startup trafia do archiwum razem z cala praca, ktora zostala wykonana.",
+      "Zamykasz ten pomysł. Startup trafia do archiwum razem z całą pracą, która została wykonana.",
     tone: "danger",
   },
 };
 
-/** Etapy, ktore koncza sie decyzja. Pozostale domykamy jednym przyciskiem. */
+/** Etapy, które kończą się decyzją. Pozostałe domykamy jednym przyciskiem. */
 export const STAGES_WITH_DECISION: string[] = ["idea"];

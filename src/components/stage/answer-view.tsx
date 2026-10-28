@@ -1,6 +1,6 @@
 import { Check, ExternalLink, Minus, Paperclip } from "lucide-react";
 import { Pill } from "@/components/ui/pill";
-import { asRecords, fieldAnswered, type StageField } from "@/types/stage";
+import { asRecords, fieldAnswered, templateSlotPattern, type StageField } from "@/types/stage";
 
 /**
  * Odpowiedź w trybie odczytu — dla osób, które mają w teamie rolę Członka.
@@ -143,7 +143,7 @@ function AnswerBody({ field, value }: { field: StageField; value: unknown }) {
       const slots = (value ?? {}) as Record<string, string>;
       const template = field.config.template ?? "";
       const sentence = template
-        .replace(/\{(\w+)\}/g, (_, key: string) => (slots[key] ?? "").trim() || "…")
+        .replace(templateSlotPattern(), (_, key: string) => (slots[key] ?? "").trim() || "…")
         .replace(/\s+/g, " ")
         .trim();
       return (

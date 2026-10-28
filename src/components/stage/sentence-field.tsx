@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import type { SentenceSlot, StageField } from "@/types/stage";
+import { templateSlotPattern, type SentenceSlot, type StageField } from "@/types/stage";
 
 type Props = {
   field: StageField;
@@ -127,7 +127,7 @@ type Part = { type: "text"; text: string } | { type: "slot"; key: string };
 /** Rozbija „{who} próbuje {what}.” na kawałki tekstu i luki. */
 function splitTemplate(template: string): Part[] {
   const parts: Part[] = [];
-  const regex = /\{([a-z0-9_]+)\}/gi;
+  const regex = templateSlotPattern();
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
