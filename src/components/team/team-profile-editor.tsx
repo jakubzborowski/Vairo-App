@@ -467,7 +467,7 @@ export function TeamProfileEditor({
 
           {/* Archiwizacja i usunięcie schowane na dole — nie sąsiadują
               z polami, które poprawia się co tydzień. */}
-          <details className="group rounded-[18px] border border-white/[0.07] bg-[var(--surface)]">
+          <details className="group mt-6 rounded-[18px] border border-white/[0.07] bg-[var(--surface)]">
             <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-5 text-[13.5px] font-medium text-[var(--text-muted)] hover:text-white">
               <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
               Zaawansowane: status, archiwizacja i usunięcie teamu
@@ -505,7 +505,13 @@ export function TeamProfileEditor({
                     zgłoszenia i skład zespołu. Nie ma kosza ani cofnięcia.
                   </p>
                   <div className="mt-3">
-                    <DeleteStartupButton startupId={startupId} name={name} />
+                    <DeleteStartupButton
+                      startupId={startupId}
+                      name={name}
+                      blockedReason={
+                        dirty ? "Najpierw zapisz albo odrzuć zmiany w profilu." : null
+                      }
+                    />
                   </div>
                 </div>
               ) : null}

@@ -19,9 +19,16 @@ import { Modal } from "@/components/ui/modal";
 export function DeleteStartupButton({
   startupId,
   name,
+  blockedReason = null,
 }: {
   startupId: string;
   name: string;
+  /**
+   * Dlaczego teraz nie wolno usuwać. Przy niezapisanych zmianach przy dolnej
+   * krawędzi ekranu przykleja się pasek „Zapisz” — i ląduje tuż przy tym
+   * przycisku. Jedno chybione kliknięcie nie może prowadzić do usuwania.
+   */
+  blockedReason?: string | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -46,10 +53,24 @@ export function DeleteStartupButton({
 
   return (
     <>
-      <Button variant="danger" size="sm" onClick={() => setOpen(true)}>
-        <Trash2 className="size-4" />
-        Usuń startup
-      </Button>
+      {/* Bez czerwonego wypełnienia: przycisk ma być do znalezienia, nie do
+          zauważenia. Kolor niesie tekst; ostrzeżenie mówi akapit nad nim
+          i okno z przepisaniem nazwy. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-[var(--danger-text)] hover:bg-[var(--danger)]/10 hover:text-[var(--danger-text)]"
+          disabled={Boolean(blockedReason)}
+          onClick={() => setOpen(true)}
+        >
+          <Trash2 className="size-4" />
+          Usuń startup…
+        </Button>
+        {blockedReason ? (
+          <p className="text-[12.5px] text-[var(--text-subtle)]">{blockedReason}</p>
+        ) : null}
+      </div>
 
       {open ? (
         <Modal
