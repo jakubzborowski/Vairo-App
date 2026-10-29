@@ -40,7 +40,10 @@ const CATEGORY_KEYS = new Set(["general", "saas", "hardware", "b2b", "b2c"]);
 /** Numer migracji nadawany per szablon, żeby pliki nie kolidowały. */
 const MIGRATION_NUMBER = {
   ambition: "006",
-  idea: "007",
+  // Idea dostała nową wersję treści po uwagach do redesignu (B2C, konkurencja,
+  // Hardware). 007 zostaje jako historyczny — tak jak 022/023 przy Preparation.
+  // Numer > 021, więc treść Idei może już używać `skip_when`.
+  idea: "034",
   preparation: "024",
   execution: "027",
   // MVP było na gałęzi pod 021 i zderzało się z 021_preparation_tools.

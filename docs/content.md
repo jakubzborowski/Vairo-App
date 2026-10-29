@@ -44,6 +44,18 @@ Użycie takiej kolumny w szablonie o niższym numerze (np. `skip_when` w Idei)
 migracji, która ją tworzy. Sprawdzian, że nic się nie rozjechało: ponowne
 wygenerowanie wszystkich czterech plików treści ma dać zerowy diff.
 
+### Idea ma dwa pliki: 007 i 034
+
+Po uwagach do redesignu treść Idei potrzebowała `skip_when` („nie znalazłem
+konkurencji” zalicza resztę punktu), a pod numerem 007 tej kolumny jeszcze nie
+ma. Dlatego `MIGRATION_NUMBER.idea` = `034`: kolejne wygenerowanie Idei
+nadpisuje 034, a 007 zostaje jako historyczny — tak samo jak 022 i 023 przy
+Preparation. Na świeżej bazie biegną oba; 034 usuwa to, czego już nie ma.
+
+Warunek z polem `checkmark` zapisujemy jako `"equals": true`, nie `one_of`:
+aplikacja porównuje `one_of` wyłącznie z tekstem, więc zaznaczenie (`true`)
+zaliczyłoby podpunkt w bazie, a na ekranie nie.
+
 ### Stabilny `answer_key`
 
 Odpowiedzi kluczujemy po `stage_fields.answer_key`, nie po `field_id`:

@@ -4,7 +4,7 @@
   "position": 2,
   "title": "Idea Stage",
   "subtitle": "Sprawdź, czy pomysł ma sens",
-  "intro": "Na tym etapie sprawdzisz, komu twój pomysł może pomóc, jaki problem dla tych osób rozwiązuje i czy da się na nim zarabiać. Twoim celem jest zmniejszenie najważniejszych niepewności i wykrycie luk we własnym pomyśle.",
+  "intro": "Zmniejsz niepewności i wykryj luki we własnym pomyśle. Sprawdź, komu twój pomysł może pomóc, jaki problem dla tych osób rozwiązuje i czy da się na nim zarabiać.",
   "finish_label": "Kończę walidację pomysłu",
   "categories": [
     {
@@ -279,11 +279,11 @@
                   "question": "Zapisz swoje główne założenie.",
                   "help": "To zdanie będziesz sprawdzać w rozmowach z ludźmi. Im konkretniejsze, tym łatwiej je obalić albo potwierdzić.",
                   "config": {
-                    "template": "Zakładam, że {kto} skorzysta z {czego}, żeby {po-co}.",
+                    "template": "Zakładam, że {kto} skorzystają z {czego}, żeby {po-co}.",
                     "slots": [
                       {
                         "key": "kto",
-                        "label": "Kto?",
+                        "label": "Kto? np. właściciele sklepów",
                         "size": "md"
                       },
                       {
@@ -371,7 +371,11 @@
                     "item_max": 200
                   }
                 }
-              ]
+              ],
+              "skip_when": {
+                "answer_key": "idea.konkurencja.brak-konkurencji.potwierdzam",
+                "equals": true
+              }
             },
             {
               "key": "opisz-rozwiazania",
@@ -414,7 +418,11 @@
                     "item_max": 200
                   }
                 }
-              ]
+              ],
+              "skip_when": {
+                "answer_key": "idea.konkurencja.brak-konkurencji.potwierdzam",
+                "equals": true
+              }
             },
             {
               "key": "opinie-uzytkownikow",
@@ -466,7 +474,11 @@
                     "max_items": 10
                   }
                 }
-              ]
+              ],
+              "skip_when": {
+                "answer_key": "idea.konkurencja.brak-konkurencji.potwierdzam",
+                "equals": true
+              }
             },
             {
               "key": "porownaj",
@@ -509,7 +521,11 @@
                     "min": 40
                   }
                 }
-              ]
+              ],
+              "skip_when": {
+                "answer_key": "idea.konkurencja.brak-konkurencji.potwierdzam",
+                "equals": true
+              }
             },
             {
               "key": "dlaczego-zmiana",
@@ -535,7 +551,11 @@
                     "item_max": 250
                   }
                 }
-              ]
+              ],
+              "skip_when": {
+                "answer_key": "idea.konkurencja.brak-konkurencji.potwierdzam",
+                "equals": true
+              }
             },
             {
               "key": "brak-konkurencji",
@@ -543,6 +563,13 @@
               "description": "Wypełnij tylko wtedy, gdy naprawdę nic nie znalazłeś. Brak konkurencji częściej oznacza brak rynku niż wolne pole.",
               "is_optional": true,
               "fields": [
+                {
+                  "key": "potwierdzam",
+                  "kind": "checkmark",
+                  "required": false,
+                  "question": "Nie znalazłem podobnych rozwiązań — zaznaczam to świadomie.",
+                  "help": "Zaznaczenie zalicza pozostałe podpunkty tego punktu bez odpowiedzi. Jeśli później znajdziesz konkurencję, odznacz to pole i je uzupełnij."
+                },
                 {
                   "key": "gdzie-szukales",
                   "kind": "list_short",
@@ -1180,7 +1207,7 @@
         },
         {
           "key": "roi",
-          "title": "Sprawdź, czy klient zarobi więcej, niż zapłaci",
+          "title": "Sprawdź, czy zakup opłaci się firmie",
           "description": "ROI (Return On Investment) to prosta odpowiedź na pytanie: czy to się firmie opłaci. Nie potrzebujesz arkusza — wystarczy uczciwy szacunek.",
           "guide": "sprawdz-czy-zakup-oplaci-sie-firmie",
           "subpoints": [
@@ -1354,8 +1381,133 @@
     {
       "key": "b2c",
       "title": "B2C",
-      "intro": "Sprzedajesz osobom prywatnym. Sprawdzisz cztery rzeczy: ile kosztuje zdobycie klienta, czy ludzie naprawdę chcą korzystać, czy są gotowi zapłacić i czy będą polecać dalej. Celem nie jest jeszcze skala, tylko wczesne wykrycie ryzyk.",
+      "intro": "W modelu B2C rozwiązanie służy osobom prywatnym lub gospodarstwom domowym. Doprecyzuj, kto uczestniczy w zakupie, w jakiej sytuacji się na niego decyduje i z jakich prywatnych środków go finansuje. Informacje, których jeszcze nie potwierdziłeś, traktuj jako założenia.",
       "points": [
+        {
+          "key": "zakup-konsumencki",
+          "title": "Doprecyzuj zakup konsumencki",
+          "guide": "doprecyzuj-zakup-konsumencki",
+          "subpoints": [
+            {
+              "key": "role-zakupu",
+              "title": "Ustal, kto korzysta, kto wybiera i kto płaci",
+              "description": "Zaznacz, dla kogo jest zakup, i przypisz role. Jeśli wszystkie pełni ta sama osoba, wystarczy jedno zaznaczenie.",
+              "fields": [
+                {
+                  "key": "dla-kogo",
+                  "kind": "select",
+                  "question": "Dla kogo jest zakup?",
+                  "config": {
+                    "options": [
+                      {
+                        "value": "siebie",
+                        "label": "Dla siebie"
+                      },
+                      {
+                        "value": "bliska-osoba",
+                        "label": "Dla bliskiej osoby"
+                      },
+                      {
+                        "value": "wspolny-dom",
+                        "label": "Dla wspólnego domu"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": "jedna-osoba",
+                  "kind": "checkmark",
+                  "required": false,
+                  "question": "Korzysta, wybiera i płaci ta sama osoba."
+                },
+                {
+                  "key": "korzysta",
+                  "kind": "short_text",
+                  "required": false,
+                  "question": "Kto korzysta?",
+                  "help": "np. uczeń",
+                  "config": {
+                    "max": 200
+                  }
+                },
+                {
+                  "key": "wybiera",
+                  "kind": "short_text",
+                  "required": false,
+                  "question": "Kto wybiera?",
+                  "help": "np. uczeń razem z rodzicem",
+                  "config": {
+                    "max": 200
+                  }
+                },
+                {
+                  "key": "placi",
+                  "kind": "short_text",
+                  "required": false,
+                  "question": "Kto płaci?",
+                  "help": "np. rodzic",
+                  "config": {
+                    "max": 200
+                  }
+                }
+              ]
+            },
+            {
+              "key": "okazja-zakupu",
+              "title": "Wskaż okazję do zakupu",
+              "description": "Jedna sytuacja z życia prywatnego, w której konsument rozważy zakup — np. rozpoczęcie hobby, przygotowania do egzaminu albo wybór prezentu.",
+              "fields": [
+                {
+                  "key": "sytuacja",
+                  "kind": "short_text",
+                  "question": "W jakiej sytuacji konsument rozważy zakup i dlaczego wydatek ma sens właśnie wtedy?",
+                  "help": "np. rodzic szuka kursu, gdy uczeń zaczyna mieć trudności z przygotowaniem do matury",
+                  "config": {
+                    "max": 400
+                  }
+                }
+              ]
+            },
+            {
+              "key": "prywatny-budzet",
+              "title": "Umieść wydatek w prywatnym budżecie",
+              "description": "Określ, skąd w prywatnym budżecie mają pochodzić pieniądze i czy zakup zastępuje dotychczasowy wydatek.",
+              "fields": [
+                {
+                  "key": "rodzaj-wydatku",
+                  "kind": "select",
+                  "question": "Jak zakup wpisuje się w budżet konsumenta?",
+                  "config": {
+                    "options": [
+                      {
+                        "value": "zastepuje",
+                        "label": "Zastępuje dotychczasowy wydatek"
+                      },
+                      {
+                        "value": "dodatkowy",
+                        "label": "To dodatkowy koszt"
+                      },
+                      {
+                        "value": "bez-oplaty",
+                        "label": "Bez opłaty od konsumenta"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": "kategoria",
+                  "kind": "short_text",
+                  "required": false,
+                  "question": "Jaki wydatek zastępuje albo do jakiej kategorii należy?",
+                  "help": "np. edukacja dziecka; kurs zastępuje część wydatków na korepetycje. Przy dostępie bez opłaty zostaw puste.",
+                  "config": {
+                    "max": 300
+                  }
+                }
+              ]
+            }
+          ]
+        },
         {
           "key": "pozyskanie-klientow",
           "title": "Jak znaleźć klientów i ile to kosztuje",
@@ -1436,7 +1588,7 @@
                   "key": "cac",
                   "kind": "number",
                   "question": "Ile kosztowało zdobycie jednej zainteresowanej osoby?",
-                  "help": "Podziel wydane pieniądze przez liczbę osób. To jest CAC — koszt pozyskania klienta.",
+                  "help": "Podziel wydane pieniądze przez liczbę osób. To koszt zdobycia jednego klienta (w branży: CAC).",
                   "config": {
                     "min": 0,
                     "unit": "zł"
@@ -1482,124 +1634,10 @@
           ]
         },
         {
-          "key": "czy-chca-korzystac",
-          "title": "Sprawdź, czy ludzie naprawdę chcą z tego korzystać",
-          "description": "Deklaracja to nie to samo co zachowanie. W tym punkcie patrzysz na to, co ludzie robią, a nie co mówią.",
-          "guide": "jak-sprawdzic-czy-ludzie-chca-z-tego-korzystac",
-          "subpoints": [
-            {
-              "key": "pierwsi-testerzy",
-              "title": "Pokaż pomysł pierwszym testerom",
-              "fields": [
-                {
-                  "key": "co-pokazales",
-                  "kind": "short_text",
-                  "question": "Co im pokazałeś?",
-                  "help": "Zamiast budować gotowy produkt, zrób prosty szkic albo pomóż ludziom „ręcznie”. Na tym etapie to wystarczy.",
-                  "config": {
-                    "min": 10,
-                    "max": 400
-                  }
-                },
-                {
-                  "key": "testerzy",
-                  "kind": "list_short",
-                  "question": "Zaproś do testów 5 osób z grupy docelowej i wypisz je tutaj.",
-                  "config": {
-                    "min_items": 5,
-                    "max_items": 15,
-                    "item_max": 200
-                  }
-                }
-              ]
-            },
-            {
-              "key": "bez-pomocy",
-              "title": "Patrz, jak radzą sobie bez twojej pomocy",
-              "fields": [
-                {
-                  "key": "obserwacje",
-                  "kind": "long_text",
-                  "question": "Daj im proste zadanie i obserwuj z boku. Co zobaczyłeś?",
-                  "help": "Nie podpowiadaj. Miejsce, w którym się zacinają, jest ważniejsze niż wszystko, co powiedzą potem.",
-                  "config": {
-                    "min": 60
-                  }
-                }
-              ]
-            },
-            {
-              "key": "czy-wroca",
-              "title": "Zobacz, czy sami z siebie wrócą",
-              "fields": [
-                {
-                  "key": "ilu-wrocilo",
-                  "kind": "number",
-                  "question": "Ilu z nich korzystało dalej po kilku dniach, bez twojego przypominania?",
-                  "config": {
-                    "min": 0,
-                    "unit": "osób"
-                  }
-                },
-                {
-                  "key": "co-powiedzieli",
-                  "kind": "long_text",
-                  "question": "Co powiedzieli ci, którzy przestali?",
-                  "help": "To najcenniejsza informacja w całym punkcie. Powód rezygnacji mówi więcej niż pochwała.",
-                  "config": {
-                    "min": 30
-                  }
-                }
-              ]
-            },
-            {
-              "key": "puste-obietnice",
-              "title": "Oddziel realne sygnały od grzeczności",
-              "fields": [
-                {
-                  "key": "sygnaly",
-                  "kind": "long_text",
-                  "question": "Co było realnym sygnałem zainteresowania, a co zwykłą uprzejmością?",
-                  "help": "„To fajny pomysł” nic nie znaczy. Liczy się to, że ktoś wrócił, zapytał kiedy będzie gotowe albo zaproponował zapłatę.",
-                  "config": {
-                    "min": 40
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
           "key": "gotowosc-do-zaplaty",
           "title": "Oceń gotowość do zapłaty",
           "guide": "ocena-gotowosci-do-zaplaty",
           "subpoints": [
-            {
-              "key": "platnik-vs-uzytkownik",
-              "title": "Rozdziel płatnika od użytkownika",
-              "fields": [
-                {
-                  "key": "kto-placi",
-                  "kind": "short_text",
-                  "question": "Czy płaci ta sama osoba, która korzysta?",
-                  "help": "Prezent, zakup dla dziecka, zakup dla rodzica — wtedy przekonujesz kogoś innego niż użytkownika.",
-                  "config": {
-                    "min": 5,
-                    "max": 400
-                  }
-                },
-                {
-                  "key": "wydatki-na-alternatywy",
-                  "kind": "short_text",
-                  "question": "Ile klient wydaje dziś na podobne rozwiązania?",
-                  "help": "To twój punkt odniesienia dla ceny. Jeśli dziś nie wydaje nic, przekonanie go będzie znacznie trudniejsze.",
-                  "config": {
-                    "min": 3,
-                    "max": 400
-                  }
-                }
-              ]
-            },
             {
               "key": "obiekcje",
               "title": "Zbierz obiekcje i pogrupuj je",
@@ -1625,7 +1663,7 @@
                   "key": "ltv",
                   "kind": "number",
                   "question": "Ile klient zapłaci ci łącznie przez cały czas korzystania?",
-                  "help": "To LTV. Policz prosto: średnia wartość zamówienia × liczba zamówień w roku × liczba lat.",
+                  "help": "To wartość klienta w całym okresie korzystania (w branży: LTV). Policz prosto: średnia wartość zamówienia × liczba zamówień w roku × liczba lat.",
                   "config": {
                     "min": 0,
                     "unit": "zł"
@@ -1634,140 +1672,8 @@
                 {
                   "key": "wniosek",
                   "kind": "short_text",
-                  "question": "Jak LTV wypada przy koszcie pozyskania z punktu 1?",
-                  "help": "Przyjęta reguła mówi, że LTV powinno być kilkukrotnie wyższe od CAC. Jeśli jest odwrotnie, biznes traci na każdym kliencie.",
-                  "config": {
-                    "min": 10,
-                    "max": 500
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "key": "potencjal-polecen",
-          "title": "Zweryfikuj potencjał poleceń",
-          "description": "Polecenia to najtańszy sposób wzrostu w B2C. Sprawdzasz, czy w ogóle się zdarzają — nie czy ludzie deklarują, że poleciliby.",
-          "guide": "weryfikacja-potencjalu-polecen",
-          "subpoints": [
-            {
-              "key": "powod-i-moment",
-              "title": "Zdefiniuj powód i moment polecenia",
-              "fields": [
-                {
-                  "key": "powod",
-                  "kind": "short_text",
-                  "question": "Co skłania użytkownika do polecenia?",
-                  "config": {
-                    "min": 10,
-                    "max": 400
-                  }
-                },
-                {
-                  "key": "moment",
-                  "kind": "short_text",
-                  "question": "W którym momencie najchętniej się tym dzielą?",
-                  "help": "Zwykle tuż po pierwszym sukcesie z produktem, nie po miesiącu korzystania.",
-                  "config": {
-                    "min": 10,
-                    "max": 400
-                  }
-                }
-              ]
-            },
-            {
-              "key": "rzeczywiste-polecenia",
-              "title": "Przetestuj rzeczywiste polecenia",
-              "fields": [
-                {
-                  "key": "ile-poproszonych",
-                  "kind": "number",
-                  "question": "Ilu testerów poprosiłeś o polecenie konkretnej osobie?",
-                  "help": "Poproś o realne polecenie, nie o deklarację „tak, polecę”.",
-                  "config": {
-                    "min": 0,
-                    "unit": "osób"
-                  }
-                },
-                {
-                  "key": "ile-polecilo",
-                  "kind": "number",
-                  "question": "Ilu z nich faktycznie kogoś poleciło?",
-                  "config": {
-                    "min": 0,
-                    "unit": "osób"
-                  }
-                },
-                {
-                  "key": "ile-podjelo-dzialanie",
-                  "kind": "number",
-                  "question": "Ile poleconych osób podjęło kolejne działanie?",
-                  "config": {
-                    "min": 0,
-                    "unit": "osób"
-                  }
-                }
-              ]
-            },
-            {
-              "key": "komunikacja",
-              "title": "Zbadaj, jak o tym mówią",
-              "fields": [
-                {
-                  "key": "jak-opisuja",
-                  "kind": "long_text",
-                  "question": "Jak użytkownicy opisują produkt, polecając go?",
-                  "help": "Ich słowa są lepsze od twoich. To gotowy materiał na stronę i reklamy.",
-                  "config": {
-                    "min": 40
-                  }
-                },
-                {
-                  "key": "organiczne-vs-motywowane",
-                  "kind": "short_text",
-                  "question": "Czy polecenia z nagrodą działały lepiej niż te bez?",
-                  "help": "Jeśli działają tylko z nagrodą, to nie jest jeszcze prawdziwe polecenie — to kupowanie ruchu.",
-                  "config": {
-                    "min": 10,
-                    "max": 400
-                  }
-                }
-              ]
-            },
-            {
-              "key": "mechanizm",
-              "title": "Zidentyfikuj, co napędza polecenia",
-              "fields": [
-                {
-                  "key": "co-decyduje",
-                  "kind": "select",
-                  "question": "Co najsilniej wpływa na decyzję o poleceniu?",
-                  "config": {
-                    "options": [
-                      {
-                        "value": "usefulness",
-                        "label": "Użyteczność — produkt po prostu działa"
-                      },
-                      {
-                        "value": "altruism",
-                        "label": "Korzyść dla drugiej osoby"
-                      },
-                      {
-                        "value": "social",
-                        "label": "Relacja społeczna i dobre wrażenie"
-                      },
-                      {
-                        "value": "reward",
-                        "label": "Nagroda albo rabat"
-                      }
-                    ]
-                  }
-                },
-                {
-                  "key": "wskaznik",
-                  "kind": "short_text",
-                  "question": "Jaki wyszedł stosunek udanych poleceń do proszonych i czy to istotne źródło wzrostu?",
+                  "question": "Jak ta kwota wypada przy koszcie zdobycia jednego klienta z punktu „Jak znaleźć klientów”?",
+                  "help": "Przyjęta reguła mówi, że to, co klient zapłaci łącznie, powinno być kilka razy wyższe niż koszt jego zdobycia. Jeśli jest odwrotnie, biznes traci na każdym kliencie.",
                   "config": {
                     "min": 10,
                     "max": 500
@@ -1788,32 +1694,6 @@
           "key": "problem-i-potrzeba-fizyczna",
           "title": "Potwierdź problem i potrzebę fizycznego urządzenia",
           "subpoints": [
-            {
-              "key": "problem-i-alternatywy",
-              "title": "Zbadaj problem i obecne alternatywy",
-              "fields": [
-                {
-                  "key": "wnioski",
-                  "kind": "long_text",
-                  "question": "Co wynika z rozmów z potencjalnymi użytkownikami?",
-                  "help": "Upewnij się, że problem jest realny — nie że brzmi realnie.",
-                  "config": {
-                    "min": 60
-                  }
-                },
-                {
-                  "key": "alternatywy",
-                  "kind": "list_short",
-                  "question": "Jak klienci radzą sobie z tym dzisiaj?",
-                  "help": "Produkty konkurencyjne, rozwiązania zastępcze, obejścia domowej roboty.",
-                  "config": {
-                    "min_items": 1,
-                    "max_items": 12,
-                    "item_max": 250
-                  }
-                }
-              ]
-            },
             {
               "key": "dlaczego-sprzet",
               "title": "Uzasadnij konieczność stworzenia sprzętu",
@@ -1845,8 +1725,8 @@
                 {
                   "key": "makieta",
                   "kind": "files",
-                  "question": "Szkice, wizualizacja 3D albo zdjęcia makiety",
-                  "help": "Kartonowa makieta albo wydruk 3D w zupełności wystarczą. Chodzi o to, żeby dało się to wziąć do ręki.",
+                  "question": "Szkice, render 3D albo zdjęcia makiety",
+                  "help": "Wystarczy szkic albo render — nie musisz niczego budować. Kartonowa makieta czy wydruk 3D też się nadadzą.",
                   "config": {
                     "max_files": 10,
                     "max_mb": 20
@@ -1862,7 +1742,7 @@
                   "key": "reakcje",
                   "kind": "long_text",
                   "question": "Czy potencjalni klienci rozumieją działanie urządzenia i potwierdzają chęć używania?",
-                  "help": "Pokaż makietę bez tłumaczenia. Jeśli musisz wyjaśniać, jak to działa — forma wymaga poprawy.",
+                  "help": "Pokaż szkic, render albo makietę bez tłumaczenia. Jeśli musisz wyjaśniać, jak to działa — forma wymaga poprawy.",
                   "config": {
                     "min": 60
                   }

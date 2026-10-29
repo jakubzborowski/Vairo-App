@@ -51,6 +51,7 @@ tabeli. Każdy plik jest idempotentny, więc ponowne odpalenie niczego nie psuje
 | 35 | `migrations/031_document_editor.sql` | `updated_by` w Dokumentach — kto zmieniał ostatnio |
 | 36 | `migrations/032_events_actor_guard.sql` | historia celów i zadań nie blokuje usuwania konta (autor bez profilu → pusty) |
 | 37 | `migrations/033_public_name.sql` | nazwa publiczna (pseudonim) osobno od imienia i nazwiska z konta |
+| 38 | `migrations/034_content_idea_v1.sql` | nowa treść Idei (generowana) — zastępuje 007; na świeżej bazie 007 i tak biegnie wcześniej, a 034 sprząta to, czego już nie ma |
 
 > **022 i 023 to wcześniejsze wygenerowania tej samej treści co 024.** Każde
 > jest idempotentne i usuwa to, czego nie ma w swoim JSON-ie, więc odpalenie

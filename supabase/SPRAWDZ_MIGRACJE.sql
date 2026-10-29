@@ -185,6 +185,13 @@ with checks(nr, migracja, co, ok, napraw) as (
             and definition like '%public_name%'),
     'odpal 033_public_name (po 032) — bez niej kreator profilu w Social nie zapisze, a zgłoszenia i powiadomienia pokażą „Brakuje migracji 033”'),
 
+  (49, '034', 'treść Idei po uwagach: nowy punkt B2C + „brak konkurencji” zalicza resztę',
+    exists (select 1 from public.stage_fields
+             where shared_key = 'idea.zakup-konsumencki.role-zakupu.dla-kogo')
+    and exists (select 1 from public.stage_fields
+                 where shared_key = 'idea.konkurencja.brak-konkurencji.potwierdzam'),
+    'odpal 034_content_idea_v1 (po 033)'),
+
   -- --- Treść etapów ---------------------------------------------------------
   (50, '006–028', 'wszystkie 5 etapów ma opublikowaną treść',
     (select count(distinct key) = 5 from public.stage_templates

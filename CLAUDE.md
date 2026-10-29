@@ -444,11 +444,12 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `031_document_editor` | `updated_by` w Dokumentach |
 | `032_events_actor_guard` | historia celów i zadań nie blokuje usuwania konta |
 | `033_public_name` | `profiles.public_name` — nazwa w Social osobno od imienia z konta; widoki `public_*` i `contact_profiles` oddają ją w kolumnie `full_name` |
+| `034_content_idea_v1` | nowa wersja treści Idei (generowana): nowy pierwszy punkt B2C, bez prototypu i poleceń w B2C, „brak konkurencji” zalicza resztę punktu (`skip_when`), Hardware bez dubla z Ogólną. 007 zostaje historyczny |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`033`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`034`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 
