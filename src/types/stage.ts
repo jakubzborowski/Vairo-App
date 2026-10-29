@@ -186,13 +186,15 @@ export type StageTree = {
  *   • „Odpowiedz jednak” po prostu nadpisuje znacznik prawdziwą odpowiedzią —
  *     nie ma osobnej flagi, która mogłaby się rozjechać z treścią.
  *
- * Klucz z podwójnym podkreśleniem nie zderzy się z niczym, co zapisują pola:
- * luki szablonu zdania i kolumny tabel mają nazwy z treści etapów.
+ * Klucz to `skipped`, bo tak samo czyta go SCORE z gałęzi `codex/score-test`
+ * (`a.value->>'skipped' = 'true'` → podpunkt bez punktów). Inny klucz
+ * oznaczałby po scaleniu punkty za pomijanie. W treści etapów żadne pole
+ * ani luka szablonu nie nazywa się `skipped` — sprawdzone przy zmianie.
  * Komponent pola nigdy nie dostaje tego znacznika jako wartości — zamiast
  * kontrolki pokazuje wtedy informację o pominięciu.
  */
-export const SKIPPED_ANSWER: Readonly<{ __skipped: true }> = Object.freeze({
-  __skipped: true,
+export const SKIPPED_ANSWER: Readonly<{ skipped: true }> = Object.freeze({
+  skipped: true,
 });
 
 export function isSkipped(value: unknown): boolean {
@@ -200,7 +202,7 @@ export function isSkipped(value: unknown): boolean {
     typeof value === "object" &&
     value !== null &&
     !Array.isArray(value) &&
-    (value as Record<string, unknown>).__skipped === true
+    (value as Record<string, unknown>).skipped === true
   );
 }
 
