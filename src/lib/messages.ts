@@ -101,7 +101,11 @@ export async function loadContactSignals(
   const signals = rows.map((row) => {
     const incoming = row.recipient_id === userId;
     const otherId = incoming ? row.sender_id : row.recipient_id;
-    const other = (incoming ? row.sender : row.recipient) ?? cards.get(otherId) ?? null;
+    // Wizytówka z `contact_profiles` ma pierwszeństwo przed embedem: niesie
+    // nazwę publiczną (migracja 033). Embed z `profiles` dałby kolegom
+    // z teamu imię z konta, a obcym NULL — ta sama osoba w jednej skrzynce
+    // miałaby dwie różne nazwy.
+    const other = cards.get(otherId) ?? (incoming ? row.sender : row.recipient) ?? null;
 
     return {
       id: row.id,
@@ -198,7 +202,7 @@ export async function loadConversations(
 
   const conversations = rows.map((row) => {
     const other = otherByConversation.get(row.conversation_id);
-    const card = other ? (other.profiles ?? cards.get(other.profile_id) ?? null) : null;
+    const card = other ? (cards.get(other.profile_id) ?? other.profiles ?? null) : null;
 
     return {
       id: row.conversation_id,
@@ -257,9 +261,12 @@ export async function loadConversation(
     (row) => row.profile_id !== userId
   );
 
-  const card =
-    other?.profiles ??
-    (other ? ((await loadPartnerCards(supabase, [other.profile_id])).get(other.profile_id) ?? null) : null);
+  // Jak w skrzynce: najpierw wizytówka z nazwą publiczną, embed tylko awaryjnie.
+  const card = other
+    ? ((await loadPartnerCards(supabase, [other.profile_id])).get(other.profile_id) ??
+      other.profiles ??
+      null)
+    : null;
 
   const messages: ChatMessage[] = (messageRows ?? []).map((row) => ({
     id: row.id as string,

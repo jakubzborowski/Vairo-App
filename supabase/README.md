@@ -50,6 +50,7 @@ tabeli. Każdy plik jest idempotentny, więc ponowne odpalenie niczego nie psuje
 | 34 | `migrations/030_file_folders.sql` | własne foldery w Plikach, zmiana nazwy i przenoszenie pliku |
 | 35 | `migrations/031_document_editor.sql` | `updated_by` w Dokumentach — kto zmieniał ostatnio |
 | 36 | `migrations/032_events_actor_guard.sql` | historia celów i zadań nie blokuje usuwania konta (autor bez profilu → pusty) |
+| 37 | `migrations/033_public_name.sql` | nazwa publiczna (pseudonim) osobno od imienia i nazwiska z konta |
 
 > **022 i 023 to wcześniejsze wygenerowania tej samej treści co 024.** Każde
 > jest idempotentne i usuwa to, czego nie ma w swoim JSON-ie, więc odpalenie

@@ -26,6 +26,7 @@ export default async function MyPublicProfilePage({
 
   type ProfileRow = {
     full_name: string | null;
+    public_name: string | null;
     avatar_url: string | null;
     headline: string | null;
     weekly_focus: string | null;
@@ -41,7 +42,7 @@ export default async function MyPublicProfilePage({
   const { data: profileRow } = await supabase
     .from("profiles")
     .select(
-      "full_name, avatar_url, headline, weekly_focus, weekly_focus_updated_at, " +
+      "full_name, public_name, avatar_url, headline, weekly_focus, weekly_focus_updated_at, " +
         "location, looking_for, weekly_hours, is_discoverable, onboarding_path, created_at",
     )
     .eq("id", user.id)
@@ -72,7 +73,8 @@ export default async function MyPublicProfilePage({
     published ??
     ({
       id: user.id,
-      full_name: profile?.full_name ?? null,
+      // Ta sama reguła co w widokach publicznych (migracja 033).
+      full_name: profile?.public_name ?? profile?.full_name ?? null,
       avatar_url: profile?.avatar_url ?? null,
       headline: profile?.headline ?? null,
       weekly_focus: profile?.weekly_focus ?? null,

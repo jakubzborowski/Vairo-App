@@ -21,6 +21,7 @@ export default async function SocialStartPage() {
 
   type ProfileRow = {
     full_name: string | null;
+    public_name: string | null;
     avatar_url: string | null;
     headline: string | null;
     weekly_focus: string | null;
@@ -35,7 +36,7 @@ export default async function SocialStartPage() {
       supabase
         .from("profiles")
         .select(
-          "full_name, avatar_url, headline, weekly_focus, looking_for, " +
+          "full_name, public_name, avatar_url, headline, weekly_focus, looking_for, " +
             "location, weekly_hours, is_discoverable"
         )
         .eq("id", user.id)
@@ -65,6 +66,7 @@ export default async function SocialStartPage() {
         }))}
         initial={{
           fullName: profile?.full_name ?? "",
+          publicName: profile?.public_name ?? "",
           avatarUrl: profile?.avatar_url ?? null,
           headline: profile?.headline ?? "",
           lookingFor: profile?.looking_for ?? null,

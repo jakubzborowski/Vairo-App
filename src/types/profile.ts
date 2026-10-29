@@ -31,6 +31,8 @@ export type Profile = {
   id: string;
   email: string | null;
   full_name: string | null;
+  /** Nazwa poza teamem (Odkrywaj, rozmowy). NULL = `full_name`. Migracja 033. */
+  public_name: string | null;
   idea_description: string | null;
   avatar_url: string | null;
   headline: string | null;

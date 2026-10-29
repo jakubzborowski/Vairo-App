@@ -21,7 +21,10 @@ import { SkillPicker, type SkillOption } from "./skill-picker";
 type Props = {
   profileId: string;
   initial: {
+    /** Imię i nazwisko z konta — tylko do podpowiedzi, kreator go nie zmienia. */
     fullName: string;
+    /** Nazwa publiczna; pusta = karta pokazuje imię i nazwisko z konta. */
+    publicName: string;
     avatarUrl: string | null;
     headline: string;
     lookingFor: LookingFor | null;
@@ -48,7 +51,7 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [catalogue, setCatalogue] = useState(skills);
-  const [fullName, setFullName] = useState(initial.fullName);
+  const [publicName, setPublicName] = useState(initial.publicName || initial.fullName);
   const [avatarUrl, setAvatarUrl] = useState(initial.avatarUrl);
   const [headline, setHeadline] = useState(initial.headline);
   const [lookingFor, setLookingFor] = useState<LookingFor | null>(initial.lookingFor);
@@ -82,7 +85,7 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
     setError(null);
     startSaving(async () => {
       const result = await saveSocialProfile({
-        fullName,
+        publicName,
         headline,
         lookingFor,
         location,
@@ -102,7 +105,7 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
 
   const preview: PublicProfile = {
     id: profileId,
-    full_name: fullName || null,
+    full_name: publicName.trim() || null,
     avatar_url: avatarUrl,
     headline: headline || null,
     weekly_focus: weeklyFocus || null,
@@ -166,17 +169,29 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
     },
     {
       key: "name",
-      title: "Jak się nazywasz?",
-      description: "Imię i nazwisko widoczne na Twojej karcie.",
-      canContinue: fullName.trim().length >= 2,
+      title: "Jak mają Cię widzieć inni?",
+      description:
+        "Ta nazwa stoi na Twojej karcie w Odkrywaj, w zaczepkach i rozmowach. Może to być imię i nazwisko albo pseudonim.",
+      // Wcześniej ten krok pytał o imię drugi raz i nadpisywał to z rejestracji.
+      // Mówimy wprost, że konto zostaje nietknięte — inaczej ktoś, kto wpisze
+      // tu pseudonim, nie wie, jak będzie podpisany w swoim teamie.
+      help: initial.fullName
+        ? `Imię i nazwisko z konta (${initial.fullName}) zostaje bez zmian — widzi je Twój team.`
+        : undefined,
+      canContinue: publicName.trim().length >= 2,
       render: () => (
-        <Input
-          value={fullName}
-          onChange={(event) => setFullName(event.target.value)}
-          maxLength={120}
-          placeholder="np. Anna Kowalska"
-          autoFocus
-        />
+        <Field counter={{ value: publicName.length, max: 80 }}>
+          {({ id }) => (
+            <Input
+              id={id}
+              value={publicName}
+              onChange={(event) => setPublicName(event.target.value)}
+              maxLength={80}
+              placeholder="np. Anna Kowalska albo annak"
+              autoFocus
+            />
+          )}
+        </Field>
       ),
     },
     {

@@ -279,6 +279,7 @@ type RequestRow = {
   startups: { name: string; logo_url: string | null } | null;
   profiles: {
     full_name: string | null;
+    public_name: string | null;
     avatar_url: string | null;
     headline: string | null;
   } | null;
@@ -295,7 +296,7 @@ const REQUEST_COLUMNS =
   "id, startup_id, profile_id, direction, status, message, job_title, " +
   "proposed_role, created_at, created_by, " +
   "startups(name, logo_url), " +
-  "profiles!startup_join_requests_profile_id_fkey(full_name, avatar_url, headline), " +
+  "profiles!startup_join_requests_profile_id_fkey(full_name, public_name, avatar_url, headline), " +
   "startup_open_roles(title)";
 
 /**
@@ -334,7 +335,9 @@ export async function loadJoinRequests(
       startupName: row.startups?.name ?? "Team",
       startupLogoUrl: row.startups?.logo_url ?? null,
       profileId: row.profile_id,
-      profileName: row.profiles?.full_name ?? null,
+      // Zgłoszenie przychodzi z Odkrywaj, więc podpisujemy je tak, jak ta osoba
+      // przedstawiła się na karcie. Imię z konta widać po dołączeniu do teamu.
+      profileName: row.profiles?.public_name?.trim() || row.profiles?.full_name || null,
       profileAvatarUrl: row.profiles?.avatar_url ?? null,
       profileHeadline: row.profiles?.headline ?? null,
       direction: row.direction,
@@ -482,6 +485,9 @@ function escapeLike(input: string) {
 }
 
 function describeMissing(message: string) {
+  if (message.includes("public_name")) {
+    return "Brakuje migracji 033 — odpal ją w Supabase → SQL Editor, a zgłoszenia wrócą.";
+  }
   if (
     message.includes("public_profiles") ||
     message.includes("public_startups") ||

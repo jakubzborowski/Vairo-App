@@ -35,8 +35,22 @@ na drodze do następnej osoby.
 | `startups.idea_description` | wyłącznie team — **nigdy** nie ma go w widoku publicznym |
 | `startups.public_tagline` / `public_description` | wszyscy — to founder napisał świadomie dla obcych |
 | `profiles.email` | wyłącznie osoby z tego samego teamu |
+| `profiles.full_name` (imię i nazwisko z konta) | team: skład, cele, zadania, historia. Poza teamem tylko wtedy, gdy ktoś nie ustawił nazwy publicznej |
+| `profiles.public_name` (nazwa publiczna) | wszyscy w Social: Odkrywaj, profil, zaczepki, rozmowy, zgłoszenia i powiadomienia z nich |
 | profil osoby z `is_discoverable = false` | nie pojawia się w Odkrywaj **ani** na liście członków cudzego teamu |
 | pominięcia | wyłącznie ich autor |
+
+**Dwie nazwy: konto i karta (migracja 033).** Kreator profilu publicznego
+pytał kiedyś o imię drugi raz i nadpisywał nim `full_name` — kto w Social
+wpisał pseudonim, tracił imię i nazwisko także w swoim teamie. Teraz kreator
+zapisuje `public_name`, a `full_name` zmienia się tylko w Ustawieniach.
+`public_name = NULL` znaczy „jak na koncie” (ta sama nazwa wpisana w kreatorze
+też zapisuje się jako NULL, żeby karta szła za późniejszą zmianą imienia).
+Widoki `public_profiles`, `public_startups.members` i `contact_profiles`
+oddają nazwę publiczną **w kolumnie `full_name`** — obcy dostaje pseudonim
+zamiast imienia, a nie obok niego. W kodzie aplikacji `public_name` czytają
+wprost tylko zgłoszenia do teamu i powiadomienia z warstwy Social; przy celach
+i zadaniach sprawca jest z teamu, więc obowiązuje imię z konta.
 
 **Pętla kontaktu: zaczepka → przyjęcie → rozmowa.** `contact_signals` to
 pierwszy krok, dostępny **dla każdego** — także dla kogoś bez teamu. Wcześniej

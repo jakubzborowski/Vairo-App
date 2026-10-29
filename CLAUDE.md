@@ -443,11 +443,12 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `030_file_folders` | foldery w Plikach, zmiana nazwy i przenoszenie (redesign Plików) |
 | `031_document_editor` | `updated_by` w Dokumentach |
 | `032_events_actor_guard` | historia celów i zadań nie blokuje usuwania konta |
+| `033_public_name` | `profiles.public_name` — nazwa w Social osobno od imienia z konta; widoki `public_*` i `contact_profiles` oddają ją w kolumnie `full_name` |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`032`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`033`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 

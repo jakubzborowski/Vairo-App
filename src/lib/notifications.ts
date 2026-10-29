@@ -47,9 +47,26 @@ type Row = {
   created_at: string;
   actor_id: string | null;
   startup_id: string | null;
-  profiles: { full_name: string | null; avatar_url: string | null } | null;
+  profiles: {
+    full_name: string | null;
+    public_name: string | null;
+    avatar_url: string | null;
+  } | null;
   startups: { name: string } | null;
 };
+
+/**
+ * Zdarzenia z warstwy Social. Ich sprawca to ktoś poznany w Odkrywaj, więc
+ * podpisujemy go nazwą z karty. Przy celach i zadaniach sprawca jest
+ * z teamu — tam obowiązuje imię i nazwisko z konta, jak w składzie teamu.
+ */
+const SOCIAL_KINDS = new Set<NotificationKind>([
+  "contact_received",
+  "contact_accepted",
+  "message_received",
+  "join_application",
+  "join_invite",
+]);
 
 export async function loadNotifications(
   supabase: SupabaseClient,
@@ -61,7 +78,7 @@ export async function loadNotifications(
     // wskazać nazwą ograniczenia — inaczej PostgREST odmawia.
     .select(
       "id, kind, href, preview, read_at, created_at, actor_id, startup_id, " +
-        "profiles!notifications_actor_id_fkey(full_name, avatar_url), " +
+        "profiles!notifications_actor_id_fkey(full_name, public_name, avatar_url), " +
         "startups(name)"
     )
     .eq("profile_id", userId)
@@ -69,6 +86,13 @@ export async function loadNotifications(
     .limit(80);
 
   if (error) {
+    if (error.message.includes("public_name")) {
+      return {
+        notifications: [],
+        error:
+          "Brakuje migracji 033 — odpal ją w Supabase → SQL Editor, a powiadomienia wrócą.",
+      };
+    }
     if (error.message.includes("notifications")) {
       return {
         notifications: [],
@@ -80,7 +104,10 @@ export async function loadNotifications(
   }
 
   const notifications = (data as unknown as Row[]).map((row) => {
-    const actorName = row.profiles?.full_name ?? null;
+    const actorName =
+      (SOCIAL_KINDS.has(row.kind) ? row.profiles?.public_name?.trim() : null) ||
+      row.profiles?.full_name ||
+      null;
     const startupName = row.startups?.name ?? null;
 
     return {

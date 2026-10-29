@@ -217,7 +217,7 @@ export async function saveSocialPreferences(input: {
  * pokazałby się obcym.
  */
 export async function saveSocialProfile(input: {
-  fullName: string;
+  publicName: string;
   headline: string;
   lookingFor: string | null;
   location: string;
@@ -229,15 +229,27 @@ export async function saveSocialProfile(input: {
   const { supabase, user } = await requireUser();
   if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
-  const fullName = input.fullName.trim();
-  if (fullName.length < 2 || fullName.length > 120) {
-    return { error: "Imię i nazwisko: 2–120 znaków." };
+  // Nazwa publiczna, nie imię i nazwisko z konta. Wcześniej kreator
+  // nadpisywał tu `full_name` — kto w Social wpisał pseudonim, tracił
+  // imię i nazwisko także w składzie teamu (migracja 033).
+  const publicName = input.publicName.trim().replace(/\s+/g, " ");
+  if (publicName.length < 2 || publicName.length > 80) {
+    return { error: "Nazwa na karcie: 2–80 znaków." };
   }
 
   const headline = input.headline.trim();
   if (headline.length > 120) {
     return { error: "Czym się zajmujesz: maksymalnie 120 znaków." };
   }
+
+  // Ta sama nazwa co na koncie zapisuje się jako brak pseudonimu — wtedy
+  // karta idzie za imieniem z konta, gdy ktoś je później poprawi.
+  const { data: account } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle();
+  const accountName = (account?.full_name as string | null)?.trim() ?? "";
 
   const weeklyFocus = input.weeklyFocus.trim();
   if (weeklyFocus.length > 2000) {
@@ -261,7 +273,7 @@ export async function saveSocialProfile(input: {
   const { error: profileError } = await supabase
     .from("profiles")
     .update({
-      full_name: fullName,
+      public_name: publicName === accountName ? null : publicName,
       headline: headline || null,
       weekly_focus: weeklyFocus || null,
       looking_for: lookingFor,

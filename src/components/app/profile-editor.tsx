@@ -286,7 +286,10 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
             </div>
           </CardHeader>
           <CardBody className="flex flex-col gap-4">
-            <Field label="Imię i nazwisko">
+            <Field
+              label="Imię i nazwisko"
+              hint="Tak podpisujesz się w teamie. Na karcie w Odkrywaj możesz mieć inną nazwę — ustawisz ją w Social → Twój profil."
+            >
               {({ id }) => (
                 <Input
                   id={id}
