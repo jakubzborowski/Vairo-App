@@ -22,6 +22,7 @@ const FOCUS_MAX = 2000;
 type Props = {
   profile: {
     fullName: string;
+    publicName: string;
     headline: string;
     weeklyFocus: string;
     avatarUrl: string | null;
@@ -44,6 +45,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
   const [skills, setSkills] = useState(initialSkills);
   const [draft, setDraft] = useState<ProfileDraft>({
     fullName: profile.fullName,
+    publicName: profile.publicName,
     headline: profile.headline,
     weeklyFocus: profile.weeklyFocus,
     isDiscoverable: profile.isDiscoverable,
@@ -62,6 +64,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
   const dirty = useMemo(() => {
     if (
       draft.fullName !== saved.fullName ||
+      draft.publicName !== saved.publicName ||
       draft.headline !== saved.headline ||
       draft.weeklyFocus !== saved.weeklyFocus ||
       draft.isDiscoverable !== saved.isDiscoverable
@@ -133,13 +136,18 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
   };
 
   const onSave = () => {
+    // Nazwa w Odkrywaj równa imieniu z konta zapisuje się jako brak
+    // pseudonimu — pole czyścimy od razu, żeby po odświeżeniu nie „znikało”.
+    const next =
+      draft.publicName.trim() === draft.fullName.trim() ? { ...draft, publicName: "" } : draft;
     startTransition(async () => {
-      const result = await saveProfile(draft);
+      const result = await saveProfile(next);
       if (result.error) {
         setError(result.error);
         return;
       }
-      setSaved(draft);
+      setDraft(next);
+      setSaved(next);
       setError(null);
       setSavedAt(Date.now());
     });
@@ -288,7 +296,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
           <CardBody className="flex flex-col gap-4">
             <Field
               label="Imię i nazwisko"
-              hint="Tak podpisujesz się w teamie. Na karcie w Odkrywaj możesz mieć inną nazwę — ustawisz ją w Social → Twój profil."
+              hint="Tak podpisujesz się w teamie: w składzie, celach i zadaniach."
             >
               {({ id }) => (
                 <Input
@@ -297,6 +305,24 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                   onChange={(e) => patch({ fullName: e.target.value })}
                   placeholder="np. Anna Kowalska"
                   autoComplete="name"
+                />
+              )}
+            </Field>
+
+            {/* Pseudonim stoi tu, obok imienia, a nie tylko w kreatorze Social.
+                Kreatora nie widać z żadnego menu — kto chciał zmienić nazwę
+                na karcie, trafiał tutaj i nie miał gdzie jej wpisać. */}
+            <Field
+              label="Nazwa w Odkrywaj"
+              hint="Opcjonalne. Tak widzą Cię osoby spoza teamu: na karcie, w zaczepkach i rozmowach. Puste pole = imię i nazwisko."
+            >
+              {({ id }) => (
+                <Input
+                  id={id}
+                  value={draft.publicName}
+                  onChange={(e) => patch({ publicName: e.target.value })}
+                  placeholder={draft.fullName.trim() || "np. annak"}
+                  maxLength={80}
                 />
               )}
             </Field>

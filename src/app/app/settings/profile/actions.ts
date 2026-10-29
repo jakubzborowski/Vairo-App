@@ -7,6 +7,7 @@ import { translateDbError } from "@/lib/db-errors";
 
 const LIMITS = {
   fullName: { min: 2, max: 120 },
+  publicName: { min: 2, max: 80 },
   headline: { max: 120 },
   weeklyFocus: { max: 2000 },
   skillLabel: { min: 1, max: 48 },
@@ -14,6 +15,8 @@ const LIMITS = {
 
 export type ProfileDraft = {
   fullName: string;
+  /** Nazwa w Odkrywaj; pusta = imię i nazwisko z konta (migracja 033). */
+  publicName: string;
   headline: string;
   weeklyFocus: string;
   isDiscoverable: boolean;
@@ -51,6 +54,7 @@ export async function saveProfile(draft: ProfileDraft): Promise<ActionResult> {
   if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const fullName = draft.fullName.trim();
+  const publicName = draft.publicName.trim().replace(/\s+/g, " ");
   const headline = draft.headline.trim();
   const weeklyFocus = draft.weeklyFocus.trim();
 
@@ -59,6 +63,14 @@ export async function saveProfile(draft: ProfileDraft): Promise<ActionResult> {
     fullName.length > LIMITS.fullName.max
   ) {
     return { error: `Imię i nazwisko: ${LIMITS.fullName.min}–${LIMITS.fullName.max} znaków.` };
+  }
+  if (
+    publicName &&
+    (publicName.length < LIMITS.publicName.min || publicName.length > LIMITS.publicName.max)
+  ) {
+    return {
+      error: `Nazwa w Odkrywaj: ${LIMITS.publicName.min}–${LIMITS.publicName.max} znaków albo puste pole.`,
+    };
   }
   if (headline.length > LIMITS.headline.max) {
     return { error: `Headline: maksymalnie ${LIMITS.headline.max} znaków.` };
@@ -71,6 +83,9 @@ export async function saveProfile(draft: ProfileDraft): Promise<ActionResult> {
     .from("profiles")
     .update({
       full_name: fullName,
+      // Ta sama nazwa co na koncie to brak pseudonimu — karta idzie wtedy
+      // za imieniem z konta, także po jego późniejszej zmianie.
+      public_name: publicName && publicName !== fullName ? publicName : null,
       headline: headline || null,
       weekly_focus: weeklyFocus || null,
       is_discoverable: draft.isDiscoverable,

@@ -44,6 +44,9 @@ na drodze do następnej osoby.
 pytał kiedyś o imię drugi raz i nadpisywał nim `full_name` — kto w Social
 wpisał pseudonim, tracił imię i nazwisko także w swoim teamie. Teraz kreator
 zapisuje `public_name`, a `full_name` zmienia się tylko w Ustawieniach.
+Pseudonim da się też poprawić w Ustawieniach → Profil („Nazwa w Odkrywaj”,
+pod imieniem) — kreator nie ma wejścia z menu, więc bez tego pola nie było
+gdzie zmienić nazwy na karcie po pierwszym przejściu kreatora.
 `public_name = NULL` znaczy „jak na koncie” (ta sama nazwa wpisana w kreatorze
 też zapisuje się jako NULL, żeby karta szła za późniejszą zmianą imienia).
 Widoki `public_profiles`, `public_startups.members` i `contact_profiles`

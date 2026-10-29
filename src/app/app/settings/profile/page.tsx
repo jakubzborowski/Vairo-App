@@ -21,7 +21,7 @@ export default async function ProfileSettingsPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, email, headline, weekly_focus, avatar_url, is_discoverable, onboarding_completed_at"
+      "full_name, public_name, email, headline, weekly_focus, avatar_url, is_discoverable, onboarding_completed_at"
     )
     .eq("id", user.id)
     .maybeSingle();
@@ -46,6 +46,7 @@ export default async function ProfileSettingsPage() {
       <ProfileEditor
       profile={{
         fullName: profile.full_name ?? "",
+        publicName: profile.public_name ?? "",
         headline: profile.headline ?? "",
         weeklyFocus: profile.weekly_focus ?? "",
         avatarUrl: profile.avatar_url ?? null,
