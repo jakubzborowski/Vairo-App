@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   BookOpen,
@@ -12,6 +12,8 @@ import {
   Layers,
   Lock,
   FileText,
+  Footprints,
+  List,
   PanelRightClose,
   PanelRightOpen,
   PlayCircle,
@@ -146,6 +148,27 @@ export function StageScreen({
   // więc zamiast otwierać to, co było „następne" w chwili zapisu, zapisujemy
   // prośbę i spełniamy ją przy pierwszym renderze ze świeżymi danymi.
   const [nextRequested, setNextRequested] = useState(false);
+
+  // Tryb „Krok po kroku” (domyślny) albo „Lista” (trzy kolumny). Członek bez
+  // prawa edycji i domknięty etap zawsze widzą listę — tam nie ma czego robić
+  // po kolei, jest co przeglądać.
+  const view = useSyncExternalStore(subscribeView, readView, () => "steps" as StageView);
+  const canStep = !readOnly && !isCompleted;
+  const stepMode = canStep && view === "steps";
+
+  // Po zapisie w trybie krokowym od razu otwiera się następny podpunkt — ale
+  // dopiero na świeżych danych (inaczej „następny” byłby tym właśnie
+  // zapisanym) i tylko gdy zapisany jest kompletny. Kto zapisał połowę i
+  // wyszedł, nie dostaje tego samego okna z powrotem.
+  const [advance, setAdvance] = useState<{ from: StageTree; subpointId: string } | null>(null);
+  if (advance && advance.from !== tree) {
+    setAdvance(null);
+    if (next && next.subpoint.id !== advance.subpointId) {
+      setCategoryKey(next.categoryKey);
+      setPointKey(next.pointKey);
+      setOpenSubpoint(next.subpoint);
+    }
+  }
   if (nextRequested) {
     setNextRequested(false);
     if (next) {
@@ -186,6 +209,11 @@ export function StageScreen({
       }
       setAnswers((prev) => ({ ...prev, ...draft }));
       setOpenSubpoint(null);
+      if (stepMode) {
+        setAdvance({ from: tree, subpointId: openSubpoint.id });
+        toast({ title: "Odpowiedź zapisana", description: openSubpoint.title });
+        return;
+      }
       toast({
         title: "Odpowiedź zapisana",
         description: openSubpoint.title,
@@ -328,227 +356,243 @@ export function StageScreen({
         </p>
       ) : null}
 
-      {/* Pierwsze wejście dostaje wprowadzenie, kolejne — sam następny krok.
-          Jeden element w dwóch stanach: człowiek, który widzi ten ekran po raz
-          pierwszy, potrzebuje wiedzieć, czym to jest i ile potrwa; ten, który
-          wraca po raz dziesiąty, potrzebuje tylko „co dalej". */}
-      {isFirstVisit && next ? (
-        <section className="edge-accent mb-5 overflow-hidden rounded-2xl border border-[var(--vairo)]/30 bg-[var(--vairo)]/6 px-5 py-5 lift-2 sm:px-6">
-          <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--vairo)]">
-            Zaczynasz nowy etap
-          </p>
-          <h2 className="mt-1.5 font-heading text-[20px] font-semibold text-white">
-            {tree.subtitle ?? tree.title}
-          </h2>
-          {tree.intro ? (
-            <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-[var(--text-muted)]">
-              {tree.intro}
+      {canStep ? (
+        <ViewSwitch view={view} onChange={writeView} />
+      ) : null}
+
+      {stepMode ? (
+        <StepView
+          tree={tree}
+          next={next}
+          intro={isFirstVisit ? tree.intro : null}
+          onOpen={openNext}
+          onShowList={() => writeView("list")}
+        />
+      ) : (
+        <>
+          {/* Pierwsze wejście dostaje wprowadzenie, kolejne — sam następny krok.
+              Jeden element w dwóch stanach: człowiek, który widzi ten ekran po raz
+              pierwszy, potrzebuje wiedzieć, czym to jest i ile potrwa; ten, który
+              wraca po raz dziesiąty, potrzebuje tylko „co dalej". */}
+          {isFirstVisit && next ? (
+            <section className="edge-accent mb-5 overflow-hidden rounded-2xl border border-[var(--vairo)]/30 bg-[var(--vairo)]/6 px-5 py-5 lift-2 sm:px-6">
+              <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--vairo)]">
+                Zaczynasz nowy etap
+              </p>
+              <h2 className="mt-1.5 font-heading text-[20px] font-semibold text-white">
+                {tree.subtitle ?? tree.title}
+              </h2>
+              {tree.intro ? (
+                <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-[var(--text-muted)]">
+                  {tree.intro}
+                </p>
+              ) : null}
+
+              <ul className="mt-4 flex flex-col gap-2 text-[13.5px] text-[var(--text-muted)]">
+                <li className="flex items-start gap-2.5">
+                  <SlidersHorizontal className="mt-0.5 size-4 shrink-0 text-[var(--text-faint)]" />
+                  <span>
+                    <strong className="text-white">{tree.total} podpunktów</strong>{" "}
+                    w {pointCount} {pointCount === 1 ? "punkcie" : "punktach"}
+                    {tree.showCategories
+                      ? `, podzielonych na ${tree.categories.length} kategorie dobrane do Twojego startupu`
+                      : ""}
+                    .
+                  </span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Save className="mt-0.5 size-4 shrink-0 text-[var(--text-faint)]" />
+                  <span>
+                    Każda odpowiedź zapisuje się osobno. Możesz wyjść w połowie
+                    i wrócić — nic nie przepada.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Undo2 className="mt-0.5 size-4 shrink-0 text-[var(--text-faint)]" />
+                  <span>
+                    Nie ma złych odpowiedzi ani punktów za szybkość. Wszystko da się
+                    później poprawić.
+                  </span>
+                </li>
+              </ul>
+
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <Button size="lg" onClick={openNext}>
+                  <PlayCircle className="size-[18px]" />
+                  Zaczynam
+                </Button>
+                <span className="text-[12.5px] text-[var(--text-subtle)]">
+                  Pierwsze pytanie: {next.subpoint.title}
+                </span>
+              </div>
+            </section>
+          ) : !readOnly && !isCompleted && next ? (
+            <button
+              type="button"
+              onClick={openNext}
+              className="lift-hover mb-4 flex w-full items-center gap-4 rounded-2xl border border-[var(--vairo)]/35 bg-[var(--vairo)]/8 px-5 py-4 text-left hover:border-[var(--vairo)]/55 hover:bg-[var(--vairo)]/12"
+            >
+              <PlayCircle
+                className="size-6 shrink-0 text-[var(--vairo)]"
+                strokeWidth={1.75}
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[12px] font-semibold uppercase tracking-wide text-[var(--vairo)]">
+                  Następny krok
+                </span>
+                <span className="mt-0.5 block truncate text-[15px] font-medium text-white">
+                  {next.subpoint.title}
+                </span>
+                <span className="mt-0.5 block truncate text-[12.5px] text-[var(--text-subtle)]">
+                  {tree.showCategories ? `${next.categoryTitle} · ` : ""}
+                  {next.pointTitle}
+                </span>
+              </span>
+              <ChevronRight className="size-5 shrink-0 text-[var(--vairo)]" />
+            </button>
+          ) : null}
+
+          {/* Kolejność jest dowolna — dla kogoś, kto widzi taki ekran pierwszy
+              raz, to nie jest oczywiste. Plus wyjście na podsumowanie, gdy jest
+              już co podsumowywać. */}
+          {!isFirstVisit && tree.done > 0 ? (
+            <p className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[var(--text-subtle)]">
+              {tree.showCategories && !readOnly && !isCompleted ? (
+                <span>
+                  Kategorie i punkty możesz robić w dowolnej kolejności. Każdy zapis
+                  zostaje.
+                </span>
+              ) : null}
+              <Link
+                href={`/app/stage/summary?stage=${tree.templateKey}`}
+                className="inline-flex items-center gap-1.5 text-[var(--text-subtle)] underline-offset-2 hover:text-white hover:underline"
+              >
+                <FileText className="size-3.5" />
+                Zobacz wszystko, co ustaliliście
+              </Link>
             </p>
           ) : null}
 
-          <ul className="mt-4 flex flex-col gap-2 text-[13.5px] text-[var(--text-muted)]">
-            <li className="flex items-start gap-2.5">
-              <SlidersHorizontal className="mt-0.5 size-4 shrink-0 text-[var(--text-faint)]" />
-              <span>
-                <strong className="text-white">{tree.total} podpunktów</strong>{" "}
-                w {pointCount} {pointCount === 1 ? "punkcie" : "punktach"}
-                {tree.showCategories
-                  ? `, podzielonych na ${tree.categories.length} kategorie dobrane do Twojego startupu`
-                  : ""}
-                .
-              </span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <Save className="mt-0.5 size-4 shrink-0 text-[var(--text-faint)]" />
-              <span>
-                Każda odpowiedź zapisuje się osobno. Możesz wyjść w połowie
-                i wrócić — nic nie przepada.
-              </span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <Undo2 className="mt-0.5 size-4 shrink-0 text-[var(--text-faint)]" />
-              <span>
-                Nie ma złych odpowiedzi ani punktów za szybkość. Wszystko da się
-                później poprawić.
-              </span>
-            </li>
-          </ul>
-
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <Button size="lg" onClick={openNext}>
-              <PlayCircle className="size-[18px]" />
-              Zaczynam
-            </Button>
-            <span className="text-[12.5px] text-[var(--text-subtle)]">
-              Pierwsze pytanie: {next.subpoint.title}
-            </span>
-          </div>
-        </section>
-      ) : !readOnly && !isCompleted && next ? (
-        <button
-          type="button"
-          onClick={openNext}
-          className="lift-hover mb-4 flex w-full items-center gap-4 rounded-2xl border border-[var(--vairo)]/35 bg-[var(--vairo)]/8 px-5 py-4 text-left hover:border-[var(--vairo)]/55 hover:bg-[var(--vairo)]/12"
-        >
-          <PlayCircle
-            className="size-6 shrink-0 text-[var(--vairo)]"
-            strokeWidth={1.75}
-          />
-          <span className="min-w-0 flex-1">
-            <span className="block text-[12px] font-semibold uppercase tracking-wide text-[var(--vairo)]">
-              Następny krok
-            </span>
-            <span className="mt-0.5 block truncate text-[15px] font-medium text-white">
-              {next.subpoint.title}
-            </span>
-            <span className="mt-0.5 block truncate text-[12.5px] text-[var(--text-subtle)]">
-              {tree.showCategories ? `${next.categoryTitle} · ` : ""}
-              {next.pointTitle}
-            </span>
-          </span>
-          <ChevronRight className="size-5 shrink-0 text-[var(--vairo)]" />
-        </button>
-      ) : null}
-
-      {/* Kolejność jest dowolna — dla kogoś, kto widzi taki ekran pierwszy
-          raz, to nie jest oczywiste. Plus wyjście na podsumowanie, gdy jest
-          już co podsumowywać. */}
-      {!isFirstVisit && tree.done > 0 ? (
-        <p className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[var(--text-subtle)]">
-          {tree.showCategories && !readOnly && !isCompleted ? (
-            <span>
-              Kategorie i punkty możesz robić w dowolnej kolejności. Każdy zapis
-              zostaje.
-            </span>
-          ) : null}
-          <Link
-            href={`/app/stage/summary?stage=${tree.templateKey}`}
-            className="inline-flex items-center gap-1.5 text-[var(--text-subtle)] underline-offset-2 hover:text-white hover:underline"
+          {/* Zwinięty przewodnik zostaje w tej samej kolumnie co rozwinięty —
+              zwężony do paska. Przycisk nie wędruje pod listy, więc user wie,
+              gdzie go szukać niezależnie od stanu panelu. */}
+          <div
+            className={cn(
+              "grid items-start gap-4",
+              hasGuide && guideOpen
+                ? tree.showCategories
+                  ? "xl:grid-cols-[190px_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,1.1fr)]"
+                  : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)]"
+                : hasGuide
+                  ? tree.showCategories
+                    ? "xl:grid-cols-[190px_minmax(0,1fr)_minmax(0,1.4fr)_52px]"
+                    : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_52px]"
+                  : tree.showCategories
+                    ? "xl:grid-cols-[190px_minmax(0,1fr)_minmax(0,1.4fr)]"
+                    : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]"
+            )}
           >
-            <FileText className="size-3.5" />
-            Zobacz wszystko, co ustaliliście
-          </Link>
-        </p>
-      ) : null}
-
-      {/* Zwinięty przewodnik zostaje w tej samej kolumnie co rozwinięty —
-          zwężony do paska. Przycisk nie wędruje pod listy, więc user wie,
-          gdzie go szukać niezależnie od stanu panelu. */}
-      <div
-        className={cn(
-          "grid items-start gap-4",
-          hasGuide && guideOpen
-            ? tree.showCategories
-              ? "xl:grid-cols-[190px_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,1.1fr)]"
-              : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)]"
-            : hasGuide
-              ? tree.showCategories
-                ? "xl:grid-cols-[190px_minmax(0,1fr)_minmax(0,1.4fr)_52px]"
-                : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_52px]"
-              : tree.showCategories
-                ? "xl:grid-cols-[190px_minmax(0,1fr)_minmax(0,1.4fr)]"
-                : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]"
-        )}
-      >
-        {tree.showCategories ? (
-          <Column
-            icon={Layers}
-            title="Kategorie"
-            subtitle="Dobrane do Twojego startupu"
-          >
-            {tree.categories.map((item) => (
-              <ListRow
-                key={item.key}
-                title={item.title}
-                done={item.done}
-                total={item.total}
-                complete={item.isComplete}
-                active={item.key === categoryKey}
-                accent={categoryAccent(item.key)}
-                markAlways
-                onClick={() => selectCategory(item.key)}
-              />
-            ))}
-          </Column>
-        ) : null}
-
-        <Column
-          icon={SlidersHorizontal}
-          accent={accent}
-          title={tree.showCategories ? (category?.title ?? "Punkty") : tree.title}
-          subtitle={
-            category ? `${category.done} z ${category.total} ukończonych` : null
-          }
-        >
-          {(category?.points ?? []).map((item) => (
-            <ListRow
-              key={item.key}
-              title={item.title}
-              subtitle={item.durationHint}
-              done={item.done}
-              total={item.total}
-              complete={item.isComplete}
-              active={item.key === pointKey}
-              accent={accent}
-              onClick={() => setPointKey(item.key)}
-            />
-          ))}
-        </Column>
-
-        <Column
-          icon={SlidersHorizontal}
-          title={readOnly ? "Odpowiedzi zespołu" : "Do zrobienia"}
-          subtitle={point?.title}
-          accent={accent}
-          active
-          meta={
-            point?.durationHint ? (
-              <span className="inline-flex items-center gap-1 rounded-md bg-white/6 px-2 py-0.5 text-[11.5px] text-[var(--text-subtle)]">
-                <Clock className="size-3" />
-                {point.durationHint}
-              </span>
-            ) : null
-          }
-        >
-          {(point?.subpoints ?? []).map((item) => (
-            <ListRow
-              key={item.key}
-              title={item.title}
-              subtitle={subpointStatus(item, answers, readOnly)}
-              complete={item.isComplete}
-              active={false}
-              chevron
-              onClick={() => {
-                setError(null);
-                setOpenSubpoint(item);
-              }}
-            />
-          ))}
-        </Column>
-
-        {hasGuide && point ? (
-          guideOpen ? (
-            <GuidePanel key={point.id} point={point} onClose={() => setGuideOpen(false)} />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setGuideOpen(true)}
-              title="Pokaż przewodnik"
-              aria-label="Pokaż przewodnik"
-              className="flex h-full min-h-[180px] w-full flex-col items-center gap-3 rounded-2xl border border-white/[0.07] bg-[var(--surface)] py-4 text-[var(--text-subtle)] transition-colors hover:border-white/20 hover:text-white"
-            >
-              <PanelRightOpen className="size-4 shrink-0" />
-              <span
-                className="text-[12px] font-medium tracking-wide"
-                style={{ writingMode: "vertical-rl" }}
+            {tree.showCategories ? (
+              <Column
+                icon={Layers}
+                title="Kategorie"
+                subtitle="Dobrane do Twojego startupu"
               >
-                Przewodnik
-              </span>
-              <BookOpen className="mt-auto size-4 shrink-0 text-[var(--vairo)]" />
-            </button>
-          )
-        ) : null}
-      </div>
+                {tree.categories.map((item) => (
+                  <ListRow
+                    key={item.key}
+                    title={item.title}
+                    done={item.done}
+                    total={item.total}
+                    complete={item.isComplete}
+                    active={item.key === categoryKey}
+                    accent={categoryAccent(item.key)}
+                    markAlways
+                    onClick={() => selectCategory(item.key)}
+                  />
+                ))}
+              </Column>
+            ) : null}
+
+            <Column
+              icon={SlidersHorizontal}
+              accent={accent}
+              title={tree.showCategories ? (category?.title ?? "Punkty") : tree.title}
+              subtitle={
+                category ? `${category.done} z ${category.total} ukończonych` : null
+              }
+            >
+              {(category?.points ?? []).map((item) => (
+                <ListRow
+                  key={item.key}
+                  title={item.title}
+                  subtitle={item.durationHint}
+                  done={item.done}
+                  total={item.total}
+                  complete={item.isComplete}
+                  active={item.key === pointKey}
+                  accent={accent}
+                  onClick={() => setPointKey(item.key)}
+                />
+              ))}
+            </Column>
+
+            <Column
+              icon={SlidersHorizontal}
+              title={readOnly ? "Odpowiedzi zespołu" : "Do zrobienia"}
+              subtitle={point?.title}
+              accent={accent}
+              active
+              meta={
+                point?.durationHint ? (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-white/6 px-2 py-0.5 text-[11.5px] text-[var(--text-subtle)]">
+                    <Clock className="size-3" />
+                    {point.durationHint}
+                  </span>
+                ) : null
+              }
+            >
+              {(point?.subpoints ?? []).map((item) => (
+                <ListRow
+                  key={item.key}
+                  title={item.title}
+                  subtitle={subpointStatus(item, answers, readOnly)}
+                  complete={item.isComplete}
+                  active={false}
+                  chevron
+                  onClick={() => {
+                    setError(null);
+                    setOpenSubpoint(item);
+                  }}
+                />
+              ))}
+            </Column>
+
+            {hasGuide && point ? (
+              guideOpen ? (
+                <GuidePanel key={point.id} point={point} onClose={() => setGuideOpen(false)} />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setGuideOpen(true)}
+                  title="Pokaż przewodnik"
+                  aria-label="Pokaż przewodnik"
+                  className="flex h-full min-h-[180px] w-full flex-col items-center gap-3 rounded-2xl border border-white/[0.07] bg-[var(--surface)] py-4 text-[var(--text-subtle)] transition-colors hover:border-white/20 hover:text-white"
+                >
+                  <PanelRightOpen className="size-4 shrink-0" />
+                  <span
+                    className="text-[12px] font-medium tracking-wide"
+                    style={{ writingMode: "vertical-rl" }}
+                  >
+                    Przewodnik
+                  </span>
+                  <BookOpen className="mt-auto size-4 shrink-0 text-[var(--vairo)]" />
+                </button>
+              )
+            ) : null}
+          </div>
+        </>
+      )}
 
       <footer className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-5 py-4 lift-1">
         <div className="min-w-0">
@@ -1019,4 +1063,221 @@ function findNext(tree: StageTree) {
     }
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Tryb „Krok po kroku”
+// ---------------------------------------------------------------------------
+
+type StageView = "steps" | "list";
+const VIEW_KEY = "vairo:stage-view";
+const viewListeners = new Set<() => void>();
+// Gdy przeglądarka blokuje localStorage (tryb prywatny), wybór żyje do
+// przeładowania strony — przełącznik działa, tylko się nie zapamiętuje.
+let memoryView: StageView = "steps";
+
+function subscribeView(callback: () => void) {
+  viewListeners.add(callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    viewListeners.delete(callback);
+    window.removeEventListener("storage", callback);
+  };
+}
+
+function readView(): StageView {
+  try {
+    const saved = window.localStorage.getItem(VIEW_KEY);
+    if (saved === "steps" || saved === "list") return saved;
+  } catch {
+    // brak dostępu do localStorage — zostaje wartość z pamięci
+  }
+  return memoryView;
+}
+
+function writeView(value: StageView) {
+  memoryView = value;
+  try {
+    window.localStorage.setItem(VIEW_KEY, value);
+  } catch {
+    // jw. — przełącznik działa bez zapamiętywania
+  }
+  viewListeners.forEach((listener) => listener());
+}
+
+/**
+ * Przełącznik widoku — „w bocznym ustawieniu”, jak w uwagach do redesignu:
+ * domyślnie zadania idą jedno po drugim, a pełną listę z wyborem kolejności
+ * włącza się świadomie.
+ */
+function ViewSwitch({ view, onChange }: { view: StageView; onChange: (v: StageView) => void }) {
+  const options: { value: StageView; label: string; icon: LucideIcon }[] = [
+    { value: "steps", label: "Krok po kroku", icon: Footprints },
+    { value: "list", label: "Lista", icon: List },
+  ];
+  return (
+    <div className="mb-4 flex justify-end">
+      <div
+        role="radiogroup"
+        aria-label="Widok etapu"
+        className="inline-flex rounded-full border border-white/[0.08] bg-[var(--surface)] p-1"
+      >
+        {options.map(({ value, label, icon: Icon }) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={view === value}
+            onClick={() => onChange(value)}
+            className={cn(
+              "inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-medium transition-colors",
+              view === value
+                ? "bg-white/[0.1] text-white"
+                : "text-[var(--text-subtle)] hover:text-white"
+            )}
+          >
+            <Icon className="size-4" aria-hidden="true" />
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Jeden podpunkt na ekranie zamiast trzech kolumn z kilkudziesięcioma
+ * pozycjami. Uwaga z redesignu: lista jest praktyczna, ale na starcie
+ * przytłacza. Liczby pozostałych zadań tu celowo nie ma — mówimy tylko,
+ * gdzie jesteś i co teraz.
+ */
+function StepView({
+  tree,
+  next,
+  intro,
+  onOpen,
+  onShowList,
+}: {
+  tree: StageTree;
+  next: ReturnType<typeof findNext>;
+  intro: string | null;
+  onOpen: () => void;
+  onShowList: () => void;
+}) {
+  const [guideFor, setGuideFor] = useState<string | null>(null);
+
+  if (!next) {
+    return (
+      <section className="rounded-2xl bg-[var(--surface)] px-6 py-8 text-center lift-1">
+        <Check className="mx-auto size-8 text-[var(--success)]" aria-hidden="true" />
+        <h2 className="mt-3 font-heading text-[1.25rem] font-semibold text-white">
+          Wszystkie wymagane podpunkty są gotowe
+        </h2>
+        <p className="mx-auto mt-1.5 max-w-md text-[13.5px] leading-relaxed text-[var(--text-muted)]">
+          Możesz domknąć etap przyciskiem na dole albo przejrzeć wszystko
+          w widoku listy — tam są też podpunkty opcjonalne.
+        </p>
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          <Button variant="secondary" onClick={onShowList}>
+            <List className="size-4" />
+            Pokaż listę
+          </Button>
+          <Button href={`/app/stage/summary?stage=${tree.templateKey}`} variant="ghost">
+            <FileText className="size-4" />
+            Zobacz wszystko, co ustaliliście
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
+  const point = tree.categories
+    .find((c) => c.key === next.categoryKey)
+    ?.points.find((p) => p.key === next.pointKey);
+  const accent = tree.showCategories ? categoryAccent(next.categoryKey) : undefined;
+  const questions = next.subpoint.fields.length;
+  const showGuide = Boolean(point?.guideBody) && guideFor === next.subpoint.id;
+
+  return (
+    <div className="mx-auto flex max-w-[760px] flex-col gap-4">
+      {intro ? (
+        <p className="text-[14px] leading-relaxed text-[var(--text-muted)]">{intro}</p>
+      ) : null}
+
+      <section
+        className="relative rounded-2xl bg-[var(--surface)] p-6 lift-1"
+        style={accentStyle(accent)}
+      >
+        {accent ? (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-2xl"
+            style={{
+              boxShadow: `0 0 0 1px color-mix(in srgb, ${accent} 34%, transparent), 0 16px 44px -28px ${accent}`,
+            }}
+          />
+        ) : null}
+        <p className="flex flex-wrap items-center gap-x-2 text-[12.5px] text-[var(--text-subtle)]">
+          {tree.showCategories ? (
+            <>
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  className="size-2 rounded-full bg-[var(--accent,var(--vairo))]"
+                  aria-hidden="true"
+                />
+                {next.categoryTitle}
+              </span>
+              <span aria-hidden="true">·</span>
+            </>
+          ) : null}
+          <span>{next.pointTitle}</span>
+        </p>
+        <h2 className="mt-2 font-heading text-[1.4rem] font-semibold leading-snug text-white">
+          {next.subpoint.title}
+        </h2>
+        {next.subpoint.description ? (
+          <p className="mt-2 text-[14px] leading-relaxed text-[var(--text-muted)]">
+            {next.subpoint.description}
+          </p>
+        ) : null}
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <Button size="lg" onClick={onOpen}>
+            <PlayCircle className="size-4" />
+            {questions === 1 ? "Odpowiedz" : `Odpowiedz (${questions} ${plural(questions, "pytanie", "pytania", "pytań")})`}
+          </Button>
+          {point?.guideBody ? (
+            <Button
+              variant="ghost"
+              onClick={() => setGuideFor(showGuide ? null : next.subpoint.id)}
+            >
+              <BookOpen className="size-4" />
+              {showGuide ? "Schowaj przewodnik" : "Przewodnik"}
+            </Button>
+          ) : null}
+        </div>
+      </section>
+
+      {showGuide && point ? (
+        <GuidePanel point={point} onClose={() => setGuideFor(null)} />
+      ) : null}
+
+      <p className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[12.5px] text-[var(--text-subtle)]">
+        <button
+          type="button"
+          onClick={onShowList}
+          className="underline-offset-2 hover:text-white hover:underline"
+        >
+          Wolisz wybrać inną kolejność? Pokaż listę
+        </button>
+        {tree.done > 0 ? (
+          <Link
+            href={`/app/stage/summary?stage=${tree.templateKey}`}
+            className="underline-offset-2 hover:text-white hover:underline"
+          >
+            Zobacz wszystko, co ustaliliście
+          </Link>
+        ) : null}
+      </p>
+    </div>
+  );
 }
