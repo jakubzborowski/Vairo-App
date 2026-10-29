@@ -445,11 +445,12 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `032_events_actor_guard` | historia celów i zadań nie blokuje usuwania konta |
 | `033_public_name` | `profiles.public_name` — nazwa w Social osobno od imienia z konta; widoki `public_*` i `contact_profiles` oddają ją w kolumnie `full_name` |
 | `034_content_idea_v1` | nowa wersja treści Idei (generowana): nowy pierwszy punkt B2C, bez prototypu i poleceń w B2C, „brak konkurencji” zalicza resztę punktu (`skip_when`), Hardware bez dubla z Ogólną. 007 zostaje historyczny |
+| `035_team_invite_links` | zaproszenie do teamu linkiem: `startup_invite_links` (odczyt tylko Founder/Admin) + funkcje `create_invite_link`, `revoke_invite_links`, `invite_link_info` (też dla gościa), `accept_invite_link` (rola Member, limit 3 teamów przez trigger z 003) |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`034`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`035`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 

@@ -192,6 +192,12 @@ with checks(nr, migracja, co, ok, napraw) as (
                  where shared_key = 'idea.konkurencja.brak-konkurencji.potwierdzam'),
     'odpal 034_content_idea_v1 (po 033)'),
 
+  (49, '035', 'zaproszenie do teamu linkiem: tabela + funkcja przyjmująca',
+    to_regclass('public.startup_invite_links') is not null
+    and exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                 where n.nspname = 'public' and p.proname = 'accept_invite_link'),
+    'odpal 035_team_invite_links (po 034) — bez niej karta „Zaproś znajomych linkiem” pokaże błąd'),
+
   -- --- Treść etapów ---------------------------------------------------------
   (50, '006–028', 'wszystkie 5 etapów ma opublikowaną treść',
     (select count(distinct key) = 5 from public.stage_templates

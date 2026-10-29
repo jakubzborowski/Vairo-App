@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { INVITE_COOKIE, INVITE_TOKEN_RE } from "@/lib/invites";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { AppShell } from "@/components/app/app-shell";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
@@ -27,6 +29,15 @@ export default async function AppLayout({
 
   if (!user) {
     redirect("/register?next=/app");
+  }
+
+  // Zaproszenie linkiem zapamiętane przed rejestracją (migracja 035). Nowa
+  // osoba przechodzi najpierw onboarding — proxy nie wpuści jej tu wcześniej —
+  // a pierwsze wejście do aplikacji wraca prosto do zaproszenia. Ciasteczko
+  // znika przy „Dołącz” albo „Nie teraz”.
+  const pendingInvite = (await cookies()).get(INVITE_COOKIE)?.value;
+  if (pendingInvite && INVITE_TOKEN_RE.test(pendingInvite)) {
+    redirect(`/join/${pendingInvite}`);
   }
 
   // Liczniki nie zależą od listy teamów, więc ruszają od razu — zamiast czekać,

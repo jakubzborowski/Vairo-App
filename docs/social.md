@@ -55,6 +55,18 @@ zamiast imienia, a nie obok niego. W kodzie aplikacji `public_name` czytają
 wprost tylko zgłoszenia do teamu i powiadomienia z warstwy Social; przy celach
 i zadaniach sprawca jest z teamu, więc obowiązuje imię z konta.
 
+**Zaproszenie linkiem (migracja 035).** Zaproszenie z `startup_join_requests`
+wymaga istniejącego konta (`profile_id not null`), więc znajomego spoza Vairo
+nie dało się ściągnąć do teamu. Link tworzy Founder albo Admin na stronie Team
+(jeden aktywny na team, 7 dni, do 10 dołączeń); kto go otworzy, dołącza jako
+Member przez `accept_invite_link()` — zwykły INSERT, więc limit 3 teamów
+pilnuje ten sam trigger co zawsze. Gość widzi nazwę teamu przed rejestracją
+(`invite_link_info()` jest dostępna dla `anon`, ale tylko z tokenem). Nowa
+osoba po rejestracji zawsze idzie do onboardingu i `?next=` tam przepada —
+dlatego token czeka w ciasteczku `vairo_invite`, a layout `/app` odsyła do
+`/join/<token>` przy pierwszym wejściu. Ciasteczko znika przy „Dołącz” albo
+„Nie teraz”.
+
 **Pętla kontaktu: zaczepka → przyjęcie → rozmowa.** `contact_signals` to
 pierwszy krok, dostępny **dla każdego** — także dla kogoś bez teamu. Wcześniej
 jedyną akcją było „zgłoś się do teamu", którą widzieli tylko Founder i Admin,

@@ -9,6 +9,8 @@ import { TeamLogo } from "@/components/social/team-logo";
 import { LeaveTeamButton } from "@/components/team/leave-team-button";
 import { MemberRow } from "@/components/team/member-row";
 import { OpenRolesManager } from "@/components/team/open-roles-manager";
+import { InviteLinkCard } from "@/components/team/invite-link-card";
+import { getActiveInviteLink } from "@/lib/invites";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MAX_STARTUPS, ROLE_LABELS, canManageTeam } from "@/types/startup";
@@ -51,6 +53,9 @@ export default async function TeamPage() {
   }
 
   const canManage = canManageTeam(active.role);
+  // Link widzą tylko Founder i Admin — przekazanie go dalej to decyzja,
+  // kto wchodzi do teamu.
+  const inviteLink = canManage ? await getActiveInviteLink(supabase, active.id) : null;
 
   // Katalog umiejętności potrzebny przy otwartych rolach — bez niego nie da
   // się powiedzieć, czego rola szuka, a to jedyne pole, po którym Odkrywaj
@@ -188,6 +193,8 @@ export default async function TeamPage() {
           </Button>
         </p>
       ) : null}
+
+      {canManage ? <InviteLinkCard startupId={active.id} initial={inviteLink} /> : null}
 
       {/* Ciepła karta tylko wtedy, gdy jest co zrobić: nikt nie czeka na
           decyzję, a team nikogo nie szuka — czyli nie pojawia się wśród

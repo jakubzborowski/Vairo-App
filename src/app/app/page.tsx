@@ -180,6 +180,10 @@ export default async function AppPage() {
   // miejsce na niej słowami.
   const stepNumber = program.findIndex((item) => item.key === current?.key) + 1;
   const canEdit = canEditStageData(active.role);
+  // Uwaga z redesignu: Vairo ma od początku zachęcać do budowania w kilka
+  // osób. Kafelek „Team” u kogoś, kto jest w teamie sam i może zapraszać,
+  // zamiast „1 osoba w zespole” prowadzi prosto do linku zaproszenia.
+  const buildsAlone = (memberCount ?? 0) <= 1 && canManageTeam(active.role);
 
   const [{ actions, blocker: stageBlocker, tree }, deadlines, recent, activity, nearestGoal, status] = await Promise.all([
     loadNextActions(supabase, {
@@ -365,11 +369,15 @@ export default async function AppPage() {
         />
 
         <StatPanel
-          href="/app/team"
+          href={buildsAlone ? "/app/team#zaproszenie" : "/app/team"}
           icon={Users}
           label="Team"
           value={<CountUp value={memberCount ?? 0} />}
-          hint={plural(memberCount ?? 0, "osoba w zespole", "osoby w zespole", "osób w zespole")}
+          hint={
+            buildsAlone
+              ? "Budujesz sam? Zaproś kogoś linkiem"
+              : plural(memberCount ?? 0, "osoba w zespole", "osoby w zespole", "osób w zespole")
+          }
           badge={
             waitingCount && waitingCount > 0
               ? `${waitingCount} czeka na decyzję`

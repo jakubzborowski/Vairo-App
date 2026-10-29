@@ -26,6 +26,20 @@ export function translateDbError(message: string | null | undefined) {
   if (message.includes("row-level security")) {
     return "Nie masz uprawnień do tej zmiany. Jeśli to pomyłka, poproś Foundera o wyższą rolę.";
   }
+  if (message.includes("invite_not_allowed")) {
+    return "Linki zaproszeń tworzą i wyłączają Founder oraz Admin.";
+  }
+  if (message.includes("invite_invalid")) {
+    return "Ten link zaproszenia jest nieaktualny. Poproś osobę, która go wysłała, o nowy.";
+  }
+  if (
+    message.includes("startup_invite_links") ||
+    message.includes("create_invite_link") ||
+    message.includes("accept_invite_link") ||
+    message.includes("revoke_invite_links")
+  ) {
+    return "Brakuje migracji 035 — odpal ją w Supabase → SQL Editor, a zaproszenia linkiem zaczną działać.";
+  }
   if (message.includes("startup_limit_reached")) {
     return "Limit 3 teamów na konto został osiągnięty.";
   }
