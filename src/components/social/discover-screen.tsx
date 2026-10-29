@@ -42,12 +42,21 @@ import {
 export type DiscoverParams = {
   view?: string;
   q?: string;
-  skill?: string;
-  looking?: string;
+  // Filtry wielokrotnego wyboru: formularz GET powtarza nazwę pola
+  // (`?skill=a&skill=b`), więc Next oddaje tablicę — albo tekst przy jednej
+  // wartości. `listParam()` sprowadza oba przypadki do tablicy.
+  skill?: string | string[];
+  looking?: string | string[];
   room?: string;
-  category?: string;
+  category?: string | string[];
   hiring?: string;
 };
+
+/** Parametr filtra jako tablica wartości, bez pustych. */
+function listParam(value: string | string[] | undefined): string[] {
+  if (!value) return [];
+  return (Array.isArray(value) ? value : [value]).filter(Boolean);
+}
 
 /** Gdzie mieszka która talia. Jedno miejsce, żeby adresy nie rozjechały się
  *  między linkiem w menu, formularzem szukania i przekierowaniem. */
@@ -270,19 +279,20 @@ export async function DiscoverScreen({
           <div className="mt-2 flex flex-wrap items-end gap-2.5 rounded-xl border border-white/[0.07] bg-[var(--surface)] p-3.5">
             {tab === "people" ? (
               <>
-                <Select
+                <MultiChoice
                   name="skill"
-                  label="Umiejętność"
-                  defaultValue={params.skill ?? ""}
+                  label="Umiejętności"
+                  selected={listParam(params.skill)}
+                  scroll
                   options={(skillRows ?? []).map((row) => ({
                     value: row.slug as string,
                     label: row.label as string,
                   }))}
                 />
-                <Select
+                <MultiChoice
                   name="looking"
                   label="Czego szuka"
-                  defaultValue={params.looking ?? ""}
+                  selected={listParam(params.looking)}
                   options={LOOKING_FOR_OPTIONS.map((option) => ({
                     value: option.value,
                     label: option.label,
@@ -296,10 +306,10 @@ export async function DiscoverScreen({
               </>
             ) : (
               <>
-                <Select
+                <MultiChoice
                   name="category"
-                  label="Kategoria"
-                  defaultValue={params.category ?? ""}
+                  label="Kategorie"
+                  selected={listParam(params.category)}
                   options={SELECTABLE_CATEGORIES.map((category) => ({
                     value: category.key,
                     label: category.label,
@@ -380,8 +390,8 @@ async function PeopleResults({
 }) {
   const filters = {
     q: params.q,
-    skillSlug: params.skill,
-    lookingFor: params.looking,
+    skillSlugs: listParam(params.skill),
+    lookingFor: listParam(params.looking),
     withRoom: params.room === "1",
   };
 
@@ -472,7 +482,7 @@ async function TeamResults({
 }) {
   const filters = {
     q: params.q,
-    category: params.category,
+    categories: listParam(params.category),
     hiringOnly: params.hiring === "1",
   };
 
@@ -542,14 +552,22 @@ async function TeamResults({
  * byłoby myleniem dwóch różnych rzeczy. */
 function hasNarrowingFilter(params: DiscoverParams) {
   return Boolean(
-    params.skill || params.looking || params.room || params.category || params.hiring
+    listParam(params.skill).length ||
+      listParam(params.looking).length ||
+      params.room ||
+      listParam(params.category).length ||
+      params.hiring
   );
 }
 
 function hasActiveFilter(params: DiscoverParams) {
   return Boolean(
-    params.q || params.skill || params.looking || params.category ||
-      params.room === "1" || params.hiring === "1"
+    params.q ||
+      listParam(params.skill).length ||
+      listParam(params.looking).length ||
+      listParam(params.category).length ||
+      params.room === "1" ||
+      params.hiring === "1"
   );
 }
 
@@ -621,38 +639,6 @@ function ViewLink({
   );
 }
 
-function Select({
-  name,
-  label,
-  defaultValue,
-  options,
-}: {
-  name: string;
-  label: string;
-  defaultValue: string;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <label className="min-w-[160px]">
-      <span className="mb-1.5 block text-[12.5px] font-medium text-[var(--text-muted)]">
-        {label}
-      </span>
-      <select
-        name={name}
-        defaultValue={defaultValue}
-        className="h-11 w-full rounded-xl border border-white/10 bg-[var(--surface-2)] px-3 text-[14px] text-white outline-none transition-colors hover:border-white/16 focus:border-[var(--vairo)]/70"
-      >
-        <option value="">Wszystkie</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
 function Checkbox({
   name,
   label,
@@ -677,13 +663,66 @@ function Checkbox({
 }
 
 /** Ile zawężeń jest włączonych — liczba na przycisku „Filtry". */
-function narrowingCount(
-  params: { skill?: string; looking?: string; room?: string; category?: string; hiring?: string },
-  tab: "people" | "teams"
-) {
-  const keys =
-    tab === "people"
-      ? [params.skill, params.looking, params.room === "1" ? "1" : ""]
-      : [params.category, params.hiring === "1" ? "1" : ""];
-  return keys.filter(Boolean).length;
+function narrowingCount(params: DiscoverParams, tab: "people" | "teams") {
+  // Liczymy zaznaczone wartości, nie grupy — „3” przy trzech umiejętnościach
+  // mówi więcej niż „1”.
+  return tab === "people"
+    ? listParam(params.skill).length +
+        listParam(params.looking).length +
+        (params.room === "1" ? 1 : 0)
+    : listParam(params.category).length + (params.hiring === "1" ? 1 : 0);
+}
+
+/**
+ * Wielokrotny wybór w filtrach — uwaga z redesignu: w Social szuka się
+ * zwykle „ktoś od React ALBO od Figmy”, a lista rozwijana pozwalała zaznaczyć
+ * jedną rzecz. Zwykłe pola wyboru w formularzu GET: działa bez JavaScriptu
+ * i adres z filtrami da się wysłać komuś dalej.
+ */
+function MultiChoice({
+  name,
+  label,
+  options,
+  selected,
+  scroll = false,
+}: {
+  name: string;
+  label: string;
+  options: { value: string; label: string }[];
+  selected: string[];
+  scroll?: boolean;
+}) {
+  const chosen = new Set(selected);
+  return (
+    <fieldset className="min-w-[200px] flex-1">
+      <legend className="mb-1.5 text-[12.5px] font-medium text-[var(--text-muted)]">
+        {label}
+        {chosen.size > 0 ? (
+          <span className="ml-1.5 text-[var(--text-subtle)]">· {chosen.size}</span>
+        ) : null}
+      </legend>
+      <div
+        className={cn(
+          "flex flex-wrap gap-1.5",
+          scroll && "max-h-40 overflow-y-auto rounded-xl border border-white/10 bg-[var(--surface-2)] p-2"
+        )}
+      >
+        {options.map((option) => (
+          <label
+            key={option.value}
+            className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-[var(--surface-2)] px-2.5 text-[13px] text-[var(--text-muted)] transition-colors hover:border-white/20 has-[:checked]:border-white/40 has-[:checked]:text-white"
+          >
+            <input
+              type="checkbox"
+              name={name}
+              value={option.value}
+              defaultChecked={chosen.has(option.value)}
+              className="size-4 accent-[var(--vairo)]"
+            />
+            {option.label}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
 }

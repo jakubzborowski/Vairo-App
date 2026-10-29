@@ -31,15 +31,18 @@ const STARTUP_COLUMNS =
 
 export type PeopleFilters = {
   q?: string;
-  skillSlug?: string;
-  lookingFor?: string;
+  /** Którakolwiek z zaznaczonych umiejętności (filtr wielokrotnego wyboru). */
+  skillSlugs?: string[];
+  /** Którykolwiek z zaznaczonych celów („czego szuka”). */
+  lookingFor?: string[];
   /** Pokazuj tylko osoby, które mają jeszcze miejsce na kolejny team. */
   withRoom?: boolean;
 };
 
 export type TeamFilters = {
   q?: string;
-  category?: string;
+  /** Którakolwiek z zaznaczonych kategorii. */
+  categories?: string[];
   tagSlug?: string;
   /** Tylko teamy, które mają otwarte role. */
   hiringOnly?: boolean;
@@ -65,11 +68,11 @@ export async function discoverPeople(
       `full_name.ilike.${term},headline.ilike.${term},weekly_focus.ilike.${term}`
     );
   }
-  if (filters.skillSlug) {
-    query = query.overlaps("skill_slugs", [filters.skillSlug]);
+  if (filters.skillSlugs && filters.skillSlugs.length > 0) {
+    query = query.overlaps("skill_slugs", filters.skillSlugs);
   }
-  if (filters.lookingFor) {
-    query = query.eq("looking_for", filters.lookingFor);
+  if (filters.lookingFor && filters.lookingFor.length > 0) {
+    query = query.in("looking_for", filters.lookingFor);
   }
   if (filters.withRoom) {
     query = query.lt("team_count", 3);
@@ -100,8 +103,8 @@ export async function discoverTeams(
       `name.ilike.${term},public_tagline.ilike.${term},public_description.ilike.${term}`
     );
   }
-  if (filters.category) {
-    query = query.overlaps("category_keys", [filters.category]);
+  if (filters.categories && filters.categories.length > 0) {
+    query = query.overlaps("category_keys", filters.categories);
   }
   if (filters.tagSlug) {
     query = query.overlaps("tag_slugs", [filters.tagSlug]);

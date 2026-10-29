@@ -53,12 +53,16 @@ export function FieldInput({
   showErrors,
   returnTo,
   canSkip = false,
+  rowLabels,
+  references,
 }: FieldInputProps & {
   startupStageId: string;
   showErrors?: boolean;
   returnTo?: string;
   /** Pokazuj „Pomiń” — tylko w modalu podpunktu, nie przy poprawianiu podsumowania. */
   canSkip?: boolean;
+  /** Odpowiedzi z innych pól (`config.show_answers`) do podejrzenia nad pytaniem. */
+  references?: { question: string; text: string }[];
 }) {
   const [showExample, setShowExample] = useState(false);
   const skipped = isSkipped(value);
@@ -133,6 +137,24 @@ export function FieldInput({
           ) : null}
 
           <div className="mt-3.5">
+            {/* Podgląd odpowiedzi z innego punktu — uwaga z redesignu: „nie powinno
+                być potrzeby otwierania kolejnego punktu”. */}
+            {references && references.length > 0 ? (
+              <div className="mb-3 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3.5 py-3">
+                <p className="text-[11.5px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+                  Twoje wcześniejsze odpowiedzi
+                </p>
+                <dl className="mt-1.5 flex flex-col gap-1.5">
+                  {references.map((ref) => (
+                    <div key={ref.question}>
+                      <dt className="text-[12px] text-[var(--text-subtle)]">{ref.question}</dt>
+                      <dd className="text-[13.5px] leading-relaxed text-[var(--text-muted)]">{ref.text}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ) : null}
+
             <Control
               field={field}
               value={value}
@@ -140,6 +162,7 @@ export function FieldInput({
               disabled={disabled}
               startupStageId={startupStageId}
               returnTo={returnTo}
+              rowLabels={rowLabels}
             />
           </div>
 

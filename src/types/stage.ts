@@ -76,6 +76,20 @@ export type FieldConfig = {
   /** Przycisk wychodzący z modala: sekcja Plików albo Social. */
   href?: string;
   label?: string;
+  /**
+   * Lista z gotowymi rubrykami: nagłówki to pozycje innej odpowiedzi
+   * (`answer_key`), np. imiona rozmówców z „Znajdź rozmówców”. Do odpowiedzi
+   * trafia „Imię: treść” — dopiero gdy ktoś coś wpisze, więc puste rubryki
+   * nie udają wypełnionego pola.
+   */
+  rows_from?: string;
+  /** Odpowiedzi z innych pól pokazane nad pytaniem — bez otwierania innego punktu. */
+  show_answers?: string[];
+  /** Kalkulator w polu liczbowym: składniki wpisuje człowiek, wynik liczy się sam. */
+  calc?: {
+    op: "product" | "quotient";
+    inputs: { key: string; label: string; unit?: string }[];
+  };
 };
 
 /** Warunek, po którym podpunkt wypada z postępu etapu. */

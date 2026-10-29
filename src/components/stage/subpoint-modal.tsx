@@ -92,6 +92,28 @@ export function SubpointModal({
     (f) => f.isRequired && !fieldAnswered(f, draft[f.answerKey])
   );
   const skippedCount = subpoint.fields.filter((f) => isSkipped(draft[f.answerKey])).length;
+
+  // Pytanie → treść, po kluczu odpowiedzi — do podglądu odpowiedzi z innych
+  // punktów (`config.show_answers`).
+  const questionByKey = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const category of tree.categories)
+      for (const point of category.points)
+        for (const sub of point.subpoints)
+          for (const f of sub.fields) map.set(f.answerKey, f.question);
+    return map;
+  }, [tree]);
+
+  const extrasFor = (field: (typeof subpoint.fields)[number]) => {
+    const { rows_from: rowsFrom, show_answers: showAnswers } = field.config;
+    const rowLabels = rowsFrom
+      ? [...new Set(answerItems(answers[rowsFrom]))].slice(0, 20)
+      : undefined;
+    const references = showAnswers
+      ?.map((key) => ({ question: questionByKey.get(key) ?? "", text: answerText(answers[key]) }))
+      .filter((ref) => ref.question && ref.text);
+    return { rowLabels, references };
+  };
   const goalsOpen = (subpoint.goalConditions ?? []).filter(
     (condition) => condition.done < condition.minCount
   );
@@ -214,6 +236,7 @@ export function SubpointModal({
                 showErrors={attemptedSave}
                 returnTo={`/app/stage?stage=${tree.templateKey}&subpoint=${subpoint.id}`}
                 canSkip
+                {...extrasFor(field)}
               />
             )
           )}
@@ -365,3 +388,19 @@ function resolveSources(
 }
 
 export { cn };
+
+/** Pozycje listy jako tekst — pominięte pytanie i puste pozycje odpadają. */
+function answerItems(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+/** Odpowiedź jako jedno zdanie do podglądu; obiektów (np. zdań z szablonu) nie pokazujemy. */
+function answerText(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number") return String(value);
+  return answerItems(value).join("; ");
+}

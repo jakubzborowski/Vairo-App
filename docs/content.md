@@ -56,6 +56,22 @@ Warunek z polem `checkmark` zapisujemy jako `"equals": true`, nie `one_of`:
 aplikacja porównuje `one_of` wyłącznie z tekstem, więc zaznaczenie (`true`)
 zaliczyłoby podpunkt w bazie, a na ekranie nie.
 
+### Pola, które sięgają do innych odpowiedzi
+
+Trzy klucze `config` (żaden nie zmienia kształtu zapisanej odpowiedzi):
+
+- `rows_from: "<answer_key>"` przy liście — rubryki z nagłówkami z innej
+  listy (imiona rozmówców → „Zapytaj o ich doświadczenia”). Do odpowiedzi
+  trafia „Imię: treść” dopiero, gdy ktoś coś wpisze; puste rubryki nie
+  udają wypełnionego pola.
+- `show_answers: ["<answer_key>", …]` — podgląd tych odpowiedzi nad pytaniem,
+  żeby nie otwierać innego punktu („Przygotuj krótką propozycję” ← punkt 2).
+- `calc: { op: "product" | "quotient", inputs: [...] }` przy polu `number` —
+  kalkulator zamiast wzoru w podpowiedzi. Zapisuje się sam wynik (liczba),
+  więc wcześniejsze odpowiedzi i podsumowanie działają bez zmian.
+
+`answer_key` w tych kluczach to `shared_key` pola: `<etap>.<punkt>.<podpunkt>.<pole>`.
+
 ### Stabilny `answer_key`
 
 Odpowiedzi kluczujemy po `stage_fields.answer_key`, nie po `field_id`:

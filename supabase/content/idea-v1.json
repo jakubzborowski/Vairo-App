@@ -634,7 +634,8 @@
                   "help": "Kiedy ostatnio pojawił się ten problem i jak często się zdarza? Jak ta osoba sobie z nim radzi? Co jest w tym najbardziej uciążliwe i ile kosztuje ją czasu, pieniędzy lub wysiłku?",
                   "config": {
                     "min_items": 5,
-                    "max_items": 20
+                    "max_items": 20,
+                    "rows_from": "idea.rozmowy.znajdz-rozmowcow.osoby"
                   }
                 },
                 {
@@ -690,10 +691,16 @@
                   "key": "oferta",
                   "kind": "short_text",
                   "question": "Co oferujesz i jak to pomoże rozmówcy?",
-                  "help": "Skorzystaj z opisu pomysłu z punktu 2. Maksymalnie dwa zdania.",
+                  "help": "Nad polem masz podgląd opisu rozwiązania z punktu 2 — streść go w maksymalnie dwóch zdaniach.",
                   "config": {
                     "min": 20,
-                    "max": 400
+                    "max": 400,
+                    "show_answers": [
+                      "idea.hipoteza-rozwiazania.opisz-rozwiazanie.co-robi",
+                      "idea.hipoteza-rozwiazania.opisz-rozwiazanie.dla-kogo",
+                      "idea.hipoteza-rozwiazania.opisz-rozwiazanie.jaki-problem",
+                      "idea.hipoteza-rozwiazania.opisz-rozwiazanie.rezultat"
+                    ]
                   }
                 },
                 {
@@ -1588,10 +1595,24 @@
                   "key": "cac",
                   "kind": "number",
                   "question": "Ile kosztowało zdobycie jednej zainteresowanej osoby?",
-                  "help": "Podziel wydane pieniądze przez liczbę osób. To koszt zdobycia jednego klienta (w branży: CAC).",
+                  "help": "To koszt zdobycia jednego klienta (w branży: CAC). Wpisz, ile wydałeś i ile osób się zainteresowało — wynik policzy się sam.",
                   "config": {
                     "min": 0,
-                    "unit": "zł"
+                    "unit": "zł",
+                    "calc": {
+                      "op": "quotient",
+                      "inputs": [
+                        {
+                          "key": "wydane",
+                          "label": "Wydane pieniądze",
+                          "unit": "zł"
+                        },
+                        {
+                          "key": "osoby",
+                          "label": "Zainteresowane osoby"
+                        }
+                      ]
+                    }
                   }
                 },
                 {
@@ -1663,10 +1684,28 @@
                   "key": "ltv",
                   "kind": "number",
                   "question": "Ile klient zapłaci ci łącznie przez cały czas korzystania?",
-                  "help": "To wartość klienta w całym okresie korzystania (w branży: LTV). Policz prosto: średnia wartość zamówienia × liczba zamówień w roku × liczba lat.",
+                  "help": "To wartość klienta w całym okresie korzystania (w branży: LTV). Wpisz trzy liczby — wynik policzy się sam.",
                   "config": {
                     "min": 0,
-                    "unit": "zł"
+                    "unit": "zł",
+                    "calc": {
+                      "op": "product",
+                      "inputs": [
+                        {
+                          "key": "zamowienie",
+                          "label": "Średnia wartość zakupu",
+                          "unit": "zł"
+                        },
+                        {
+                          "key": "zakupy",
+                          "label": "Zakupy w roku"
+                        },
+                        {
+                          "key": "lata",
+                          "label": "Ile lat zostaje klientem"
+                        }
+                      ]
+                    }
                   }
                 },
                 {

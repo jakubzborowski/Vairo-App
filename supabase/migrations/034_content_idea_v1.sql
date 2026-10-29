@@ -1012,7 +1012,7 @@ Po tym punkcie masz notatki z rozmów, wspólne obserwacje i poprawiony opis pro
   values (v_subpoint, 'zapisy', 'list_long',
           'Po każdej rozmowie zapisz, czego się dowiedziałeś.', 'Kiedy ostatnio pojawił się ten problem i jak często się zdarza? Jak ta osoba sobie z nim radzi? Co jest w tym najbardziej uciążliwe i ile kosztuje ją czasu, pieniędzy lub wysiłku?', null,
           true, 'idea.rozmowy.zapytaj-o-doswiadczenia.zapisy',
-          '{"min_items":5,"max_items":20}'::jsonb, 1)
+          '{"min_items":5,"max_items":20,"rows_from":"idea.rozmowy.znajdz-rozmowcow.osoby"}'::jsonb, 1)
   on conflict (subpoint_id, key) do update set
     kind = excluded.kind, question = excluded.question,
     help = excluded.help, example = excluded.example,
@@ -1131,9 +1131,9 @@ Po tym punkcie masz pierwsze reakcje na ofertę i cenę oraz decyzję opartą na
     (subpoint_id, key, kind, question, help, example,
      is_required, shared_key, config, position)
   values (v_subpoint, 'oferta', 'short_text',
-          'Co oferujesz i jak to pomoże rozmówcy?', 'Skorzystaj z opisu pomysłu z punktu 2. Maksymalnie dwa zdania.', null,
+          'Co oferujesz i jak to pomoże rozmówcy?', 'Nad polem masz podgląd opisu rozwiązania z punktu 2 — streść go w maksymalnie dwóch zdaniach.', null,
           true, 'idea.zainteresowanie-i-cena.propozycja.oferta',
-          '{"min":20,"max":400}'::jsonb, 1)
+          '{"min":20,"max":400,"show_answers":["idea.hipoteza-rozwiazania.opisz-rozwiazanie.co-robi","idea.hipoteza-rozwiazania.opisz-rozwiazanie.dla-kogo","idea.hipoteza-rozwiazania.opisz-rozwiazanie.jaki-problem","idea.hipoteza-rozwiazania.opisz-rozwiazanie.rezultat"]}'::jsonb, 1)
   on conflict (subpoint_id, key) do update set
     kind = excluded.kind, question = excluded.question,
     help = excluded.help, example = excluded.example,
@@ -2742,9 +2742,9 @@ Na początku nie warto zamykać się na jeden sposób reklamowania. Przetestuj r
     (subpoint_id, key, kind, question, help, example,
      is_required, shared_key, config, position)
   values (v_subpoint, 'cac', 'number',
-          'Ile kosztowało zdobycie jednej zainteresowanej osoby?', 'Podziel wydane pieniądze przez liczbę osób. To koszt zdobycia jednego klienta (w branży: CAC).', null,
+          'Ile kosztowało zdobycie jednej zainteresowanej osoby?', 'To koszt zdobycia jednego klienta (w branży: CAC). Wpisz, ile wydałeś i ile osób się zainteresowało — wynik policzy się sam.', null,
           true, 'idea.pozyskanie-klientow.koszt-klienta.cac',
-          '{"min":0,"unit":"zł"}'::jsonb, 2)
+          '{"min":0,"unit":"zł","calc":{"op":"quotient","inputs":[{"key":"wydane","label":"Wydane pieniądze","unit":"zł"},{"key":"osoby","label":"Zainteresowane osoby"}]}}'::jsonb, 2)
   on conflict (subpoint_id, key) do update set
     kind = excluded.kind, question = excluded.question,
     help = excluded.help, example = excluded.example,
@@ -2884,9 +2884,9 @@ Na sam koniec dzielisz LTV przez CAC i wpisujesz w lukę otrzymany wynik.',
     (subpoint_id, key, kind, question, help, example,
      is_required, shared_key, config, position)
   values (v_subpoint, 'ltv', 'number',
-          'Ile klient zapłaci ci łącznie przez cały czas korzystania?', 'To wartość klienta w całym okresie korzystania (w branży: LTV). Policz prosto: średnia wartość zamówienia × liczba zamówień w roku × liczba lat.', null,
+          'Ile klient zapłaci ci łącznie przez cały czas korzystania?', 'To wartość klienta w całym okresie korzystania (w branży: LTV). Wpisz trzy liczby — wynik policzy się sam.', null,
           true, 'idea.gotowosc-do-zaplaty.ltv-vs-cac.ltv',
-          '{"min":0,"unit":"zł"}'::jsonb, 1)
+          '{"min":0,"unit":"zł","calc":{"op":"product","inputs":[{"key":"zamowienie","label":"Średnia wartość zakupu","unit":"zł"},{"key":"zakupy","label":"Zakupy w roku"},{"key":"lata","label":"Ile lat zostaje klientem"}]}}'::jsonb, 1)
   on conflict (subpoint_id, key) do update set
     kind = excluded.kind, question = excluded.question,
     help = excluded.help, example = excluded.example,

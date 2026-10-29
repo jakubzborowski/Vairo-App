@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Input, Textarea } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
@@ -12,6 +12,8 @@ export type FieldInputProps = {
   value: unknown;
   onChange: (value: unknown) => void;
   disabled?: boolean;
+  /** Nagłówki rubryk listy (`config.rows_from`), wyliczone przez modal. */
+  rowLabels?: string[];
 };
 
 const asString = (value: unknown) => (typeof value === "string" ? value : "");
@@ -61,7 +63,20 @@ export function ListInput({
   onChange,
   disabled,
   multiline,
+  rowLabels,
 }: FieldInputProps & { multiline?: boolean }) {
+  if (rowLabels && rowLabels.length > 0) {
+    return (
+      <LabeledRows
+        field={field}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        labels={rowLabels}
+        multiline={multiline}
+      />
+    );
+  }
   const items = asList(value);
   const config = field.config;
   const max = config.max_items ?? 20;
@@ -133,6 +148,80 @@ export function ListInput({
           {max < 20 ? `, maksimum ${max}` : ""}
         </p>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * Rubryki z nagłówkami z innej odpowiedzi — uwaga z redesignu: „po wpisaniu
+ * imion osób, z którymi się rozmawiało, w drugim podpunkcie powinny być już
+ * stworzone rubryki”. Pozycja w odpowiedzi to „Imię: treść”; rubrykę
+ * rozpoznajemy po przedrostku, nie po kolejności, więc dopisanie albo
+ * usunięcie kogoś z listy rozmówców nie przesuwa cudzych notatek.
+ */
+function LabeledRows({
+  field,
+  value,
+  onChange,
+  disabled,
+  labels,
+  multiline,
+}: {
+  field: StageField;
+  value: unknown;
+  onChange: (value: unknown) => void;
+  disabled?: boolean;
+  labels: string[];
+  multiline?: boolean;
+}) {
+  const items = asList(value);
+  const prefix = (label: string) => `${label}: `;
+  const textFor = (label: string) => {
+    const hit = items.find((item) => item.startsWith(prefix(label)));
+    return hit ? hit.slice(prefix(label).length) : "";
+  };
+  // Notatki o osobach, których już nie ma na liście rozmówców — zostają
+  // w odpowiedzi nietknięte, żeby nic nie zniknęło po cichu.
+  const extras = items.filter((item) => !labels.some((label) => item.startsWith(prefix(label))));
+
+  const update = (label: string, text: string) => {
+    const next = labels
+      .map((l) => (l === label ? text : textFor(l)))
+      .map((t, i) => (t.trim() ? prefix(labels[i]!) + t : ""))
+      .filter(Boolean);
+    onChange([...next, ...extras]);
+  };
+
+  const Control = multiline ? Textarea : Input;
+
+  return (
+    <div className="flex flex-col gap-3">
+      {labels.map((label) => (
+        <label key={label} className="flex flex-col gap-1.5">
+          <span className="text-[13px] font-medium text-white">{label}</span>
+          <Control
+            value={textFor(label)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement & HTMLTextAreaElement>) =>
+              update(label, e.target.value)
+            }
+            maxLength={field.config.item_max}
+            disabled={disabled}
+            rows={multiline ? 3 : undefined}
+            placeholder="Czego się dowiedziałeś?"
+          />
+        </label>
+      ))}
+      {extras.length > 0 ? (
+        <p className="text-[12px] text-[var(--text-faint)]">
+          Masz też {extras.length} {extras.length === 1 ? "wcześniejszą notatkę" : "wcześniejsze notatki"} spoza
+          obecnej listy rozmówców — zostają w odpowiedzi.
+        </p>
+      ) : null}
+      <p className="text-[12px] text-[var(--text-faint)]">
+        Rubryki biorą się z listy rozmówców w poprzednim podpunkcie. Rozmawiałeś
+        z kimś jeszcze? Dopisz go tam.
+        {field.config.min_items ? ` Minimum ${field.config.min_items} uzupełnione.` : ""}
+      </p>
     </div>
   );
 }
@@ -242,6 +331,9 @@ export function MultiSelectInput({ field, value, onChange, disabled }: FieldInpu
 // ---------------------------------------------------------------------------
 
 export function NumberInput({ field, value, onChange, disabled }: FieldInputProps) {
+  if (field.config.calc) {
+    return <CalcInput field={field} value={value} onChange={onChange} disabled={disabled} />;
+  }
   return (
     <div className="flex items-center gap-2">
       <Input
@@ -258,6 +350,81 @@ export function NumberInput({ field, value, onChange, disabled }: FieldInputProp
       {field.config.unit ? (
         <span className="text-[14px] text-[var(--text-subtle)]">{field.config.unit}</span>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * Kalkulator zamiast wzoru w podpowiedzi — uwaga z redesignu: „zastąpić
+ * matematyczne wzory w opisach automatycznym wzorem do uzupełnienia”.
+ * Zapisujemy sam wynik (liczba, jak w zwykłym polu), więc odpowiedzi sprzed
+ * zmiany i ekran podsumowania działają bez zmian. Składniki żyją tylko
+ * w formularzu; wynik można też poprawić ręcznie.
+ */
+function CalcInput({ field, value, onChange, disabled }: FieldInputProps) {
+  const calc = field.config.calc!;
+  const [parts, setParts] = useState<Record<string, string>>({});
+
+  const compute = (next: Record<string, string>) => {
+    const numbers = calc.inputs.map((input) => Number((next[input.key] ?? "").replace(",", ".")));
+    if (numbers.some((n, i) => !next[calc.inputs[i]!.key]?.trim() || !Number.isFinite(n))) return;
+    const result =
+      calc.op === "product"
+        ? numbers.reduce((acc, n) => acc * n, 1)
+        : numbers[1] === 0
+          ? null
+          : numbers[0]! / numbers[1]!;
+    if (result === null) return;
+    onChange(Math.round(result * 100) / 100);
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-end gap-2">
+        {calc.inputs.map((input, index) => (
+          <div key={input.key} className="flex items-end gap-2">
+            {index > 0 ? (
+              <span className="pb-3 text-[15px] text-[var(--text-subtle)]" aria-hidden="true">
+                {calc.op === "product" ? "×" : "÷"}
+              </span>
+            ) : null}
+            <label className="flex flex-col gap-1">
+              <span className="text-[12px] text-[var(--text-subtle)]">
+                {input.label}
+                {input.unit ? ` (${input.unit})` : ""}
+              </span>
+              <Input
+                inputMode="decimal"
+                value={parts[input.key] ?? ""}
+                onChange={(e) => {
+                  const next = { ...parts, [input.key]: e.target.value };
+                  setParts(next);
+                  compute(next);
+                }}
+                disabled={disabled}
+                className="w-[130px]"
+                placeholder="0"
+              />
+            </label>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-[13px] text-[var(--text-muted)]">Wynik:</span>
+        <Input
+          type="number"
+          inputMode="decimal"
+          aria-label="Wynik"
+          value={typeof value === "number" ? String(value) : ""}
+          onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+          disabled={disabled}
+          className="max-w-[160px]"
+          placeholder="0"
+        />
+        {field.config.unit ? (
+          <span className="text-[14px] text-[var(--text-subtle)]">{field.config.unit}</span>
+        ) : null}
+      </div>
     </div>
   );
 }
