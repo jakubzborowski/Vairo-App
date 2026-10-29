@@ -100,6 +100,17 @@
   --info-text: #7ea6f3;
   --danger-text: #ef7478;
 
+  /* Kategorie walidacyjne — kolor mówi „gdzie jesteś”, nie „co kliknąć”.
+     Tylko na znacznikach (kreska, kropka, ikona, obwódka), nigdy na tekście
+     i nigdy na przycisku: akcja główna zostaje pomarańczowa. Patrz
+     docs/design.md → „Kolory kategorii”. */
+  --cat-general: #ee5f1c; /* = --vairo */
+  --cat-saas: #ff4d6d;
+  --cat-b2b: #4f8cff;
+  --cat-b2c: #4ade80;
+  --cat-hardware: #22d3ee;
+  --cat-social: #facc15; /* kategoria w przygotowaniu — kolor zarezerwowany */
+
   /* shadcn / baza */
   --background: #08090c;
   --foreground: #ffffff;

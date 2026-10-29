@@ -26,7 +26,36 @@ i to treścią, którą czyta się jako pierwszą. Dekoracja to kreska, kropka,
 ikona bez znaczenia; nie słowo.
 
 **Jeden akcent na ekran.** Pomarańcz oznacza akcję główną albo bieżący stan.
-Wszystko inne jest w skali szarości.
+Wszystko inne jest w skali szarości. Jedyny wyjątek to kolory kategorii —
+niżej, w osobnej sekcji.
+
+## Kolory kategorii
+
+Każda kategoria walidacyjna ma swój kolor (tokeny `--cat-*` w `globals.css`,
+mapa w `src/lib/category-colors.ts`):
+
+| Kategoria | Kolor | Token |
+|---|---|---|
+| Ogólne | pomarańcz | `--cat-general` (= `--vairo`) |
+| SaaS | czerwień | `--cat-saas` |
+| B2B | niebieski | `--cat-b2b` |
+| B2C | zieleń | `--cat-b2c` |
+| Hardware | cyjan | `--cat-hardware` |
+| Social | żółty | `--cat-social` (kategoria jeszcze nie istnieje — kolor zarezerwowany) |
+
+Dlaczego to nie łamie zasady jednego akcentu: **kolor kategorii mówi „gdzie
+jesteś”, pomarańcz mówi „co zrobić”.** To dwa różne pytania, więc nie
+konkurują — pod warunkiem że kolor kategorii trzyma się swojego miejsca:
+
+- **wolno:** kreska przy wierszu, kropka przy nazwie, ikona nagłówka kolumny,
+  obwódka kolumny „Do zrobienia”, delikatne podświetlenie wybranego wiersza,
+  obwódka zaznaczonej karty w wyborze kategorii;
+- **nie wolno:** tekst (zostaje biały lub szary), przyciski (akcja główna jest
+  pomarańczowa w każdej kategorii), wypełnienia całych kart, poświaty w tle.
+
+Etap z jedną kategorią (Ambition) nie dostaje koloru — nie ma czego odróżniać.
+Kolor podaje się przez zmienną `--accent` na elemencie (`accentStyle()`),
+a klasy biorą `var(--accent)` — bez osobnej klasy na każdą kategorię.
 
 ## Głębokość — dlaczego same cienie nie wystarczają
 

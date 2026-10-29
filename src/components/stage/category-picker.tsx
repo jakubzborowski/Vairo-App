@@ -3,7 +3,8 @@
 import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
-import { cn } from "@/lib/utils";
+import { accentStyle, categoryAccent } from "@/lib/category-colors";
+import { cn, plural } from "@/lib/utils";
 import { SELECTABLE_CATEGORIES, type IndustryTag } from "@/types/startup";
 
 /**
@@ -43,15 +44,22 @@ export function CategoryPicker({
                 type="button"
                 onClick={() => onToggle(option.key)}
                 aria-pressed={selected.has(option.key)}
+                // Zaznaczenie w kolorze kategorii — tym samym, którym kategoria
+                // jest oznaczona potem na ekranie etapu.
+                style={accentStyle(categoryAccent(option.key))}
                 className={cn(
                   "rounded-xl border px-4 py-3 text-left transition-colors",
                   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--vairo)]",
                   selected.has(option.key)
-                    ? "border-[var(--vairo)] bg-[var(--vairo)]/8"
+                    ? "border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_9%,transparent)]"
                     : "border-white/10 bg-[var(--surface)] hover:border-white/22 hover:bg-[var(--surface-2)]"
                 )}
               >
-                <span className="block text-[15px] font-semibold text-white">
+                <span className="flex items-center gap-2 text-[15px] font-semibold text-white">
+                  <span
+                    className="size-2 shrink-0 rounded-full bg-[var(--accent)]"
+                    aria-hidden="true"
+                  />
                   {option.label}
                 </span>
                 <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[var(--text-muted)]">
@@ -59,7 +67,9 @@ export function CategoryPicker({
                 </span>
                 {counts?.[option.key] ? (
                   <span className="mt-1.5 block text-[12px] text-[var(--text-subtle)]">
-                    + {counts[option.key]} podpunktów do uzupełnienia
+                    + {counts[option.key]}{" "}
+                    {plural(counts[option.key], "podpunkt", "podpunkty", "podpunktów")} do
+                    uzupełnienia
                   </span>
                 ) : null}
               </button>

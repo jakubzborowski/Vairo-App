@@ -29,6 +29,7 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
+import { accentStyle, categoryAccent } from "@/lib/category-colors";
 import { cn, plural } from "@/lib/utils";
 import {
   fieldAnswered,
@@ -102,6 +103,9 @@ export function StageScreen({
       ""
   );
   const category = tree.categories.find((c) => c.key === categoryKey) ?? tree.categories[0];
+  // Kolor tylko tam, gdzie kategorii jest kilka. Etap z jedną kategorią
+  // (Ambition) nie ma czego odróżniać — tam kolumny zostają neutralne.
+  const accent = tree.showCategories ? categoryAccent(category?.key) : undefined;
 
   const [pointKey, setPointKey] = useState(
     () =>
@@ -460,6 +464,8 @@ export function StageScreen({
                 total={item.total}
                 complete={item.isComplete}
                 active={item.key === categoryKey}
+                accent={categoryAccent(item.key)}
+                markAlways
                 onClick={() => selectCategory(item.key)}
               />
             ))}
@@ -468,6 +474,7 @@ export function StageScreen({
 
         <Column
           icon={SlidersHorizontal}
+          accent={accent}
           title={tree.showCategories ? (category?.title ?? "Punkty") : tree.title}
           subtitle={
             category ? `${category.done} z ${category.total} ukończonych` : null
@@ -482,6 +489,7 @@ export function StageScreen({
               total={item.total}
               complete={item.isComplete}
               active={item.key === pointKey}
+              accent={accent}
               onClick={() => setPointKey(item.key)}
             />
           ))}
@@ -491,6 +499,7 @@ export function StageScreen({
           icon={SlidersHorizontal}
           title={readOnly ? "Odpowiedzi zespołu" : "Do zrobienia"}
           subtitle={point?.title}
+          accent={accent}
           active
           meta={
             point?.durationHint ? (
@@ -667,26 +676,51 @@ function Column({
   title,
   subtitle,
   meta,
+  accent,
+  active = false,
   children,
 }: {
   icon: LucideIcon;
   title: string;
   subtitle?: string | null;
   meta?: React.ReactNode;
-  /** Zostawione dla zgodności wywołań — kolumny nie mają już własnego akcentu. */
+  /** Kolor bieżącej kategorii — ikona nagłówka, a przy `active` obwódka. */
+  accent?: string;
+  /** Kolumna, w której się teraz pracuje („Do zrobienia”). */
   active?: boolean;
   children: React.ReactNode;
 }) {
   // Kolumny to karty bez obrysu, na równej wysokości. Pomarańczowa ramka
   // kolumny „Do zrobienia" wyleciała: pomarańcz na tym ekranie ma jedno
-  // miejsce — pasek „Następny krok". Ścieżkę Kategoria → Punkt niesie
-  // jasny wybrany wiersz z kreską po lewej.
+  // miejsce — pasek „Następny krok". Wraca za to obwódka w kolorze
+  // KATEGORII: mówi, gdzie jesteś (B2C, Hardware…), a nie co kliknąć,
+  // więc nie konkuruje z akcją główną (docs/design.md → „Kolory kategorii”).
   return (
-    <section className="flex h-full flex-col rounded-2xl bg-[var(--surface)] p-4 lift-1">
+    <section
+      className="relative flex h-full flex-col rounded-2xl bg-[var(--surface)] p-4 lift-1"
+      style={accentStyle(accent)}
+    >
+      {accent && active ? (
+        // Osobna warstwa, bo `lift-1` sam ustawia box-shadow — nadpisanie
+        // go zabrałoby kolumnie głębię.
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-2xl"
+          style={{
+            boxShadow: `0 0 0 1px color-mix(in srgb, ${accent} 34%, transparent), 0 16px 44px -28px ${accent}`,
+          }}
+        />
+      ) : null}
       <header className="mb-3 flex items-start justify-between gap-2 px-1">
         <div className="min-w-0">
           <p className="flex items-center gap-2 text-[13px] font-semibold text-white">
-            <Icon className="size-4 shrink-0 text-[var(--text-subtle)]" strokeWidth={2} />
+            <Icon
+              className={cn(
+                "size-4 shrink-0",
+                accent ? "text-[var(--accent)]" : "text-[var(--text-subtle)]"
+              )}
+              strokeWidth={2}
+            />
             <span className="truncate">{title}</span>
           </p>
           {subtitle ? (
@@ -722,6 +756,8 @@ function ListRow({
   complete,
   active,
   chevron,
+  accent,
+  markAlways = false,
   onClick,
 }: {
   title: string;
@@ -731,9 +767,14 @@ function ListRow({
   complete: boolean;
   active: boolean;
   chevron?: boolean;
+  /** Kolor kategorii dla kreski i podświetlenia wybranego wiersza. */
+  accent?: string;
+  /** Kreska widoczna zawsze (przygaszona) — w kolumnie kategorii jest legendą kolorów. */
+  markAlways?: boolean;
   onClick: () => void;
 }) {
   const partial = !complete && (done ?? 0) > 0;
+  const showMark = active || (markAlways && Boolean(accent));
   return (
     <li>
       <button
@@ -745,10 +786,20 @@ function ListRow({
           "transition-colors duration-150",
           active ? "bg-white/[0.08]" : "hover:bg-white/[0.05]"
         )}
+        style={
+          active && accent
+            ? { backgroundColor: `color-mix(in srgb, ${accent} 12%, rgba(255, 255, 255, 0.04))` }
+            : undefined
+        }
       >
-        {active ? (
+        {showMark ? (
           <span
-            className="absolute left-0.5 top-3 h-[18px] w-[3px] rounded-full bg-white/80"
+            className={cn(
+              "absolute left-0.5 top-3 h-[18px] w-[3px] rounded-full",
+              !accent && "bg-white/80",
+              !active && "opacity-45"
+            )}
+            style={accent ? { backgroundColor: accent } : undefined}
             aria-hidden="true"
           />
         ) : null}
