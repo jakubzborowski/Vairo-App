@@ -140,7 +140,7 @@ with checks(nr, migracja, co, ok, napraw) as (
     and to_regclass('public.startup_documents') is not null,
     'odpal 026_execution_content_rules'),
 
-  -- --- Redesign (029–032) -----------------------------------------------------
+  -- --- Redesign (029–033) -----------------------------------------------------
   -- Aplikacja działa bez 029–031 (chowa pola, których nie ma gdzie zapisać),
   -- więc `false` tu nie psuje ekranów — tylko wyłącza nowe funkcje.
   (45, '029', 'zadania: notatka, powód blokady, completed_at + tabela task_events',
@@ -170,6 +170,20 @@ with checks(nr, migracja, co, ok, napraw) as (
     and (to_regclass('public.task_events') is null
          or exists (select 1 from pg_trigger where tgname = 'task_events_drop_missing_actor')),
     'odpal 032_events_actor_guard (po 031; jeśli 029 doszła później — odpal 032 jeszcze raz)'),
+
+  -- Ta jest WYMAGANA, w przeciwieństwie do 029–031: kreator profilu
+  -- publicznego zapisuje `public_name`, a zgłoszenia i powiadomienia ją czytają.
+  -- Sprawdzamy też widoki — sama kolumna bez nich znaczyłaby, że obcy dalej
+  -- widzą imię z konta zamiast pseudonimu.
+  (49, '033', 'nazwa publiczna: profiles.public_name + widoki publiczne ją oddają',
+    exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'profiles'
+               and column_name = 'public_name')
+    and (select count(*) = 3 from pg_views
+          where schemaname = 'public'
+            and viewname in ('public_profiles', 'public_startups', 'contact_profiles')
+            and definition like '%public_name%'),
+    'odpal 033_public_name (po 032) — bez niej kreator profilu w Social nie zapisze, a zgłoszenia i powiadomienia pokażą „Brakuje migracji 033”'),
 
   -- --- Treść etapów ---------------------------------------------------------
   (50, '006–028', 'wszystkie 5 etapów ma opublikowaną treść',
