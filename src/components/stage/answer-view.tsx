@@ -1,6 +1,13 @@
-import { Check, ExternalLink, Minus, Paperclip } from "lucide-react";
+import Link from "next/link";
+import { Check, ExternalLink, Minus, Paperclip, SkipForward } from "lucide-react";
 import { Pill } from "@/components/ui/pill";
-import { asRecords, fieldAnswered, templateSlotPattern, type StageField } from "@/types/stage";
+import {
+  asRecords,
+  fieldAnswered,
+  isSkipped,
+  templateSlotPattern,
+  type StageField,
+} from "@/types/stage";
 
 /**
  * Odpowiedź w trybie odczytu — dla osób, które mają w teamie rolę Członka.
@@ -12,9 +19,12 @@ import { asRecords, fieldAnswered, templateSlotPattern, type StageField } from "
 export function AnswerView({
   field,
   value,
+  answerHref = null,
 }: {
   field: StageField;
   value: unknown;
+  /** Dokąd prowadzi „Odpowiedz teraz” przy pominiętym pytaniu. Brak = bez linku. */
+  answerHref?: string | null;
 }) {
   return (
     <div className="border-t border-white/[0.06] pt-5 first:border-t-0 first:pt-0">
@@ -22,7 +32,22 @@ export function AnswerView({
         {field.question}
       </p>
       <div className="mt-2.5">
-        {fieldAnswered(field, value) ? (
+        {isSkipped(value) ? (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[var(--text-subtle)]">
+            <span className="inline-flex items-center gap-1.5">
+              <SkipForward className="size-3.5" aria-hidden="true" />
+              Pominięte
+            </span>
+            {answerHref ? (
+              <Link
+                href={answerHref}
+                className="text-[var(--text-muted)] underline underline-offset-2 hover:text-white"
+              >
+                Odpowiedz teraz
+              </Link>
+            ) : null}
+          </p>
+        ) : fieldAnswered(field, value) ? (
           <AnswerBody field={field} value={value} />
         ) : (
           <p className="inline-flex items-center gap-1.5 text-[13px] text-[var(--text-faint)]">

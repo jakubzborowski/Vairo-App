@@ -9,6 +9,7 @@ import { AnswerView } from "@/components/stage/answer-view";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { hasAnswer } from "@/types/stage";
+import { canEditStageData } from "@/types/startup";
 
 export const metadata = { title: "Podsumowanie etapu — Vairo" };
 export const dynamic = "force-dynamic";
@@ -94,6 +95,7 @@ export default async function StageSummaryPage({
     .filter((category) => category.points.length > 0);
 
   const goesToCategories = next === "categories";
+  const canEdit = canEditStageData(active.role);
 
   return (
     <div className="page">
@@ -169,6 +171,11 @@ export default async function StageSummaryPage({
                                 key={field.id}
                                 field={field}
                                 value={tree.answers[field.answerKey]}
+                                answerHref={
+                                  canEdit
+                                    ? `/app/stage?stage=${tree.templateKey}&subpoint=${subpoint.id}`
+                                    : null
+                                }
                               />
                             ))}
                           </div>

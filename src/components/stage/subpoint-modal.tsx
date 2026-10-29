@@ -4,8 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, Check, Lock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { emptyValueFor, fieldAnswered, type StageSubpoint, type StageTree } from "@/types/stage";
+import { cn, plural } from "@/lib/utils";
+import {
+  emptyValueFor,
+  fieldAnswered,
+  isSkipped,
+  type StageSubpoint,
+  type StageTree,
+} from "@/types/stage";
 import { AnswerView } from "./answer-view";
 import { FieldInput } from "./field-input";
 import { validateField } from "./field-inputs";
@@ -85,6 +91,7 @@ export function SubpointModal({
   const missing = subpoint.fields.filter(
     (f) => f.isRequired && !fieldAnswered(f, draft[f.answerKey])
   );
+  const skippedCount = subpoint.fields.filter((f) => isSkipped(draft[f.answerKey])).length;
   const goalsOpen = (subpoint.goalConditions ?? []).filter(
     (condition) => condition.done < condition.minCount
   );
@@ -206,6 +213,7 @@ export function SubpointModal({
                 startupStageId={tree.startupStageId}
                 showErrors={attemptedSave}
                 returnTo={`/app/stage?stage=${tree.templateKey}&subpoint=${subpoint.id}`}
+                canSkip
               />
             )
           )}
@@ -278,10 +286,17 @@ export function SubpointModal({
                 {goalsOpen.map((condition) => `${condition.label} ${condition.done}/${condition.minCount}`).join(", ")}.
               </p>
             ) : (
-              <Badge tone="success">
-                <Check className="size-3" />
-                Komplet
-              </Badge>
+              <span className="inline-flex flex-wrap items-center gap-2">
+                <Badge tone="success">
+                  <Check className="size-3" />
+                  Komplet
+                </Badge>
+                {skippedCount > 0 ? (
+                  <span className="text-[12.5px] text-[var(--text-subtle)]">
+                    {skippedCount} {plural(skippedCount, "pytanie pominięte", "pytania pominięte", "pytań pominiętych")}
+                  </span>
+                ) : null}
+              </span>
             )}
           </div>
 

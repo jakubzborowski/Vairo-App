@@ -29,8 +29,10 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { cn } from "@/lib/utils";
+import { cn, plural } from "@/lib/utils";
 import {
+  fieldAnswered,
+  isSkipped,
   STAGES_WITH_DECISION,
   type StageDecision,
   type StagePoint,
@@ -503,25 +505,7 @@ export function StageScreen({
             <ListRow
               key={item.key}
               title={item.title}
-              subtitle={
-                item.waitingOn
-                  ? item.waitingOn
-                  : item.skipped
-                  ? "Pominięte"
-                  : item.goalConditions.length > 0
-                    ? item.goalConditions
-                        .map((condition) => `${condition.label} ${condition.done}/${condition.minCount}`)
-                        .join(" · ")
-                    : item.isComplete
-                      ? "Uzupełnione"
-                      : readOnly
-                        ? "Jeszcze nieuzupełnione"
-                        : item.isOptional
-                          ? "Opcjonalne"
-                          : `${item.fields.length} ${
-                              item.fields.length === 1 ? "pytanie" : "pytania"
-                            } do uzupełnienia`
-              }
+              subtitle={subpointStatus(item, answers, readOnly)}
               complete={item.isComplete}
               active={false}
               chevron
@@ -643,6 +627,39 @@ export function StageScreen({
       ) : null}
     </div>
   );
+}
+
+/**
+ * Jedna linijka pod nazwą podpunktu. Liczy tylko pytania, których
+ * brakuje — wcześniej stała tu liczba wszystkich pól i forma „pytania”
+ * dla każdej liczby („5 pytania”).
+ */
+function subpointStatus(
+  item: StageSubpoint,
+  answers: Record<string, unknown>,
+  readOnly: boolean
+): string {
+  if (item.waitingOn) return item.waitingOn;
+  // Podpunkt wyłączony warunkiem z treści — nie pojedyncze pominięte pytanie.
+  if (item.skipped) return "Pominięte";
+  if (item.goalConditions.length > 0) {
+    return item.goalConditions
+      .map((condition) => `${condition.label} ${condition.done}/${condition.minCount}`)
+      .join(" · ");
+  }
+  if (item.isComplete) {
+    const skipped = item.fields.filter((f) => isSkipped(answers[f.answerKey])).length;
+    return skipped > 0
+      ? `Uzupełnione · ${skipped} ${plural(skipped, "pytanie pominięte", "pytania pominięte", "pytań pominiętych")}`
+      : "Uzupełnione";
+  }
+  if (readOnly) return "Jeszcze nieuzupełnione";
+  if (item.isOptional) return "Opcjonalne";
+  const missing = item.fields.filter(
+    (f) => f.isRequired && !fieldAnswered(f, answers[f.answerKey])
+  ).length;
+  const count = missing > 0 ? missing : item.fields.length;
+  return `${count} ${plural(count, "pytanie", "pytania", "pytań")} do uzupełnienia`;
 }
 
 function Column({

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Info, Lightbulb } from "lucide-react";
+import { ChevronDown, Info, Lightbulb, SkipForward } from "lucide-react";
 import { useState } from "react";
 import {
   CheckmarkInput,
@@ -21,8 +21,16 @@ import { StageFilesInput } from "./files-field";
 import { RecordsInput } from "./records-field";
 import { ActionInput } from "./action-field";
 import { PeopleInput } from "./people-field";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { StageField } from "@/types/stage";
+import {
+  SKIPPED_ANSWER,
+  canSkipField,
+  emptyValueFor,
+  fieldAnswered,
+  isSkipped,
+  type StageField,
+} from "@/types/stage";
 
 /**
  * Jedno pytanie w modalu: treść, podpowiedź, składany przykład i kontrolka
@@ -30,6 +38,11 @@ import type { StageField } from "@/types/stage";
  *
  * Podpowiedź jest widoczna zawsze — to ona tłumaczy, czego oczekujemy.
  * Przykład jest zwinięty, żeby nie podsuwał gotowej odpowiedzi.
+ *
+ * „Pomiń” stoi przy pustym pytaniu wymaganym. Kto nie chce albo nie umie
+ * na nie odpowiedzieć, i tak tego nie zrobi — zamiast zamykać mu drogę
+ * dalej, zapisujemy pominięcie. Liczy się ono do postępu, a pytanie czeka
+ * z przyciskiem „Odpowiedz jednak”.
  */
 export function FieldInput({
   field,
@@ -39,12 +52,18 @@ export function FieldInput({
   startupStageId,
   showErrors,
   returnTo,
+  canSkip = false,
 }: FieldInputProps & {
   startupStageId: string;
   showErrors?: boolean;
   returnTo?: string;
+  /** Pokazuj „Pomiń” — tylko w modalu podpunktu, nie przy poprawianiu podsumowania. */
+  canSkip?: boolean;
 }) {
   const [showExample, setShowExample] = useState(false);
+  const skipped = isSkipped(value);
+  const offerSkip =
+    canSkip && !disabled && !skipped && canSkipField(field) && !fieldAnswered(field, value);
   // Nic nie podpowiadamy w trakcie pisania — człowiek dopiero zaczyna zdanie,
   // a aplikacja już zgłasza problem. Ostrzeżenie pokazuje modal po „Zapisz".
   const warning = showErrors ? validateField(field, value) : null;
@@ -60,69 +79,97 @@ export function FieldInput({
             </span>
           ) : null}
         </p>
-      </div>
-
-      {/* To pole nadaje nazwę całemu teamowi. Bez tego zdania user za chwilę
-          widzi w sidebarze inną nazwę i nie rozumie, skąd się wzięła. */}
-      {field.config.syncs_startup_name ? (
-        <p className="mt-1.5 flex items-start gap-2 rounded-lg bg-[var(--vairo)]/8 px-3 py-2 text-[12.5px] leading-relaxed text-[var(--text-muted)]">
-          <Info
-            className="mt-0.5 size-3.5 shrink-0 text-[var(--vairo)]"
-            aria-hidden="true"
-          />
-          <span>
-            Tak będzie nazywał się Twój team w całej aplikacji. Zmienisz to
-            później w ustawieniach.
-          </span>
-        </p>
-      ) : null}
-
-      {field.help ? (
-        <p className="mt-1.5 flex items-start gap-2 text-[13px] leading-relaxed text-[var(--text-subtle)]">
-          <Lightbulb
-            className="mt-0.5 size-3.5 shrink-0 text-[var(--text-faint)]"
-            aria-hidden="true"
-          />
-          <span>{field.help}</span>
-        </p>
-      ) : null}
-
-      <div className="mt-3.5">
-        <Control
-          field={field}
-          value={value}
-          onChange={onChange}
-          disabled={disabled}
-          startupStageId={startupStageId}
-          returnTo={returnTo}
-        />
-      </div>
-
-      {warning ? (
-        <p className="mt-2 text-[12px] text-[var(--warning)]">{warning}</p>
-      ) : null}
-
-      {field.example ? (
-        <div className="mt-3">
+        {offerSkip ? (
           <button
             type="button"
-            onClick={() => setShowExample((v) => !v)}
-            aria-expanded={showExample}
-            className="inline-flex items-center gap-1 rounded-md text-[12.5px] text-[var(--text-subtle)] transition-colors hover:text-white"
+            onClick={() => onChange(SKIPPED_ANSWER)}
+            className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg px-2 text-[12.5px] text-[var(--text-subtle)] transition-colors hover:bg-white/[0.06] hover:text-white sm:min-h-8"
           >
-            <ChevronDown
-              className={cn("size-3.5 transition-transform", showExample && "rotate-180")}
-              aria-hidden="true"
-            />
-            {showExample ? "Ukryj przykład" : "Zobacz przykład"}
+            <SkipForward className="size-3.5" aria-hidden="true" />
+            Pomiń
           </button>
-          {showExample ? (
-            <p className="mt-2 rounded-lg border-l-2 border-[var(--vairo)]/40 bg-white/[0.03] py-2 pl-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
-              {field.example}
+        ) : null}
+      </div>
+
+      {skipped ? (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-white/12 px-4 py-3">
+          <p className="text-[13px] leading-relaxed text-[var(--text-muted)]">
+            Pytanie pominięte. Liczy się do postępu — możesz tu wrócić w każdej chwili.
+          </p>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={disabled}
+            onClick={() => onChange(emptyValueFor(field.kind))}
+          >
+            Odpowiedz jednak
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* To pole nadaje nazwę całemu teamowi. Bez tego zdania user za chwilę
+              widzi w sidebarze inną nazwę i nie rozumie, skąd się wzięła. */}
+          {field.config.syncs_startup_name ? (
+            <p className="mt-1.5 flex items-start gap-2 rounded-lg bg-[var(--vairo)]/8 px-3 py-2 text-[12.5px] leading-relaxed text-[var(--text-muted)]">
+              <Info
+                className="mt-0.5 size-3.5 shrink-0 text-[var(--vairo)]"
+                aria-hidden="true"
+              />
+              <span>
+                Tak będzie nazywał się Twój team w całej aplikacji. Zmienisz to
+                później w ustawieniach.
+              </span>
             </p>
           ) : null}
-        </div>
-      ) : null}
+
+          {field.help ? (
+            <p className="mt-1.5 flex items-start gap-2 text-[13px] leading-relaxed text-[var(--text-subtle)]">
+              <Lightbulb
+                className="mt-0.5 size-3.5 shrink-0 text-[var(--text-faint)]"
+                aria-hidden="true"
+              />
+              <span>{field.help}</span>
+            </p>
+          ) : null}
+
+          <div className="mt-3.5">
+            <Control
+              field={field}
+              value={value}
+              onChange={onChange}
+              disabled={disabled}
+              startupStageId={startupStageId}
+              returnTo={returnTo}
+            />
+          </div>
+
+          {warning ? (
+            <p className="mt-2 text-[12px] text-[var(--warning)]">{warning}</p>
+          ) : null}
+
+          {field.example ? (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => setShowExample((v) => !v)}
+                aria-expanded={showExample}
+                className="inline-flex items-center gap-1 rounded-md text-[12.5px] text-[var(--text-subtle)] transition-colors hover:text-white"
+              >
+                <ChevronDown
+                  className={cn("size-3.5 transition-transform", showExample && "rotate-180")}
+                  aria-hidden="true"
+                />
+                {showExample ? "Ukryj przykład" : "Zobacz przykład"}
+              </button>
+              {showExample ? (
+                <p className="mt-2 rounded-lg border-l-2 border-[var(--vairo)]/40 bg-white/[0.03] py-2 pl-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
+                  {field.example}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { StageField } from "@/types/stage";
-import { hasAnswer } from "@/types/stage";
+import { hasAnswer, isSkipped } from "@/types/stage";
 import { FieldInput } from "./field-input";
 
 export type ResolvedSource = {
@@ -50,7 +50,8 @@ export function SummaryField({
         {sources.map(({ label, field: sourceField }) => {
           const answer = answers[sourceField.answerKey];
           const isEditing = editing === sourceField.answerKey;
-          const filled = hasAnswer(answer);
+          const skipped = isSkipped(answer);
+          const filled = hasAnswer(answer) && !skipped;
 
           return (
             <li
@@ -96,7 +97,11 @@ export function SummaryField({
                     filled ? "text-white" : "text-[var(--text-faint)] italic"
                   )}
                 >
-                  {filled ? renderAnswer(answer) : "Jeszcze nieuzupełnione"}
+                  {skipped
+                    ? "Pominięte"
+                    : filled
+                      ? renderAnswer(answer)
+                      : "Jeszcze nieuzupełnione"}
                 </p>
               )}
             </li>

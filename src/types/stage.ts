@@ -177,8 +177,45 @@ export type StageTree = {
 };
 
 /** Czy odpowiedź liczy się jako udzielona. Musi zgadzać się z triggerem w bazie. */
+/**
+ * Pominięte pytanie („Pomiń”). Zapisujemy je w tym samym miejscu co odpowiedź,
+ * jako znacznik zamiast wartości:
+ *
+ *   • baza uznaje każdy niepusty obiekt za uzupełnienie, więc pominięte
+ *     pytanie liczy się do postępu bez zmiany funkcji przeliczającej;
+ *   • „Odpowiedz jednak” po prostu nadpisuje znacznik prawdziwą odpowiedzią —
+ *     nie ma osobnej flagi, która mogłaby się rozjechać z treścią.
+ *
+ * Klucz z podwójnym podkreśleniem nie zderzy się z niczym, co zapisują pola:
+ * luki szablonu zdania i kolumny tabel mają nazwy z treści etapów.
+ * Komponent pola nigdy nie dostaje tego znacznika jako wartości — zamiast
+ * kontrolki pokazuje wtedy informację o pominięciu.
+ */
+export const SKIPPED_ANSWER: Readonly<{ __skipped: true }> = Object.freeze({
+  __skipped: true,
+});
+
+export function isSkipped(value: unknown): boolean {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    (value as Record<string, unknown>).__skipped === true
+  );
+}
+
+/**
+ * Czy pytanie można pominąć. Tylko wymagane — opcjonalne i tak da się
+ * zostawić puste. Bez podsumowania (potwierdza się je, nie odpowiada na nie)
+ * i bez pola, które nadaje nazwę startupowi: bez niej team nie ma nazwy.
+ */
+export function canSkipField(field: { kind: FieldKind; isRequired: boolean; config: FieldConfig }) {
+  return field.isRequired && field.kind !== "summary" && !field.config.syncs_startup_name;
+}
+
 export function hasAnswer(value: unknown): boolean {
   if (value === null || value === undefined) return false;
+  if (isSkipped(value)) return true;
   if (typeof value === "string") return value.trim().length > 0;
   if (typeof value === "boolean") return value;
   if (typeof value === "number") return true;
@@ -245,6 +282,7 @@ export function fieldAnswered(
   field: { kind: FieldKind; config: FieldConfig },
   value: unknown
 ): boolean {
+  if (isSkipped(value)) return true;
   if (field.kind === "records") {
     if (value === null || value === undefined) return false;
     const filled = asRecords(value).rows.some((row) =>
