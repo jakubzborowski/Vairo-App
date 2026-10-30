@@ -464,6 +464,19 @@ taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 
+### Dyktowanie („Nagraj głosem”)
+
+`src/components/ui/voice-button.tsx` — reużywalny `VoiceButton` (`onText`) +
+`appendDictation()` (dopisuje ze spacją, pilnuje limitu pola). Dwa tryby:
+Web Speech API `pl-PL` w Chrome/Edge/Safari (bez serwera) albo nagranie
+MediaRecorder → `src/app/api/transcribe/route.ts` → Groq `whisper-large-v3-turbo`
+w Firefoksie i Brave (oraz po błędzie `network`). Endpoint: tylko zalogowani,
+≤ 4 MB, typy audio, 10/min i 100/dobę na osobę (`src/lib/rate-limit.ts`, limit
+w pamięci instancji — nie globalny). Wymaga `GROQ_API_KEY` (bez `NEXT_PUBLIC_`)
+i `Permissions-Policy: microphone=(self)` w `next.config.ts` — przy
+`microphone=()` przeglądarka blokuje mikrofon bez pytania.
+
+
 Pomocnicze: `SUPPORT_zgloszenia.sql` (niedostarczone zgłoszenia, usuwanie na prośbę, retencja), `SPRAWDZ_MIGRACJE.sql` (**po każdym scaleniu** — wyłapuje złą kolejność, która nie daje błędu), `DIAGNOSTYKA.sql` (co faktycznie wjechało), `BACKUP_export.sql`
 (zrzut danych bez `pg_dump`), `CLEANUP_puste_etapy.sql`, `ROLLBACK_003_007.sql`, `METRYKI_social.sql`
 (zaproszenia, zgłoszenia, zaczepki — tylko odczyt).

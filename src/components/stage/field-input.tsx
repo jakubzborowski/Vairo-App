@@ -22,7 +22,7 @@ import { RecordsInput } from "./records-field";
 import { ActionInput } from "./action-field";
 import { PeopleInput } from "./people-field";
 import { Button } from "@/components/ui/button";
-import { DictationButton, appendDictation } from "./dictation-button";
+import { VoiceButton, appendDictation } from "@/components/ui/voice-button";
 import { cn } from "@/lib/utils";
 import {
   SKIPPED_ANSWER,
@@ -166,7 +166,7 @@ export function FieldInput({
               rowLabels={rowLabels}
             />
             {field.kind === "short_text" || field.kind === "long_text" ? (
-              <DictationButton
+              <VoiceButton
                 disabled={disabled}
                 onText={(text) => onChange(appendDictation(value, text, field.config.max))}
               />

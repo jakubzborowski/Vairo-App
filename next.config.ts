@@ -15,9 +15,9 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
-    // Mikrofon dla własnej domeny: dyktowanie w polach tekstowych
-    // (`dictation-button.tsx`). `microphone=()` blokowało je u każdego —
-    // przeglądarka zwracała „not-allowed”, zanim zapytała człowieka.
+    // Mikrofon tylko dla samej aplikacji — „Nagraj głosem” w polach etapów.
+    // `microphone=()` blokował go całkowicie: przeglądarka odmawiała, zanim
+    // zapytała o zgodę.
     value: "camera=(), microphone=(self), geolocation=()",
   },
   {
