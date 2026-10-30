@@ -34,7 +34,15 @@ export default function RootLayout({
       lang="pl"
       className={`${poppins.variable} ${inter.variable} ${geistMono.variable} dark h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      {/* `suppressHydrationWarning` tylko na <body>: rozszerzenia przeglądarki
+          (ColorZilla — `cz-shortcut-listen`, Grammarly i inne) dopisują tu
+          atrybuty, zanim React przejmie stronę, i w trybie dev wyskakiwał
+          czerwony błąd hydratacji. Wyciszenie działa na jeden poziom —
+          prawdziwe rozjazdy w treści strony dalej będą zgłaszane. */}
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col bg-background text-foreground"
+      >
         {children}
       </body>
     </html>

@@ -32,6 +32,7 @@ import { TeamCard } from "@/components/social/team-card";
 import { TeamsDeck } from "@/components/social/teams-deck";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ChipFilter } from "@/components/social/chip-filter";
 import { LOOKING_FOR_OPTIONS } from "@/types/social";
 import {
   MAX_STARTUPS,
@@ -276,37 +277,36 @@ export async function DiscoverScreen({
             <ChevronDown className="size-3.5 text-[var(--text-muted)] transition-transform group-open:rotate-180" />
           </summary>
 
-          <div className="mt-2 flex flex-wrap items-end gap-2.5 rounded-xl border border-white/[0.07] bg-[var(--surface)] p-3.5">
-            {tab === "people" ? (
-              <>
-                <MultiChoice
-                  name="skill"
-                  label="Umiejętności"
-                  selected={listParam(params.skill)}
-                  scroll
-                  options={(skillRows ?? []).map((row) => ({
-                    value: row.slug as string,
-                    label: row.label as string,
-                  }))}
-                />
-                <MultiChoice
-                  name="looking"
-                  label="Czego szuka"
-                  selected={listParam(params.looking)}
-                  options={LOOKING_FOR_OPTIONS.map((option) => ({
-                    value: option.value,
-                    label: option.label,
-                  }))}
-                />
-                <Checkbox
-                  name="room"
-                  label="Ma miejsce na team"
-                  checked={params.room === "1"}
-                />
-              </>
-            ) : (
-              <>
-                <MultiChoice
+          {/* Panel filtrów: grupy chipów jedna pod drugą, akcje w pasku na dole.
+              Wcześniej pola wyboru stały w jednym rzędzie z „Zastosuj” na
+              końcu — przycisk uciekał poza ekran, a lista umiejętności miała
+              systemowy pasek przewijania. */}
+          <div className="mt-2 overflow-hidden rounded-2xl border border-white/[0.07] bg-[var(--surface)]">
+            <div className="flex flex-col gap-5 p-4 sm:p-5">
+              {tab === "people" ? (
+                <>
+                  <ChipFilter
+                    name="skill"
+                    label="Umiejętności"
+                    selected={listParam(params.skill)}
+                    searchable
+                    options={(skillRows ?? []).map((row) => ({
+                      value: row.slug as string,
+                      label: row.label as string,
+                    }))}
+                  />
+                  <ChipFilter
+                    name="looking"
+                    label="Czego szuka"
+                    selected={listParam(params.looking)}
+                    options={LOOKING_FOR_OPTIONS.map((option) => ({
+                      value: option.value,
+                      label: option.label,
+                    }))}
+                  />
+                </>
+              ) : (
+                <ChipFilter
                   name="category"
                   label="Kategorie"
                   selected={listParam(params.category)}
@@ -315,17 +315,24 @@ export async function DiscoverScreen({
                     label: category.label,
                   }))}
                 />
-                <Checkbox
-                  name="hiring"
-                  label="Tylko szukające ludzi"
-                  checked={params.hiring === "1"}
-                />
-              </>
-            )}
+              )}
+            </div>
 
-            <Button type="submit" variant="secondary" size="sm">
-              Zastosuj
-            </Button>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] bg-white/[0.02] px-4 py-3 sm:px-5">
+              {tab === "people" ? (
+                <Checkbox name="room" label="Ma miejsce na team" checked={params.room === "1"} />
+              ) : (
+                <Checkbox name="hiring" label="Tylko szukające ludzi" checked={params.hiring === "1"} />
+              )}
+              <div className="ml-auto flex items-center gap-2">
+                <Button href={resetHref} variant="ghost" size="sm">
+                  Wyczyść wszystko
+                </Button>
+                <Button type="submit" variant="secondary" size="sm">
+                  Zastosuj
+                </Button>
+              </div>
+            </div>
           </div>
         </details>
       </form>
@@ -648,14 +655,13 @@ function Checkbox({
   label: string;
   checked: boolean;
 }) {
+  // Przełącznik zamiast surowego pola wyboru — ten sam język co chipy wyżej.
   return (
-    <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-[var(--surface-2)] px-3.5 text-[13.5px] text-[var(--text-muted)] transition-colors hover:border-white/16">
-      <input
-        type="checkbox"
-        name={name}
-        value="1"
-        defaultChecked={checked}
-        className="size-4 accent-[var(--vairo)]"
+    <label className="group/switch inline-flex cursor-pointer select-none items-center gap-2.5 text-[13px] text-[var(--text-muted)] has-[:checked]:text-white">
+      <input type="checkbox" name={name} value="1" defaultChecked={checked} className="peer sr-only" />
+      <span
+        aria-hidden="true"
+        className="relative h-5 w-9 rounded-full bg-white/[0.12] transition-colors peer-checked:bg-white/70 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--vairo)] after:absolute after:left-0.5 after:top-0.5 after:size-4 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-4 peer-checked:after:bg-[var(--bg)]"
       />
       {label}
     </label>
@@ -673,56 +679,3 @@ function narrowingCount(params: DiscoverParams, tab: "people" | "teams") {
     : listParam(params.category).length + (params.hiring === "1" ? 1 : 0);
 }
 
-/**
- * Wielokrotny wybór w filtrach — uwaga z redesignu: w Social szuka się
- * zwykle „ktoś od React ALBO od Figmy”, a lista rozwijana pozwalała zaznaczyć
- * jedną rzecz. Zwykłe pola wyboru w formularzu GET: działa bez JavaScriptu
- * i adres z filtrami da się wysłać komuś dalej.
- */
-function MultiChoice({
-  name,
-  label,
-  options,
-  selected,
-  scroll = false,
-}: {
-  name: string;
-  label: string;
-  options: { value: string; label: string }[];
-  selected: string[];
-  scroll?: boolean;
-}) {
-  const chosen = new Set(selected);
-  return (
-    <fieldset className="min-w-[200px] flex-1">
-      <legend className="mb-1.5 text-[12.5px] font-medium text-[var(--text-muted)]">
-        {label}
-        {chosen.size > 0 ? (
-          <span className="ml-1.5 text-[var(--text-subtle)]">· {chosen.size}</span>
-        ) : null}
-      </legend>
-      <div
-        className={cn(
-          "flex flex-wrap gap-1.5",
-          scroll && "max-h-40 overflow-y-auto rounded-xl border border-white/10 bg-[var(--surface-2)] p-2"
-        )}
-      >
-        {options.map((option) => (
-          <label
-            key={option.value}
-            className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-[var(--surface-2)] px-2.5 text-[13px] text-[var(--text-muted)] transition-colors hover:border-white/20 has-[:checked]:border-white/40 has-[:checked]:text-white"
-          >
-            <input
-              type="checkbox"
-              name={name}
-              value={option.value}
-              defaultChecked={chosen.has(option.value)}
-              className="size-4 accent-[var(--vairo)]"
-            />
-            {option.label}
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
