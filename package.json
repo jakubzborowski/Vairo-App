@@ -11,6 +11,7 @@
     "content:build": "node scripts/build-content.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.135.0",
     "@base-ui/react": "^1.6.0",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.111.0",

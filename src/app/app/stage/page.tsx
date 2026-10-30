@@ -10,6 +10,7 @@ import {
   loadStageTree,
 } from "@/lib/stage";
 import { StageScreen } from "@/components/stage/stage-screen";
+import { AiProvider } from "@/components/ai/ai-context";
 import { advanceSkeletonStage, openStage } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
@@ -272,17 +273,19 @@ export default async function StagePage({
   }
 
   return (
-    <StageScreen
-      tree={tree}
-      role={active.role}
-      isCurrent={current?.key === entry.key}
-      currentTitle={current?.title ?? null}
-      initialSubpointId={subpoint ?? null}
-      team={{
-        canInvite,
-        members: memberCount ?? 1,
-        hasLink: Boolean(inviteLink && inviteLink.useCount === 0),
-      }}
-    />
+    <AiProvider enabled={Boolean(process.env.ANTHROPIC_API_KEY)}>
+      <StageScreen
+        tree={tree}
+        role={active.role}
+        isCurrent={current?.key === entry.key}
+        currentTitle={current?.title ?? null}
+        initialSubpointId={subpoint ?? null}
+        team={{
+          canInvite,
+          members: memberCount ?? 1,
+          hasLink: Boolean(inviteLink && inviteLink.useCount === 0),
+        }}
+      />
+    </AiProvider>
   );
 }

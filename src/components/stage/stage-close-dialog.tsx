@@ -13,6 +13,7 @@ import {
   type StageDecision,
   type StageTree,
 } from "@/types/stage";
+import { MentorPanel } from "@/components/ai/ai-assist";
 
 type Props = {
   tree: StageTree;
@@ -141,6 +142,13 @@ export function StageCloseDialog({
       canContinue: decision !== null,
       render: () => (
         <div className="flex flex-col gap-2.5">
+          {/* Mentor doradza przed wyborem — decyzja zostaje przy zespole. */}
+          <MentorPanel
+            className="mb-1"
+            startupStageId={tree.startupStageId}
+            scope="stage"
+            label="Zapytaj mentora przed decyzją"
+          />
           {STAGE_DECISIONS.map((key) => {
             const copy = STAGE_DECISION_COPY[key];
             const selected = decision === key;

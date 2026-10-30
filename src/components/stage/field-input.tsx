@@ -23,6 +23,7 @@ import { ActionInput } from "./action-field";
 import { PeopleInput } from "./people-field";
 import { Button } from "@/components/ui/button";
 import { VoiceButton, appendDictation } from "@/components/ui/voice-button";
+import { FieldAiAssist } from "@/components/ai/ai-assist";
 import { cn } from "@/lib/utils";
 import {
   SKIPPED_ANSWER,
@@ -171,6 +172,13 @@ export function FieldInput({
                 onText={(text) => onChange(appendDictation(value, text, field.config.max))}
               />
             ) : null}
+            <FieldAiAssist
+              field={field}
+              value={value}
+              startupStageId={startupStageId}
+              onChange={onChange}
+              disabled={disabled}
+            />
           </div>
 
           {warning ? (

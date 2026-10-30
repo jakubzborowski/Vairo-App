@@ -516,6 +516,29 @@ znów była ostatnia.
 
 CRM · osobny czat zespołowy · finanse · pełny HR · zaawansowana analityka ·
 time tracking · kreator arkuszy · silnik automatyzacji diagramów · webhooki ·
-AI. „Współpracownik" w dokumencie **nie** oznacza asystenta AI.
+AI poza mentorem w etapach (patrz niżej — decyzja zespołu po uwagach do
+redesignu). „Współpracownik" w dokumencie **nie** oznacza asystenta AI.
+
+### Mentor AI w etapach (Claude)
+
+**Zasada nadrzędna: AI nie wpisuje odpowiedzi za foundera.** Walidacja to
+zbieranie prawdziwych dowodów; gotowe odpowiedzi od modelu dałyby wypełnione
+pola bez wiedzy o rynku (i punkty w SCORE). Mentor pyta, podważa, pokazuje
+przykład na ich pomyśle i porządkuje WYŁĄCZNIE to, co zespół sam napisał.
+Nie wymyśla liczb, firm ani cytatów. Instrukcje: `src/lib/ai/prompts.ts`.
+
+Cztery tryby (`POST /api/ai/assist`): „Podpowiedz” (szybki model), „Oceń moją
+odpowiedź”, „Uporządkuj notatki” (JSON → podgląd → „Wstaw”, nic nie trafia do
+pola bez kliknięcia) i przegląd mentora dla punktu oraz przed decyzją o etapie
+(decyzja zostaje przy zespole). Kontekst: pytanie, podpowiedź i przewodnik
+programu + odpowiedzi zespołu z etapu (`src/lib/ai/context.ts`).
+
+Bezpieczeństwo i koszty: `ANTHROPIC_API_KEY` tylko na serwerze; bez klucza
+przyciski się nie pokazują (`AiProvider` na stronie etapu). Etap czytany
+klientem zalogowanej osoby — RLS wpuszcza tylko członków teamu. Limity na
+osobę w pamięci instancji (`src/lib/rate-limit.ts`). Modele przez
+`AI_MODEL_FAST` / `AI_MODEL_SMART` (domyślnie `claude-haiku-5-5` /
+`claude-sonnet-5-5`); stała część instrukcji z cache promptów. Do śledzenia
+kosztów w bazie — tabela pod numerem 042 (038–041 czekają na SCORE).
 
 Ścieżka Partner — dopiero w alfie.

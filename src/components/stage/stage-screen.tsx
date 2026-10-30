@@ -35,6 +35,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { accentStyle, categoryAccent } from "@/lib/category-colors";
+import { MentorPanel } from "@/components/ai/ai-assist";
 import { cn, plural } from "@/lib/utils";
 import {
   fieldAnswered,
@@ -615,6 +616,17 @@ export function StageScreen({
                   }}
                 />
               ))}
+              {point && !readOnly ? (
+                <li className="list-none">
+                  <MentorPanel
+                    className="mt-3 px-1"
+                    startupStageId={tree.startupStageId}
+                    scope="point"
+                    pointKey={point.key}
+                    label="Mentor: przejrzyj ten punkt"
+                  />
+                </li>
+              ) : null}
             </Column>
 
             {hasGuide && point ? (
@@ -1311,6 +1323,15 @@ function StepView({
           ) : null}
         </div>
       </section>
+
+      {point ? (
+        <MentorPanel
+          startupStageId={tree.startupStageId}
+          scope="point"
+          pointKey={point.key}
+          label="Mentor: przejrzyj ten punkt"
+        />
+      ) : null}
 
       {showGuide && point ? (
         <GuidePanel point={point} onClose={() => setGuideFor(null)} />
