@@ -53,6 +53,8 @@ tabeli. Każdy plik jest idempotentny, więc ponowne odpalenie niczego nie psuje
 | 37 | `migrations/033_public_name.sql` | nazwa publiczna (pseudonim) osobno od imienia i nazwiska z konta |
 | 38 | `migrations/034_content_idea_v1.sql` | nowa treść Idei (generowana) — zastępuje 007; na świeżej bazie 007 i tak biegnie wcześniej, a 034 sprząta to, czego już nie ma |
 | 39 | `migrations/035_team_invite_links.sql` | zaproszenie do teamu linkiem (tabela linków + 4 funkcje) |
+| 40 | `migrations/036_content_preparation_v1.sql` | nowa treść Preparation (generowana) — „Porozmawiaj z osobami” przeniesione z Idei |
+| 41 | `migrations/037_carry_answers_between_stages.sql` | odpowiedzi przechodzą razem z polem do innego etapu (trigger + wyrównanie) |
 
 > **022 i 023 to wcześniejsze wygenerowania tej samej treści co 024.** Każde
 > jest idempotentne i usuwa to, czego nie ma w swoim JSON-ie, więc odpalenie

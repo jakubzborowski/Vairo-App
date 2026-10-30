@@ -44,7 +44,9 @@ const MIGRATION_NUMBER = {
   // Hardware). 007 zostaje jako historyczny — tak jak 022/023 przy Preparation.
   // Numer > 021, więc treść Idei może już używać `skip_when`.
   idea: "034",
-  preparation: "024",
+  // Kolejne wygenerowanie Preparation (po uwagach do redesignu: punkt
+  // „Porozmawiaj z osobami” przeniesiony z Idei). 022–024 zostają historyczne.
+  preparation: "036",
   execution: "027",
   // MVP było na gałęzi pod 021 i zderzało się z 021_preparation_tools.
   // Treść MVP odwołuje się do typów celów z 025, więc idzie po Execution.

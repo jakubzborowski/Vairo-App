@@ -189,14 +189,33 @@ with checks(nr, migracja, co, ok, napraw) as (
     exists (select 1 from public.stage_fields
              where shared_key = 'idea.zakup-konsumencki.role-zakupu.dla-kogo')
     and exists (select 1 from public.stage_fields
-                 where shared_key = 'idea.konkurencja.brak-konkurencji.potwierdzam'),
-    'odpal 034_content_idea_v1 (po 033)'),
+                 where shared_key = 'idea.konkurencja.brak-konkurencji.potwierdzam')
+    -- najnowsza wersja 034: bez „Opisz rozwiązanie” w hipotezie
+    and not exists (select 1 from public.stage_fields
+                     where shared_key = 'idea.hipoteza-rozwiazania.opisz-rozwiazanie.co-robi'),
+    'odpal 034_content_idea_v1 (po 033) — także jeśli starsza wersja 034 już biegła'),
 
   (49, '035', 'zaproszenie do teamu linkiem: tabela + funkcja przyjmująca',
     to_regclass('public.startup_invite_links') is not null
     and exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                  where n.nspname = 'public' and p.proname = 'accept_invite_link'),
     'odpal 035_team_invite_links (po 034) — bez niej karta „Zaproś znajomych linkiem” pokaże błąd'),
+
+  (49, '036', '„Porozmawiaj z osobami” w Preparation (treść przeniesiona z Idei)',
+    exists (select 1
+              from public.stage_fields f
+              join public.stage_subpoints s  on s.id = f.subpoint_id
+              join public.stage_points p     on p.id = s.point_id
+              join public.stage_categories c on c.id = p.category_id
+              join public.stage_templates t  on t.id = c.template_id
+             where t.key = 'preparation'
+               and f.shared_key = 'idea.rozmowy.znajdz-rozmowcow.osoby'),
+    'odpal 036_content_preparation_v1 (po 035)'),
+
+  (49, '037', 'odpowiedzi idą za polem do innego etapu (trigger na startup_stages)',
+    exists (select 1 from pg_trigger
+             where tgname = 'startup_stages_carry_answers' and not tgisinternal),
+    'odpal 037_carry_answers_between_stages (po 036) — bez niej rozmowy wpisane w Idei nie pojawią się w Preparation'),
 
   -- --- Treść etapów ---------------------------------------------------------
   (50, '006–028', 'wszystkie 5 etapów ma opublikowaną treść',

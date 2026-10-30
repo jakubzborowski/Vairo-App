@@ -31,7 +31,7 @@ begin
   -- ═══ kategoria: Ogólna walidacja ═══
   insert into public.stage_categories
     (template_id, key, title, intro, always_active, position)
-  values (v_template, 'general', 'Ogólna walidacja', 'Wspólna podstawa dla każdego pomysłu — niezależnie od tego, co budujesz i komu sprzedajesz.',
+  values (v_template, 'general', 'Ogólna walidacja', 'Podstawa dla każdego pomysłu, niezależnie od tego, co budujesz i komu sprzedajesz.',
           true, 1)
   on conflict (template_id, key) do update set
     title = excluded.title, intro = excluded.intro,
@@ -127,7 +127,7 @@ Po tym punkcie masz opis problemu, konkretnego odbiorcę i wstępną ocenę znac
     (subpoint_id, key, kind, question, help, example,
      is_required, shared_key, config, position)
   values (v_subpoint, 'kto', 'long_text',
-          'Opisz osobę lub organizację, której problem dotyczy.', 'Weź pod uwagę rolę, sytuację, branżę i inne cechy, które są kluczowe dla twojego pomysłu. Zamiast „przedsiębiorcy” napisz „właściciele małych sklepów internetowych”.', null,
+          'Opisz osobę lub organizację, której problem dotyczy.', 'Rola, sytuacja, branża — to, co ma znaczenie dla twojego pomysłu. Zamiast „przedsiębiorcy” napisz „właściciele małych sklepów internetowych”.', null,
           true, 'idea.profil-uzytkownika',
           '{"min":30}'::jsonb, 1)
   on conflict (subpoint_id, key) do update set
@@ -237,7 +237,7 @@ Po tym punkcie masz opis problemu, konkretnego odbiorcę i wstępną ocenę znac
   insert into public.stage_subpoints
     (point_id, key, title, description, is_optional, shared_key, skip_when, depends_on, position)
   values (v_point, 'ostateczna-definicja', 'Ostateczna definicja problemu',
-          'Uzupełnij pola, żeby opisać problem jednym zdaniem. Skorzystaj z wcześniejszych odpowiedzi. Skup się na trudności, nie na swoim produkcie.', false,
+          'Złóż problem w jedno zdanie z wcześniejszych odpowiedzi. Pisz o trudności, nie o swoim produkcie.', false,
           null, null, null, 5)
   on conflict (point_id, key) do update set
     title = excluded.title, description = excluded.description,
@@ -300,130 +300,9 @@ Po tym punkcie masz zrozumiały opis rozwiązania, jego niezbędny zakres i jedn
 
   insert into public.stage_subpoints
     (point_id, key, title, description, is_optional, shared_key, skip_when, depends_on, position)
-  values (v_point, 'opisz-rozwiazanie', 'Opisz rozwiązanie i jego główną wartość',
-          'Skup się na głównej wartości, bez rozwijania pełnej listy funkcji.', false,
-          null, null, null, 1)
-  on conflict (point_id, key) do update set
-    title = excluded.title, description = excluded.description,
-    is_optional = excluded.is_optional, shared_key = excluded.shared_key,
-    skip_when = excluded.skip_when, depends_on = excluded.depends_on,
-    position = excluded.position
-  returning id into v_subpoint;
-
-  insert into public.stage_fields
-    (subpoint_id, key, kind, question, help, example,
-     is_required, shared_key, config, position)
-  values (v_subpoint, 'co-robi', 'short_text',
-          'Co twoje rozwiązanie robi?', 'Jedno zdanie, zwykłymi słowami. Tak, żeby zrozumiała to osoba spoza branży.', null,
-          true, 'idea.hipoteza-rozwiazania.opisz-rozwiazanie.co-robi',
-          '{"min":10,"max":300}'::jsonb, 1)
-  on conflict (subpoint_id, key) do update set
-    kind = excluded.kind, question = excluded.question,
-    help = excluded.help, example = excluded.example,
-    is_required = excluded.is_required, shared_key = excluded.shared_key,
-    config = excluded.config, position = excluded.position;
-
-  insert into public.stage_fields
-    (subpoint_id, key, kind, question, help, example,
-     is_required, shared_key, config, position)
-  values (v_subpoint, 'dla-kogo', 'short_text',
-          'Dla kogo jest przeznaczone?', null, null,
-          true, 'idea.hipoteza-rozwiazania.opisz-rozwiazanie.dla-kogo',
-          '{"min":5,"max":200}'::jsonb, 2)
-  on conflict (subpoint_id, key) do update set
-    kind = excluded.kind, question = excluded.question,
-    help = excluded.help, example = excluded.example,
-    is_required = excluded.is_required, shared_key = excluded.shared_key,
-    config = excluded.config, position = excluded.position;
-
-  insert into public.stage_fields
-    (subpoint_id, key, kind, question, help, example,
-     is_required, shared_key, config, position)
-  values (v_subpoint, 'jaki-problem', 'short_text',
-          'Jaki problem rozwiązuje?', null, null,
-          true, 'idea.hipoteza-rozwiazania.opisz-rozwiazanie.jaki-problem',
-          '{"min":10,"max":300}'::jsonb, 3)
-  on conflict (subpoint_id, key) do update set
-    kind = excluded.kind, question = excluded.question,
-    help = excluded.help, example = excluded.example,
-    is_required = excluded.is_required, shared_key = excluded.shared_key,
-    config = excluded.config, position = excluded.position;
-
-  insert into public.stage_fields
-    (subpoint_id, key, kind, question, help, example,
-     is_required, shared_key, config, position)
-  values (v_subpoint, 'rezultat', 'short_text',
-          'Jaki daje rezultat?', 'Co się zmienia po stronie użytkownika — co widzi, czuje albo oszczędza.', null,
-          true, 'idea.hipoteza-rozwiazania.opisz-rozwiazanie.rezultat',
-          '{"min":10,"max":300}'::jsonb, 4)
-  on conflict (subpoint_id, key) do update set
-    kind = excluded.kind, question = excluded.question,
-    help = excluded.help, example = excluded.example,
-    is_required = excluded.is_required, shared_key = excluded.shared_key,
-    config = excluded.config, position = excluded.position;
-
-  delete from public.stage_fields
-  where subpoint_id = v_subpoint and key <> all(array['co-robi', 'dla-kogo', 'jaki-problem', 'rezultat']);
-
-  insert into public.stage_subpoints
-    (point_id, key, title, description, is_optional, shared_key, skip_when, depends_on, position)
-  values (v_point, 'dostarczenie-wartosci', 'Dostarczenie wartości',
-          null, false,
-          null, null, null, 2)
-  on conflict (point_id, key) do update set
-    title = excluded.title, description = excluded.description,
-    is_optional = excluded.is_optional, shared_key = excluded.shared_key,
-    skip_when = excluded.skip_when, depends_on = excluded.depends_on,
-    position = excluded.position
-  returning id into v_subpoint;
-
-  insert into public.stage_fields
-    (subpoint_id, key, kind, question, help, example,
-     is_required, shared_key, config, position)
-  values (v_subpoint, 'jak-rozwiazuje', 'long_text',
-          'Jak twój pomysł rozwiązuje problem opisany w punkcie 1?', 'Opisz krótki ciąg wydarzeń: co użytkownik dostarcza lub robi, co dzieje się dalej i co dostaje na końcu.', null,
-          true, 'idea.hipoteza-rozwiazania.dostarczenie-wartosci.jak-rozwiazuje',
-          '{"min":40}'::jsonb, 1)
-  on conflict (subpoint_id, key) do update set
-    kind = excluded.kind, question = excluded.question,
-    help = excluded.help, example = excluded.example,
-    is_required = excluded.is_required, shared_key = excluded.shared_key,
-    config = excluded.config, position = excluded.position;
-
-  insert into public.stage_fields
-    (subpoint_id, key, kind, question, help, example,
-     is_required, shared_key, config, position)
-  values (v_subpoint, 'co-zyska', 'long_text',
-          'Co użytkownik zyska dzięki twojemu rozwiązaniu?', 'Funkcja to możliwość zrobienia czegoś. Korzyść to to, co człowiek dzięki temu zyskuje. Opisz korzyść.', null,
-          true, 'idea.hipoteza-rozwiazania.dostarczenie-wartosci.co-zyska',
-          '{"min":20}'::jsonb, 2)
-  on conflict (subpoint_id, key) do update set
-    kind = excluded.kind, question = excluded.question,
-    help = excluded.help, example = excluded.example,
-    is_required = excluded.is_required, shared_key = excluded.shared_key,
-    config = excluded.config, position = excluded.position;
-
-  insert into public.stage_fields
-    (subpoint_id, key, kind, question, help, example,
-     is_required, shared_key, config, position)
-  values (v_subpoint, 'co-musi-zrobic', 'short_text',
-          'Co najważniejszego musi zrobić użytkownik, żeby uzyskać tę korzyść?', 'Jeśli wymaga to dużego wysiłku na starcie, to jest ryzyko, które trzeba sprawdzić.', null,
-          true, 'idea.hipoteza-rozwiazania.dostarczenie-wartosci.co-musi-zrobic',
-          '{"min":10,"max":300}'::jsonb, 3)
-  on conflict (subpoint_id, key) do update set
-    kind = excluded.kind, question = excluded.question,
-    help = excluded.help, example = excluded.example,
-    is_required = excluded.is_required, shared_key = excluded.shared_key,
-    config = excluded.config, position = excluded.position;
-
-  delete from public.stage_fields
-  where subpoint_id = v_subpoint and key <> all(array['jak-rozwiazuje', 'co-zyska', 'co-musi-zrobic']);
-
-  insert into public.stage_subpoints
-    (point_id, key, title, description, is_optional, shared_key, skip_when, depends_on, position)
   values (v_point, 'wersja-minimalna', 'Wersja minimalna',
           null, false,
-          null, null, null, 3)
+          null, null, null, 1)
   on conflict (point_id, key) do update set
     title = excluded.title, description = excluded.description,
     is_optional = excluded.is_optional, shared_key = excluded.shared_key,
@@ -451,7 +330,7 @@ Po tym punkcie masz zrozumiały opis rozwiązania, jego niezbędny zakres i jedn
     (point_id, key, title, description, is_optional, shared_key, skip_when, depends_on, position)
   values (v_point, 'dlaczego-skorzysta', 'Dlaczego ktoś miałby skorzystać',
           null, false,
-          null, null, null, 4)
+          null, null, null, 2)
   on conflict (point_id, key) do update set
     title = excluded.title, description = excluded.description,
     is_optional = excluded.is_optional, shared_key = excluded.shared_key,
@@ -492,7 +371,7 @@ Po tym punkcie masz zrozumiały opis rozwiązania, jego niezbędny zakres i jedn
     (point_id, key, title, description, is_optional, shared_key, skip_when, depends_on, position)
   values (v_point, 'zalozenie-do-testow', 'Sprawdzane założenie do testów',
           null, false,
-          null, null, null, 5)
+          null, null, null, 3)
   on conflict (point_id, key) do update set
     title = excluded.title, description = excluded.description,
     is_optional = excluded.is_optional, shared_key = excluded.shared_key,
@@ -530,7 +409,7 @@ Po tym punkcie masz zrozumiały opis rozwiązania, jego niezbędny zakres i jedn
   where subpoint_id = v_subpoint and key <> all(array['najwazniejsze', 'pozostale']);
 
   delete from public.stage_subpoints
-  where point_id = v_point and key <> all(array['opisz-rozwiazanie', 'dostarczenie-wartosci', 'wersja-minimalna', 'dlaczego-skorzysta', 'zalozenie-do-testow']);
+  where point_id = v_point and key <> all(array['wersja-minimalna', 'dlaczego-skorzysta', 'zalozenie-do-testow']);
 
   -- ── punkt 3: Sprawdź, jak inni rozwiązują ten problem
   insert into public.stage_points
@@ -930,156 +809,7 @@ Po tym punkcie masz krótkie porównanie, linki do informacji i pomysł na to, c
   delete from public.stage_subpoints
   where point_id = v_point and key <> all(array['znajdz-rozwiazania', 'opisz-rozwiazania', 'opinie-uzytkownikow', 'porownaj', 'dlaczego-zmiana', 'brak-konkurencji']);
 
-  -- ── punkt 4: Porozmawiaj z osobami, którym chcesz pomóc
-  insert into public.stage_points
-    (category_id, key, title, description, duration_hint,
-     guide_body, guide_sources, guide_source_label, shared_key, position)
-  values (v_category, 'rozmowy', 'Porozmawiaj z osobami, którym chcesz pomóc', null,
-          null, 'Teraz sprawdzisz wcześniejsze przypuszczenia w rozmowach. Poszukasz konkretnych zdarzeń pokazujących, czy problem występuje, jak przeszkadza i co ludzie z nim robią. Przygotuj miejsce na notatki oraz kilka pytań pomocniczych.
-Znajdź przynajmniej pięciu rozmówców
-Wróć do opisu odbiorcy z punktu 1. Szukaj osób, które wykonują wskazaną czynność. Do przykładu sklepowego zaproś kogoś odpowiedzialnego za zamawianie towaru. Sam fakt pracy w sklepie może nie wystarczyć.
-Zacznij od znajomych, poleceń, grup tematycznych, lokalnych firm lub wydarzeń. Możesz napisać: „Próbuję zrozumieć, jak właściciele małych sklepów planują zamówienia towaru. Czy znajdziesz 15 minut, żeby opowiedzieć mi, jak wygląda to u ciebie?”. Podany czas to przykładowa propozycja krótkiego spotkania.
-Znajomy jest odpowiednim rozmówcą, jeśli pasuje do grupy. Warto dotrzeć również poza własne otoczenie. Pięć rozmów to początek przewidziany w tym ćwiczeniu. Nie traktuj tej liczby jako gwarancji, że poznałeś potrzeby całej grupy.
-Pytaj o wydarzenia i słuchaj odpowiedzi
-Na początku wyjaśnij, jaki temat chcesz zrozumieć. Opis rozwiązania zostaw na później, żeby nie podpowiadać rozmówcy, co chcesz usłyszeć. Pomocne pytania to:
-Jak wyglądało ostatnie uzupełnianie zapasów w twoim sklepie?
-W którym momencie pojawiła się trudność? Co wtedy się wydarzyło?
-Jak często zdarza się podobna sytuacja?
-Co zrobiłeś, żeby sobie poradzić, i jaki był rezultat?
-Ile zajęło ci to czasu lub ile kosztowało? Skąd ta ocena?
-Nie musisz odczytywać pytań po kolei. Dopytuj o niejasne odpowiedzi: „Co masz na myśli?” lub „Możesz podać przykład?”. Jeśli ktoś mówi, że obecny sposób jest wystarczający, pozwól mu to wyjaśnić. Unikaj pytania „Czy też marnujesz czas na te okropne pliki?”, które sugeruje ocenę.
-Gdy pada pomysł nowej funkcji, zapytaj, w jakiej sytuacji byłaby potrzebna. Dzięki temu poznasz powód prośby. Jeśli rozmówca chce obejrzeć twój pomysł, najpierw dokończ część o doświadczeniach i wyraźnie oddziel późniejszą prezentację.
-Zapisz każdą rozmowę osobno
-W notatce umieść datę, krótki opis roli rozmówcy, konkretny przypadek, częstotliwość, obecny sposób działania oraz skutki. Zapisz także sytuacje, w których problem nie wystąpił albo nie miał dużego znaczenia. Cytat oznacz jako cytat tylko wtedy, gdy pamiętasz dokładne słowa. Nagrywaj wyłącznie za zgodą rozmówcy.
-Oddziel odpowiedź od własnego wniosku. „Powiedział, że porównywał pliki przez godzinę” to informacja z rozmowy. „Będzie chciał zapłacić za oszczędność czasu” to twoje przypuszczenie. Jeśli nie uzyskałeś odpowiedzi, wpisz „brak informacji”.
-Porównaj rozmowy i popraw założenia
-Zestaw odpowiedzi pod kątem tych samych pytań: kto ma trudność, jak często, co z nią robi i jak bardzo mu przeszkadza. Przy małej grupie zapis „3 z 5 osób opisały taki przypadek” jest bardziej przejrzysty niż samotne „60%”. Nie przenoś tego wyniku na wszystkich potencjalnych klientów.
-Wypisz powtarzające się obserwacje i osobno to, co przeczy pomysłowi. Jeśli tylko część rozmówców doświadcza problemu, sprawdź, co ich łączy. Może warto zawęzić grupę. Jeśli relacje są niejasne lub sprzeczne, zapisz konkretną niewiadomą i dobierz kolejne rozmowy pod jej wyjaśnienie.
-Po tym punkcie masz notatki z rozmów, wspólne obserwacje i poprawiony opis problemu. Wróć też do punktu 2, jeśli proponowane rozwiązanie przestało pasować do tego, czego się dowiedziałeś.',
-          '["Eric Migicovsky, How to Talk to Users. Podstawa: rozmowy o konkretnych doświadczeniach, obecnych sposobach działania i trudnościach. Link prowadzi do omówienia i zapisu wykładu.","Paul Graham, Do Things that Don''t Scale. Podstawa: osobiste docieranie do pierwszych odbiorców.","Paul Graham, Before the Startup. Podstawa: budowanie wiedzy o użytkownikach."]'::jsonb, null,
-          null, 4)
-  on conflict (category_id, key) do update set
-    title = excluded.title, description = excluded.description,
-    duration_hint = excluded.duration_hint, guide_body = excluded.guide_body,
-    guide_sources = excluded.guide_sources,
-    guide_source_label = excluded.guide_source_label,
-    shared_key = excluded.shared_key, position = excluded.position
-  returning id into v_point;
-
-  insert into public.stage_subpoints
-    (point_id, key, title, description, is_optional, shared_key, skip_when, depends_on, position)
-  values (v_point, 'znajdz-rozmowcow', 'Znajdź rozmówców',
-          null, false,
-          null, null, null, 1)
-  on conflict (point_id, key) do update set
-    title = excluded.title, description = excluded.description,
-    is_optional = excluded.is_optional, shared_key = excluded.shared_key,
-    skip_when = excluded.skip_when, depends_on = excluded.depends_on,
-    position = excluded.position
-  returning id into v_subpoint;
-
-  insert into public.stage_fields
-    (subpoint_id, key, kind, question, help, example,
-     is_required, shared_key, config, position)
-  values (v_subpoint, 'osoby', 'list_short',
-          'Znajdź przynajmniej 5 osób, których może dotyczyć wybrany problem.', 'Wpisz imię albo opis, żeby wiedzieć, z kim rozmawiałeś. Nie muszą to być obcy ludzie — zacznij od znajomych z branży.', null,
-          true, 'idea.rozmowy.znajdz-rozmowcow.osoby',
-          '{"min_items":5,"max_items":20,"item_max":200}'::jsonb, 1)
-  on conflict (subpoint_id, key) do update set
-    kind = excluded.kind, question = excluded.question,
-    help = excluded.help, example = excluded.example,
-    is_required = excluded.is_required, shared_key = excluded.shared_key,
-    config = excluded.config, position = excluded.position;
-
-  delete from public.stage_fields
-  where subpoint_id = v_subpoint and key <> all(array['osoby']);
-
-  insert into public.stage_subpoints
-    (point_id, key, title, description, is_optional, shared_key, skip_when, depends_on, position)
-  values (v_point, 'zapytaj-o-doswiadczenia', 'Zapytaj o ich doświadczenia',
-          'Na początku nie przedstawiaj swojego pomysłu. Pytaj o to, co robili, nie o to, co zrobiliby.', false,
-          null, null, null, 2)
-  on conflict (point_id, key) do update set
-    title = excluded.title, description = excluded.description,
-    is_optional = excluded.is_optional, shared_key = excluded.shared_key,
-    skip_when = excluded.skip_when, depends_on = excluded.depends_on,
-    position = excluded.position
-  returning id into v_subpoint;
-
-  insert into public.stage_fields
-    (subpoint_id, key, kind, question, help, example,
-     is_required, shared_key, config, position)
-  values (v_subpoint, 'zapisy', 'list_long',
-          'Po każdej rozmowie zapisz, czego się dowiedziałeś.', 'Kiedy ostatnio pojawił się ten problem i jak często się zdarza? Jak ta osoba sobie z nim radzi? Co jest w tym najbardziej uciążliwe i ile kosztuje ją czasu, pieniędzy lub wysiłku?', null,
-          true, 'idea.rozmowy.zapytaj-o-doswiadczenia.zapisy',
-          '{"min_items":5,"max_items":20,"rows_from":"idea.rozmowy.znajdz-rozmowcow.osoby"}'::jsonb, 1)
-  on conflict (subpoint_id, key) do update set
-    kind = excluded.kind, question = excluded.question,
-    help = excluded.help, example = excluded.example,
-    is_required = excluded.is_required, shared_key = excluded.shared_key,
-    config = excluded.config, position = excluded.position;
-
-  insert into public.stage_fields
-    (subpoint_id, key, kind, question, help, example,
-     is_required, shared_key, config, position)
-  values (v_subpoint, 'materialy', 'files',
-          'Nagrania albo notatki z rozmów', null, null,
-          false, 'idea.rozmowy.zapytaj-o-doswiadczenia.materialy',
-          '{"max_files":20,"max_mb":20}'::jsonb, 2)
-  on conflict (subpoint_id, key) do update set
-    kind = excluded.kind, question = excluded.question,
-    help = excluded.help, example = excluded.example,
-    is_required = excluded.is_required, shared_key = excluded.shared_key,
-    config = excluded.config, position = excluded.position;
-
-  delete from public.stage_fields
-  where subpoint_id = v_subpoint and key <> all(array['zapisy', 'materialy']);
-
-  insert into public.stage_subpoints
-    (point_id, key, title, description, is_optional, shared_key, skip_when, depends_on, position)
-  values (v_point, 'podsumuj-rozmowy', 'Podsumuj rozmowy',
-          null, false,
-          null, null, null, 3)
-  on conflict (point_id, key) do update set
-    title = excluded.title, description = excluded.description,
-    is_optional = excluded.is_optional, shared_key = excluded.shared_key,
-    skip_when = excluded.skip_when, depends_on = excluded.depends_on,
-    position = excluded.position
-  returning id into v_subpoint;
-
-  insert into public.stage_fields
-    (subpoint_id, key, kind, question, help, example,
-     is_required, shared_key, config, position)
-  values (v_subpoint, 'powtarzalo', 'list_short',
-          'Co powtarzało się w odpowiedziach?', 'Rzecz, którą powiedziały trzy osoby z pięciu, jest ważniejsza niż najciekawsza uwaga jednej.', null,
-          true, 'idea.rozmowy.podsumuj-rozmowy.powtarzalo',
-          '{"min_items":1,"max_items":10,"item_max":300}'::jsonb, 1)
-  on conflict (subpoint_id, key) do update set
-    kind = excluded.kind, question = excluded.question,
-    help = excluded.help, example = excluded.example,
-    is_required = excluded.is_required, shared_key = excluded.shared_key,
-    config = excluded.config, position = excluded.position;
-
-  insert into public.stage_fields
-    (subpoint_id, key, kind, question, help, example,
-     is_required, shared_key, config, position)
-  values (v_subpoint, 'za-i-przeciw', 'long_text',
-          'Co wskazuje, że warto rozwiązać ten problem, a co podważa twoje założenia?', 'Zapisz też to, co ci się nie spodobało. Sprzeczny dowód jest wart więcej niż dziesięć potwierdzeń.', null,
-          true, 'idea.rozmowy.podsumuj-rozmowy.za-i-przeciw',
-          '{"min":60}'::jsonb, 2)
-  on conflict (subpoint_id, key) do update set
-    kind = excluded.kind, question = excluded.question,
-    help = excluded.help, example = excluded.example,
-    is_required = excluded.is_required, shared_key = excluded.shared_key,
-    config = excluded.config, position = excluded.position;
-
-  delete from public.stage_fields
-  where subpoint_id = v_subpoint and key <> all(array['powtarzalo', 'za-i-przeciw']);
-
-  delete from public.stage_subpoints
-  where point_id = v_point and key <> all(array['znajdz-rozmowcow', 'zapytaj-o-doswiadczenia', 'podsumuj-rozmowy']);
-
-  -- ── punkt 5: Sprawdź zainteresowanie pomysłem i ceną
+  -- ── punkt 4: Sprawdź zainteresowanie pomysłem i ceną
   insert into public.stage_points
     (category_id, key, title, description, duration_hint,
      guide_body, guide_sources, guide_source_label, shared_key, position)
@@ -1106,7 +836,7 @@ Oprzyj decyzję na powodach i działaniach. Jeśli odbiorcy opisują potrzebę i
 Końcowa notatka powinna mówić: czego się dowiedziałeś, co zmieniasz, co pozostaje niepewne i jaki będzie następny krok. Przykład: „Dwie osoby umówiły test, ale żadna jeszcze nie korzystała z rozwiązania i żadna za nie nie zapłaciła. Przygotuję dla nich przykładowe listy i sprawdzę, czy pomagają w zamówieniu”.
 Po tym punkcie masz pierwsze reakcje na ofertę i cenę oraz decyzję opartą na zebranych informacjach. To nadal nie dowodzi, że produkt działa, klienci będą wracać ani że przychody pokryją koszty. Te pytania sprawdzisz w kolejnych krokach pracy.',
           '["Michael Seibel, The Real Product Market Fit. Podstawa: ostrożność w ogłaszaniu sukcesu i dalsze uczenie się na użyciu produktu.","Michael Seibel, How to Plan an MVP. Podstawa: przejście do prostego rozwiązania używanego przez pierwszych odbiorców. Link prowadzi do omówienia i zapisu wykładu.","Paul Graham, Do Things that Don''t Scale. Podstawa: bezpośrednia praca z pierwszymi użytkownikami.","Źrodła:","\"How to Get Startup Ideas\" – Paul Graham / Jared Friedman","\"Before the Startup\" – Paul Graham","\"Do Things that Don''t Scale\" – Paul Graham (słynny esej o robieniu rzeczy ręcznie na początku)","\"How to Plan an MVP\" – Michael Seibel (o bezlitosnym cięciu funkcji i upraszczaniu produktu)","\"How to Talk to Users\" – Eric Migicovsky","\"The Real Product-Market Fit\" – Michael Seibel","\"How to Get and Test Ideas\" – Kevin Hale"]'::jsonb, null,
-          null, 5)
+          null, 4)
   on conflict (category_id, key) do update set
     title = excluded.title, description = excluded.description,
     duration_hint = excluded.duration_hint, guide_body = excluded.guide_body,
@@ -1131,9 +861,9 @@ Po tym punkcie masz pierwsze reakcje na ofertę i cenę oraz decyzję opartą na
     (subpoint_id, key, kind, question, help, example,
      is_required, shared_key, config, position)
   values (v_subpoint, 'oferta', 'short_text',
-          'Co oferujesz i jak to pomoże rozmówcy?', 'Nad polem masz podgląd opisu rozwiązania z punktu 2 — streść go w maksymalnie dwóch zdaniach.', null,
+          'Co oferujesz i jak to pomoże rozmówcy?', 'Nad polem masz definicję problemu, swoją hipotezę i wersję minimalną. Streść z nich, co oferujesz — najwyżej dwa zdania.', null,
           true, 'idea.zainteresowanie-i-cena.propozycja.oferta',
-          '{"min":20,"max":400,"show_answers":["idea.hipoteza-rozwiazania.opisz-rozwiazanie.co-robi","idea.hipoteza-rozwiazania.opisz-rozwiazanie.dla-kogo","idea.hipoteza-rozwiazania.opisz-rozwiazanie.jaki-problem","idea.hipoteza-rozwiazania.opisz-rozwiazanie.rezultat"]}'::jsonb, 1)
+          '{"min":20,"max":400,"show_answers":["idea.zdefiniuj-problem.ostateczna-definicja.zdanie","idea.hipoteza-rozwiazania.dlaczego-skorzysta.zalozenie","idea.hipoteza-rozwiazania.wersja-minimalna.funkcje"]}'::jsonb, 1)
   on conflict (subpoint_id, key) do update set
     kind = excluded.kind, question = excluded.question,
     help = excluded.help, example = excluded.example,
@@ -1159,7 +889,7 @@ Po tym punkcie masz pierwsze reakcje na ofertę i cenę oraz decyzję opartą na
   insert into public.stage_subpoints
     (point_id, key, title, description, is_optional, shared_key, skip_when, depends_on, position)
   values (v_point, 'miara-zainteresowania', 'Ustal, po czym poznasz zainteresowanie',
-          'Ustal to zanim zaczniesz rozmawiać — inaczej zawsze znajdziesz powód, żeby uznać wynik za dobry.', false,
+          'Ustal to, zanim zaczniesz rozmawiać — inaczej zawsze znajdziesz powód, żeby uznać wynik za dobry.', false,
           null, null, null, 2)
   on conflict (point_id, key) do update set
     title = excluded.title, description = excluded.description,
@@ -1200,7 +930,7 @@ Po tym punkcie masz pierwsze reakcje na ofertę i cenę oraz decyzję opartą na
   insert into public.stage_subpoints
     (point_id, key, title, description, is_optional, shared_key, skip_when, depends_on, position)
   values (v_point, 'przedstaw-pomysl', 'Przedstaw pomysł i cenę',
-          'Możesz wrócić do wcześniejszych rozmówców. Jeśli płacić ma ktoś inny niż użytkownik, porozmawiaj również z taką osobą.', false,
+          'Porozmawiaj z kilkoma osobami, których dotyczy problem. Jeśli płacić ma ktoś inny niż użytkownik, porozmawiaj też z nim.', false,
           null, null, null, 3)
   on conflict (point_id, key) do update set
     title = excluded.title, description = excluded.description,
@@ -1270,12 +1000,12 @@ Po tym punkcie masz pierwsze reakcje na ofertę i cenę oraz decyzję opartą na
   where point_id = v_point and key <> all(array['propozycja', 'miara-zainteresowania', 'przedstaw-pomysl', 'decyzja']);
 
   delete from public.stage_points
-  where category_id = v_category and key <> all(array['zdefiniuj-problem', 'hipoteza-rozwiazania', 'konkurencja', 'rozmowy', 'zainteresowanie-i-cena']);
+  where category_id = v_category and key <> all(array['zdefiniuj-problem', 'hipoteza-rozwiazania', 'konkurencja', 'zainteresowanie-i-cena']);
 
   -- ═══ kategoria: SaaS ═══
   insert into public.stage_categories
     (template_id, key, title, intro, always_active, position)
-  values (v_template, 'saas', 'SaaS', 'Oprogramowanie w abonamencie musi odpowiadać na potrzebę na tyle regularną, żeby klient odnawiał subskrypcję co miesiąc albo co rok. Sprawdzisz, jak często wraca problem, ile zajmie start, co zatrzyma klienta, a co go zniechęci.',
+  values (v_template, 'saas', 'SaaS', 'Abonament ma sens, gdy problem wraca regularnie — tak często, że klient odnawia subskrypcję co miesiąc albo co rok. Sprawdź, jak często problem wraca, ile trwa start, co zatrzyma klienta, a co go zniechęci.',
           false, 2)
   on conflict (template_id, key) do update set
     title = excluded.title, intro = excluded.intro,
@@ -1406,7 +1136,7 @@ Po tym punkcie masz wstępny sposób naliczania opłat, opis tego, co obejmuje c
   insert into public.stage_subpoints
     (point_id, key, title, description, is_optional, shared_key, skip_when, depends_on, position)
   values (v_point, 'reakcja-na-rozliczenie', 'Sprawdź reakcję na sposób rozliczenia',
-          'Jeśli rozmawiałeś już z ludźmi w Ogólnej walidacji, wróć do tych samych osób — nie musisz szukać nowych.', false,
+          'Jeśli rozmawiałeś już z ludźmi o tym problemie, wróć do tych samych osób — nie musisz szukać nowych.', false,
           null, null, null, 3)
   on conflict (point_id, key) do update set
     title = excluded.title, description = excluded.description,
@@ -1558,7 +1288,7 @@ Po tym punkcie masz listę rzeczy potrzebnych do rozpoczęcia korzystania, niezb
     (subpoint_id, key, kind, question, help, example,
      is_required, shared_key, config, position)
   values (v_subpoint, 'z-czym', 'list_short',
-          'Z jakimi programami twoje rozwiązanie musi wymieniać dane, żeby spełnić główną obietnicę?', 'Jeśli z żadnymi — wpisz „z żadnymi”. Każda integracja to tygodnie pracy, więc warto wiedzieć na pewno.', null,
+          'Z jakimi programami twoje rozwiązanie musi wymieniać dane, żeby spełnić główną obietnicę?', 'Jeśli z żadnymi — wpisz „z żadnymi”. Każda integracja to tygodnie pracy, więc lepiej wiedzieć na pewno.', null,
           true, 'idea.start-korzystania.integracje.z-czym',
           '{"min_items":1,"max_items":12,"item_max":200}'::jsonb, 1)
   on conflict (subpoint_id, key) do update set
@@ -1768,7 +1498,7 @@ Po tym punkcie masz opis wspólnej części produktu, listę indywidualnych ocze
     (subpoint_id, key, kind, question, help, example,
      is_required, shared_key, config, position)
   values (v_subpoint, 'osobna-wersja', 'short_text',
-          'Czy któreś oczekiwanie wymaga osobnej wersji programu albo regularnego wykonywania pracy za klienta?', 'Jeśli tak, to nie jest już SaaS, tylko usługa. To nie musi być zła wiadomość — ale warto wiedzieć.', null,
+          'Czy któreś oczekiwanie wymaga osobnej wersji programu albo regularnego wykonywania pracy za klienta?', 'Jeśli tak, to już nie SaaS, tylko usługa. To nie musi być zła wiadomość — ale trzeba to wiedzieć.', null,
           true, 'idea.jeden-program-rozni-klienci.najwieksza-niewiadoma.osobna-wersja',
           '{"min":10,"max":400}'::jsonb, 1)
   on conflict (subpoint_id, key) do update set
@@ -1802,7 +1532,7 @@ Po tym punkcie masz opis wspólnej części produktu, listę indywidualnych ocze
   -- ═══ kategoria: B2B ═══
   insert into public.stage_categories
     (template_id, key, title, intro, always_active, position)
-  values (v_template, 'b2b', 'B2B', 'Sprzedajesz firmom. Pamiętaj, że osoba korzystająca z twojego rozwiązania rzadko decyduje o jego zakupie — pracownik potrzebuje lepszego narzędzia, ale zgodę wydaje szef. Sprawdzisz, komu w firmie pomagasz, kto zatwierdza zakup i co musi się wydarzyć, żeby firma zaczęła korzystać.',
+  values (v_template, 'b2b', 'B2B', 'Sprzedajesz firmom. Kto korzysta, zwykle nie decyduje: pracownik chce lepszego narzędzia, ale zgodę daje szef. Ustal, komu w firmie pomagasz, kto zatwierdza zakup i co musi się stać, żeby firma zaczęła korzystać.',
           false, 3)
   on conflict (template_id, key) do update set
     title = excluded.title, intro = excluded.intro,
@@ -1878,7 +1608,7 @@ Tutaj wystarczą nazwy kroków. Czas oczekiwania opiszesz w punkcie 2, a przygot
     (subpoint_id, key, kind, question, help, example,
      is_required, shared_key, config, position)
   values (v_subpoint, 'profil-uzytkownika', 'long_text',
-          'Opisz osobę, która będzie korzystać z twojego rozwiązania.', 'Rola, sytuacja, branża i inne cechy kluczowe dla twojego pomysłu. Jeśli odpowiadałeś już na to w Ogólnej walidacji, zobaczysz tu swoją odpowiedź.', null,
+          'Opisz osobę, która będzie korzystać z twojego rozwiązania.', 'Rola, sytuacja, branża — to, co ma znaczenie dla twojego pomysłu. Jeśli odpowiadałeś już na to w Ogólnej walidacji, zobaczysz tu swoją odpowiedź.', null,
           true, 'idea.profil-uzytkownika',
           '{"min":30}'::jsonb, 2)
   on conflict (subpoint_id, key) do update set
@@ -2204,7 +1934,7 @@ Nie wymyślaj wartości pieniężnej tylko po to, żeby wynik obliczeń wygląda
     (subpoint_id, key, kind, question, help, example,
      is_required, shared_key, config, position)
   values (v_subpoint, 'minimalny-wynik', 'short_text',
-          'Jaki minimalny wynik i w jakim czasie przekona go do zakupu?', '„Musi zwrócić się w pół roku” to typowa odpowiedź. Warto ją znać przed rozmową o cenie.', null,
+          'Jaki minimalny wynik i w jakim czasie przekona go do zakupu?', '„Musi zwrócić się w pół roku” to typowa odpowiedź. Poznaj ją przed rozmową o cenie.', null,
           true, 'idea.roi.przelicz-na-pieniadze.minimalny-wynik',
           '{"min":10,"max":400}'::jsonb, 2)
   on conflict (subpoint_id, key) do update set
@@ -2918,7 +2648,7 @@ Na sam koniec dzielisz LTV przez CAC i wpisujesz w lukę otrzymany wynik.',
   -- ═══ kategoria: Hardware ═══
   insert into public.stage_categories
     (template_id, key, title, intro, always_active, position)
-  values (v_template, 'hardware', 'Hardware', 'Sprawdzasz, czy fizyczny produkt da się zbudować, wyprodukować i wprowadzić na rynek w sposób technicznie i ekonomicznie uzasadniony. Celem nie jest gotowe urządzenie, tylko wczesne wykrycie ryzyk: wykonalności, kosztów, czasu wejścia na rynek, popytu i wymogów zgodności.',
+  values (v_template, 'hardware', 'Hardware', 'Sprawdź, czy da się zbudować i wyprodukować urządzenie tak, żeby miało sens technicznie i finansowo. Nie budujesz jeszcze gotowego produktu — wyłapujesz ryzyka: wykonalność, koszty, czas wejścia na rynek, popyt i przepisy.',
           false, 5)
   on conflict (template_id, key) do update set
     title = excluded.title, intro = excluded.intro,

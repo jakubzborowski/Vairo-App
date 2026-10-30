@@ -56,6 +56,21 @@ Warunek z polem `checkmark` zapisujemy jako `"equals": true`, nie `one_of`:
 aplikacja porównuje `one_of` wyłącznie z tekstem, więc zaznaczenie (`true`)
 zaliczyłoby podpunkt w bazie, a na ekranie nie.
 
+### Przenoszenie pytań między etapami
+
+Odpowiedź w bazie należy do etapu startupu (`stage_answers.startup_stage_id`),
+nie tylko do klucza. Żeby przeniesione pole nie zgubiło odpowiedzi:
+
+1. w nowym miejscu nadaj polu stary klucz przez `"shared": "<stary klucz>"`
+   (tak przeszło „Porozmawiaj z osobami” z Idei do Preparation — `idea.rozmowy.…`);
+2. migracja 037 robi resztę: przy każdym nowym etapie startupu kopiuje
+   odpowiedzi spod kluczy jego pól z innych etapów tego startupu, a przy
+   wdrożeniu wyrównuje etapy, które już istnieją. Istniejąca odpowiedź
+   w etapie docelowym zawsze wygrywa.
+
+`config.rows_from` i `show_answers` używają tych samych kluczy, więc przeniesione
+pola dalej się do siebie odwołują.
+
 ### Pola, które sięgają do innych odpowiedzi
 
 Trzy klucze `config` (żaden nie zmienia kształtu zapisanej odpowiedzi):

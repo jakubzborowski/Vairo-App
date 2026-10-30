@@ -11,7 +11,7 @@
       "key": "general",
       "title": "Ogólna walidacja",
       "always_active": true,
-      "intro": "Wspólna podstawa dla każdego pomysłu — niezależnie od tego, co budujesz i komu sprzedajesz.",
+      "intro": "Podstawa dla każdego pomysłu, niezależnie od tego, co budujesz i komu sprzedajesz.",
       "points": [
         {
           "key": "zdefiniuj-problem",
@@ -50,7 +50,7 @@
                   "key": "kto",
                   "kind": "long_text",
                   "question": "Opisz osobę lub organizację, której problem dotyczy.",
-                  "help": "Weź pod uwagę rolę, sytuację, branżę i inne cechy, które są kluczowe dla twojego pomysłu. Zamiast „przedsiębiorcy” napisz „właściciele małych sklepów internetowych”.",
+                  "help": "Rola, sytuacja, branża — to, co ma znaczenie dla twojego pomysłu. Zamiast „przedsiębiorcy” napisz „właściciele małych sklepów internetowych”.",
                   "config": {
                     "min": 30
                   },
@@ -124,7 +124,7 @@
             {
               "key": "ostateczna-definicja",
               "title": "Ostateczna definicja problemu",
-              "description": "Uzupełnij pola, żeby opisać problem jednym zdaniem. Skorzystaj z wcześniejszych odpowiedzi. Skup się na trudności, nie na swoim produkcie.",
+              "description": "Złóż problem w jedno zdanie z wcześniejszych odpowiedzi. Pisz o trudności, nie o swoim produkcie.",
               "fields": [
                 {
                   "key": "zdanie",
@@ -172,85 +172,6 @@
           "title": "Zdefiniuj hipotezę rozwiązania",
           "guide": "zdefiniuj-hipoteze-rozwiazania",
           "subpoints": [
-            {
-              "key": "opisz-rozwiazanie",
-              "title": "Opisz rozwiązanie i jego główną wartość",
-              "description": "Skup się na głównej wartości, bez rozwijania pełnej listy funkcji.",
-              "fields": [
-                {
-                  "key": "co-robi",
-                  "kind": "short_text",
-                  "question": "Co twoje rozwiązanie robi?",
-                  "help": "Jedno zdanie, zwykłymi słowami. Tak, żeby zrozumiała to osoba spoza branży.",
-                  "config": {
-                    "min": 10,
-                    "max": 300
-                  }
-                },
-                {
-                  "key": "dla-kogo",
-                  "kind": "short_text",
-                  "question": "Dla kogo jest przeznaczone?",
-                  "config": {
-                    "min": 5,
-                    "max": 200
-                  }
-                },
-                {
-                  "key": "jaki-problem",
-                  "kind": "short_text",
-                  "question": "Jaki problem rozwiązuje?",
-                  "config": {
-                    "min": 10,
-                    "max": 300
-                  }
-                },
-                {
-                  "key": "rezultat",
-                  "kind": "short_text",
-                  "question": "Jaki daje rezultat?",
-                  "help": "Co się zmienia po stronie użytkownika — co widzi, czuje albo oszczędza.",
-                  "config": {
-                    "min": 10,
-                    "max": 300
-                  }
-                }
-              ]
-            },
-            {
-              "key": "dostarczenie-wartosci",
-              "title": "Dostarczenie wartości",
-              "fields": [
-                {
-                  "key": "jak-rozwiazuje",
-                  "kind": "long_text",
-                  "question": "Jak twój pomysł rozwiązuje problem opisany w punkcie 1?",
-                  "help": "Opisz krótki ciąg wydarzeń: co użytkownik dostarcza lub robi, co dzieje się dalej i co dostaje na końcu.",
-                  "config": {
-                    "min": 40
-                  }
-                },
-                {
-                  "key": "co-zyska",
-                  "kind": "long_text",
-                  "question": "Co użytkownik zyska dzięki twojemu rozwiązaniu?",
-                  "help": "Funkcja to możliwość zrobienia czegoś. Korzyść to to, co człowiek dzięki temu zyskuje. Opisz korzyść.",
-                  "config": {
-                    "min": 20
-                  }
-                },
-                {
-                  "key": "co-musi-zrobic",
-                  "kind": "short_text",
-                  "question": "Co najważniejszego musi zrobić użytkownik, żeby uzyskać tę korzyść?",
-                  "help": "Jeśli wymaga to dużego wysiłku na starcie, to jest ryzyko, które trzeba sprawdzić.",
-                  "config": {
-                    "min": 10,
-                    "max": 300
-                  }
-                }
-              ]
-            },
             {
               "key": "wersja-minimalna",
               "title": "Wersja minimalna",
@@ -601,84 +522,6 @@
           ]
         },
         {
-          "key": "rozmowy",
-          "title": "Porozmawiaj z osobami, którym chcesz pomóc",
-          "guide": "porozmawiaj-z-osobami-ktorym-chcesz-pomoc",
-          "subpoints": [
-            {
-              "key": "znajdz-rozmowcow",
-              "title": "Znajdź rozmówców",
-              "fields": [
-                {
-                  "key": "osoby",
-                  "kind": "list_short",
-                  "question": "Znajdź przynajmniej 5 osób, których może dotyczyć wybrany problem.",
-                  "help": "Wpisz imię albo opis, żeby wiedzieć, z kim rozmawiałeś. Nie muszą to być obcy ludzie — zacznij od znajomych z branży.",
-                  "config": {
-                    "min_items": 5,
-                    "max_items": 20,
-                    "item_max": 200
-                  }
-                }
-              ]
-            },
-            {
-              "key": "zapytaj-o-doswiadczenia",
-              "title": "Zapytaj o ich doświadczenia",
-              "description": "Na początku nie przedstawiaj swojego pomysłu. Pytaj o to, co robili, nie o to, co zrobiliby.",
-              "fields": [
-                {
-                  "key": "zapisy",
-                  "kind": "list_long",
-                  "question": "Po każdej rozmowie zapisz, czego się dowiedziałeś.",
-                  "help": "Kiedy ostatnio pojawił się ten problem i jak często się zdarza? Jak ta osoba sobie z nim radzi? Co jest w tym najbardziej uciążliwe i ile kosztuje ją czasu, pieniędzy lub wysiłku?",
-                  "config": {
-                    "min_items": 5,
-                    "max_items": 20,
-                    "rows_from": "idea.rozmowy.znajdz-rozmowcow.osoby"
-                  }
-                },
-                {
-                  "key": "materialy",
-                  "kind": "files",
-                  "question": "Nagrania albo notatki z rozmów",
-                  "is_required": false,
-                  "config": {
-                    "max_files": 20,
-                    "max_mb": 20
-                  }
-                }
-              ]
-            },
-            {
-              "key": "podsumuj-rozmowy",
-              "title": "Podsumuj rozmowy",
-              "fields": [
-                {
-                  "key": "powtarzalo",
-                  "kind": "list_short",
-                  "question": "Co powtarzało się w odpowiedziach?",
-                  "help": "Rzecz, którą powiedziały trzy osoby z pięciu, jest ważniejsza niż najciekawsza uwaga jednej.",
-                  "config": {
-                    "min_items": 1,
-                    "max_items": 10,
-                    "item_max": 300
-                  }
-                },
-                {
-                  "key": "za-i-przeciw",
-                  "kind": "long_text",
-                  "question": "Co wskazuje, że warto rozwiązać ten problem, a co podważa twoje założenia?",
-                  "help": "Zapisz też to, co ci się nie spodobało. Sprzeczny dowód jest wart więcej niż dziesięć potwierdzeń.",
-                  "config": {
-                    "min": 60
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
           "key": "zainteresowanie-i-cena",
           "title": "Sprawdź zainteresowanie pomysłem i ceną",
           "guide": "sprawdz-zainteresowanie-pomyslem-i-cena",
@@ -691,15 +534,14 @@
                   "key": "oferta",
                   "kind": "short_text",
                   "question": "Co oferujesz i jak to pomoże rozmówcy?",
-                  "help": "Nad polem masz podgląd opisu rozwiązania z punktu 2 — streść go w maksymalnie dwóch zdaniach.",
+                  "help": "Nad polem masz definicję problemu, swoją hipotezę i wersję minimalną. Streść z nich, co oferujesz — najwyżej dwa zdania.",
                   "config": {
                     "min": 20,
                     "max": 400,
                     "show_answers": [
-                      "idea.hipoteza-rozwiazania.opisz-rozwiazanie.co-robi",
-                      "idea.hipoteza-rozwiazania.opisz-rozwiazanie.dla-kogo",
-                      "idea.hipoteza-rozwiazania.opisz-rozwiazanie.jaki-problem",
-                      "idea.hipoteza-rozwiazania.opisz-rozwiazanie.rezultat"
+                      "idea.zdefiniuj-problem.ostateczna-definicja.zdanie",
+                      "idea.hipoteza-rozwiazania.dlaczego-skorzysta.zalozenie",
+                      "idea.hipoteza-rozwiazania.wersja-minimalna.funkcje"
                     ]
                   }
                 },
@@ -718,7 +560,7 @@
             {
               "key": "miara-zainteresowania",
               "title": "Ustal, po czym poznasz zainteresowanie",
-              "description": "Ustal to zanim zaczniesz rozmawiać — inaczej zawsze znajdziesz powód, żeby uznać wynik za dobry.",
+              "description": "Ustal to, zanim zaczniesz rozmawiać — inaczej zawsze znajdziesz powód, żeby uznać wynik za dobry.",
               "fields": [
                 {
                   "key": "dzialanie",
@@ -745,7 +587,7 @@
             {
               "key": "przedstaw-pomysl",
               "title": "Przedstaw pomysł i cenę",
-              "description": "Możesz wrócić do wcześniejszych rozmówców. Jeśli płacić ma ktoś inny niż użytkownik, porozmawiaj również z taką osobą.",
+              "description": "Porozmawiaj z kilkoma osobami, których dotyczy problem. Jeśli płacić ma ktoś inny niż użytkownik, porozmawiaj też z nim.",
               "fields": [
                 {
                   "key": "reakcje",
@@ -789,7 +631,7 @@
     {
       "key": "saas",
       "title": "SaaS",
-      "intro": "Oprogramowanie w abonamencie musi odpowiadać na potrzebę na tyle regularną, żeby klient odnawiał subskrypcję co miesiąc albo co rok. Sprawdzisz, jak często wraca problem, ile zajmie start, co zatrzyma klienta, a co go zniechęci.",
+      "intro": "Abonament ma sens, gdy problem wraca regularnie — tak często, że klient odnawia subskrypcję co miesiąc albo co rok. Sprawdź, jak często problem wraca, ile trwa start, co zatrzyma klienta, a co go zniechęci.",
       "points": [
         {
           "key": "za-co-placi",
@@ -852,7 +694,7 @@
             {
               "key": "reakcja-na-rozliczenie",
               "title": "Sprawdź reakcję na sposób rozliczenia",
-              "description": "Jeśli rozmawiałeś już z ludźmi w Ogólnej walidacji, wróć do tych samych osób — nie musisz szukać nowych.",
+              "description": "Jeśli rozmawiałeś już z ludźmi o tym problemie, wróć do tych samych osób — nie musisz szukać nowych.",
               "fields": [
                 {
                   "key": "pasuje-przeszkadza",
@@ -929,7 +771,7 @@
                   "key": "z-czym",
                   "kind": "list_short",
                   "question": "Z jakimi programami twoje rozwiązanie musi wymieniać dane, żeby spełnić główną obietnicę?",
-                  "help": "Jeśli z żadnymi — wpisz „z żadnymi”. Każda integracja to tygodnie pracy, więc warto wiedzieć na pewno.",
+                  "help": "Jeśli z żadnymi — wpisz „z żadnymi”. Każda integracja to tygodnie pracy, więc lepiej wiedzieć na pewno.",
                   "config": {
                     "min_items": 1,
                     "max_items": 12,
@@ -1045,7 +887,7 @@
                   "key": "osobna-wersja",
                   "kind": "short_text",
                   "question": "Czy któreś oczekiwanie wymaga osobnej wersji programu albo regularnego wykonywania pracy za klienta?",
-                  "help": "Jeśli tak, to nie jest już SaaS, tylko usługa. To nie musi być zła wiadomość — ale warto wiedzieć.",
+                  "help": "Jeśli tak, to już nie SaaS, tylko usługa. To nie musi być zła wiadomość — ale trzeba to wiedzieć.",
                   "config": {
                     "min": 10,
                     "max": 400
@@ -1069,7 +911,7 @@
     {
       "key": "b2b",
       "title": "B2B",
-      "intro": "Sprzedajesz firmom. Pamiętaj, że osoba korzystająca z twojego rozwiązania rzadko decyduje o jego zakupie — pracownik potrzebuje lepszego narzędzia, ale zgodę wydaje szef. Sprawdzisz, komu w firmie pomagasz, kto zatwierdza zakup i co musi się wydarzyć, żeby firma zaczęła korzystać.",
+      "intro": "Sprzedajesz firmom. Kto korzysta, zwykle nie decyduje: pracownik chce lepszego narzędzia, ale zgodę daje szef. Ustal, komu w firmie pomagasz, kto zatwierdza zakup i co musi się stać, żeby firma zaczęła korzystać.",
       "points": [
         {
           "key": "decyzja-o-zakupie",
@@ -1094,7 +936,7 @@
                   "kind": "long_text",
                   "shared": "idea.profil-uzytkownika",
                   "question": "Opisz osobę, która będzie korzystać z twojego rozwiązania.",
-                  "help": "Rola, sytuacja, branża i inne cechy kluczowe dla twojego pomysłu. Jeśli odpowiadałeś już na to w Ogólnej walidacji, zobaczysz tu swoją odpowiedź.",
+                  "help": "Rola, sytuacja, branża — to, co ma znaczenie dla twojego pomysłu. Jeśli odpowiadałeś już na to w Ogólnej walidacji, zobaczysz tu swoją odpowiedź.",
                   "config": {
                     "min": 30
                   }
@@ -1269,7 +1111,7 @@
                   "key": "minimalny-wynik",
                   "kind": "short_text",
                   "question": "Jaki minimalny wynik i w jakim czasie przekona go do zakupu?",
-                  "help": "„Musi zwrócić się w pół roku” to typowa odpowiedź. Warto ją znać przed rozmową o cenie.",
+                  "help": "„Musi zwrócić się w pół roku” to typowa odpowiedź. Poznaj ją przed rozmową o cenie.",
                   "config": {
                     "min": 10,
                     "max": 400
@@ -1727,7 +1569,7 @@
     {
       "key": "hardware",
       "title": "Hardware",
-      "intro": "Sprawdzasz, czy fizyczny produkt da się zbudować, wyprodukować i wprowadzić na rynek w sposób technicznie i ekonomicznie uzasadniony. Celem nie jest gotowe urządzenie, tylko wczesne wykrycie ryzyk: wykonalności, kosztów, czasu wejścia na rynek, popytu i wymogów zgodności.",
+      "intro": "Sprawdź, czy da się zbudować i wyprodukować urządzenie tak, żeby miało sens technicznie i finansowo. Nie budujesz jeszcze gotowego produktu — wyłapujesz ryzyka: wykonalność, koszty, czas wejścia na rynek, popyt i przepisy.",
       "points": [
         {
           "key": "problem-i-potrzeba-fizyczna",

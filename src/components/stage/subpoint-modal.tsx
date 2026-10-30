@@ -9,6 +9,8 @@ import {
   emptyValueFor,
   fieldAnswered,
   isSkipped,
+  templateSlotPattern,
+  type StageField,
   type StageSubpoint,
   type StageTree,
 } from "@/types/stage";
@@ -95,12 +97,12 @@ export function SubpointModal({
 
   // Pytanie → treść, po kluczu odpowiedzi — do podglądu odpowiedzi z innych
   // punktów (`config.show_answers`).
-  const questionByKey = useMemo(() => {
-    const map = new Map<string, string>();
+  const fieldByKey = useMemo(() => {
+    const map = new Map<string, StageField>();
     for (const category of tree.categories)
       for (const point of category.points)
         for (const sub of point.subpoints)
-          for (const f of sub.fields) map.set(f.answerKey, f.question);
+          for (const f of sub.fields) map.set(f.answerKey, f);
     return map;
   }, [tree]);
 
@@ -110,7 +112,13 @@ export function SubpointModal({
       ? [...new Set(answerItems(answers[rowsFrom]))].slice(0, 20)
       : undefined;
     const references = showAnswers
-      ?.map((key) => ({ question: questionByKey.get(key) ?? "", text: answerText(answers[key]) }))
+      ?.map((key) => {
+        const source = fieldByKey.get(key);
+        return {
+          question: source?.question ?? "",
+          text: answerText(answers[key], source?.config.template),
+        };
+      })
       .filter((ref) => ref.question && ref.text);
     return { rowLabels, references };
   };
@@ -398,9 +406,23 @@ function answerItems(value: unknown): string[] {
     .filter(Boolean);
 }
 
-/** Odpowiedź jako jedno zdanie do podglądu; obiektów (np. zdań z szablonu) nie pokazujemy. */
-function answerText(value: unknown): string {
+/**
+ * Odpowiedź jako tekst do podglądu. Zdanie z szablonu składamy z luk —
+ * definicja problemu i hipoteza są właśnie takimi zdaniami. Puste albo
+ * pominięte pole daje pusty tekst i znika z podglądu.
+ */
+function answerText(value: unknown, template?: string): string {
   if (typeof value === "string") return value.trim();
   if (typeof value === "number") return String(value);
-  return answerItems(value).join("; ");
+  if (Array.isArray(value)) return answerItems(value).join("; ");
+  if (template && value && typeof value === "object" && !isSkipped(value)) {
+    const slots = value as Record<string, unknown>;
+    const filled = Object.values(slots).some((v) => typeof v === "string" && v.trim());
+    if (!filled) return "";
+    return template.replace(templateSlotPattern(), (_, key: string) => {
+      const slot = slots[key];
+      return typeof slot === "string" && slot.trim() ? slot.trim() : "…";
+    });
+  }
+  return "";
 }

@@ -14,6 +14,94 @@
       "intro": "Ta część dotyczy każdego startupu. SaaS, Hardware, B2B i B2C dokładają własne punkty tylko wtedy, gdy startup ma tę kategorię.",
       "points": [
         {
+          "key": "rozmowy",
+          "title": "Porozmawiaj z osobami, którym chcesz pomóc",
+          "subpoints": [
+            {
+              "key": "znajdz-rozmowcow",
+              "title": "Znajdź rozmówców",
+              "fields": [
+                {
+                  "key": "osoby",
+                  "kind": "list_short",
+                  "question": "Znajdź przynajmniej 5 osób, których może dotyczyć wybrany problem.",
+                  "help": "Wpisz imię albo opis, żeby wiedzieć, z kim rozmawiałeś. Nie muszą to być obcy ludzie — zacznij od znajomych z branży.",
+                  "config": {
+                    "min_items": 5,
+                    "max_items": 20,
+                    "item_max": 200
+                  },
+                  "shared": "idea.rozmowy.znajdz-rozmowcow.osoby"
+                }
+              ]
+            },
+            {
+              "key": "zapytaj-o-doswiadczenia",
+              "title": "Zapytaj o ich doświadczenia",
+              "description": "Na początku nie przedstawiaj swojego pomysłu. Pytaj o to, co robili, nie o to, co zrobiliby.",
+              "fields": [
+                {
+                  "key": "zapisy",
+                  "kind": "list_long",
+                  "question": "Po każdej rozmowie zapisz, czego się dowiedziałeś.",
+                  "help": "Kiedy ostatnio pojawił się ten problem i jak często się zdarza? Jak ta osoba sobie z nim radzi? Co jest w tym najbardziej uciążliwe i ile kosztuje ją czasu, pieniędzy lub wysiłku?",
+                  "config": {
+                    "min_items": 5,
+                    "max_items": 20,
+                    "rows_from": "idea.rozmowy.znajdz-rozmowcow.osoby"
+                  },
+                  "shared": "idea.rozmowy.zapytaj-o-doswiadczenia.zapisy"
+                },
+                {
+                  "key": "materialy",
+                  "kind": "files",
+                  "question": "Nagrania albo notatki z rozmów",
+                  "is_required": false,
+                  "config": {
+                    "max_files": 20,
+                    "max_mb": 20
+                  },
+                  "shared": "idea.rozmowy.zapytaj-o-doswiadczenia.materialy"
+                }
+              ]
+            },
+            {
+              "key": "podsumuj-rozmowy",
+              "title": "Podsumuj rozmowy",
+              "fields": [
+                {
+                  "key": "powtarzalo",
+                  "kind": "list_short",
+                  "question": "Co powtarzało się w odpowiedziach?",
+                  "help": "Rzecz, którą powiedziały trzy osoby z pięciu, jest ważniejsza niż najciekawsza uwaga jednej.",
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 10,
+                    "item_max": 300
+                  },
+                  "shared": "idea.rozmowy.podsumuj-rozmowy.powtarzalo"
+                },
+                {
+                  "key": "za-i-przeciw",
+                  "kind": "long_text",
+                  "question": "Co wskazuje, że warto rozwiązać ten problem, a co podważa twoje założenia?",
+                  "help": "Zapisz też to, co ci się nie spodobało. Sprzeczny dowód jest wart więcej niż dziesięć potwierdzeń.",
+                  "config": {
+                    "min": 60
+                  },
+                  "shared": "idea.rozmowy.podsumuj-rozmowy.za-i-przeciw"
+                }
+              ]
+            }
+          ],
+          "guide_body": "Teraz sprawdzisz wcześniejsze przypuszczenia w rozmowach. Poszukasz konkretnych zdarzeń pokazujących, czy problem występuje, jak przeszkadza i co ludzie z nim robią. Przygotuj miejsce na notatki oraz kilka pytań pomocniczych.\nZnajdź przynajmniej pięciu rozmówców\nWróć do opisu odbiorcy z punktu 1. Szukaj osób, które wykonują wskazaną czynność. Do przykładu sklepowego zaproś kogoś odpowiedzialnego za zamawianie towaru. Sam fakt pracy w sklepie może nie wystarczyć.\nZacznij od znajomych, poleceń, grup tematycznych, lokalnych firm lub wydarzeń. Możesz napisać: „Próbuję zrozumieć, jak właściciele małych sklepów planują zamówienia towaru. Czy znajdziesz 15 minut, żeby opowiedzieć mi, jak wygląda to u ciebie?”. Podany czas to przykładowa propozycja krótkiego spotkania.\nZnajomy jest odpowiednim rozmówcą, jeśli pasuje do grupy. Warto dotrzeć również poza własne otoczenie. Pięć rozmów to początek przewidziany w tym ćwiczeniu. Nie traktuj tej liczby jako gwarancji, że poznałeś potrzeby całej grupy.\nPytaj o wydarzenia i słuchaj odpowiedzi\nNa początku wyjaśnij, jaki temat chcesz zrozumieć. Opis rozwiązania zostaw na później, żeby nie podpowiadać rozmówcy, co chcesz usłyszeć. Pomocne pytania to:\nJak wyglądało ostatnie uzupełnianie zapasów w twoim sklepie?\nW którym momencie pojawiła się trudność? Co wtedy się wydarzyło?\nJak często zdarza się podobna sytuacja?\nCo zrobiłeś, żeby sobie poradzić, i jaki był rezultat?\nIle zajęło ci to czasu lub ile kosztowało? Skąd ta ocena?\nNie musisz odczytywać pytań po kolei. Dopytuj o niejasne odpowiedzi: „Co masz na myśli?” lub „Możesz podać przykład?”. Jeśli ktoś mówi, że obecny sposób jest wystarczający, pozwól mu to wyjaśnić. Unikaj pytania „Czy też marnujesz czas na te okropne pliki?”, które sugeruje ocenę.\nGdy pada pomysł nowej funkcji, zapytaj, w jakiej sytuacji byłaby potrzebna. Dzięki temu poznasz powód prośby. Jeśli rozmówca chce obejrzeć twój pomysł, najpierw dokończ część o doświadczeniach i wyraźnie oddziel późniejszą prezentację.\nZapisz każdą rozmowę osobno\nW notatce umieść datę, krótki opis roli rozmówcy, konkretny przypadek, częstotliwość, obecny sposób działania oraz skutki. Zapisz także sytuacje, w których problem nie wystąpił albo nie miał dużego znaczenia. Cytat oznacz jako cytat tylko wtedy, gdy pamiętasz dokładne słowa. Nagrywaj wyłącznie za zgodą rozmówcy.\nOddziel odpowiedź od własnego wniosku. „Powiedział, że porównywał pliki przez godzinę” to informacja z rozmowy. „Będzie chciał zapłacić za oszczędność czasu” to twoje przypuszczenie. Jeśli nie uzyskałeś odpowiedzi, wpisz „brak informacji”.\nPorównaj rozmowy i popraw założenia\nZestaw odpowiedzi pod kątem tych samych pytań: kto ma trudność, jak często, co z nią robi i jak bardzo mu przeszkadza. Przy małej grupie zapis „3 z 5 osób opisały taki przypadek” jest bardziej przejrzysty niż samotne „60%”. Nie przenoś tego wyniku na wszystkich potencjalnych klientów.\nWypisz powtarzające się obserwacje i osobno to, co przeczy pomysłowi. Jeśli tylko część rozmówców doświadcza problemu, sprawdź, co ich łączy. Może warto zawęzić grupę. Jeśli relacje są niejasne lub sprzeczne, zapisz konkretną niewiadomą i dobierz kolejne rozmowy pod jej wyjaśnienie.\nPo tym punkcie masz notatki z rozmów, wspólne obserwacje i poprawiony opis problemu. Wróć też do punktu 2, jeśli proponowane rozwiązanie przestało pasować do tego, czego się dowiedziałeś.",
+          "guide_sources": [
+            "Eric Migicovsky, How to Talk to Users. Podstawa: rozmowy o konkretnych doświadczeniach, obecnych sposobach działania i trudnościach. Link prowadzi do omówienia i zapisu wykładu.",
+            "Paul Graham, Do Things that Don't Scale. Podstawa: osobiste docieranie do pierwszych odbiorców.",
+            "Paul Graham, Before the Startup. Podstawa: budowanie wiedzy o użytkownikach."
+          ]
+        },
+        {
           "key": "scope",
           "title": "Co możemy zrobić sami? A co nie?",
           "duration_hint": "Około 15 minut",
@@ -34,7 +122,10 @@
                   "question": "Lista rzeczy, które muszą zostać zrobione do pierwszej wersji.",
                   "help": "Wybierz zadania prowadzące do głównej korzyści. Dodatki możesz dopisać później.",
                   "example": "Przygotować instrukcję korzystania.\nUruchomić prosty formularz.\nWykonać model obudowy.",
-                  "config": { "min_items": 1, "max_items": 30 }
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 30
+                  }
                 }
               ]
             },
@@ -48,7 +139,10 @@
                   "question": "Które z tych rzeczy możesz zrobić sam?",
                   "help": "Jeśli nie ma takich zadań, wpisz „brak”.",
                   "example": "Przygotować instrukcję korzystania.",
-                  "config": { "min_items": 1, "max_items": 20 }
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 20
+                  }
                 },
                 {
                   "key": "learn",
@@ -56,7 +150,10 @@
                   "question": "Których możesz się nauczyć?",
                   "help": "Wybieraj umiejętność przy konkretnym zadaniu. Jeśli nauka mocno odsunęłaby start, przenieś zadanie do pomocy innych osób.",
                   "example": "Uruchomić prosty formularz w wybranym narzędziu.",
-                  "config": { "min_items": 1, "max_items": 20 }
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 20
+                  }
                 },
                 {
                   "key": "others",
@@ -64,7 +161,10 @@
                   "question": "Do których potrzebujesz innych osób?",
                   "help": "Jeśli dasz radę sam, wpisz „brak”.",
                   "example": "Wykonać model obudowy.",
-                  "config": { "min_items": 1, "max_items": 20 }
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 20
+                  }
                 }
               ]
             },
@@ -79,10 +179,22 @@
                   "help": "Wybór „Dam radę sam” pomija szukanie ludzi, wspólną próbę i zasady współpracy. Pliki i lista braków zostają.",
                   "config": {
                     "options": [
-                      { "value": "alone", "label": "Dam radę sam" },
-                      { "value": "cofounder", "label": "Szukam co-foundera" },
-                      { "value": "helpers", "label": "Szukam wykonawców, nie co-foundera" },
-                      { "value": "both", "label": "Szukam co-foundera i wykonawców" }
+                      {
+                        "value": "alone",
+                        "label": "Dam radę sam"
+                      },
+                      {
+                        "value": "cofounder",
+                        "label": "Szukam co-foundera"
+                      },
+                      {
+                        "value": "helpers",
+                        "label": "Szukam wykonawców, nie co-foundera"
+                      },
+                      {
+                        "value": "both",
+                        "label": "Szukam co-foundera i wykonawców"
+                      }
                     ]
                   }
                 }
@@ -93,7 +205,10 @@
               "title": "Profil co-foundera",
               "skip_when": {
                 "answer_key": "preparation.scope.mode.choice",
-                "one_of": ["alone", "helpers"]
+                "one_of": [
+                  "alone",
+                  "helpers"
+                ]
               },
               "fields": [
                 {
@@ -107,11 +222,31 @@
                     "allow_custom_columns": true,
                     "max_items": 5,
                     "columns": [
-                      { "key": "responsibility", "label": "Odpowiedzialność", "placeholder": "Za co ta osoba odpowiada" },
-                      { "key": "equity", "label": "Zakres udziałów do rozmowy", "placeholder": "Np. 10–20%" },
-                      { "key": "experience", "label": "Wymagane doświadczenie", "placeholder": "Co powinna umieć pokazać" },
-                      { "key": "approach", "label": "Podejście", "placeholder": "Jakiej współpracy oczekujesz" },
-                      { "key": "hours", "label": "Wolne godziny i zaangażowanie", "placeholder": "Ile czasu może poświęcić" }
+                      {
+                        "key": "responsibility",
+                        "label": "Odpowiedzialność",
+                        "placeholder": "Za co ta osoba odpowiada"
+                      },
+                      {
+                        "key": "equity",
+                        "label": "Zakres udziałów do rozmowy",
+                        "placeholder": "Np. 10–20%"
+                      },
+                      {
+                        "key": "experience",
+                        "label": "Wymagane doświadczenie",
+                        "placeholder": "Co powinna umieć pokazać"
+                      },
+                      {
+                        "key": "approach",
+                        "label": "Podejście",
+                        "placeholder": "Jakiej współpracy oczekujesz"
+                      },
+                      {
+                        "key": "hours",
+                        "label": "Wolne godziny i zaangażowanie",
+                        "placeholder": "Ile czasu może poświęcić"
+                      }
                     ]
                   }
                 }
@@ -122,7 +257,10 @@
               "title": "Osoby potrzebne do konkretnej pracy",
               "skip_when": {
                 "answer_key": "preparation.scope.mode.choice",
-                "one_of": ["alone", "cofounder"]
+                "one_of": [
+                  "alone",
+                  "cofounder"
+                ]
               },
               "fields": [
                 {
@@ -135,9 +273,21 @@
                     "add_label": "Dodaj osobę",
                     "max_items": 12,
                     "columns": [
-                      { "key": "task", "label": "Zadanie", "placeholder": "Co ma powstać" },
-                      { "key": "skill", "label": "Umiejętność i doświadczenie", "placeholder": "Czego szukasz" },
-                      { "key": "pay", "label": "Czy możesz zapłacić i ile", "placeholder": "Np. 800 zł albo brak budżetu" }
+                      {
+                        "key": "task",
+                        "label": "Zadanie",
+                        "placeholder": "Co ma powstać"
+                      },
+                      {
+                        "key": "skill",
+                        "label": "Umiejętność i doświadczenie",
+                        "placeholder": "Czego szukasz"
+                      },
+                      {
+                        "key": "pay",
+                        "label": "Czy możesz zapłacić i ile",
+                        "placeholder": "Np. 800 zł albo brak budżetu"
+                      }
                     ]
                   }
                 }
@@ -159,7 +309,9 @@
               "title": "Użyj warstwy Social",
               "skip_when": {
                 "answer_key": "preparation.scope.mode.choice",
-                "one_of": ["alone"]
+                "one_of": [
+                  "alone"
+                ]
               },
               "fields": [
                 {
@@ -180,7 +332,9 @@
               "title": "Zapisz, kogo pytałeś",
               "skip_when": {
                 "answer_key": "preparation.scope.mode.choice",
-                "one_of": ["alone"]
+                "one_of": [
+                  "alone"
+                ]
               },
               "fields": [
                 {
@@ -193,10 +347,22 @@
                     "add_label": "Dodaj kontakt",
                     "max_items": 20,
                     "columns": [
-                      { "key": "who", "label": "Imię i nazwisko albo firma" },
-                      { "key": "reply", "label": "Czy odpowiedziała" },
-                      { "key": "skills", "label": "Umiejętności" },
-                      { "key": "together", "label": "Czy będziecie współpracować" }
+                      {
+                        "key": "who",
+                        "label": "Imię i nazwisko albo firma"
+                      },
+                      {
+                        "key": "reply",
+                        "label": "Czy odpowiedziała"
+                      },
+                      {
+                        "key": "skills",
+                        "label": "Umiejętności"
+                      },
+                      {
+                        "key": "together",
+                        "label": "Czy będziecie współpracować"
+                      }
                     ]
                   }
                 }
@@ -207,7 +373,9 @@
               "title": "Wybierz osoby z platformy",
               "skip_when": {
                 "answer_key": "preparation.scope.mode.choice",
-                "one_of": ["alone"]
+                "one_of": [
+                  "alone"
+                ]
               },
               "fields": [
                 {
@@ -215,7 +383,9 @@
                   "kind": "people",
                   "question": "Zaznacz osoby, z którymi chcesz iść dalej.",
                   "help": "To prawdziwe profile z Vairo. Zaproszenie do startupu wysyłasz z karty osoby w Social. Samo zaznaczenie nie tworzy członkostwa. Jeśli nikogo nie wybierasz, zapisz pustą listę.",
-                  "config": { "empty_ok": true }
+                  "config": {
+                    "empty_ok": true
+                  }
                 }
               ]
             }
@@ -235,7 +405,9 @@
               "title": "Wybierzcie wspólne zadanie",
               "skip_when": {
                 "answer_key": "preparation.scope.mode.choice",
-                "one_of": ["alone"]
+                "one_of": [
+                  "alone"
+                ]
               },
               "fields": [
                 {
@@ -244,7 +416,9 @@
                   "question": "Które niewielkie zadanie z listy bierzecie na próbę?",
                   "help": "Ma wykorzystać różne umiejętności i zająć najwyżej kilka dni.",
                   "example": "Model mocowania uchwytu rowerowego.",
-                  "config": { "max": 300 }
+                  "config": {
+                    "max": 300
+                  }
                 },
                 {
                   "key": "plan",
@@ -252,7 +426,9 @@
                   "question": "Co ma powstać, kto robi którą część i kiedy kończycie?",
                   "help": "Wystarczy jedno zdanie na osobę.",
                   "example": "Ola przygotuje model, ja dostarczę wymiary. W piątek oglądamy wynik.",
-                  "config": { "max": 500 }
+                  "config": {
+                    "max": 500
+                  }
                 }
               ]
             },
@@ -261,7 +437,9 @@
               "title": "Zapiszcie wynik próby",
               "skip_when": {
                 "answer_key": "preparation.scope.mode.choice",
-                "one_of": ["alone"]
+                "one_of": [
+                  "alone"
+                ]
               },
               "fields": [
                 {
@@ -270,7 +448,9 @@
                   "question": "Co powstało i do czego możecie tego użyć?",
                   "help": "Krótki opis albo link. Wynik zostaje zwykłą odpowiedzią w tym etapie.",
                   "example": "Powstał model mocowania. Pasuje do koszyka, ale zaczep wymaga poprawki. Link: …",
-                  "config": { "max": 2000 }
+                  "config": {
+                    "max": 2000
+                  }
                 },
                 {
                   "key": "decision",
@@ -278,14 +458,18 @@
                   "question": "Co dalej z tym składem?",
                   "help": "Jeśli niczego nie zmieniacie, wystarczy „Kontynuujemy w tym składzie”. Inaczej zapiszcie tylko potrzebną zmianę.",
                   "example": "Kontynuujemy. Przed kolejnym modelem najpierw przekazuję komplet wymiarów.",
-                  "config": { "max": 2000 }
+                  "config": {
+                    "max": 2000
+                  }
                 },
                 {
                   "key": "ready",
                   "kind": "checkmark",
                   "question": "Team jest gotowy do dalszej pracy.",
                   "help": "Zaznacz, gdy macie uzgodniony skład. Jedna próba nie musi rozwiązać wszystkiego.",
-                  "config": { "confirm_label": "Team gotowy" }
+                  "config": {
+                    "confirm_label": "Team gotowy"
+                  }
                 }
               ]
             }
@@ -322,7 +506,9 @@
               "title": "Ustalcie zasady współpracy",
               "skip_when": {
                 "answer_key": "preparation.scope.mode.choice",
-                "one_of": ["alone"]
+                "one_of": [
+                  "alone"
+                ]
               },
               "fields": [
                 {
@@ -331,7 +517,10 @@
                   "question": "Zaakceptowane ustalenia, po jednym w każdym wpisie.",
                   "help": "Dostępność, sposób kontaktu, podejmowanie decyzji i warunki udziału. Nieuzgodnioną sprawę oznacz jako otwartą.",
                   "example": "Każde z nas przeznacza na projekt około pięciu godzin tygodniowo.\nWydatki zatwierdzamy razem.",
-                  "config": { "min_items": 1, "max_items": 12 }
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12
+                  }
                 }
               ]
             }
@@ -362,9 +551,21 @@
                     "add_label": "Dodaj rzecz",
                     "max_items": 20,
                     "columns": [
-                      { "key": "thing", "label": "Potrzebna rzecz", "placeholder": "Nazwa, możesz dopisać link" },
-                      { "key": "source", "label": "Skąd ją weźmiesz", "placeholder": "Kupię, pożyczę, mam w zespole" },
-                      { "key": "cost", "label": "Koszt", "placeholder": "Np. 200 zł jednorazowo albo bezpłatnie" }
+                      {
+                        "key": "thing",
+                        "label": "Potrzebna rzecz",
+                        "placeholder": "Nazwa, możesz dopisać link"
+                      },
+                      {
+                        "key": "source",
+                        "label": "Skąd ją weźmiesz",
+                        "placeholder": "Kupię, pożyczę, mam w zespole"
+                      },
+                      {
+                        "key": "cost",
+                        "label": "Koszt",
+                        "placeholder": "Np. 200 zł jednorazowo albo bezpłatnie"
+                      }
                     ]
                   }
                 }
@@ -399,7 +600,9 @@
                   "question": "Czy użytkownicy mają osobne dane, czy współdzielą przestrzeń, na przykład firmy albo zespołu?",
                   "help": "Zapisz wybrany sposób jednym konkretnym zdaniem.",
                   "example": "Każda firma ma własne dokumenty. Pracownicy logują się własnymi kontami. Firma A nie widzi dokumentów firmy B.",
-                  "config": { "max": 400 }
+                  "config": {
+                    "max": 400
+                  }
                 }
               ]
             },
@@ -417,10 +620,26 @@
                     "add_label": "Dodaj rolę",
                     "max_items": 8,
                     "columns": [
-                      { "key": "role", "label": "Rola", "placeholder": "Np. właściciel przestrzeni" },
-                      { "key": "see", "label": "Co może zobaczyć", "placeholder": "Np. dokumenty swojej firmy" },
-                      { "key": "change", "label": "Co może zmienić albo usunąć", "placeholder": "Np. własne dokumenty, nie cudze" },
-                      { "key": "invite", "label": "Czy może zapraszać innych", "placeholder": "Tak, nie, albo tylko do odczytu" }
+                      {
+                        "key": "role",
+                        "label": "Rola",
+                        "placeholder": "Np. właściciel przestrzeni"
+                      },
+                      {
+                        "key": "see",
+                        "label": "Co może zobaczyć",
+                        "placeholder": "Np. dokumenty swojej firmy"
+                      },
+                      {
+                        "key": "change",
+                        "label": "Co może zmienić albo usunąć",
+                        "placeholder": "Np. własne dokumenty, nie cudze"
+                      },
+                      {
+                        "key": "invite",
+                        "label": "Czy może zapraszać innych",
+                        "placeholder": "Tak, nie, albo tylko do odczytu"
+                      }
                     ]
                   }
                 }
@@ -449,7 +668,9 @@
                   "question": "Ilu testerów zaprosisz i ile każdy zużyje?",
                   "help": "Podaj liczbę osób i jednostkę, która naprawdę generuje koszt: czas, miejsce albo liczba operacji.",
                   "example": "10 osób, każda przetworzy około 5 godzin nagrań miesięcznie. Łącznie 50 godzin.",
-                  "config": { "max": 400 }
+                  "config": {
+                    "max": 400
+                  }
                 },
                 {
                   "key": "monthly",
@@ -457,7 +678,9 @@
                   "question": "Jaki jest szacowany miesięczny koszt usług dla tej grupy?",
                   "help": "Wyjdź od cen z listy braków w Ogólne. Dolicz opłatę stałą i opłatę za użycie. Przy nieznanej cenie napisz „do sprawdzenia”, nie zero.",
                   "example": "Serwer 60 zł miesięcznie plus 0,04 zł za minutę nagrania. Przy 3000 minut wychodzi około 180 zł miesięcznie.",
-                  "config": { "max": 400 }
+                  "config": {
+                    "max": 400
+                  }
                 }
               ]
             },
@@ -471,7 +694,10 @@
                   "question": "Co stanie się po przekroczeniu limitów wybranych usług?",
                   "help": "Przy każdej usłudze napisz: dopłata, zatrzymanie działania albo konieczność zmiany pakietu. Zaznacz, czy limit jest na cały program, czy na jednego użytkownika.",
                   "example": "Po wykorzystaniu miejsca dostawca blokuje nowe pliki i nie nalicza dopłaty.\nPrzetwarzanie nagrań powyżej pakietu kosztuje drożej za minutę.",
-                  "config": { "min_items": 1, "max_items": 12 }
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12
+                  }
                 },
                 {
                   "key": "cap",
@@ -479,7 +705,9 @@
                   "question": "Jaki limit nakładasz na testy, żeby zmieścić się w budżecie?",
                   "help": "Liczba testerów, godziny albo miejsce. Jeśli dodatkowy limit jest zbędny, napisz krótko dlaczego.",
                   "example": "10 osób, do 5 godzin nagrań miesięcznie na osobę. Po limicie kolejne nagrania czekają do następnego miesiąca.",
-                  "config": { "max": 400 }
+                  "config": {
+                    "max": 400
+                  }
                 }
               ]
             }
@@ -507,8 +735,14 @@
                   "help": "Jeśli nie, reszta tego punktu odpada. Wrócisz do niej, gdy zmienisz odpowiedź.",
                   "config": {
                     "options": [
-                      { "value": "yes", "label": "Tak, dostęp będzie płatny" },
-                      { "value": "no", "label": "Nie, pierwsza wersja jest bezpłatna" }
+                      {
+                        "value": "yes",
+                        "label": "Tak, dostęp będzie płatny"
+                      },
+                      {
+                        "value": "no",
+                        "label": "Nie, pierwsza wersja jest bezpłatna"
+                      }
                     ]
                   }
                 }
@@ -519,7 +753,9 @@
               "title": "Jak klient płaci i dostaje dostęp",
               "skip_when": {
                 "answer_key": "preparation.paid.choice.answer",
-                "one_of": ["no"]
+                "one_of": [
+                  "no"
+                ]
               },
               "fields": [
                 {
@@ -528,7 +764,9 @@
                   "question": "Jak klient zapłaci i jak otrzyma dostęp?",
                   "help": "Napisz, kto sprawdza płatność i czy konto włącza się ręcznie, czy samo.",
                   "example": "Klient płaci przez link do oferty. Po wpłacie w panelu operatora ręcznie odblokowujemy konto i piszemy, że może zacząć.",
-                  "config": { "max": 500 }
+                  "config": {
+                    "max": 500
+                  }
                 }
               ]
             },
@@ -537,7 +775,9 @@
               "title": "Kiedy dostęp się zaczyna i kończy",
               "skip_when": {
                 "answer_key": "preparation.paid.choice.answer",
-                "one_of": ["no"]
+                "one_of": [
+                  "no"
+                ]
               },
               "fields": [
                 {
@@ -546,7 +786,9 @@
                   "question": "Klient opłacił dostęp. Od kiedy może korzystać i na jak długo?",
                   "help": "Jedno zdanie. Przy opłacie za użycie dopisz, skąd bierzecie informację o zużyciu.",
                   "example": "Dostęp włącza się tego samego dnia i trwa do końca opłaconego miesiąca.",
-                  "config": { "max": 400 }
+                  "config": {
+                    "max": 400
+                  }
                 },
                 {
                   "key": "trial",
@@ -554,7 +796,9 @@
                   "question": "Skończył się bezpłatny test. Co zostaje, a co wymaga płatności?",
                   "help": "Jeśli nie ma bezpłatnego testu, napisz „Nie dotyczy”.",
                   "example": "Po 14 dniach może tylko przeglądać zapisane dane, dopóki nie opłaci dostępu.",
-                  "config": { "max": 400 }
+                  "config": {
+                    "max": 400
+                  }
                 },
                 {
                   "key": "failed",
@@ -562,7 +806,9 @@
                   "question": "Płatność się nie powiodła. Co z nowym kontem, a co z klientem, który już korzysta?",
                   "help": "Rozdziel pierwszy zakup od odnowienia. Napisz, czy dotychczasowy klient dostaje dodatkowe dni.",
                   "example": "Nowe konto zostaje wyłączone. Dotychczasowy klient ma 7 dni na poprawienie karty, potem dostęp do dodawania nowych rzeczy się zamyka.",
-                  "config": { "max": 500 }
+                  "config": {
+                    "max": 500
+                  }
                 },
                 {
                   "key": "cancel",
@@ -570,7 +816,9 @@
                   "question": "Klient zrezygnował z odnawiania, ale opłacony okres jeszcze trwa. Do kiedy korzysta?",
                   "help": "Napisz, do kiedy działa to, co już opłacił, i że kolejna opłata nie jest pobierana.",
                   "example": "Korzysta do końca opłaconego miesiąca. Kolejna płatność nie schodzi.",
-                  "config": { "max": 400 }
+                  "config": {
+                    "max": 400
+                  }
                 },
                 {
                   "key": "ended",
@@ -578,7 +826,9 @@
                   "question": "Opłacony okres się skończył. Czy może jeszcze przeglądać albo pobrać zapisane materiały?",
                   "help": "Zakończenie dostępu, usunięcie konta i usunięcie materiałów to osobne decyzje.",
                   "example": "Może przeglądać i pobrać zapisane dokumenty. Nie może dodawać nowych ani ich zmieniać.",
-                  "config": { "max": 500 }
+                  "config": {
+                    "max": 500
+                  }
                 }
               ]
             }
@@ -615,10 +865,26 @@
                     "add_label": "Dodaj wymaganie",
                     "max_items": 20,
                     "columns": [
-                      { "key": "name", "label": "Parametr albo efekt", "placeholder": "Np. czas pracy na jednym ładowaniu" },
-                      { "key": "minimum", "label": "Minimum pierwszej wersji", "placeholder": "Np. 8 godzin" },
-                      { "key": "target", "label": "Cel na później", "placeholder": "Np. 12 godzin" },
-                      { "key": "priority", "label": "Obowiązkowe czy pożądane", "placeholder": "Obowiązkowe albo pożądane" }
+                      {
+                        "key": "name",
+                        "label": "Parametr albo efekt",
+                        "placeholder": "Np. czas pracy na jednym ładowaniu"
+                      },
+                      {
+                        "key": "minimum",
+                        "label": "Minimum pierwszej wersji",
+                        "placeholder": "Np. 8 godzin"
+                      },
+                      {
+                        "key": "target",
+                        "label": "Cel na później",
+                        "placeholder": "Np. 12 godzin"
+                      },
+                      {
+                        "key": "priority",
+                        "label": "Obowiązkowe czy pożądane",
+                        "placeholder": "Obowiązkowe albo pożądane"
+                      }
                     ]
                   }
                 }
@@ -649,10 +915,26 @@
                     "add_label": "Dodaj część",
                     "max_items": 30,
                     "columns": [
-                      { "key": "part", "label": "Część", "placeholder": "Nazwa i ewentualny dostawca" },
-                      { "key": "price", "label": "Cena za sztukę", "placeholder": "Np. 18 zł albo do sprawdzenia" },
-                      { "key": "moq", "label": "Minimalne zamówienie", "placeholder": "Np. 200 sztuk" },
-                      { "key": "lead", "label": "Dostępność i czas dostawy", "placeholder": "Np. jest, 6 tygodni" }
+                      {
+                        "key": "part",
+                        "label": "Część",
+                        "placeholder": "Nazwa i ewentualny dostawca"
+                      },
+                      {
+                        "key": "price",
+                        "label": "Cena za sztukę",
+                        "placeholder": "Np. 18 zł albo do sprawdzenia"
+                      },
+                      {
+                        "key": "moq",
+                        "label": "Minimalne zamówienie",
+                        "placeholder": "Np. 200 sztuk"
+                      },
+                      {
+                        "key": "lead",
+                        "label": "Dostępność i czas dostawy",
+                        "placeholder": "Np. jest, 6 tygodni"
+                      }
                     ]
                   }
                 }
@@ -673,8 +955,16 @@
                     "add_label": "Dodaj część krytyczną",
                     "max_items": 15,
                     "columns": [
-                      { "key": "part", "label": "Część krytyczna", "placeholder": "Co może zatrzymać produkcję" },
-                      { "key": "alt", "label": "Zamiennik albo drugi dostawca", "placeholder": "Nazwa albo „jeszcze szukam”" }
+                      {
+                        "key": "part",
+                        "label": "Część krytyczna",
+                        "placeholder": "Co może zatrzymać produkcję"
+                      },
+                      {
+                        "key": "alt",
+                        "label": "Zamiennik albo drugi dostawca",
+                        "placeholder": "Nazwa albo „jeszcze szukam”"
+                      }
                     ]
                   }
                 },
@@ -684,7 +974,10 @@
                   "question": "Jakie narzędzia, maszyny albo formy są potrzebne do pierwszej serii?",
                   "help": "Przy każdej pozycji dopisz orientacyjny czas jej przygotowania, jeśli go znasz.",
                   "example": "Forma wtryskowa obudowy. Przygotowanie około 10 tygodni.\nStanowisko do sprawdzenia szczelności.",
-                  "config": { "min_items": 1, "max_items": 15 }
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 15
+                  }
                 },
                 {
                   "key": "logistics",
@@ -692,7 +985,9 @@
                   "question": "Jakie cło, przepisy wwozu i wywozu oraz czas transportu wchodzą w koszt i termin?",
                   "help": "Jeśli sprzedajesz i produkujesz w jednym kraju i nie widzisz takich kosztów, napisz to wprost.",
                   "example": "Części z Azji: fracht i cło około 12% wartości. Transport 4 tygodnie. To wchodzi w cenę sztuki.",
-                  "config": { "max": 1500 }
+                  "config": {
+                    "max": 1500
+                  }
                 }
               ]
             }
@@ -717,7 +1012,9 @@
                   "question": "Jak produkt ma się zachować przy zwykłym użyciu i przy przewidywalnym błędzie użytkownika?",
                   "help": "Upadek, złe zasilanie, wilgoć, dziecko w pobliżu — tylko to, co naprawdę dotyczy tego urządzenia.",
                   "example": "Przy upadku z biurka obudowa nie pęka. Zła ładowarka nie może uszkodzić baterii ani nagrzać obudowy.",
-                  "config": { "max": 1500 }
+                  "config": {
+                    "max": 1500
+                  }
                 },
                 {
                   "key": "life",
@@ -725,7 +1022,9 @@
                   "question": "Jak długo ma działać i jaki odsetek usterek albo odrzuceń akceptujesz?",
                   "help": "Podaj okres i liczbę. „Mało awarii” nie da się sprawdzić.",
                   "example": "Rok codziennego użycia. Poniżej 2% sztuk odrzuconych na kontroli i poniżej 1% awarii w pierwszym roku.",
-                  "config": { "max": 400 }
+                  "config": {
+                    "max": 400
+                  }
                 }
               ]
             },
@@ -743,8 +1042,16 @@
                     "add_label": "Dodaj test",
                     "max_items": 15,
                     "columns": [
-                      { "key": "need", "label": "Wymaganie", "placeholder": "Co ma być prawdą" },
-                      { "key": "test", "label": "Test albo pomiar", "placeholder": "Jak to sprawdzicie" }
+                      {
+                        "key": "need",
+                        "label": "Wymaganie",
+                        "placeholder": "Co ma być prawdą"
+                      },
+                      {
+                        "key": "test",
+                        "label": "Test albo pomiar",
+                        "placeholder": "Jak to sprawdzicie"
+                      }
                     ]
                   }
                 }
@@ -775,9 +1082,21 @@
                     "add_label": "Dodaj wymóg",
                     "max_items": 15,
                     "columns": [
-                      { "key": "rule", "label": "Przepis, norma albo certyfikat", "placeholder": "Np. oznaczenie CE, bezpieczeństwo baterii" },
-                      { "key": "effect", "label": "Co zmienia w produkcie", "placeholder": "Materiał, układ, dokument" },
-                      { "key": "when", "label": "Kiedy jest potrzebne", "placeholder": "Np. przed pierwszą sprzedażą w UE" }
+                      {
+                        "key": "rule",
+                        "label": "Przepis, norma albo certyfikat",
+                        "placeholder": "Np. oznaczenie CE, bezpieczeństwo baterii"
+                      },
+                      {
+                        "key": "effect",
+                        "label": "Co zmienia w produkcie",
+                        "placeholder": "Materiał, układ, dokument"
+                      },
+                      {
+                        "key": "when",
+                        "label": "Kiedy jest potrzebne",
+                        "placeholder": "Np. przed pierwszą sprzedażą w UE"
+                      }
                     ]
                   }
                 },
@@ -787,7 +1106,9 @@
                   "question": "Co musi być na etykiecie i w instrukcji na rynku, od którego zaczynasz?",
                   "help": "Treść, znaki i język. Jeśli jeszcze nie wiesz, napisz „do sprawdzenia” przy konkretnym znaku, nie pomijaj rynku.",
                   "example": "Nazwa produktu, dane producenta, znak przekreślonego kosza i krótkie ostrzeżenie po polsku.",
-                  "config": { "max": 1500 }
+                  "config": {
+                    "max": 1500
+                  }
                 },
                 {
                   "key": "clash",
@@ -795,7 +1116,9 @@
                   "question": "Czy któryś przepis kłóci się z wcześniejszymi wymaganiami? Jak to rozstrzygacie?",
                   "help": "Jeśli sprzeczności nie ma, napisz „Brak sprzeczności” i jednym zdaniem, co sprawdziłeś.",
                   "example": "Izolacja wymusza grubszą obudowę. Podnosimy dopuszczalny wymiar z 80 mm do 92 mm. Masa nadal mieści się w minimum.",
-                  "config": { "max": 1500 }
+                  "config": {
+                    "max": 1500
+                  }
                 }
               ]
             }
@@ -825,8 +1148,16 @@
                     "add_label": "Dodaj zasób",
                     "max_items": 15,
                     "columns": [
-                      { "key": "what", "label": "Kompetencja albo zasób", "placeholder": "Kto albo co" },
-                      { "key": "status", "label": "Mamy czy trzeba pozyskać", "placeholder": "Mamy, wynajmiemy, szukamy" }
+                      {
+                        "key": "what",
+                        "label": "Kompetencja albo zasób",
+                        "placeholder": "Kto albo co"
+                      },
+                      {
+                        "key": "status",
+                        "label": "Mamy czy trzeba pozyskać",
+                        "placeholder": "Mamy, wynajmiemy, szukamy"
+                      }
                     ]
                   }
                 },
@@ -836,7 +1167,9 @@
                   "question": "Jaki budżet rezerwujesz na narzędzia, prototypy, testy i konsultacje?",
                   "help": "Oprzyj kwotę na poprzednich punktach i dodaj zapas około 15–20% na poprawkę, która wyjdzie przy pierwszym podejściu.",
                   "example": "Forma, dwie iteracje płytki i jedno badanie: 28 tys. zł plus 20% zapasu, razem około 34 tys. zł.",
-                  "config": { "max": 400 }
+                  "config": {
+                    "max": 400
+                  }
                 }
               ]
             },
@@ -855,8 +1188,16 @@
                     "add_label": "Dodaj ryzyko",
                     "max_items": 15,
                     "columns": [
-                      { "key": "risk", "label": "Otwarty problem", "placeholder": "Co nadal nie jest rozstrzygnięte" },
-                      { "key": "gate", "label": "Blokuje budowę czy może poczekać", "placeholder": "Blokuje albo może poczekać" }
+                      {
+                        "key": "risk",
+                        "label": "Otwarty problem",
+                        "placeholder": "Co nadal nie jest rozstrzygnięte"
+                      },
+                      {
+                        "key": "gate",
+                        "label": "Blokuje budowę czy może poczekać",
+                        "placeholder": "Blokuje albo może poczekać"
+                      }
                     ]
                   }
                 }
@@ -894,8 +1235,16 @@
                     "add_label": "Dodaj etap",
                     "max_items": 8,
                     "columns": [
-                      { "key": "stage", "label": "Etap", "placeholder": "Np. pierwsza rozmowa" },
-                      { "key": "forward", "label": "Co musi się stać, żeby iść dalej", "placeholder": "Konkretne zdarzenie, nie „dobra rozmowa”" }
+                      {
+                        "key": "stage",
+                        "label": "Etap",
+                        "placeholder": "Np. pierwsza rozmowa"
+                      },
+                      {
+                        "key": "forward",
+                        "label": "Co musi się stać, żeby iść dalej",
+                        "placeholder": "Konkretne zdarzenie, nie „dobra rozmowa”"
+                      }
                     ]
                   }
                 }
@@ -915,10 +1264,26 @@
                     "add_label": "Dodaj firmę",
                     "max_items": 30,
                     "columns": [
-                      { "key": "company", "label": "Firma", "placeholder": "Nazwa" },
-                      { "key": "stage", "label": "Aktualny etap", "placeholder": "Np. jeszcze bez kontaktu" },
-                      { "key": "next", "label": "Następne działanie", "placeholder": "Co i kiedy" },
-                      { "key": "owner", "label": "Kto z waszego teamu", "placeholder": "Imię" }
+                      {
+                        "key": "company",
+                        "label": "Firma",
+                        "placeholder": "Nazwa"
+                      },
+                      {
+                        "key": "stage",
+                        "label": "Aktualny etap",
+                        "placeholder": "Np. jeszcze bez kontaktu"
+                      },
+                      {
+                        "key": "next",
+                        "label": "Następne działanie",
+                        "placeholder": "Co i kiedy"
+                      },
+                      {
+                        "key": "owner",
+                        "label": "Kto z waszego teamu",
+                        "placeholder": "Imię"
+                      }
                     ]
                   }
                 }
@@ -945,7 +1310,9 @@
                   "question": "Jaki zakres pierwszej wersji możecie zaoferować firmie?",
                   "help": "Oprzyj się na tym, co ma powstać do pierwszej wersji w Ogólne. Napisz, co klient dostaje, nie jak to jest zbudowane.",
                   "example": "Formularz zgłoszeń dla recepcji i tygodniowe zestawienie, ile zgłoszeń zostało zamkniętych.",
-                  "config": { "max": 1500 }
+                  "config": {
+                    "max": 1500
+                  }
                 },
                 {
                   "key": "price",
@@ -953,7 +1320,9 @@
                   "question": "Jaka jest cena albo jak ją liczycie i za co dokładnie klient płaci?",
                   "help": "Kwota, stawka albo wzór. Dopisz, czy to abonament, wdrożenie, czy jedno i drugie.",
                   "example": "2 400 zł za wdrożenie i 800 zł miesięcznie za korzystanie do 5 osób.",
-                  "config": { "max": 400 }
+                  "config": {
+                    "max": 400
+                  }
                 },
                 {
                   "key": "term",
@@ -961,7 +1330,9 @@
                   "question": "Jak długo trwa współpraca albo realizacja?",
                   "help": "Jeśli czas nie ma znaczenia, napisz „Bez określonego końca” i co wtedy kończy współpracę.",
                   "example": "Wdrożenie 3 tygodnie. Abonament na czas nieokreślony, z miesięcznym wypowiedzeniem.",
-                  "config": { "max": 400 }
+                  "config": {
+                    "max": 400
+                  }
                 }
               ]
             },
@@ -975,7 +1346,9 @@
                   "question": "Co klient dostaje w teście i po czym uznajecie go za zakończony?",
                   "help": "Jeśli testu nie ma, napisz „Nie dotyczy”.",
                   "example": "14 dni na jednym zespole. Koniec, gdy policzymy zaoszczędzone godziny i klient zdecyduje, czy bierze abonament.",
-                  "config": { "max": 500 }
+                  "config": {
+                    "max": 500
+                  }
                 }
               ]
             }
@@ -1000,7 +1373,10 @@
                   "question": "Czego potrzebujecie od klienta, zanim zacznie korzystać?",
                   "help": "Dane, dostępy, zgody, materiały. Jeśli niczego nie potrzebujecie, wpisz „Nic”.",
                   "example": "Lista osób, które dostaną dostęp.\nOsoba po stronie klienta, która odbiera pytania.",
-                  "config": { "min_items": 1, "max_items": 12 }
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12
+                  }
                 },
                 {
                   "key": "ours",
@@ -1008,7 +1384,10 @@
                   "question": "Co przed startem musi zrobić wasz team?",
                   "help": "Jedno działanie w pozycji.",
                   "example": "Założyć przestrzeń firmy.\nWysłać umowę do podpisu.",
-                  "config": { "min_items": 1, "max_items": 12 }
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12
+                  }
                 },
                 {
                   "key": "theirs",
@@ -1016,7 +1395,10 @@
                   "question": "Co przed startem musi zrobić klient?",
                   "help": "Jedno działanie w pozycji. Jeśli lista jest tylko „Nic”, wpisz to jednym wpisem.",
                   "example": "Podpisać umowę.\nWskazać osobę prowadzącą po swojej stronie.",
-                  "config": { "min_items": 1, "max_items": 12 }
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12
+                  }
                 }
               ]
             },
@@ -1030,7 +1412,10 @@
                   "question": "Jakie są kolejne działania od potwierdzenia zakupu do momentu, w którym klient może korzystać?",
                   "help": "Dopisz formalności, które u was są: umowa, NDA, zamówienie, faktura, materiały.",
                   "example": "Podpisujemy umowę.\nWystawiamy fakturę za wdrożenie.\nZakładamy dostępy i umawiamy godzinę pierwszego użycia.",
-                  "config": { "min_items": 1, "max_items": 12 }
+                  "config": {
+                    "min_items": 1,
+                    "max_items": 12
+                  }
                 },
                 {
                   "key": "data",
@@ -1038,7 +1423,9 @@
                   "question": "Jakie dane klienta będziecie mieć i kto poza tą firmą może je zobaczyć?",
                   "help": "Dane osobowe, dane firmy, pliki. Jeśli dwóch klientów nie może widzieć swoich materiałów, napisz to wprost. Gdy danych klienta nie przetwarzacie, napisz „Nie przetwarzamy danych klienta”.",
                   "example": "Mamy imiona pracowników i treść zgłoszeń. Widzi je tylko ta firma i osoba z naszego teamu, która prowadzi wdrożenie. Inny klient tego nie widzi.",
-                  "config": { "max": 1500 }
+                  "config": {
+                    "max": 1500
+                  }
                 }
               ]
             }
@@ -1070,7 +1457,9 @@
                   "question": "Gdzie odbywa się pierwsza sprzedaż i jak kupujący płaci oraz odbiera zakup?",
                   "help": "Internet albo miejsce stacjonarne, sposób płatności i sposób odbioru. Od tego zależą zwroty.",
                   "example": "Sklep w internecie. Płatność przy zamówieniu. Paczka kurierem albo odbiór osobisty.",
-                  "config": { "max": 400 }
+                  "config": {
+                    "max": 400
+                  }
                 }
               ]
             },
@@ -1084,7 +1473,9 @@
                   "question": "Kiedy klient może zrezygnować z zakupu i co musisz zrobić, jeśli zakup nie działa tak, jak obiecano?",
                   "help": "Uwzględnij kraj, w którym zaczynasz, i sposób sprzedaży. Jeśli terminu jeszcze nie sprawdziłeś, napisz „do sprawdzenia” przy konkretnej zasadzie, nie zgaduj liczby.",
                   "example": "Sprzedaż przez internet w Polsce: klient może odstąpić w ciągu 14 dni od odbioru. Gdy produkt nie działa, przyjmujemy reklamację i zwracamy pieniądze albo wymieniamy sztukę.",
-                  "config": { "max": 500 }
+                  "config": {
+                    "max": 500
+                  }
                 }
               ]
             },
@@ -1102,10 +1493,26 @@
                     "add_label": "Dodaj ścieżkę",
                     "max_items": 6,
                     "columns": [
-                      { "key": "kind", "label": "Zwrot czy reklamacja", "placeholder": "Zwrot albo reklamacja" },
-                      { "key": "report", "label": "Jak klient się zgłasza", "placeholder": "Mail, formularz, w sklepie" },
-                      { "key": "product", "label": "Co musi umożliwiać produkt albo sprzedaż", "placeholder": "Np. znaleźć kontakt i numer zakupu" },
-                      { "key": "manual", "label": "Co zrobicie ręcznie", "placeholder": "Sprawdzenie, odpowiedź, zwrot pieniędzy" }
+                      {
+                        "key": "kind",
+                        "label": "Zwrot czy reklamacja",
+                        "placeholder": "Zwrot albo reklamacja"
+                      },
+                      {
+                        "key": "report",
+                        "label": "Jak klient się zgłasza",
+                        "placeholder": "Mail, formularz, w sklepie"
+                      },
+                      {
+                        "key": "product",
+                        "label": "Co musi umożliwiać produkt albo sprzedaż",
+                        "placeholder": "Np. znaleźć kontakt i numer zakupu"
+                      },
+                      {
+                        "key": "manual",
+                        "label": "Co zrobicie ręcznie",
+                        "placeholder": "Sprawdzenie, odpowiedź, zwrot pieniędzy"
+                      }
                     ]
                   }
                 }
