@@ -22,6 +22,7 @@ import { RecordsInput } from "./records-field";
 import { ActionInput } from "./action-field";
 import { PeopleInput } from "./people-field";
 import { Button } from "@/components/ui/button";
+import { DictationButton, appendDictation } from "./dictation-button";
 import { cn } from "@/lib/utils";
 import {
   SKIPPED_ANSWER,
@@ -164,6 +165,12 @@ export function FieldInput({
               returnTo={returnTo}
               rowLabels={rowLabels}
             />
+            {field.kind === "short_text" || field.kind === "long_text" ? (
+              <DictationButton
+                disabled={disabled}
+                onText={(text) => onChange(appendDictation(value, text, field.config.max))}
+              />
+            ) : null}
           </div>
 
           {warning ? (

@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronDown, HelpCircle, LogOut, Menu as MenuIcon, Settings } from "lucide-react";
+import { Bell, ChevronDown, GraduationCap, HelpCircle, LogOut, Menu as MenuIcon, Settings } from "lucide-react";
 import { signOut } from "@/app/app/actions";
 import { Avatar } from "@/components/ui/avatar";
 import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
@@ -14,6 +14,7 @@ import { AppBackdrop } from "./app-backdrop";
 import { NavRow } from "./nav-item";
 import { TeamSwitcher, type TeamSummary } from "./team-switcher";
 import { BrandLogo } from "@/components/brand-logo";
+import { OPEN_TOUR_EVENT, WelcomeTour } from "./welcome-tour";
 
 const SOCIAL_OPEN_KEY = "vairo:nav:social-open";
 
@@ -244,6 +245,16 @@ export function AppShell({
                   Jak to działa
                 </MenuItem>
                 <MenuItem
+                  icon={GraduationCap}
+                  onClick={() => {
+                    close();
+                    setMobileOpen(false);
+                    window.dispatchEvent(new Event(OPEN_TOUR_EVENT));
+                  }}
+                >
+                  Samouczek
+                </MenuItem>
+                <MenuItem
                   icon={Settings}
                   onClick={() => {
                     close();
@@ -272,6 +283,7 @@ export function AppShell({
   return (
     <div className="relative flex min-h-full flex-1 bg-[var(--bg)] text-white">
       <AppBackdrop />
+      <WelcomeTour hasTeam={hasTeam} />
 
       {/* Sidebar jest lekko przezroczysty, żeby światło z tła pod nim
           przechodziło — bez tego byłby płaskim czarnym pasem doklejonym

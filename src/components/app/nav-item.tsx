@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { CountBadge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "./nav-config";
@@ -35,6 +35,7 @@ export function NavRow({ item, active, count }: Props) {
           : "text-[var(--text-muted)] hover:bg-white/[0.05] hover:text-white"
       )}
     >
+      <NavPending />
       {/* Znacznik bieżącej pozycji: **pastylka wewnątrz kafelka**, nie kreska
           na jego krawędzi.
 
@@ -58,5 +59,25 @@ export function NavRow({ item, active, count }: Props) {
       <span className="truncate">{item.label}</span>
       {count ? <CountBadge count={count} /> : null}
     </Link>
+  );
+}
+
+/**
+ * Natychmiastowy sygnał, że kliknięcie w menu zadziałało — uwaga z redesignu
+ * o „czasach ładowania na sidebarze”. Każda strona ma już ekran ładowania,
+ * ale między kliknięciem a jego pojawieniem się mija chwila (zwłaszcza
+ * w `npm run dev`, gdzie strona kompiluje się przy pierwszym wejściu).
+ * Pulsująca kreska przy pozycji mówi „już idę”, zanim cokolwiek się zmieni.
+ */
+function NavPending() {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "pointer-events-none absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-white/70 transition-opacity",
+        pending ? "animate-pulse opacity-100" : "opacity-0"
+      )}
+    />
   );
 }
