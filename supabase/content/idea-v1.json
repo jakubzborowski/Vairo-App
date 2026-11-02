@@ -481,7 +481,7 @@
             {
               "key": "brak-konkurencji",
               "title": "Jeśli nie znajdujesz podobnych rozwiązań",
-              "description": "Wypełnij tylko wtedy, gdy naprawdę nic nie znalazłeś. Brak konkurencji częściej oznacza brak rynku niż wolne pole.",
+              "description": "Wypełnij tylko wtedy, gdy naprawdę nic się nie znalazło. Brak konkurencji częściej oznacza brak rynku niż wolne pole.",
               "is_optional": true,
               "fields": [
                 {
@@ -494,7 +494,7 @@
                 {
                   "key": "gdzie-szukales",
                   "kind": "list_short",
-                  "question": "Gdzie szukałeś?",
+                  "question": "Jakie miejsca są już przeszukane?",
                   "is_required": false,
                   "config": {
                     "max_items": 10,
@@ -600,7 +600,7 @@
                 {
                   "key": "wynik",
                   "kind": "short_text",
-                  "question": "Ile osób wykonało proponowane działanie spośród wszystkich, którym przedstawiłeś pomysł?",
+                  "question": "Ile osób wykonało proponowane działanie spośród wszystkich, którym pomysł został przedstawiony?",
                   "help": "Pochwała pomysłu, zapis do darmowych testów i deklaracja „zapłaciłbym” znaczą co innego. Żadne z nich samo w sobie nie dowodzi, że ktoś kupi.",
                   "config": {
                     "min": 1,
@@ -617,7 +617,7 @@
                   "key": "wnioski",
                   "kind": "long_text",
                   "question": "Co zostawisz, co zmienisz i co jeszcze musisz sprawdzić?",
-                  "help": "To podsumowanie całego etapu. Za miesiąc wrócisz do niego i sprawdzisz, czy trzymałeś się planu.",
+                  "help": "To podsumowanie całego etapu. Za miesiąc wrócisz do niego i sprawdzisz, czy plan został dotrzymany.",
                   "config": {
                     "min": 60
                   }
@@ -682,7 +682,7 @@
                 {
                   "key": "w-cenie",
                   "kind": "list_short",
-                  "question": "Co klient otrzyma w cenie, którą podałeś w Ogólnej walidacji?",
+                  "question": "Co klient otrzyma w cenie podanej w Ogólnej walidacji?",
                   "config": {
                     "min_items": 1,
                     "max_items": 12,
@@ -694,7 +694,7 @@
             {
               "key": "reakcja-na-rozliczenie",
               "title": "Sprawdź reakcję na sposób rozliczenia",
-              "description": "Jeśli rozmawiałeś już z ludźmi o tym problemie, wróć do tych samych osób — nie musisz szukać nowych.",
+              "description": "Jeśli były już rozmowy z ludźmi o tym problemie, wróć do tych samych osób — nie musisz szukać nowych.",
               "fields": [
                 {
                   "key": "pasuje-przeszkadza",
@@ -936,7 +936,7 @@
                   "kind": "long_text",
                   "shared": "idea.profil-uzytkownika",
                   "question": "Opisz osobę, która będzie korzystać z twojego rozwiązania.",
-                  "help": "Rola, sytuacja, branża — to, co ma znaczenie dla twojego pomysłu. Jeśli odpowiadałeś już na to w Ogólnej walidacji, zobaczysz tu swoją odpowiedź.",
+                  "help": "Rola, sytuacja, branża — to, co ma znaczenie dla twojego pomysłu. Jeśli odpowiedź padła już w Ogólnej walidacji, zobaczysz tu swoją odpowiedź.",
                   "config": {
                     "min": 30
                   }
@@ -1230,7 +1230,7 @@
     {
       "key": "b2c",
       "title": "B2C",
-      "intro": "W modelu B2C rozwiązanie służy osobom prywatnym lub gospodarstwom domowym. Doprecyzuj, kto uczestniczy w zakupie, w jakiej sytuacji się na niego decyduje i z jakich prywatnych środków go finansuje. Informacje, których jeszcze nie potwierdziłeś, traktuj jako założenia.",
+      "intro": "W modelu B2C rozwiązanie służy osobom prywatnym lub gospodarstwom domowym. Doprecyzuj, kto uczestniczy w zakupie, w jakiej sytuacji się na niego decyduje i z jakich prywatnych środków go finansuje. Niepotwierdzone jeszcze informacje traktuj jako założenia.",
       "points": [
         {
           "key": "zakup-konsumencki",
@@ -1403,7 +1403,7 @@
                   "key": "kogo-zainteresowalo",
                   "kind": "long_text",
                   "question": "Kogo zainteresował twój pomysł?",
-                  "help": "Kto zareagował, o co pytał, czy to byli ci ludzie, których się spodziewałeś?",
+                  "help": "Kto zareagował, o co pytał, czy to byli ci ludzie, o których chodziło?",
                   "config": {
                     "min": 30
                   }
@@ -1426,8 +1426,8 @@
                 {
                   "key": "wydane",
                   "kind": "number",
-                  "question": "Ile pieniędzy wydałeś na dotarcie do tych osób?",
-                  "help": "Reklamy, materiały, wejściówki na targi. Jeśli nic nie wydałeś, wpisz 0.",
+                  "question": "Ile kosztowało dotarcie do tych osób?",
+                  "help": "Reklamy, materiały, wejściówki na targi. Jeśli nic to nie kosztowało, wpisz 0.",
                   "config": {
                     "min": 0,
                     "unit": "zł"
@@ -1437,7 +1437,7 @@
                   "key": "cac",
                   "kind": "number",
                   "question": "Ile kosztowało zdobycie jednej zainteresowanej osoby?",
-                  "help": "To koszt zdobycia jednego klienta (w branży: CAC). Wpisz, ile wydałeś i ile osób się zainteresowało — wynik policzy się sam.",
+                  "help": "To koszt zdobycia jednego klienta (w branży: CAC). Wpisz wydaną kwotę i liczbę zainteresowanych osób — wynik policzy się sam.",
                   "config": {
                     "min": 0,
                     "unit": "zł",
@@ -1855,7 +1855,7 @@
                 {
                   "key": "forma",
                   "kind": "short_text",
-                  "question": "W jakiej formie sprawdziłeś gotowość rynku?",
+                  "question": "W jakiej formie była sprawdzana gotowość rynku?",
                   "help": "Zapis na listę oczekujących, deklaracja zakupu na stronie, formularz przedsprzedażowy.",
                   "config": {
                     "min": 10,
@@ -1931,7 +1931,7 @@
                 {
                   "key": "uzasadnienie",
                   "kind": "short_text",
-                  "question": "Na jakiej podstawie tak to zakwalifikowałeś?",
+                  "question": "Na czym opiera się ta ocena?",
                   "config": {
                     "min": 10,
                     "max": 400

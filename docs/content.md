@@ -52,6 +52,12 @@ ma. Dlatego `MIGRATION_NUMBER.idea` = `034`: kolejne wygenerowanie Idei
 nadpisuje 034, a 007 zostaje jako historyczny — tak samo jak 022 i 023 przy
 Preparation. Na świeżej bazie biegną oba; 034 usuwa to, czego już nie ma.
 
+**Aktualne numery (od listopada 2026): Ambition `039`, Idea `040`,
+Preparation `041`, Execution `042`, MVP `028`.** Powód: treść przepisana na
+formy bezosobowe (bez „pomyślałeś”, „pracujesz sam”). Nowe wygenerowanie
+nadpisuje plik pod aktualnym numerem; zmiana numeru = tylko wtedy, gdy plik
+pod obecnym numerem był już u kogoś odpalony, a treść się zmienia.
+
 Warunek z polem `checkmark` zapisujemy jako `"equals": true`, nie `one_of`:
 aplikacja porównuje `one_of` wyłącznie z tekstem, więc zaznaczenie (`true`)
 zaliczyłoby podpunkt w bazie, a na ekranie nie.

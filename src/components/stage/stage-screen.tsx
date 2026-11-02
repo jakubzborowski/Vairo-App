@@ -22,6 +22,8 @@ import {
   Undo2,
   RotateCcw,
   SlidersHorizontal,
+  ListTree,
+  ListChecks,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -525,7 +527,7 @@ export function StageScreen({
             ) : null}
 
             <Column
-              icon={SlidersHorizontal}
+              icon={ListTree}
               accent={accent}
               title={tree.showCategories ? (category?.title ?? "Punkty") : tree.title}
               subtitle={
@@ -548,7 +550,7 @@ export function StageScreen({
             </Column>
 
             <Column
-              icon={SlidersHorizontal}
+              icon={ListChecks}
               title={readOnly ? "Odpowiedzi zespołu" : "Do zrobienia"}
               subtitle={point?.title}
               accent={accent}

@@ -449,16 +449,18 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `036_content_preparation_v1` | nowa wersja treści Preparation (generowana): punkt „Porozmawiaj z osobami” przeniesiony z Idei, pola z kluczami `idea.rozmowy.…`. 022–024 zostają historyczne |
 | `037_carry_answers_between_stages` | `carry_answers_into_stage()` + trigger na `startup_stages`: odpowiedź pod kluczem pola z innego etapu startupu kopiuje się do nowego etapu; wyrównanie dla istniejących |
 | `038_invite_link_joined` | powiadomienie dla autora linku zaproszenia, gdy ktoś przez niego dołączy (`invite_link_joined`) |
+| `039`–`042_content_*` | Ambition, Idea, Preparation, Execution — ta sama treść z formami bezosobowymi zamiast męskich; wcześniejsze pliki treści zostają historyczne |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`038`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`042`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 
 Pomocnicze: `SPRAWDZ_MIGRACJE.sql` (**po każdym scaleniu** — wyłapuje złą kolejność, która nie daje błędu), `DIAGNOSTYKA.sql` (co faktycznie wjechało), `BACKUP_export.sql`
-(zrzut danych bez `pg_dump`), `CLEANUP_puste_etapy.sql`, `ROLLBACK_003_007.sql`.
+(zrzut danych bez `pg_dump`), `CLEANUP_puste_etapy.sql`, `ROLLBACK_003_007.sql`, `METRYKI_social.sql`
+(zaproszenia, zgłoszenia, zaczepki — tylko odczyt).
 `profile_social.sql` w katalogu `supabase/` jest **wycofany** — zastąpiła go
 migracja 002; ma rekurencję w politykach RLS i nie wolno go odpalać.
 

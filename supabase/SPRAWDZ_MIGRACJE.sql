@@ -223,6 +223,12 @@ with checks(nr, migracja, co, ok, napraw) as (
                and p.prosrc like '%invite_link_joined%'),
     'odpal 038_invite_link_joined (po 037)'),
 
+  (49, '039–042', 'treść etapów bez form męskich (Ambition, Idea, Preparation, Execution)',
+    exists (select 1 from public.stage_templates where key = 'ambition' and intro like 'Kiedy ostatnio przyszło%')
+    and exists (select 1 from public.stage_fields where question = 'Na czym opiera się ta ocena?')
+    and not exists (select 1 from public.stage_subpoints where title = 'Zapisz, kogo pytałeś'),
+    'odpal 039, 040, 041 i 042 (po 038), w tej kolejności'),
+
   -- --- Treść etapów ---------------------------------------------------------
   (50, '006–028', 'wszystkie 5 etapów ma opublikowaną treść',
     (select count(distinct key) = 5 from public.stage_templates

@@ -38,16 +38,20 @@ const GOAL_PROOF_KINDS = new Set([
 const CATEGORY_KEYS = new Set(["general", "saas", "hardware", "b2b", "b2c"]);
 
 /** Numer migracji nadawany per szablon, żeby pliki nie kolidowały. */
+// 039–042: ta sama treść z formami bezosobowymi zamiast męskich
+// („pomyślałeś”, „pracujesz sam”) — uwaga recenzenta „brzmieć bardziej po
+// polsku”, CLAUDE.md: komunikaty bez rodzaju. Wcześniejsze numery zostają
+// historyczne; na świeżej bazie biegną oba, nowszy nadpisuje tekst.
 const MIGRATION_NUMBER = {
-  ambition: "006",
+  ambition: "039",
   // Idea dostała nową wersję treści po uwagach do redesignu (B2C, konkurencja,
   // Hardware). 007 zostaje jako historyczny — tak jak 022/023 przy Preparation.
   // Numer > 021, więc treść Idei może już używać `skip_when`.
-  idea: "034",
+  idea: "040",
   // Kolejne wygenerowanie Preparation (po uwagach do redesignu: punkt
   // „Porozmawiaj z osobami” przeniesiony z Idei). 022–024 zostają historyczne.
-  preparation: "036",
-  execution: "027",
+  preparation: "041",
+  execution: "042",
   // MVP było na gałęzi pod 021 i zderzało się z 021_preparation_tools.
   // Treść MVP odwołuje się do typów celów z 025, więc idzie po Execution.
   mvp: "028",

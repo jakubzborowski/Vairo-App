@@ -56,6 +56,10 @@ tabeli. Każdy plik jest idempotentny, więc ponowne odpalenie niczego nie psuje
 | 40 | `migrations/036_content_preparation_v1.sql` | nowa treść Preparation (generowana) — „Porozmawiaj z osobami” przeniesione z Idei |
 | 41 | `migrations/037_carry_answers_between_stages.sql` | odpowiedzi przechodzą razem z polem do innego etapu (trigger + wyrównanie) |
 | 42 | `migrations/038_invite_link_joined.sql` | powiadomienie dla autora linku, gdy ktoś dołączy przez zaproszenie |
+| 43 | `migrations/039_content_ambition_v1.sql` | treść Ambition bez form męskich (wygenerowana) |
+| 44 | `migrations/040_content_idea_v1.sql` | treść Idei bez form męskich (wygenerowana) — obowiązuje zamiast 034 |
+| 45 | `migrations/041_content_preparation_v1.sql` | treść Preparation bez form męskich (wygenerowana) — obowiązuje zamiast 036 |
+| 46 | `migrations/042_content_execution_v1.sql` | treść Execution bez form męskich (wygenerowana) — obowiązuje zamiast 027 |
 
 > **022 i 023 to wcześniejsze wygenerowania tej samej treści co 024.** Każde
 > jest idempotentne i usuwa to, czego nie ma w swoim JSON-ie, więc odpalenie

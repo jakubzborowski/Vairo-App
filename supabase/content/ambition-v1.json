@@ -4,7 +4,7 @@
   "position": 1,
   "title": "Ambition Stage",
   "subtitle": "Twój pierwszy pomysł",
-  "intro": "Co ostatnio sprawiło, że pomyślałeś: „Przecież musi być łatwiejszy sposób”? Za chwilę wybierzesz jedną taką sytuację, wymyślisz sposób jej poprawienia i nadasz swojemu projektowi nazwę. Orientacyjny czas: 10–15 minut. Wystarczą krótkie odpowiedzi. Wszystko możesz później zmienić.",
+  "intro": "Kiedy ostatnio przyszło Ci do głowy: „Przecież musi być łatwiejszy sposób”? Za chwilę wybierzesz jedną taką sytuację, wymyślisz sposób jej poprawienia i nadasz swojemu projektowi nazwę. Orientacyjny czas: 10–15 minut. Wystarczą krótkie odpowiedzi. Wszystko możesz później zmienić.",
   "finish_label": "Sprawdzam mój pomysł",
   "categories": [
     {
@@ -151,7 +151,7 @@
           "key": "save-idea",
           "title": "Zapisz swój pomysł",
           "duration_hint": "Około 1 minuty",
-          "guide_body": "To podsumowanie wszystkiego, co przed chwilą zapisałeś. Przeczytaj je jak jedną całość i sprawdź, czy oddaje to, co chcesz zrobić. Popraw tylko te odpowiedzi, które tego wymagają — reszta zostaje bez zmian. Po zatwierdzeniu przechodzisz do sprawdzania, czy osoby, którym chcesz pomóc, też potrzebują takiej zmiany.",
+          "guide_body": "To podsumowanie wszystkiego, co przed chwilą zostało zapisane. Przeczytaj je jak jedną całość i sprawdź, czy oddaje to, co chcesz zrobić. Popraw tylko te odpowiedzi, które tego wymagają — reszta zostaje bez zmian. Po zatwierdzeniu przechodzisz do sprawdzania, czy osoby, którym chcesz pomóc, też potrzebują takiej zmiany.",
           "subpoints": [
             {
               "key": "project-outline",

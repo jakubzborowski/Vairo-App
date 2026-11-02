@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Compass, FolderOpen, Rocket, Target, Users, type LucideIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Compass, FolderOpen, Rocket, Route, Users, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
@@ -29,7 +29,7 @@ const STEPS: Step[] = [
     body: "Vairo prowadzi Cię od pomysłu do pierwszych klientów — etap po etapie. W minutę pokażemy, co gdzie jest.",
   },
   {
-    icon: Target,
+    icon: Route,
     title: "Etap startupu",
     body: "Tu pracujesz nad pomysłem. Widzisz jedno zadanie naraz: odpowiadasz, zapisujesz, a kolejne otwiera się samo. Pytanie, na które nie znasz odpowiedzi, możesz pominąć i wrócić do niego później.",
     teamOnly: true,

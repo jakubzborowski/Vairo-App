@@ -25,7 +25,7 @@
                   "key": "osoby",
                   "kind": "list_short",
                   "question": "Znajdź przynajmniej 5 osób, których może dotyczyć wybrany problem.",
-                  "help": "Wpisz imię albo opis, żeby wiedzieć, z kim rozmawiałeś. Nie muszą to być obcy ludzie — zacznij od znajomych z branży.",
+                  "help": "Wpisz imię albo opis, żeby wiedzieć, z kim była rozmowa. Nie muszą to być obcy ludzie — zacznij od znajomych z branży.",
                   "config": {
                     "min_items": 5,
                     "max_items": 20,
@@ -43,7 +43,7 @@
                 {
                   "key": "zapisy",
                   "kind": "list_long",
-                  "question": "Po każdej rozmowie zapisz, czego się dowiedziałeś.",
+                  "question": "Po każdej rozmowie zapisz, czego się z niej dowiadujesz.",
                   "help": "Kiedy ostatnio pojawił się ten problem i jak często się zdarza? Jak ta osoba sobie z nim radzi? Co jest w tym najbardziej uciążliwe i ile kosztuje ją czasu, pieniędzy lub wysiłku?",
                   "config": {
                     "min_items": 5,
@@ -94,7 +94,7 @@
               ]
             }
           ],
-          "guide_body": "Teraz sprawdzisz wcześniejsze przypuszczenia w rozmowach. Poszukasz konkretnych zdarzeń pokazujących, czy problem występuje, jak przeszkadza i co ludzie z nim robią. Przygotuj miejsce na notatki oraz kilka pytań pomocniczych.\nZnajdź przynajmniej pięciu rozmówców\nWróć do opisu odbiorcy z punktu 1. Szukaj osób, które wykonują wskazaną czynność. Do przykładu sklepowego zaproś kogoś odpowiedzialnego za zamawianie towaru. Sam fakt pracy w sklepie może nie wystarczyć.\nZacznij od znajomych, poleceń, grup tematycznych, lokalnych firm lub wydarzeń. Możesz napisać: „Próbuję zrozumieć, jak właściciele małych sklepów planują zamówienia towaru. Czy znajdziesz 15 minut, żeby opowiedzieć mi, jak wygląda to u ciebie?”. Podany czas to przykładowa propozycja krótkiego spotkania.\nZnajomy jest odpowiednim rozmówcą, jeśli pasuje do grupy. Warto dotrzeć również poza własne otoczenie. Pięć rozmów to początek przewidziany w tym ćwiczeniu. Nie traktuj tej liczby jako gwarancji, że poznałeś potrzeby całej grupy.\nPytaj o wydarzenia i słuchaj odpowiedzi\nNa początku wyjaśnij, jaki temat chcesz zrozumieć. Opis rozwiązania zostaw na później, żeby nie podpowiadać rozmówcy, co chcesz usłyszeć. Pomocne pytania to:\nJak wyglądało ostatnie uzupełnianie zapasów w twoim sklepie?\nW którym momencie pojawiła się trudność? Co wtedy się wydarzyło?\nJak często zdarza się podobna sytuacja?\nCo zrobiłeś, żeby sobie poradzić, i jaki był rezultat?\nIle zajęło ci to czasu lub ile kosztowało? Skąd ta ocena?\nNie musisz odczytywać pytań po kolei. Dopytuj o niejasne odpowiedzi: „Co masz na myśli?” lub „Możesz podać przykład?”. Jeśli ktoś mówi, że obecny sposób jest wystarczający, pozwól mu to wyjaśnić. Unikaj pytania „Czy też marnujesz czas na te okropne pliki?”, które sugeruje ocenę.\nGdy pada pomysł nowej funkcji, zapytaj, w jakiej sytuacji byłaby potrzebna. Dzięki temu poznasz powód prośby. Jeśli rozmówca chce obejrzeć twój pomysł, najpierw dokończ część o doświadczeniach i wyraźnie oddziel późniejszą prezentację.\nZapisz każdą rozmowę osobno\nW notatce umieść datę, krótki opis roli rozmówcy, konkretny przypadek, częstotliwość, obecny sposób działania oraz skutki. Zapisz także sytuacje, w których problem nie wystąpił albo nie miał dużego znaczenia. Cytat oznacz jako cytat tylko wtedy, gdy pamiętasz dokładne słowa. Nagrywaj wyłącznie za zgodą rozmówcy.\nOddziel odpowiedź od własnego wniosku. „Powiedział, że porównywał pliki przez godzinę” to informacja z rozmowy. „Będzie chciał zapłacić za oszczędność czasu” to twoje przypuszczenie. Jeśli nie uzyskałeś odpowiedzi, wpisz „brak informacji”.\nPorównaj rozmowy i popraw założenia\nZestaw odpowiedzi pod kątem tych samych pytań: kto ma trudność, jak często, co z nią robi i jak bardzo mu przeszkadza. Przy małej grupie zapis „3 z 5 osób opisały taki przypadek” jest bardziej przejrzysty niż samotne „60%”. Nie przenoś tego wyniku na wszystkich potencjalnych klientów.\nWypisz powtarzające się obserwacje i osobno to, co przeczy pomysłowi. Jeśli tylko część rozmówców doświadcza problemu, sprawdź, co ich łączy. Może warto zawęzić grupę. Jeśli relacje są niejasne lub sprzeczne, zapisz konkretną niewiadomą i dobierz kolejne rozmowy pod jej wyjaśnienie.\nPo tym punkcie masz notatki z rozmów, wspólne obserwacje i poprawiony opis problemu. Wróć też do punktu 2, jeśli proponowane rozwiązanie przestało pasować do tego, czego się dowiedziałeś.",
+          "guide_body": "Teraz sprawdzisz wcześniejsze przypuszczenia w rozmowach. Poszukasz konkretnych zdarzeń pokazujących, czy problem występuje, jak przeszkadza i co ludzie z nim robią. Przygotuj miejsce na notatki oraz kilka pytań pomocniczych.\nZnajdź przynajmniej pięciu rozmówców\nWróć do opisu odbiorcy z punktu 1. Szukaj osób, które wykonują wskazaną czynność. Do przykładu sklepowego zaproś kogoś odpowiedzialnego za zamawianie towaru. Sam fakt pracy w sklepie może nie wystarczyć.\nZacznij od znajomych, poleceń, grup tematycznych, lokalnych firm lub wydarzeń. Możesz napisać: „Próbuję zrozumieć, jak właściciele małych sklepów planują zamówienia towaru. Czy znajdziesz 15 minut, żeby opowiedzieć mi, jak wygląda to u ciebie?”. Podany czas to przykładowa propozycja krótkiego spotkania.\nZnajomy jest odpowiednim rozmówcą, jeśli pasuje do grupy. Warto dotrzeć również poza własne otoczenie. Pięć rozmów to początek przewidziany w tym ćwiczeniu. Nie traktuj tej liczby jako gwarancji, że potrzeby całej grupy są już znane.\nPytaj o wydarzenia i słuchaj odpowiedzi\nNa początku wyjaśnij, jaki temat chcesz zrozumieć. Opis rozwiązania zostaw na później, żeby nie podpowiadać rozmówcy, co chcesz usłyszeć. Pomocne pytania to:\nJak wyglądało ostatnie uzupełnianie zapasów w twoim sklepie?\nW którym momencie pojawiła się trudność? Co wtedy się wydarzyło?\nJak często zdarza się podobna sytuacja?\nCo udało się wtedy zrobić, żeby sobie poradzić, i jaki był rezultat?\nIle zajęło ci to czasu lub ile kosztowało? Skąd ta ocena?\nNie musisz odczytywać pytań po kolei. Dopytuj o niejasne odpowiedzi: „Co masz na myśli?” lub „Możesz podać przykład?”. Jeśli ktoś mówi, że obecny sposób jest wystarczający, pozwól mu to wyjaśnić. Unikaj pytania „Czy też marnujesz czas na te okropne pliki?”, które sugeruje ocenę.\nGdy pada pomysł nowej funkcji, zapytaj, w jakiej sytuacji byłaby potrzebna. Dzięki temu poznasz powód prośby. Jeśli rozmówca chce obejrzeć twój pomysł, najpierw dokończ część o doświadczeniach i wyraźnie oddziel późniejszą prezentację.\nZapisz każdą rozmowę osobno\nW notatce umieść datę, krótki opis roli rozmówcy, konkretny przypadek, częstotliwość, obecny sposób działania oraz skutki. Zapisz także sytuacje, w których problem nie wystąpił albo nie miał dużego znaczenia. Cytat oznacz jako cytat tylko wtedy, gdy pamiętasz dokładne słowa. Nagrywaj wyłącznie za zgodą rozmówcy.\nOddziel odpowiedź od własnego wniosku. „Powiedział, że porównywał pliki przez godzinę” to informacja z rozmowy. „Będzie chciał zapłacić za oszczędność czasu” to twoje przypuszczenie. Jeśli odpowiedzi nie ma, wpisz „brak informacji”.\nPorównaj rozmowy i popraw założenia\nZestaw odpowiedzi pod kątem tych samych pytań: kto ma trudność, jak często, co z nią robi i jak bardzo mu przeszkadza. Przy małej grupie zapis „3 z 5 osób opisały taki przypadek” jest bardziej przejrzysty niż samotne „60%”. Nie przenoś tego wyniku na wszystkich potencjalnych klientów.\nWypisz powtarzające się obserwacje i osobno to, co przeczy pomysłowi. Jeśli tylko część rozmówców doświadcza problemu, sprawdź, co ich łączy. Może warto zawęzić grupę. Jeśli relacje są niejasne lub sprzeczne, zapisz konkretną niewiadomą i dobierz kolejne rozmowy pod jej wyjaśnienie.\nPo tym punkcie masz notatki z rozmów, wspólne obserwacje i poprawiony opis problemu. Wróć też do punktu 2, jeśli proponowane rozwiązanie przestało pasować do tego, co wyszło z rozmów.",
           "guide_sources": [
             "Eric Migicovsky, How to Talk to Users. Podstawa: rozmowy o konkretnych doświadczeniach, obecnych sposobach działania i trudnościach. Link prowadzi do omówienia i zapisu wykładu.",
             "Paul Graham, Do Things that Don't Scale. Podstawa: osobiste docieranie do pierwszych odbiorców.",
@@ -105,7 +105,7 @@
           "key": "scope",
           "title": "Co możemy zrobić sami? A co nie?",
           "duration_hint": "Około 15 minut",
-          "guide_body": "Wypisz prace prowadzące do pierwszej wersji, z której ktoś może skorzystać. Zapisuj konkretny wynik, na przykład „przygotować formularz zgłoszeń”, a nie hasło „technologia”. Przy każdym zadaniu wskaż, czy zrobisz je sam, musisz się nauczyć, czy szukasz kogoś. Co-foundera szukaj przy długotrwałej odpowiedzialności za ważny obszar. Do jednorazowej pracy wystarczy wykonawca. Udziały traktuj jako wstępną propozycję do rozmowy, nie jako zapłatę za jedno zadanie.",
+          "guide_body": "Wypisz prace prowadzące do pierwszej wersji, z której ktoś może skorzystać. Zapisuj konkretny wynik, na przykład „przygotować formularz zgłoszeń”, a nie hasło „technologia”. Przy każdym zadaniu wskaż, czy zrobisz je samodzielnie, musisz się nauczyć, czy szukasz kogoś. Co-foundera szukaj przy długotrwałej odpowiedzialności za ważny obszar. Do jednorazowej pracy wystarczy wykonawca. Udziały traktuj jako wstępną propozycję do rozmowy, nie jako zapłatę za jedno zadanie.",
           "guide_sources": [
             "Michael Seibel, How to Plan an MVP (Startup School, 2019)",
             "Michael Seibel, One Order of Operations for Starting a Startup (2018)",
@@ -136,7 +136,7 @@
                 {
                   "key": "alone",
                   "kind": "list_long",
-                  "question": "Które z tych rzeczy możesz zrobić sam?",
+                  "question": "Które z tych rzeczy możesz zrobić samodzielnie?",
                   "help": "Jeśli nie ma takich zadań, wpisz „brak”.",
                   "example": "Przygotować instrukcję korzystania.",
                   "config": {
@@ -159,7 +159,7 @@
                   "key": "others",
                   "kind": "list_long",
                   "question": "Do których potrzebujesz innych osób?",
-                  "help": "Jeśli dasz radę sam, wpisz „brak”.",
+                  "help": "Jeśli dasz radę samodzielnie, wpisz „brak”.",
                   "example": "Wykonać model obudowy.",
                   "config": {
                     "min_items": 1,
@@ -176,12 +176,12 @@
                   "key": "choice",
                   "kind": "select",
                   "question": "Jak chcesz przejść ten etap?",
-                  "help": "Wybór „Dam radę sam” pomija szukanie ludzi, wspólną próbę i zasady współpracy. Pliki i lista braków zostają.",
+                  "help": "Wybór „Dam radę samodzielnie” pomija szukanie ludzi, wspólną próbę i zasady współpracy. Pliki i lista braków zostają.",
                   "config": {
                     "options": [
                       {
                         "value": "alone",
-                        "label": "Dam radę sam"
+                        "label": "Dam radę samodzielnie"
                       },
                       {
                         "value": "cofounder",
@@ -266,7 +266,7 @@
                 {
                   "key": "roles",
                   "kind": "records",
-                  "question": "Zadania, które są za małe na co-foundera, ale nie zrobisz ich sam.",
+                  "question": "Zadania, które są za małe na co-foundera, ale nie zrobisz ich samodzielnie.",
                   "help": "Przy każdej pozycji napisz umiejętność i czy możesz za tę pracę zapłacić.",
                   "example": "Projekt opakowania gotowego do drukarni. Szukam kogoś, kto przygotowywał takie pliki. Budżet: 800 zł.",
                   "config": {
@@ -299,7 +299,7 @@
           "key": "find-help",
           "title": "Zdobądź pomoc i pierwsze kontakty",
           "duration_hint": "Około 20 minut",
-          "guide_body": "Użyj tego, co zapisałeś w poprzednim punkcie. Profil w Social ma mówić, co tworzysz, na jakim jesteś etapie i w czym ktoś może pomóc. Szukaj osób, których umiejętności pasują do zadań. Po odpowiedzi zapisz w tabeli, czy odpisali, co umieją i czy będziecie współpracować. Do startupu dodajesz tylko osoby, które potwierdziły chęć udziału.",
+          "guide_body": "Użyj tego, co jest zapisane w poprzednim punkcie. Profil w Social ma mówić, co tworzysz, na jakim jesteś etapie i w czym ktoś może pomóc. Szukaj osób, których umiejętności pasują do zadań. Po odpowiedzi zapisz w tabeli, czy odpisali, co umieją i czy będziecie współpracować. Do startupu dodajesz tylko osoby, które potwierdziły chęć udziału.",
           "guide_sources": [
             "Michael Seibel, One Order of Operations for Starting a Startup (2018)"
           ],
@@ -329,7 +329,7 @@
             },
             {
               "key": "outreach",
-              "title": "Zapisz, kogo pytałeś",
+              "title": "Zapisz, kogo prosisz o pomoc",
               "skip_when": {
                 "answer_key": "preparation.scope.mode.choice",
                 "one_of": [
@@ -479,7 +479,7 @@
           "key": "workspace",
           "title": "Uruchom miejsce do pracy",
           "duration_hint": "Około 10 minut",
-          "guide_body": "Zbierz w Plikach materiały, do których zespół będzie wracał: opis pomysłu, wnioski z rozmów, wyniki dotychczasowych zadań. Nazwij je tak, żeby było wiadomo, co zawierają. Zasady współpracy zapisujcie po jednej: dostępność, kontakt, decyzje, warunki udziału. Jeśli działasz sam, zasady pomijasz.",
+          "guide_body": "Zbierz w Plikach materiały, do których zespół będzie wracał: opis pomysłu, wnioski z rozmów, wyniki dotychczasowych zadań. Nazwij je tak, żeby było wiadomo, co zawierają. Zasady współpracy zapisujcie po jednej: dostępność, kontakt, decyzje, warunki udziału. Jeśli działasz w pojedynkę, zasady pomijasz.",
           "guide_sources": [
             "Y Combinator, 10 Questions to Discuss with a Potential Co-founder (2023)"
           ],
@@ -1114,7 +1114,7 @@
                   "key": "clash",
                   "kind": "long_text",
                   "question": "Czy któryś przepis kłóci się z wcześniejszymi wymaganiami? Jak to rozstrzygacie?",
-                  "help": "Jeśli sprzeczności nie ma, napisz „Brak sprzeczności” i jednym zdaniem, co sprawdziłeś.",
+                  "help": "Jeśli sprzeczności nie ma, napisz „Brak sprzeczności” i jednym zdaniem, co zostało sprawdzone.",
                   "example": "Izolacja wymusza grubszą obudowę. Podnosimy dopuszczalny wymiar z 80 mm do 92 mm. Masa nadal mieści się w minimum.",
                   "config": {
                     "max": 1500
@@ -1258,7 +1258,7 @@
                   "key": "companies",
                   "kind": "records",
                   "question": "Wpisz firmy, z którymi już rozmawiacie albo do których chcecie się odezwać.",
-                  "help": "Przy każdej: aktualny etap, następne działanie i kto z waszego teamu za to odpowiada. Jeśli działasz sam, wpisz swoje imię.",
+                  "help": "Przy każdej: aktualny etap, następne działanie i kto z waszego teamu za to odpowiada. Jeśli działasz w pojedynkę, wpisz swoje imię.",
                   "example": "Studio Nord. Po pierwszej rozmowie. Wysłać ofertę w czwartek. Kuba.",
                   "config": {
                     "add_label": "Dodaj firmę",
@@ -1471,7 +1471,7 @@
                   "key": "rule",
                   "kind": "short_text",
                   "question": "Kiedy klient może zrezygnować z zakupu i co musisz zrobić, jeśli zakup nie działa tak, jak obiecano?",
-                  "help": "Uwzględnij kraj, w którym zaczynasz, i sposób sprzedaży. Jeśli terminu jeszcze nie sprawdziłeś, napisz „do sprawdzenia” przy konkretnej zasadzie, nie zgaduj liczby.",
+                  "help": "Uwzględnij kraj, w którym zaczynasz, i sposób sprzedaży. Jeśli termin nie jest jeszcze sprawdzony, napisz „do sprawdzenia” przy konkretnej zasadzie, nie zgaduj liczby.",
                   "example": "Sprzedaż przez internet w Polsce: klient może odstąpić w ciągu 14 dni od odbioru. Gdy produkt nie działa, przyjmujemy reklamację i zwracamy pieniądze albo wymieniamy sztukę.",
                   "config": {
                     "max": 500

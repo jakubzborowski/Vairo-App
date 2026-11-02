@@ -1,8 +1,10 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { PathChoice } from "@/components/onboarding/path-choice";
 import { ensureOwnProfile } from "@/lib/profile";
+import { INVITE_COOKIE, INVITE_TOKEN_RE } from "@/lib/invites";
 
 export const metadata = { title: "Od czego zaczynasz? — Vairo" };
 export const dynamic = "force-dynamic";
@@ -27,6 +29,19 @@ export default async function OnboardingPathPage() {
 
   if (profile?.onboarding_completed_at) {
     redirect("/app");
+  }
+
+  // Ktoś przyszedł z linku zaproszenia: nie pytamy, czy zakłada startup.
+  // Wybór „founder” zakładał mu własny projekt (jedno z 3 miejsc), zanim
+  // w ogóle zobaczył zaproszenie. Zostaje samo imię, a pierwsze wejście do
+  // aplikacji prowadzi prosto na /join (layout `/app`).
+  const pendingInvite = (await cookies()).get(INVITE_COOKIE)?.value;
+  if (pendingInvite && INVITE_TOKEN_RE.test(pendingInvite)) {
+    await supabase
+      .from("profiles")
+      .update({ onboarding_path: "joiner", onboarding_step: "name" })
+      .eq("id", user.id);
+    redirect("/onboarding/name");
   }
 
   return (
