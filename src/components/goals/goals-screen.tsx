@@ -309,7 +309,7 @@ function NowView({
     <div className="flex flex-col gap-8">
       {stage ? <NextStepCard stage={stage} onLink={onLink} onCreate={onCreate} /> : null}
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
         <section>
           <SectionLabel count={mineOpen.length}>Twoje cele</SectionLabel>
           {mineOpen.length === 0 ? (
@@ -464,7 +464,7 @@ function NextStepCard({
           : "border-white/[0.08] bg-[var(--surface)]"
       )}
     >
-      <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,17rem)] md:items-center">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,17rem)] md:items-center">
         <div>
           {next ? (
             <>
@@ -744,7 +744,7 @@ function StageView({
         ) : null}
       </div>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[...byType.entries()].map(([type, list]) => (
           <section
             key={type}

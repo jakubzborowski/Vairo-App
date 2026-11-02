@@ -207,19 +207,19 @@ function LabeledRows({
             maxLength={field.config.item_max}
             disabled={disabled}
             rows={multiline ? 3 : undefined}
-            placeholder="Czego się dowiedziałeś?"
+            placeholder="Co z tej rozmowy wynika?"
           />
         </label>
       ))}
       {extras.length > 0 ? (
-        <p className="text-[12px] text-[var(--text-faint)]">
+        <p className="text-[12px] text-[var(--text-subtle)]">
           Masz też {extras.length} {extras.length === 1 ? "wcześniejszą notatkę" : "wcześniejsze notatki"} spoza
           obecnej listy rozmówców — zostają w odpowiedzi.
         </p>
       ) : null}
-      <p className="text-[12px] text-[var(--text-faint)]">
-        Rubryki biorą się z listy rozmówców w poprzednim podpunkcie. Rozmawiałeś
-        z kimś jeszcze? Dopisz go tam.
+      <p className="text-[12px] text-[var(--text-subtle)]">
+        Rubryki biorą się z listy rozmówców w poprzednim podpunkcie. Była
+        jeszcze jakaś rozmowa? Dopisz tę osobę tam.
         {field.config.min_items ? ` Minimum ${field.config.min_items} uzupełnione.` : ""}
       </p>
     </div>

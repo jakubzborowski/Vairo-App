@@ -95,7 +95,7 @@ export function DocsShelf({ documents }: { documents: DocSummary[] }) {
           </p>
         </section>
       ) : (
-        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {documents.map((doc) => {
             const preview = plainPreview(doc.body, 3);
             return (

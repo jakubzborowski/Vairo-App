@@ -48,7 +48,7 @@ export function MessagesShell({
 
   return (
     <div className="page-wide">
-      <div className="grid gap-5 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] md:items-start">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] md:items-start">
         <aside className={cn("min-w-0", isThread && "hidden md:block")}>
           <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
             Wiadomości

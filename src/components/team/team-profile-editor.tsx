@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Field, Input, Textarea } from "@/components/ui/input";
 import { SaveBar } from "@/components/ui/save-bar";
+import { useToast } from "@/components/ui/toast";
 import { scoreTeamProfile } from "@/lib/profile-completeness";
 import { cn } from "@/lib/utils";
 import type { StartupStatus } from "@/types/startup";
@@ -104,6 +105,7 @@ export function TeamProfileEditor({
   openRoles,
 }: Props) {
   const router = useRouter();
+  const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [logo, setLogo] = useState(logoUrl);
@@ -206,6 +208,14 @@ export function TeamProfileEditor({
         setSideError(result.error);
         return;
       }
+      toast({
+        title:
+          next === "paused"
+            ? "Startup wstrzymany"
+            : next === "archived"
+              ? "Startup przeniesiony do archiwum"
+              : "Prace wznowione",
+      });
       router.refresh();
     });
   };
@@ -296,7 +306,7 @@ export function TeamProfileEditor({
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] lg:items-start">
         <div className={cn("flex flex-col gap-5", mobileTab === "preview" && "hidden lg:flex")}>
           {/* Gotowość profilu — licznik mówi, czego brakuje, i prowadzi do pola. */}
           <section className="rounded-[18px] border border-white/[0.07] bg-[var(--surface)] px-5 py-4">
@@ -401,7 +411,7 @@ export function TeamProfileEditor({
                 )}
               </Field>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Lokalizacja" hint="Miasto albo „zdalnie”.">
                   {() => (
                     <Input

@@ -59,6 +59,19 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
   }
   const status = info?.status ?? "not_found";
 
+  // Kto już jest w teamie (np. Founder sprawdzający własny link), nie
+  // „dołącza jako Członek” — `accept_invite_link` i tak niczego mu nie zmieni.
+  let alreadyMember = false;
+  if (user && info?.startup_id) {
+    const { data: membership } = await supabase
+      .from("startup_members")
+      .select("startup_id")
+      .eq("startup_id", info.startup_id)
+      .eq("profile_id", user.id)
+      .maybeSingle();
+    alreadyMember = Boolean(membership);
+  }
+
   return (
     <main className="flex min-h-dvh items-center justify-center px-4 py-10">
       <div className="w-full max-w-[440px]">
@@ -83,11 +96,16 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
                 </div>
               </div>
               <p className="mt-5 text-[14px] leading-relaxed text-[var(--text-muted)]">
-                {user
-                  ? "Dołączysz jako Członek: zobaczysz etapy, cele i pliki teamu i będziesz mógł pracować razem z resztą."
+                {alreadyMember
+                  ? "Już należysz do tego teamu. Link niczego nie zmieni w Twojej roli."
+                  : user
+                  ? "Dołączysz jako Członek: zobaczysz etapy, cele i pliki teamu i od razu dołączysz do wspólnej pracy."
                   : "Załóż konto albo zaloguj się — zaraz potem wrócisz tutaj i dołączysz do teamu."}
               </p>
-              <JoinActions token={token} mode={user ? "member" : "guest"} />
+              <JoinActions
+                token={token}
+                mode={alreadyMember ? "already" : user ? "member" : "guest"}
+              />
             </>
           ) : (
             <>

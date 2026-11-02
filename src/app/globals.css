@@ -549,7 +549,9 @@
 /* Wejście ekranu w /app: jedno delikatne fade, bez kaskady opóźnień.
    Kaskada jest ładna za pierwszym razem i irytująca za dwudziestym. */
 .app-enter {
-  animation: fade-in 0.18s ease-out both;
+  /* `backwards`, nie `both`: po animacji nie zostaje kontekst warstw, który
+     zamykał nakładki z <main> pod górnym paskiem na telefonie. */
+  animation: fade-in 0.18s ease-out backwards;
 }
 
 @keyframes splash-mesh-in {

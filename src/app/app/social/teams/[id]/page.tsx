@@ -251,7 +251,7 @@ export default async function PublicTeamPage({
           </p>
 
           {members.length > 0 ? (
-            <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+            <ul className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {members.map((member) => (
                 <li
                   key={member.id}

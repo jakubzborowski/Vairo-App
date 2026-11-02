@@ -127,7 +127,7 @@ export default async function MyPublicProfilePage({
 
       {/* Ten sam układ co profil teamu: po lewej „co poprawić" i ustawienia,
           po prawej przyklejona karta tak, jak widzą ją inni. */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] lg:items-start">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] lg:items-start">
         <div className="flex flex-col gap-4">
           {top ? (
             <section className="edge-accent flex flex-wrap items-center gap-3.5 rounded-[22px] border border-[var(--vairo)]/25 bg-[var(--vairo)]/[0.06] px-5 py-4 lift-2">

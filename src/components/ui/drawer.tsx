@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Portal } from "./portal";
 
 /**
  * Panel z prawej — szczegół rzeczy z listy, bez zasłaniania listy.
@@ -29,10 +30,13 @@ export function Drawer({
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    ref.current?.focus();
+    // Pole z `autoFocus` w środku dostało fokus wcześniej — nie zabieramy go.
+    const node = ref.current;
+    if (node && !node.contains(document.activeElement)) node.focus();
   }, []);
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 flex justify-end">
       <button
         type="button"
@@ -80,5 +84,6 @@ export function Drawer({
         ) : null}
       </div>
     </div>
+    </Portal>
   );
 }

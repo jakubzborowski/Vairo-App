@@ -55,7 +55,7 @@ export function DashboardSkeleton() {
 
       <Skeleton className="mt-6 h-11 w-full rounded-xl" />
 
-      <div className="mt-6 grid gap-3 md:grid-cols-6">
+      <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-6">
         <div className="rounded-2xl border border-white/[0.07] bg-[var(--surface)] p-5 md:col-span-6">
           <Skeleton className="h-3.5 w-28" />
           <Skeleton className="mt-3 h-6 w-48" />
@@ -72,7 +72,7 @@ export function DashboardSkeleton() {
         ))}
       </div>
 
-      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <SkeletonCard />
         <SkeletonCard />
       </div>
@@ -84,7 +84,7 @@ export function StageSkeleton() {
   return (
     <LoadingRegion className="mx-auto w-full max-w-[1400px]">
       <HeaderSkeleton />
-      <div className="mt-6 grid gap-3 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-3">
         {[0, 1, 2].map((i) => (
           <div
             key={i}

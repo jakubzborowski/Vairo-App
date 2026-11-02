@@ -186,7 +186,7 @@ export default async function NotificationsPage({
           <p className="mt-1.5 text-[14.5px] text-[var(--text-muted)]">
             Tu pojawią się rzeczy, które dotyczą Ciebie. Każda prowadzi do właściwego miejsca.
           </p>
-          <ul className="mt-6 grid w-full max-w-[520px] gap-2.5 text-left sm:grid-cols-2">
+          <ul className="mt-6 grid grid-cols-1 w-full max-w-[520px] gap-2.5 text-left sm:grid-cols-2">
             {EMPTY_KINDS.map(([Icon, text]) => (
               <li key={text} className="flex items-center gap-3 rounded-2xl bg-[var(--surface)] px-3.5 py-3">
                 <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-[var(--surface-2)] text-[var(--text-muted)]">

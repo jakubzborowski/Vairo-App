@@ -213,7 +213,7 @@ export function DeckFrame({
           w bazie liczba kart wyglądała jak pasek ładowania i mówiła tylko,
           jak mało jest jeszcze ludzi. Lewa komórka zostaje pusta, żeby
           przyciski trzymały środek. */}
-      <div className="mt-3 grid items-center gap-4 rounded-[24px] bg-[var(--surface)] px-4 py-3.5 lift-1 sm:px-5 md:grid-cols-[1fr_auto_1fr]">
+      <div className="mt-3 grid grid-cols-1 items-center gap-4 rounded-[24px] bg-[var(--surface)] px-4 py-3.5 lift-1 sm:px-5 md:grid-cols-[1fr_auto_1fr]">
         <div className="hidden md:block" aria-hidden="true" />
 
         <div className="flex items-start justify-center gap-3 sm:gap-5">

@@ -239,7 +239,7 @@ export function GoalWizard({
       validate: () => (kind ? null : "Wybierz formę dowodu."),
       render: ({ error: stepError }) => (
         <div>
-          <div role="radiogroup" aria-label="Forma dowodu" className="grid gap-2.5 sm:grid-cols-2">
+          <div role="radiogroup" aria-label="Forma dowodu" className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {kinds.map((item) => {
               const meta = PROOF_KIND_META[item];
               return (
@@ -423,9 +423,21 @@ function Created({ goalId, preset }: { goalId: string; preset: MilestoneConditio
             Rozpisz zadania
             <ArrowRight className="size-4" />
           </Button>
-          <Button size="lg" variant="ghost" href="/app/goals">
-            Wróć do celów
-          </Button>
+          {/* Cel założony z podpunktu etapu: człowiek przyszedł z etapu i tam
+              chce wrócić — „Wróć do celów” zostawiało go na liście celów. */}
+          {preset?.stageKey ? (
+            <Button
+              size="lg"
+              variant="ghost"
+              href={`/app/stage?stage=${preset.stageKey}&subpoint=${preset.subpointId}`}
+            >
+              Wróć do etapu
+            </Button>
+          ) : (
+            <Button size="lg" variant="ghost" href="/app/goals">
+              Wróć do celów
+            </Button>
+          )}
         </div>
       </div>
     </div>

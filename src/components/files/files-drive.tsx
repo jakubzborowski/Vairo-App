@@ -595,7 +595,7 @@ export function FilesDrive({
         onChange={(event) => void upload(event.target.files)}
       />
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-[200px_minmax(0,1fr)]">
+      <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[200px_minmax(0,1fr)]">
         {/* Miejsca */}
         <nav aria-label="Miejsca" className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] lg:flex-col lg:overflow-visible lg:pb-0">
           {places.map((item) => {

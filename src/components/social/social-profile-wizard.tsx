@@ -286,7 +286,7 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
         "To najczęstsze źródło rozczarowań w zespołach. Lepiej powiedzieć wprost teraz niż tłumaczyć się za miesiąc.",
       optional: true,
       render: () => (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Godzin tygodniowo">
             {({ id }) => (
               <Input

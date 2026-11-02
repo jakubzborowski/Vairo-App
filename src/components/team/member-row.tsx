@@ -416,7 +416,7 @@ export function MemberRow({
         >
           <p className="rounded-xl border border-white/10 bg-[var(--surface-2)] px-4 py-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
             Tę zmianę da się odwrócić tylko wtedy, gdy nowy Founder odda Ci
-            rolę z powrotem. Rób to tylko z osobą, z którą się na to umówiłeś.
+            rolę z powrotem. Rób to tylko po wcześniejszym uzgodnieniu z tą osobą.
           </p>
 
           {error ? (

@@ -24,7 +24,7 @@ export function TeamMockup() {
     <div className="rounded-xl border border-white/8 bg-[#101115] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
       <p className="text-[13px] font-semibold text-white">Znajdź członków zespołu</p>
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
         {people.map((person) => (
           <div
             key={person.name}

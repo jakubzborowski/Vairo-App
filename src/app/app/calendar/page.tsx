@@ -36,11 +36,13 @@ export default async function CalendarPage() {
   const active = resolveActiveStartup(startups, activeTeamId);
   if (!active) redirect("/app");
 
-  if (!(await isExecutionUnlocked(supabase, active.id))) {
-    redirect("/app");
-  }
-
-  const workspace = await loadGoalsWorkspace(supabase, active.id);
+  // Równolegle: przed odblokowaniem Execution nikt tu nie trafia z menu,
+  // więc zbędny odczyt celów zdarza się rzadko, a zwykłe wejście jest szybsze.
+  const [unlocked, workspace] = await Promise.all([
+    isExecutionUnlocked(supabase, active.id),
+    loadGoalsWorkspace(supabase, active.id),
+  ]);
+  if (!unlocked) redirect("/app");
   if (!workspace.ready || workspace.loadError) {
     return <GoalsUnavailable missingMigration={!workspace.ready} title="Terminy" href="/app/calendar" />;
   }

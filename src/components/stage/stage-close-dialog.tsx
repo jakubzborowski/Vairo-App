@@ -1,5 +1,6 @@
 "use client";
 
+import { Portal } from "@/components/ui/portal";
 import { useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, Check, FileText, X } from "lucide-react";
@@ -83,7 +84,7 @@ export function StageCloseDialog({
         "To jest podsumowanie Twojej pracy w tym etapie. Przejrzyj je na spokojnie — decyzja na następnym ekranie ma się opierać właśnie na tym.",
       render: () => (
         <div className="flex flex-col gap-3">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Stat
               value={`${tree.done} z ${tree.total}`}
               label="wymaganych podpunktów uzupełnionych"
@@ -311,6 +312,7 @@ export function StageCloseDialog({
   });
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 overflow-y-auto bg-[var(--bg)]/97 backdrop-blur-sm">
       <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-4 py-10 sm:px-8">
         <div className="mb-6 flex items-center justify-end">
@@ -339,6 +341,7 @@ export function StageCloseDialog({
         />
       </div>
     </div>
+    </Portal>
   );
 }
 

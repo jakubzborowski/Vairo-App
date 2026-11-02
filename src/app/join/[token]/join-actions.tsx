@@ -5,7 +5,14 @@ import { LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { acceptInvite, dismissInvite, rememberInviteAndGo } from "./actions";
 
-export function JoinActions({ token, mode }: { token: string; mode: "guest" | "member" }) {
+export function JoinActions({
+  token,
+  mode,
+}: {
+  token: string;
+  /** `already` — ta osoba już jest w teamie; link tylko przełącza na niego. */
+  mode: "guest" | "member" | "already";
+}) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -43,8 +50,14 @@ export function JoinActions({ token, mode }: { token: string; mode: "guest" | "m
               })
             }
           >
-            <UserPlus className="size-4" />
-            {pending ? "Dołączam…" : "Dołącz do teamu"}
+            {mode === "already" ? null : <UserPlus className="size-4" />}
+            {mode === "already"
+              ? pending
+                ? "Przechodzę…"
+                : "Przejdź do teamu"
+              : pending
+                ? "Dołączam…"
+                : "Dołącz do teamu"}
           </Button>
           <Button
             variant="ghost"

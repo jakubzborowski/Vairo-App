@@ -56,7 +56,7 @@ function FeatureBlock({ feature }: { feature: Feature }) {
     <div
       id={feature.id}
       className={cn(
-        "grid items-center gap-8 rounded-2xl border border-white/6 bg-[#0a0b0f] p-6 sm:p-8 lg:grid-cols-2 lg:gap-12",
+        "grid grid-cols-1 items-center gap-8 rounded-2xl border border-white/6 bg-[#0a0b0f] p-6 sm:p-8 lg:grid-cols-2 lg:gap-12",
         feature.reverse && "lg:[&>*:first-child]:order-2"
       )}
     >

@@ -471,8 +471,11 @@ export function TasksView({
 
       {mine && rows.length === 0 ? (
         <EmptyNote className="mt-4">
-          Nie masz jeszcze żadnego zadania. Dodaj pierwsze w kolumnie „Do zrobienia” albo
-          zobacz, nad czym pracuje cały team.
+          {/* Bez otwartego celu nie ma gdzie dodać zadania — kolumna mówi to
+              sama, więc tu nie odsyłamy do przycisku, którego nie ma. */}
+          {openGoals.length > 0
+            ? "Nie masz jeszcze żadnego zadania. Dodaj pierwsze w kolumnie „Do zrobienia” albo zobacz, nad czym pracuje cały team."
+            : "Nie masz otwartych zadań. Zadania dodaje się pod celem — załóż nowy cel w Celach albo zobacz, nad czym pracuje cały team."}
         </EmptyNote>
       ) : null}
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { Portal } from "@/components/ui/portal";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, Check, Lock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -165,6 +166,7 @@ export function SubpointModal({
   const showSoftHints = attemptedSave && tooShort.length > 0;
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
       <button
         type="button"
@@ -335,7 +337,12 @@ export function SubpointModal({
             <Button variant="ghost" onClick={tryClose} disabled={saving}>
               Anuluj
             </Button>
-            <Button onClick={trySave} loading={saving} disabled={!dirty && !canConfirmEmpty}>
+            <Button
+              onClick={trySave}
+              loading={saving}
+              disabled={!dirty && !canConfirmEmpty}
+              title={!dirty && !canConfirmEmpty ? "Nic się jeszcze nie zmieniło — wpisz albo zaznacz odpowiedź" : undefined}
+            >
               {showSoftHints ? "Zapisz mimo to" : "Zapisz"}
             </Button>
           </div>
@@ -351,7 +358,7 @@ export function SubpointModal({
               <p className="mt-1.5 text-[13px] text-[var(--text-subtle)]">
                 Jeśli zamkniesz teraz, przepadną.
               </p>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <Button
                   variant="secondary"
                   block
@@ -368,6 +375,7 @@ export function SubpointModal({
         ) : null}
       </div>
     </div>
+    </Portal>
   );
 }
 

@@ -179,6 +179,14 @@ export default async function AppPage() {
   // dwa razy — i o to chodzi. Pasek pokazuje kształt drogi, karta nazywa
   // miejsce na niej słowami.
   const stepNumber = program.findIndex((item) => item.key === current?.key) + 1;
+  // Po domknięciu etapu `active.stage` to wciąż domknięty etap (np. Idea),
+  // a program wskazuje już kolejny, jeszcze nie założony (Preparation). Karta
+  // brała tytuł z jednego, a podtytuł z drugiego: „Etap domknięty · Idea Stage
+  // · Przygotuj się do budowy”. Teraz mówi wprost, co jest następne.
+  const nextUp =
+    current && stage && current.key !== stage.key && current.status === "not_started"
+      ? current
+      : null;
   const canEdit = canEditStageData(active.role);
   // Uwaga z redesignu: Vairo ma od początku zachęcać do budowania w kilka
   // osób. Kafelek „Team” u kogoś, kto jest w teamie sam i może zapraszać,
@@ -302,14 +310,14 @@ export default async function AppPage() {
 
           `panels` daje im wejście po kolei, co 70 ms. Kolejność pojawiania
           się jest tą samą informacją co kolejność w siatce. */}
-      <div className="panels mt-4 grid gap-3 md:grid-cols-6">
+      <div className="panels mt-4 grid grid-cols-1 gap-3 md:grid-cols-6">
         {stage ? (
           <Card className="topo md:col-span-6" interactive>
             <CardBody className="pt-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-                    {stage.status === "completed" ? "Etap domknięty" : "Bieżący etap"}
+                    {nextUp ? "Następny etap" : stage.status === "completed" ? "Etap domknięty" : "Bieżący etap"}
                     {stepNumber > 0 ? (
                       <span className="tabular font-normal normal-case tracking-normal">
                         · {stepNumber} z {program.length}
@@ -317,7 +325,7 @@ export default async function AppPage() {
                     ) : null}
                   </p>
                   <h2 className="mt-1 font-heading text-[20px] font-semibold text-white">
-                    {stage.title}
+                    {nextUp ? nextUp.title : stage.title}
                   </h2>
                   {/* Podtytuł etapu leżał w bazie nieużywany, a to jedyne
                       zdanie, które mówi, PO CO jest ten etap. Sama nazwa
@@ -336,7 +344,11 @@ export default async function AppPage() {
                   ) : null}
                 </div>
                 <Button href="/app/stage">
-                  {stage.status === "completed" || !canEdit ? "Przejrzyj" : "Kontynuuj"}
+                  {nextUp && canEdit
+                    ? "Zacznij"
+                    : stage.status === "completed" || !canEdit
+                      ? "Przejrzyj"
+                      : "Kontynuuj"}
                   <ArrowRight className="size-4" />
                 </Button>
               </div>
@@ -345,11 +357,13 @@ export default async function AppPage() {
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/8">
                   <div
                     className="grow-bar h-full rounded-full bg-[var(--vairo)]"
-                    style={{ width: `${percent}%` }}
+                    style={{ width: `${nextUp ? 0 : percent}%` }}
                   />
                 </div>
                 <span className="tabular shrink-0 text-[12.5px] text-[var(--text-subtle)]">
-                  {stage.status === "completed"
+                  {nextUp
+                    ? `${stage.title} domknięty`
+                    : stage.status === "completed"
                     ? canEdit
                       ? "Możesz tu wrócić i poprawić odpowiedzi"
                       : "Tylko do odczytu"
@@ -375,7 +389,7 @@ export default async function AppPage() {
           value={<CountUp value={memberCount ?? 0} />}
           hint={
             buildsAlone
-              ? "Budujesz sam? Zaproś kogoś linkiem"
+              ? "Budujesz w pojedynkę? Zaproś kogoś linkiem"
               : plural(memberCount ?? 0, "osoba w zespole", "osoby w zespole", "osób w zespole")
           }
           badge={
@@ -450,7 +464,7 @@ export default async function AppPage() {
           i podpisane**: mówią, czego będą dotyczyć i kiedy się odblokują.
           To nie jest fake UI — nie pokazują wymyślonych danych, tylko własną
           nieobecność. */}
-      <div className="panels mt-4 grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-start">
+      <div className="panels mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-start">
         <NextActions actions={actions} />
 
         <div className="flex flex-col gap-3">
@@ -472,7 +486,7 @@ export default async function AppPage() {
         </div>
       </div>
 
-      <div className="panels mt-3 grid gap-3 md:grid-cols-2">
+      <div className="panels mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
         {/* Aktywność składana z prawdziwych zdarzeń: historia celów (025)
             i zadań (029). Przed Execution nie ma czego pokazać — wtedy
             panel mówi, kiedy się zapełni. */}

@@ -127,11 +127,16 @@ export async function createGoal(input: {
   let ownerId = input.ownerId || user.id;
   if (!canAssignToOthers(role)) ownerId = user.id;
 
-  let condition: { id: string; goal_type_id: string; proof_kind: string | null } | null = null;
+  let condition: {
+    id: string;
+    goal_type_id: string;
+    proof_kind: string | null;
+    match_any_type?: boolean | null;
+  } | null = null;
   if (input.conditionId) {
     const { data } = await supabase
       .from("startup_goal_conditions")
-      .select("id, goal_type_id, proof_kind, startup_id")
+      .select("id, goal_type_id, proof_kind, match_any_type, startup_id")
       .eq("id", input.conditionId)
       .eq("startup_id", input.startupId)
       .maybeSingle();
@@ -149,7 +154,11 @@ export async function createGoal(input: {
     }
   }
 
-  const goalTypeId = condition ? condition.goal_type_id : input.goalTypeId;
+  // Warunek z `match_any_type` przyjmuje cel każdego rodzaju — wtedy wygrywa
+  // wybór z kreatora. Wcześniej rodzaj z warunku nadpisywał go po cichu:
+  // „Wynik budowy” w podsumowaniu, „Własny cel” w bazie.
+  const goalTypeId =
+    condition && !condition.match_any_type ? condition.goal_type_id : input.goalTypeId;
   if (!goalTypeId) return { error: "Wybierz typ celu." };
   if (condition?.proof_kind && built.requirement.kind !== condition.proof_kind) {
     return { error: "Ten punkt programu oczekuje innego formatu dowodu." };

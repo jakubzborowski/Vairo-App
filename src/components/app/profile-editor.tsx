@@ -225,7 +225,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
               onChange={(e) => onAvatar(e.target.files?.[0] ?? null)}
             />
 
-            <div className="grid gap-5 sm:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}

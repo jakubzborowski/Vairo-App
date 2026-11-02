@@ -322,8 +322,14 @@ async function runCloseStage(
   // domknięciu Preparation, a przełącznik teamu rysuje kreski etapów.
   revalidatePath("/app", "layout");
 
+  if (input.decision === "pivot") {
+    // Pivot zostawia TEN etap otwarty z podpunktami do przemyślenia — tam
+    // człowiek ma wrócić. Samo „/app/stage” prowadziło do bieżącego etapu
+    // programu, który przy pivocie wcześniejszego etapu jest gdzie indziej.
+    return { error: null, next: templateKey ? `/app/stage?stage=${templateKey}` : "/app/stage" };
+  }
   if (input.decision !== "continue") {
-    // Pivot zostawia etap otwarty, pauza i archiwum nie otwierają kolejnego.
+    // Pauza i archiwum nie otwierają kolejnego etapu.
     return { error: null, next: "/app/stage" };
   }
 

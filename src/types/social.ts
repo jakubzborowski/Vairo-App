@@ -252,7 +252,7 @@ export function translateContactError(message: string | null | undefined) {
     return "Ta zaczepka została już rozpatrzona.";
   }
   if (message.includes("contact_signal_not_self")) {
-    return "Nie napiszesz sam do siebie.";
+    return "Nie da się napisać do siebie.";
   }
   if (message.includes("not_allowed")) {
     return "Nie masz uprawnień do tej operacji.";

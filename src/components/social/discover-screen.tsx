@@ -440,7 +440,7 @@ async function PeopleResults({
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {people.map((person) => (
         <PersonCard
           key={person.id}
@@ -527,7 +527,7 @@ async function TeamResults({
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {teams.map((team) => (
         <TeamCard
           key={team.id}

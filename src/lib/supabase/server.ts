@@ -35,14 +35,19 @@ export const createClient = cache(async () => {
 });
 
 /**
- * Logged-in user, verified against Supabase Auth once per request.
- * Layout and page used to call `auth.getUser()` separately — two round trips
- * to Auth before either could start loading data.
+ * Logged-in user, verified once per request.
+ *
+ * `getClaims()` checks the JWT signature locally (JWKS, cached) instead of
+ * a round trip to Supabase Auth on every page — the proxy already refreshed
+ * the session for this request. Projects still on a symmetric JWT secret
+ * fall back to `getUser()` inside the SDK, so nothing gets less strict.
+ * Pages read only `id` and `email`; anything needing the full Auth user
+ * (e.g. pending e-mail change) calls `auth.getUser()` itself.
  */
-export const getCurrentUser = cache(async () => {
+export const getCurrentUser = cache(async (): Promise<{ id: string; email: string | null } | null> => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
+  const { data, error } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (error || !claims?.sub) return null;
+  return { id: claims.sub, email: typeof claims.email === "string" ? claims.email : null };
 });

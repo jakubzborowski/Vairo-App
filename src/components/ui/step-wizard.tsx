@@ -215,12 +215,13 @@ export function StepWizard({
       </div>
 
       {step.optional ? (
-        <p className="mt-3 text-center text-[12.5px] text-[var(--text-faint)]">
+        <p className="mt-3 text-center text-[12.5px] text-[var(--text-subtle)]">
           {/* „bez zaznaczania" pasowało do kroków z wyborem, ale ten sam
               kreator ma też krok ze zdjęciem i kroki z polem tekstowym —
               a tam nie ma czego zaznaczać. Sformułowanie neutralne działa
               na wszystkich. */}
-          Ten krok jest opcjonalny — „Dalej” działa też pusty.
+          {/* Na ostatnim kroku przycisk nie nazywa się „Dalej”. */}
+          Ten krok jest opcjonalny — „{isLast ? finishLabel : "Dalej"}” działa też pusty.
         </p>
       ) : null}
     </div>

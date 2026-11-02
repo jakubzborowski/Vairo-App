@@ -197,7 +197,7 @@ export type StageTree = {
  *
  *   • baza uznaje każdy niepusty obiekt za uzupełnienie, więc pominięte
  *     pytanie liczy się do postępu bez zmiany funkcji przeliczającej;
- *   • „Odpowiedz jednak” po prostu nadpisuje znacznik prawdziwą odpowiedzią —
+ *   • „Cofnij pominięcie” po prostu nadpisuje znacznik prawdziwą odpowiedzią —
  *     nie ma osobnej flagi, która mogłaby się rozjechać z treścią.
  *
  * Klucz to `skipped`, bo tak samo czyta go SCORE z gałęzi `codex/score-test`

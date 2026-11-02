@@ -170,7 +170,7 @@ export function GoalEditForm({
           )}
         </Field>
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <span className="text-[13px] font-medium text-[var(--text-muted)]">Właściciel</span>
             <MenuSelect

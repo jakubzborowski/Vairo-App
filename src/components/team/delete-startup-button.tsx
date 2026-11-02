@@ -7,6 +7,7 @@ import { deleteStartup } from "@/app/app/team/actions";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { useToast } from "@/components/ui/toast";
 
 /**
  * Jedyna operacja w aplikacji, po której nic nie da się odzyskać.
@@ -31,6 +32,7 @@ export function DeleteStartupButton({
   blockedReason?: string | null;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +48,8 @@ export function DeleteStartupButton({
         setError(result.error);
         return;
       }
+      // Toast żyje w layoucie, więc przetrwa przejście na Start.
+      toast({ title: "Startup usunięty", description: name });
       router.push("/app");
       router.refresh();
     });

@@ -28,7 +28,7 @@ export function IdeaCreatorMockup() {
     <div className="rounded-xl border border-white/8 bg-[#101115] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
       <p className="text-[13px] font-semibold text-white">Kreator pomysłu</p>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-[1.4fr_1fr]">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[1.4fr_1fr]">
         <div>
           <p className="text-[10px] font-medium text-white/55">
             Wybierz obszar, który Cię interesuje

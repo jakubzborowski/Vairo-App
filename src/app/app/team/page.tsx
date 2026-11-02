@@ -53,9 +53,6 @@ export default async function TeamPage() {
   }
 
   const canManage = canManageTeam(active.role);
-  // Link widzą tylko Founder i Admin — przekazanie go dalej to decyzja,
-  // kto wchodzi do teamu.
-  const inviteLink = canManage ? await getActiveInviteLink(supabase, active.id) : null;
 
   // Katalog umiejętności potrzebny przy otwartych rolach — bez niego nie da
   // się powiedzieć, czego rola szuka, a to jedyne pole, po którym Odkrywaj
@@ -66,7 +63,20 @@ export default async function TeamPage() {
     .order("label", { ascending: true })
     .limit(300);
 
-  const [members, openRoles, { requests }, { data: skillRows }] = await Promise.all([
+  // Wszystko poniżej zależy tylko od aktywnego teamu — jedna fala zapytań
+  // zamiast trzech po kolei (link, skład, praca).
+  const [
+    inviteLink,
+    members,
+    openRoles,
+    { requests },
+    { data: skillRows },
+    goalRows,
+    taskRows,
+  ] = await Promise.all([
+    // Link widzą tylko Founder i Admin — przekazanie go dalej to decyzja,
+    // kto wchodzi do teamu.
+    canManage ? getActiveInviteLink(supabase, active.id) : Promise.resolve(null),
     getTeamMembers(supabase, active.id),
     getOpenRoles(supabase, active.id),
     loadJoinRequests(
@@ -76,11 +86,8 @@ export default async function TeamPage() {
       "pending"
     ),
     skillsQuery,
-  ]);
-
-  // Otwarta praca każdej osoby i praca po kimś, kto odszedł (wytyczne,
-  // sekcja 7). Przed migracją 025 tabel nie ma — wtedy nic nie pokazujemy.
-  const [goalRows, taskRows] = await Promise.all([
+    // Otwarta praca każdej osoby i praca po kimś, kto odszedł (wytyczne,
+    // sekcja 7). Przed migracją 025 tabel nie ma — wtedy nic nie pokazujemy.
     supabase
       .from("goals")
       .select("owner_id, needs_reassign")
@@ -216,7 +223,7 @@ export default async function TeamPage() {
           towarzysząca. Jedna pod drugą wyglądały jak dwie równorzędne listy
           i trzeba było przeczytać nagłówki, żeby się dowiedzieć, że są o czym
           innym. */}
-      <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
+      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
         <section className="overflow-hidden rounded-[22px] bg-[var(--surface)] lift-1">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-3">
             <h2 className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
@@ -263,7 +270,7 @@ export default async function TeamPage() {
       <p className="mt-6 text-[12.5px] text-[var(--text-subtle)]">
         Jesteś w {startups.length} z {MAX_STARTUPS} teamów.
         {seatsLeft > 0
-          ? ` Zostało ${seatsLeft} ${seatsLeft === 1 ? "miejsce" : "miejsca"}.`
+          ? ` ${seatsLeft === 1 ? "Zostało 1 miejsce" : `Zostały ${seatsLeft} miejsca`}.`
           : " To maksimum na konto."}
       </p>
     </div>

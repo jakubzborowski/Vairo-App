@@ -70,7 +70,7 @@ export function CreateStartupForm({ tags, teamCount, categoryCounts }: Props) {
     const formData = new FormData();
     formData.set("startup_name", name);
     formData.set("idea_description", hasIdea ? idea : "");
-    formData.set("categories", [...categories].join(","));
+    formData.set("categories", hasIdea ? [...categories].join(",") : "");
     formData.set("tag_ids", [...selectedTags].join(","));
 
     startTransition(async () => {
@@ -160,20 +160,27 @@ export function CreateStartupForm({ tags, teamCount, categoryCounts }: Props) {
           } satisfies WizardStep,
         ]
       : []),
-    {
-      key: "categories",
-      title: "Co budujesz i komu to sprzedajesz?",
-      description: "Zaznacz wszystko, co pasuje. Możesz też nie zaznaczać nic.",
-      help: "Od tego zależy, o co Vairo będzie pytać podczas walidacji. Ogólna walidacja jest zawsze włączona — reszta tylko ją uzupełnia.",
-      optional: true,
-      render: () => (
-        <CategoryPicker
-          counts={categoryCounts}
-          selected={categories}
-          onToggle={(key) => toggle(categories, setCategories, key)}
-        />
-      ),
-    },
+    // Bez pomysłu kategorie wybiera się dopiero po Ambition
+    // (`chooseCategoriesAfterAmbition`) — wtedy wiadomo już, co powstaje.
+    // Pytanie tutaj było podwójne i zadawane przed jakąkolwiek wiedzą.
+    ...(hasIdea
+      ? [
+          {
+            key: "categories",
+            title: "Co budujesz i komu to sprzedajesz?",
+            description: "Zaznacz wszystko, co pasuje. Możesz też nie zaznaczać nic.",
+            help: "Od tego zależy, o co Vairo będzie pytać podczas walidacji. Ogólna walidacja jest zawsze włączona — reszta tylko ją uzupełnia.",
+            optional: true,
+            render: () => (
+              <CategoryPicker
+                counts={categoryCounts}
+                selected={categories}
+                onToggle={(key) => toggle(categories, setCategories, key)}
+              />
+            ),
+          } satisfies WizardStep,
+        ]
+      : []),
     {
       key: "tags",
       title: "W jakiej branży to działa?",

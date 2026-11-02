@@ -18,7 +18,7 @@ export function HeroSection() {
       </div>
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_78%_30%,rgba(238,95,28,0.13),rgba(238,95,28,0)_55%)]" />
 
-      <div className="relative mx-auto grid w-full max-w-[1200px] items-center gap-14 px-5 md:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-6">
+      <div className="relative mx-auto grid grid-cols-1 w-full max-w-[1200px] items-center gap-14 px-5 md:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-6">
         <div className="fade-up max-w-lg">
           <h1 className="font-heading text-[2.6rem] font-bold leading-[1.08] tracking-tight text-white sm:text-5xl md:text-[3.5rem]">
             Zbuduj swój

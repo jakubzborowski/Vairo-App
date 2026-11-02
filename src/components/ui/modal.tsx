@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Portal } from "./portal";
 
 type Props = {
   title: string;
@@ -31,12 +32,15 @@ export function Modal({
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    dialogRef.current?.focus();
+    // Pole z `autoFocus` w środku dostało fokus wcześniej — nie zabieramy go.
+    const node = dialogRef.current;
+    if (node && !node.contains(document.activeElement)) node.focus();
   }, []);
 
   return (
     // Na telefonie okno jest arkuszem od dołu — w zasięgu kciuka i bez
     // „okna w oknie". Od `sm` wraca na środek.
+    <Portal>
     <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto sm:items-start sm:p-8">
       <button
         type="button"
@@ -93,5 +97,6 @@ export function Modal({
         ) : null}
       </div>
     </div>
+    </Portal>
   );
 }

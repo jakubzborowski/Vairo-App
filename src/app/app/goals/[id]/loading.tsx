@@ -10,7 +10,7 @@ export default function GoalLoading() {
       <Skeleton className="mt-3 h-4 w-2/3" />
       <Skeleton className="mt-6 h-44 w-full rounded-[22px]" />
       <Skeleton className="mt-4 h-32 w-full rounded-[18px]" />
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Skeleton className="h-16 rounded-[18px]" />
         <Skeleton className="h-16 rounded-[18px]" />
       </div>

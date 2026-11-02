@@ -43,7 +43,7 @@ import {
  * „Pomiń” stoi przy pustym pytaniu wymaganym. Kto nie chce albo nie umie
  * na nie odpowiedzieć, i tak tego nie zrobi — zamiast zamykać mu drogę
  * dalej, zapisujemy pominięcie. Liczy się ono do postępu, a pytanie czeka
- * z przyciskiem „Odpowiedz jednak”.
+ * z przyciskiem „Cofnij pominięcie”.
  */
 export function FieldInput({
   field,
@@ -107,7 +107,7 @@ export function FieldInput({
             disabled={disabled}
             onClick={() => onChange(emptyValueFor(field.kind))}
           >
-            Odpowiedz jednak
+            Cofnij pominięcie
           </Button>
         </div>
       ) : (
