@@ -24,6 +24,8 @@ type Props = {
   tree: StageTree;
   subpoint: StageSubpoint;
   pointTitle: string;
+  /** Dodatek nad pytaniami, np. zachęta do zaproszenia przy punkcie o pomocy. */
+  nudge?: React.ReactNode;
   answers: Record<string, unknown>;
   saving: boolean;
   error: string | null;
@@ -43,6 +45,7 @@ export function SubpointModal({
   tree,
   subpoint,
   pointTitle,
+  nudge,
   answers,
   saving,
   error,
@@ -186,7 +189,7 @@ export function SubpointModal({
       >
         <header className="flex items-start justify-between gap-4 border-b border-white/[0.07] px-6 py-5">
           <div className="min-w-0">
-            <p className="text-[12px] font-medium text-[var(--text-faint)]">
+            <p className="text-[12px] font-medium text-[var(--text-subtle)]">
               {pointTitle}
             </p>
             <h2 className="mt-1 font-heading text-[19px] font-semibold text-white">
@@ -198,10 +201,11 @@ export function SubpointModal({
               </p>
             ) : null}
             {subpoint.alsoIn.length > 0 ? (
-              <p className="mt-2 text-[12px] text-[var(--text-faint)]">
+              <p className="mt-2 text-[12px] text-[var(--text-subtle)]">
                 To pytanie dotyczy też: {subpoint.alsoIn.join(", ")} — odpowiadasz raz.
               </p>
             ) : null}
+            {nudge}
           </div>
           <button
             type="button"

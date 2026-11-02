@@ -448,11 +448,12 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `035_team_invite_links` | zaproszenie do teamu linkiem: `startup_invite_links` (odczyt tylko Founder/Admin) + funkcje `create_invite_link`, `revoke_invite_links`, `invite_link_info` (też dla gościa), `accept_invite_link` (rola Member, limit 3 teamów przez trigger z 003) |
 | `036_content_preparation_v1` | nowa wersja treści Preparation (generowana): punkt „Porozmawiaj z osobami” przeniesiony z Idei, pola z kluczami `idea.rozmowy.…`. 022–024 zostają historyczne |
 | `037_carry_answers_between_stages` | `carry_answers_into_stage()` + trigger na `startup_stages`: odpowiedź pod kluczem pola z innego etapu startupu kopiuje się do nowego etapu; wyrównanie dla istniejących |
+| `038_invite_link_joined` | powiadomienie dla autora linku zaproszenia, gdy ktoś przez niego dołączy (`invite_link_joined`) |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`037`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`038`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 

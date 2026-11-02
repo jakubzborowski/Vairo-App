@@ -14,7 +14,8 @@ import { advanceSkeletonStage, openStage } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { canEditStageData } from "@/types/startup";
+import { canEditStageData, canManageTeam } from "@/types/startup";
+import { getActiveInviteLink } from "@/lib/invites";
 
 export const metadata = { title: "Etap startupu — Vairo" };
 export const dynamic = "force-dynamic";
@@ -237,11 +238,21 @@ export default async function StagePage({
     );
   }
 
-  const tree = await loadStageTree(supabase, {
-    startupStageId: stageId,
-    activeCategories: active.categories,
-    role: active.role,
-  });
+  // Zachęta do zaproszenia (Idea i punkt o pomocy w Preparation) potrzebuje
+  // tylko liczby osób i tego, czy link już czeka — razem z drzewem etapu.
+  const canInvite = canManageTeam(active.role);
+  const [tree, { count: memberCount }, inviteLink] = await Promise.all([
+    loadStageTree(supabase, {
+      startupStageId: stageId,
+      activeCategories: active.categories,
+      role: active.role,
+    }),
+    supabase
+      .from("startup_members")
+      .select("profile_id", { count: "exact", head: true })
+      .eq("startup_id", active.id),
+    canInvite ? getActiveInviteLink(supabase, active.id) : Promise.resolve(null),
+  ]);
 
   if (!tree || tree.total === 0) {
     return (
@@ -267,6 +278,11 @@ export default async function StagePage({
       isCurrent={current?.key === entry.key}
       currentTitle={current?.title ?? null}
       initialSubpointId={subpoint ?? null}
+      team={{
+        canInvite,
+        members: memberCount ?? 1,
+        hasLink: Boolean(inviteLink && inviteLink.useCount === 0),
+      }}
     />
   );
 }

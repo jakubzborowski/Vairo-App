@@ -38,6 +38,7 @@ const KIND_ICON: Record<NotificationKind, LucideIcon> = {
   task_assigned: ListTodo,
   goal_blocked: OctagonAlert,
   goal_due: CalendarDays,
+  invite_link_joined: UserPlus,
 };
 
 const EMPTY_KINDS: [LucideIcon, string][] = [

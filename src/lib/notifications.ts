@@ -20,6 +20,7 @@ export const NOTIFICATION_KINDS = [
   "task_assigned",
   "goal_blocked",
   "goal_due",
+  "invite_link_joined",
 ] as const;
 
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
@@ -163,6 +164,8 @@ function describe(
       return `${who} chce dołączyć do ${team}`;
     case "join_invite":
       return `${who} zaprasza Cię do ${team}`;
+    case "invite_link_joined":
+      return `Nowa osoba w ${team}: ${who}, z Twojego linku zaproszenia`;
     case "join_accepted":
       return `Jesteś w ${team}`;
     case "join_declined":

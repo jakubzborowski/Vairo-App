@@ -1,5 +1,6 @@
 "use client";
 
+import { InviteNudge, type TeamNudgeData } from "@/components/team/invite-nudge";
 import { useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -55,6 +56,8 @@ type Props = {
   currentTitle?: string | null;
   /** Podpunkt do otwarcia od razu, np. po powrocie z Plików. */
   initialSubpointId?: string | null;
+  /** Dane do zachęty „zaproś znajomego” — brak = bez zachęty. */
+  team?: TeamNudgeData;
 };
 
 function locateSubpoint(tree: StageTree, subpointId?: string | null) {
@@ -93,6 +96,7 @@ export function StageScreen({
   isCurrent = true,
   currentTitle,
   initialSubpointId,
+  team,
 }: Props) {
   const router = useRouter();
   const { toast } = useToast();
@@ -310,6 +314,12 @@ export function StageScreen({
             </div>
           </div>
         </div>
+
+        {/* Pierwszy z dwóch momentów zachęty do zaproszenia znajomego
+            („Vairo rozwój socialu”): początek Idei, póki team to jedna osoba. */}
+        {team && tree.templateKey === "idea" && !readOnly ? (
+          <InviteNudge data={team} variant="start" />
+        ) : null}
 
         {/* Rola Członka nie jest błędem ani karą — mówimy wprost, co z niej
             wynika i u kogo prosić o zmianę, zamiast tylko blokować przyciski. */}
@@ -653,6 +663,12 @@ export function StageScreen({
           tree={{ ...tree, answers }}
           subpoint={openSubpoint}
           pointTitle={point.title}
+          // Drugi moment zachęty: punkt o zespole i potrzebnej pomocy.
+          nudge={
+            team && point.key === "find-help" && !readOnly ? (
+              <InviteNudge data={team} variant="help" />
+            ) : null
+          }
           answers={answers}
           saving={saving}
           error={error}

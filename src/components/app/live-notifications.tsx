@@ -108,6 +108,8 @@ function liveTitle(kind: NotificationKind) {
       return "Zgłoszenie przyjęte";
     case "join_declined":
       return "Zgłoszenie odrzucone";
+    case "invite_link_joined":
+      return "Nowa osoba w teamie — z Twojego linku";
     default:
       return "Nowe zdarzenie";
   }

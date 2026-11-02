@@ -217,6 +217,12 @@ with checks(nr, migracja, co, ok, napraw) as (
              where tgname = 'startup_stages_carry_answers' and not tgisinternal),
     'odpal 037_carry_answers_between_stages (po 036) — bez niej rozmowy wpisane w Idei nie pojawią się w Preparation'),
 
+  (49, '038', 'autor linku zaproszenia dostaje powiadomienie o nowej osobie',
+    exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.proname = 'accept_invite_link'
+               and p.prosrc like '%invite_link_joined%'),
+    'odpal 038_invite_link_joined (po 037)'),
+
   -- --- Treść etapów ---------------------------------------------------------
   (50, '006–028', 'wszystkie 5 etapów ma opublikowaną treść',
     (select count(distinct key) = 5 from public.stage_templates
