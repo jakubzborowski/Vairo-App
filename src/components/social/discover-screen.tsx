@@ -320,7 +320,7 @@ export async function DiscoverScreen({
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] bg-white/[0.02] px-4 py-3 sm:px-5">
               {tab === "people" ? (
-                <Checkbox name="room" label="Ma miejsce na team" checked={params.room === "1"} />
+                <Checkbox name="room" label="Ma miejsce na zespół" checked={params.room === "1"} />
               ) : (
                 <Checkbox name="hiring" label="Tylko szukające ludzi" checked={params.hiring === "1"} />
               )}
@@ -448,7 +448,7 @@ async function PeopleResults({
           highlight={matchHighlight(reasonsForPerson(person, matchContext))}
           action={
             pendingInvitees.has(person.id) ? (
-              <span className="text-[12px] text-[var(--text-faint)]">
+              <span className="text-[12px] text-[var(--text-subtle)]">
                 Zaproszenie wysłane
               </span>
             ) : (
@@ -519,7 +519,7 @@ async function TeamResults({
   if (teams.length === 0) {
     return (
       <EmptyNote
-        title="Żaden team nie pasuje do tych filtrów"
+        title="Żaden zespół nie pasuje do tych filtrów"
         description="Widoczne są tylko aktywne startupy, które włączyły profil publiczny."
         resetHref={resetHref}
       />
@@ -543,7 +543,7 @@ async function TeamResults({
                 myPendingTeams.has(team.id)
                   ? "Zgłoszenie wysłane"
                   : atTeamLimit
-                    ? `Masz już ${MAX_STARTUPS} teamy`
+                    ? `Masz już ${MAX_STARTUPS} zespoły`
                     : null
               }
             />

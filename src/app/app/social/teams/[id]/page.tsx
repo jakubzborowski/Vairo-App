@@ -75,17 +75,17 @@ export default async function PublicTeamPage({
   const hiddenMembers = Math.max(0, team.member_count - members.length);
 
   const blockedReason = isMember
-    ? "Jesteś w tym teamie"
+    ? "Jesteś w tym zespole"
     : pending
       ? "Zgłoszenie wysłane"
       : startups.length >= MAX_STARTUPS
-        ? `Masz już ${MAX_STARTUPS} teamy`
+        ? `Masz już ${MAX_STARTUPS} zespoły`
         : null;
 
   const cta = isMember ? (
     <Button href="/app/team" variant="secondary" size="lg">
       <Users className="size-4" />
-      Otwórz swój team
+      Otwórz swój zespół
     </Button>
   ) : (
     <ApplyButton
@@ -224,7 +224,7 @@ export default async function PublicTeamPage({
             </ul>
           ) : (
             <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--text-subtle)]">
-              Ten team nie ma teraz otwartych ról. Zgłoszenie i tak trafi do osób,
+              Ten zespół nie ma teraz otwartych ról. Zgłoszenie i tak trafi do osób,
               które nim zarządzają — czasem to wystarczy.
             </p>
           )}
@@ -279,7 +279,7 @@ export default async function PublicTeamPage({
           {/* Osoby, które wyłączyły widoczność, liczą się do składu, ale nie
               pojawiają się z imienia — także na cudzej stronie teamu. */}
           {hiddenMembers > 0 ? (
-            <p className="mt-3 text-[12.5px] text-[var(--text-faint)]">
+            <p className="mt-3 text-[12.5px] text-[var(--text-subtle)]">
               {members.length > 0 ? "oraz " : ""}
               {hiddenMembers}{" "}
               {hiddenMembers === 1 ? "osoba, która nie" : "osób, które nie"}{" "}

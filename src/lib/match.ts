@@ -83,7 +83,7 @@ function overlap(mine: string[], theirs: string[]): string[] {
 }
 
 const LOOKING_FOR_REASON: Record<string, string> = {
-  team: "Szuka teamu",
+  team: "Szuka zespołu",
   cofounder: "Szuka współzałożyciela",
   collaborators: "Szuka ludzi do swojego projektu",
 };
@@ -166,7 +166,7 @@ export function reasonsForPerson(
   // 6. Zupełnie wolna osoba — dla teamu to informacja, że nie konkuruje
   //    o jej czas z trzema innymi projektami.
   if (person.team_count === 0) {
-    reasons.push({ key: "no-team", text: "Nie należy jeszcze do żadnego teamu" });
+    reasons.push({ key: "no-team", text: "Nie należy jeszcze do żadnego zespołu" });
   }
 
   return reasons.slice(0, MAX_REASONS);

@@ -41,7 +41,7 @@ export function InviteLinkCard({
       }
       setError(null);
       setLink(result.link);
-      toast({ title: "Link zaproszenia gotowy", description: "Skopiuj go i wyślij komuś do teamu." });
+      toast({ title: "Link zaproszenia gotowy", description: "Skopiuj go i wyślij komuś do zespołu." });
     });
 
   const revoke = () =>
@@ -78,7 +78,7 @@ export function InviteLinkCard({
           <h2 className="text-[15px] font-medium text-white">Zaproś znajomych linkiem</h2>
           <p className="mt-0.5 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
             Wyślij link komukolwiek — nie musi mieć jeszcze konta w Vairo. Po
-            rejestracji albo zalogowaniu dołączy do teamu jako {ROLE_LABELS.member}.
+            rejestracji albo zalogowaniu dołączy do zespołu jako {ROLE_LABELS.member}.
           </p>
         </div>
       </div>
@@ -115,7 +115,7 @@ export function InviteLinkCard({
               <XCircle className="size-3.5" />
               Wyłącz link
             </Button>
-            <span className="self-center text-[12px] text-[var(--text-faint)]">
+            <span className="self-center text-[12px] text-[var(--text-subtle)]">
               Nowy link wyłącza obecny.
             </span>
           </div>

@@ -7,9 +7,9 @@ import { Field, Input } from "@/components/ui/input";
 import type { OnboardingPath } from "@/types/profile";
 
 const SUBTITLE: Record<OnboardingPath, string> = {
-  joiner: "Pod tym imieniem zobaczą Cię teamy szukające ludzi.",
-  founder_idea: "Pod tym imieniem zobaczą Cię ludzie, których zaprosisz do teamu.",
-  founder_no_idea: "Pod tym imieniem zobaczą Cię ludzie, których zaprosisz do teamu.",
+  joiner: "Pod tym imieniem zobaczą Cię zespoły szukające ludzi.",
+  founder_idea: "Pod tym imieniem zobaczą Cię ludzie, których zaprosisz do zespołu.",
+  founder_no_idea: "Pod tym imieniem zobaczą Cię ludzie, których zaprosisz do zespołu.",
 };
 
 export function NameStepForm({

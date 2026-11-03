@@ -128,7 +128,7 @@ export function TeamPreviewCard({
                 </li>
               ))}
               {openRoles.length > 3 ? (
-                <li className="text-[12.5px] text-[var(--text-faint)]">
+                <li className="text-[12.5px] text-[var(--text-subtle)]">
                   i jeszcze {openRoles.length - 3}
                 </li>
               ) : null}
@@ -146,7 +146,7 @@ export function TeamPreviewCard({
             przewijający talię. */}
         <p className="mt-auto border-t border-white/[0.06] pt-3.5 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
           Opis „O projekcie”, skład zespołu i tagi widać dopiero na profilu
-          teamu — jedno kliknięcie dalej.
+          zespołu — jedno kliknięcie dalej.
         </p>
       </div>
     </article>

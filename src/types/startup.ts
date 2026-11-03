@@ -76,7 +76,7 @@ export const ROLE_LABELS: Record<StartupRole, string> = {
 
 export const ROLE_DESCRIPTIONS: Record<StartupRole, string> = {
   founder:
-    "Pełna kontrola: etapy, ustawienia teamu, role, usuwanie startupu.",
+    "Pełna kontrola: etapy, ustawienia zespołu, role, usuwanie startupu.",
   admin:
     "Wypełnia etapy, zarządza członkami i zaproszeniami. Nie usuwa startupu.",
   member:

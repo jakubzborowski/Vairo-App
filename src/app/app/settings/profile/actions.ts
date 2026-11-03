@@ -92,7 +92,7 @@ export async function saveProfile(draft: ProfileDraft): Promise<ActionResult> {
     })
     .eq("id", user.id);
 
-  if (profileError) return { error: profileError.message };
+  if (profileError) return { error: translateDbError(profileError.message) };
 
   // Skille: podmiana całego zestawu. Przy kilkunastu pozycjach to tańsze
   // i prostsze niż wyliczanie różnicy.
@@ -103,14 +103,14 @@ export async function saveProfile(draft: ProfileDraft): Promise<ActionResult> {
     .delete()
     .eq("profile_id", user.id);
 
-  if (deleteError) return { error: deleteError.message };
+  if (deleteError) return { error: translateDbError(deleteError.message) };
 
   if (unique.length > 0) {
     const { error: insertError } = await supabase
       .from("profile_skills")
       .insert(unique.map((skill_id) => ({ profile_id: user.id, skill_id })));
 
-    if (insertError) return { error: insertError.message };
+    if (insertError) return { error: translateDbError(insertError.message) };
   }
 
   revalidatePath("/app/settings/profile");

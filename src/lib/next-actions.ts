@@ -117,8 +117,8 @@ export async function loadNextActions(
       key: "invites",
       title:
         pendingInvites === 1
-          ? "Odpowiedz na zaproszenie do teamu"
-          : `Odpowiedz na ${pendingInvites} zaproszenia do teamu`,
+          ? "Odpowiedz na zaproszenie do zespołu"
+          : `Odpowiedz na ${pendingInvites} zaproszenia do zespołu`,
       why: "Ktoś czeka na Twoją decyzję.",
       href: "/app/social/invites",
       meta: "Ty · ktoś czeka na odpowiedź",
@@ -131,8 +131,8 @@ export async function loadNextActions(
       key: "applications",
       title:
         pendingApplications === 1
-          ? "Rozpatrz zgłoszenie do teamu"
-          : `Rozpatrz ${pendingApplications} zgłoszenia do teamu`,
+          ? "Rozpatrz zgłoszenie do zespołu"
+          : `Rozpatrz ${pendingApplications} zgłoszenia do zespołu`,
       why: "Dopóki nie odpowiesz, te osoby czekają.",
       href: "/app/team",
       meta: "Ty · ktoś czeka na odpowiedź",
@@ -254,7 +254,7 @@ export async function loadNextActions(
       actions.push({
         key: "find-people",
         title: "Znajdź kogoś do zespołu",
-        why: "Dodanie otwartej roli sprawia, że team pojawia się wśród rekrutujących.",
+        why: "Dodanie otwartej roli sprawia, że zespół pojawia się wśród rekrutujących.",
         href: "/app/social/people",
         tone: "neutral",
       });
@@ -287,14 +287,14 @@ function findBlocker(params: {
   if (active.status === "paused") {
     return {
       title: "Startup jest wstrzymany",
-      why: "Kolejny etap się nie otworzy, dopóki nie wznowisz prac w ustawieniach teamu.",
+      why: "Kolejny etap się nie otworzy, dopóki nie wznowisz prac w ustawieniach zespołu.",
     };
   }
 
   if (active.status === "archived") {
     return {
       title: "Startup jest w archiwum",
-      why: "Dane zostają dostępne do odczytu. Przywrócić go może Founder w ustawieniach teamu.",
+      why: "Dane zostają dostępne do odczytu. Przywrócić go może Founder w ustawieniach zespołu.",
     };
   }
 
@@ -317,8 +317,10 @@ function findBlocker(params: {
 
 /** Kilka pierwszych nieukończonych podpunktów, w kolejności programu. */
 export function findNextSubpoints(tree: StageTree, limit: number) {
-  const found: { point: { title: string }; subpoint: { id: string; title: string } }[] =
-    [];
+  const found: {
+    point: { title: string; done: number; total: number };
+    subpoint: { id: string; title: string };
+  }[] = [];
 
   for (const category of tree.categories) {
     for (const point of category.points) {

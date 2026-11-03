@@ -81,7 +81,7 @@ Konsekwencje, które z tego wynikają:
   Founderem** (trigger `profiles_cleanup_startups`, wykonywany PRZED kaskadą).
   Pozostałe zostają z resztą Founderów.
 - **Usunięcie startupu wymaga przepisania nazwy** i jest dostępne wyłącznie dla
-  Foundera (Team → Profil publiczny). To operacja bez cofnięcia, więc
+  Foundera (Zespół → Profil publiczny). To operacja bez cofnięcia, więc
   potwierdzenie musi wymagać uwagi, a nie jednego kliknięcia. Obok stoi
   przypomnienie o pauzie i archiwum — one istnieją właśnie po to, żeby nikt tu
   nie trafiał przez pomyłkę.
@@ -91,3 +91,8 @@ Konsekwencje, które z tego wynikają:
   e-mail, a modal **wypisuje z nazwy** startupy, które znikną razem z kontem.
   Jeśli baza nie pozwala kasować z `auth.users`, aplikacja mówi to wprost
   i odsyła do panelu — nie udaje, że się udało.
+- **Zgłoszenia z „Pomoc i opinie”** (043) **nie** znikają razem z kontem —
+  to korespondencja z firmą, a jej kopia i tak leży w skrzynce support@.
+  `profile_id` i `startup_id` przechodzą na `null`, kontakt zostaje zapisany
+  w samym zgłoszeniu. Prośbę o usunięcie danych obsługuje się ręcznie
+  (`SUPPORT_zgloszenia.sql`, sekcja 4 + poczta).

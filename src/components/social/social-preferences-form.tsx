@@ -83,12 +83,12 @@ export function SocialPreferencesForm({
         )}
         <span className="min-w-0 flex-1">
           <span className="block text-[14px] font-medium text-white">
-            {discoverable ? "Jesteś widoczny w Odkrywaj" : "Jesteś ukryty"}
+            {discoverable ? "Profil jest widoczny w Odkrywaj" : "Profil jest ukryty"}
           </span>
           <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
             {discoverable
-              ? "Inni mogą Cię znaleźć i zaprosić do teamu. Twój e-mail widzą dopiero osoby z tego samego teamu."
-              : "Nie pojawiasz się w wyszukiwarce ani na publicznych stronach teamów. Nadal możesz sam zgłaszać się do projektów."}
+              ? "Inni mogą Cię znaleźć i zaprosić do zespołu. Twój e-mail widzą dopiero osoby z tego samego zespołu."
+              : "Nie pojawiasz się w wyszukiwarce ani na publicznych stronach zespołów. Nadal możesz samodzielnie zgłaszać się do projektów."}
           </span>
         </span>
       </button>

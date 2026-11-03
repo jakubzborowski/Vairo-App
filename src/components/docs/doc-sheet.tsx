@@ -268,7 +268,7 @@ export function DocSheet({
         </Link>
         <span className="text-[12.5px] text-[var(--text-subtle)]">
           {editorName && editorName !== authorName
-            ? `Autor: ${authorName ?? "ktoś z teamu"} · ostatnia zmiana: ${editorName}`
+            ? `Autor: ${authorName ?? "ktoś z zespołu"} · ostatnia zmiana: ${editorName}`
             : authorName
               ? `Pisze ${authorName}`
               : null}

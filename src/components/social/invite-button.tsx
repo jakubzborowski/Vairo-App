@@ -68,7 +68,7 @@ export function InviteButton({
 
   if (teams.length === 0 || blockedReason) {
     return blockedReason ? (
-      <span className="text-[12px] text-[var(--text-faint)]">{blockedReason}</span>
+      <span className="text-[12px] text-[var(--text-subtle)]">{blockedReason}</span>
     ) : null;
   }
 
@@ -90,7 +90,7 @@ export function InviteButton({
   const submit = () => {
     setError(null);
     if (!teamId) {
-      setError("Wybierz team.");
+      setError("Wybierz zespół.");
       return;
     }
     startSending(async () => {
@@ -123,14 +123,14 @@ export function InviteButton({
       ) : (
         <Button variant={variant} size={size} className={className} onClick={() => setOpen(true)}>
           <UserPlus className="size-4" />
-          Zaproś do teamu
+          Zaproś do zespołu
         </Button>
       )}
 
       {open ? (
         <Modal
           title={`Zaproś ${profileName}`}
-          description="Zaproszenie czeka na odpowiedź. Do teamu dołącza dopiero po akceptacji."
+          description="Zaproszenie czeka na odpowiedź. Do zespołu dołącza dopiero po akceptacji."
           onClose={() => setOpen(false)}
           footer={
             <>
@@ -146,7 +146,7 @@ export function InviteButton({
           {teams.length > 1 ? (
             <div>
               <p className="mb-2 text-[13px] font-medium text-[var(--text-muted)]">
-                Do którego teamu?
+                Do którego zespołu?
               </p>
               <div className="flex flex-col gap-1.5">
                 {teams.map((team) => (
@@ -174,7 +174,7 @@ export function InviteButton({
               dołączeniu, jednym ruchem w menu przy członku. */}
           <Field
             label="Stanowisko"
-            hint="Wizytówka w składzie teamu. Nie ma wpływu na uprawnienia."
+            hint="Wizytówka w składzie zespołu. Nie ma wpływu na uprawnienia."
           >
             {({ id }) => (
               <div>
@@ -226,7 +226,7 @@ export function InviteButton({
               <AlertCircle className="mt-[2px] size-4 shrink-0" />
               <span>
                 {trimmed.length === 0
-                  ? `${profileName} zobaczy samą nazwę teamu i nic poza tym — ani czemu akurat ta osoba, ani czym mielibyście się zajmować.`
+                  ? `${profileName} zobaczy samą nazwę zespołu i nic poza tym — ani czemu akurat ta osoba, ani czym mielibyście się zajmować.`
                   : "To bardzo krótkie zaproszenie. Jedno zdanie o tym, czemu akurat ta osoba, zmienia je z rozesłanego w skierowane."}{" "}
                 Możesz je rozwinąć albo wysłać tak, jak jest.
               </span>

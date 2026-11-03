@@ -44,8 +44,8 @@ export function TeamCard({
               {team.public_tagline}
             </p>
           ) : (
-            <p className="mt-0.5 text-[13px] italic text-[var(--text-faint)]">
-              Team nie dodał jeszcze opisu.
+            <p className="mt-0.5 text-[13px] italic text-[var(--text-subtle)]">
+              Zespół nie dodał jeszcze opisu.
             </p>
           )}
 
@@ -99,7 +99,7 @@ export function TeamCard({
               </li>
             ))}
             {openRoles.length > 3 ? (
-              <li className="text-[12px] text-[var(--text-faint)]">
+              <li className="text-[12px] text-[var(--text-subtle)]">
                 i {openRoles.length - 3} więcej
               </li>
             ) : null}
@@ -127,7 +127,7 @@ export function TeamCard({
           href={`/app/social/teams/${team.id}`}
           className="inline-flex h-9 items-center rounded-lg border border-white/10 px-3.5 text-[13px] font-medium text-[var(--text-muted)] transition-colors hover:border-white/22 hover:text-white"
         >
-          Zobacz team
+          Zobacz zespół
         </Link>
         {action}
       </div>

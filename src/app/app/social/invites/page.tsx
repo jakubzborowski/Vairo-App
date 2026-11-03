@@ -92,7 +92,7 @@ export default async function InvitesPage({
           Zaproszenia
         </h1>
         <p className="mt-1 text-[14px] text-[var(--text-subtle)]">
-          Zaczepki od ludzi i sprawy członkostwa w teamach.
+          Zaczepki od ludzi i sprawy członkostwa w zespołach.
         </p>
       </header>
 
@@ -107,7 +107,7 @@ export default async function InvitesPage({
           <EmptyState
             icon={Inbox}
             title="Tu jeszcze pusto"
-            description="Pojawią się tutaj zaczepki od innych osób i sprawy Twoich teamów. Pierwszy krok możesz zrobić sam."
+            description="Pojawią się tutaj zaczepki od innych osób i sprawy Twoich zespołów. Pierwszy krok może też wyjść od Ciebie."
             action={
               <Button href="/app/social/discover" variant="secondary">
                 <Compass className="size-4" />

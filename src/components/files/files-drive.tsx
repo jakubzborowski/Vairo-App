@@ -624,7 +624,7 @@ export function FilesDrive({
             );
           })}
           <p className="hidden px-2.5 pt-3 text-[12px] leading-relaxed text-[var(--text-subtle)] lg:block">
-            Do {MAX_MB} MB na plik. Widzą je tylko osoby z tego teamu.
+            Do {MAX_MB} MB na plik. Widzą je tylko osoby z tego zespołu.
           </p>
         </nav>
 
@@ -988,7 +988,7 @@ export function FilesDrive({
               <dt className="text-[12px] text-[var(--text-subtle)]">Kto dodał</dt>
               <dd className="mt-1 flex items-center gap-2 text-white">
                 {selected.uploaderName ? <Avatar name={selected.uploaderName} size="xs" /> : null}
-                {selected.uploaderName ?? "Osoba spoza teamu"}
+                {selected.uploaderName ?? "Osoba spoza zespołu"}
               </dd>
             </div>
             <div>

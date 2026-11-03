@@ -50,7 +50,7 @@ export function AnswerView({
         ) : fieldAnswered(field, value) ? (
           <AnswerBody field={field} value={value} />
         ) : (
-          <p className="inline-flex items-center gap-1.5 text-[13px] text-[var(--text-faint)]">
+          <p className="inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)]">
             <Minus className="size-3.5" aria-hidden="true" />
             Jeszcze nie uzupełnione
           </p>
@@ -71,7 +71,7 @@ function AnswerBody({ field, value }: { field: StageField; value: unknown }) {
               key={index}
               className="flex gap-2.5 text-[14px] leading-relaxed text-[var(--text-muted)]"
             >
-              <span className="tabular mt-0.5 shrink-0 text-[12px] text-[var(--text-faint)]">
+              <span className="tabular mt-0.5 shrink-0 text-[12px] text-[var(--text-subtle)]">
                 {index + 1}.
               </span>
               <span className="whitespace-pre-line">{item}</span>
@@ -106,7 +106,7 @@ function AnswerBody({ field, value }: { field: StageField; value: unknown }) {
           <span className="tabular text-[18px] font-semibold text-white">
             {String(value)}
           </span>
-          <span className="text-[var(--text-faint)]"> / {max}</span>
+          <span className="text-[var(--text-subtle)]"> / {max}</span>
         </p>
       );
     }

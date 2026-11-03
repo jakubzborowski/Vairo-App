@@ -100,7 +100,7 @@ export function ListInput({
       {rows.map((item, index) => (
         <div key={index} className="group flex items-start gap-2.5">
           <span
-            className="tabular mt-3 w-4 shrink-0 text-right text-[12px] text-[var(--text-faint)]"
+            className="tabular mt-3 w-4 shrink-0 text-right text-[12px] text-[var(--text-subtle)]"
             aria-hidden="true"
           >
             {index + 1}
@@ -143,7 +143,7 @@ export function ListInput({
       ) : null}
 
       {config.min_items ? (
-        <p className="text-[12px] text-[var(--text-faint)]">
+        <p className="text-[12px] text-[var(--text-subtle)]">
           Minimum {config.min_items}
           {max < 20 ? `, maksimum ${max}` : ""}
         </p>
@@ -270,7 +270,7 @@ export function ScaleInput({ field, value, onChange, disabled }: FieldInputProps
       ) : null}
 
       {current === null ? (
-        <p className="mt-2 text-[12px] text-[var(--text-faint)]">
+        <p className="mt-2 text-[12px] text-[var(--text-subtle)]">
           Przesuń suwak, żeby zapisać ocenę.
         </p>
       ) : null}

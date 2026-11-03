@@ -610,7 +610,7 @@ Gotowość zespołu znaczy tu, że macie uzgodniony skład i możecie podjąć d
     (subpoint_id, key, kind, question, help, example,
      is_required, shared_key, config, position)
   values (v_subpoint, 'ready', 'checkmark',
-          'Team jest gotowy do dalszej pracy.', 'Zaznacz, gdy macie uzgodniony skład. Jedna próba nie musi rozwiązać wszystkiego.', null,
+          'Zespół jest gotowy do dalszej pracy.', 'Zaznacz, gdy macie uzgodniony skład. Jedna próba nie musi rozwiązać wszystkiego.', null,
           true, 'preparation.trial.result.ready',
           '{"confirm_label":"Team gotowy"}'::jsonb, 3)
   on conflict (subpoint_id, key) do update set
@@ -1660,8 +1660,8 @@ Przy każdym etapie zapisz zdarzenie, po którym firma może przejść dalej: de
 Nie przesuwaj sprawy tylko dlatego, że rozmowa była miła. Opieraj się na sygnale: odesłany opis potrzeb, obecność osoby, która dysponuje budżetem.
 §
 Lista firm zamiast osobnego systemu
-Prowadź firmy, z którymi rozmawiacie albo do których chcecie się odezwać: aktualny etap, następny krok i osoba z waszego teamu.
-Na początku wystarczy ta lista. Nie potrzebujecie osobnego programu do sprzedaży. Ważne, żeby cały team widział następny krok i kiedy ma się wydarzyć.',
+Prowadź firmy, z którymi rozmawiacie albo do których chcecie się odezwać: aktualny etap, następny krok i osoba z waszego zespołu.
+Na początku wystarczy ta lista. Nie potrzebujecie osobnego programu do sprzedaży. Ważne, żeby cały zespół widział następny krok i kiedy ma się wydarzyć.',
           '["Forum Ventures, Customer-Driven Product Development."]'::jsonb, null,
           null, 1)
   on conflict (category_id, key) do update set
@@ -1716,9 +1716,9 @@ Na początku wystarczy ta lista. Nie potrzebujecie osobnego programu do sprzeda�
     (subpoint_id, key, kind, question, help, example,
      is_required, shared_key, config, position)
   values (v_subpoint, 'companies', 'records',
-          'Wpisz firmy, z którymi już rozmawiacie albo do których chcecie się odezwać.', 'Przy każdej: aktualny etap, następne działanie i kto z waszego teamu za to odpowiada. Jeśli działasz w pojedynkę, wpisz swoje imię.', 'Studio Nord. Po pierwszej rozmowie. Wysłać ofertę w czwartek. Kuba.',
+          'Wpisz firmy, z którymi już rozmawiacie albo do których chcecie się odezwać.', 'Przy każdej: aktualny etap, następne działanie i kto z waszego zespołu za to odpowiada. Jeśli działasz w pojedynkę, wpisz swoje imię.', 'Studio Nord. Po pierwszej rozmowie. Wysłać ofertę w czwartek. Kuba.',
           true, 'preparation.sales.accounts.companies',
-          '{"add_label":"Dodaj firmę","max_items":30,"columns":[{"key":"company","label":"Firma","placeholder":"Nazwa"},{"key":"stage","label":"Aktualny etap","placeholder":"Np. jeszcze bez kontaktu"},{"key":"next","label":"Następne działanie","placeholder":"Co i kiedy"},{"key":"owner","label":"Kto z waszego teamu","placeholder":"Imię"}]}'::jsonb, 1)
+          '{"add_label":"Dodaj firmę","max_items":30,"columns":[{"key":"company","label":"Firma","placeholder":"Nazwa"},{"key":"stage","label":"Aktualny etap","placeholder":"Np. jeszcze bez kontaktu"},{"key":"next","label":"Następne działanie","placeholder":"Co i kiedy"},{"key":"owner","label":"Kto z waszego zespołu","placeholder":"Imię"}]}'::jsonb, 1)
   on conflict (subpoint_id, key) do update set
     kind = excluded.kind, question = excluded.question,
     help = excluded.help, example = excluded.example,
@@ -1873,7 +1873,7 @@ Wypisz materiały, dane, dostępy i zgody, które klient musi przekazać przed s
 Im mniej zadań na samym początku, tym szybciej klient dojdzie do pierwszego użycia. Prosta lista dla niego wystarcza.
 §
 Podział pracy
-Wypisz, co przed startem robi wasz team, a co klient. Przypisz osoby po obu stronach.
+Wypisz, co przed startem robi wasz zespół, a co klient. Przypisz osoby po obu stronach.
 Najczęstsze opóźnienie to brak osoby prowadzącej po stronie klienta. Upewnijcie się, że jest wskazana od pierwszego dnia.
 §
 Formalności w tej drodze
@@ -1919,7 +1919,7 @@ Osoba po stronie klienta, która odbiera pytania.',
     (subpoint_id, key, kind, question, help, example,
      is_required, shared_key, config, position)
   values (v_subpoint, 'ours', 'list_long',
-          'Co przed startem musi zrobić wasz team?', 'Jedno działanie w pozycji.', 'Założyć przestrzeń firmy.
+          'Co przed startem musi zrobić wasz zespół?', 'Jedno działanie w pozycji.', 'Założyć przestrzeń firmy.
 Wysłać umowę do podpisu.',
           true, 'preparation.kickoff.needs.ours',
           '{"min_items":1,"max_items":12}'::jsonb, 2)
@@ -1977,7 +1977,7 @@ Zakładamy dostępy i umawiamy godzinę pierwszego użycia.',
     (subpoint_id, key, kind, question, help, example,
      is_required, shared_key, config, position)
   values (v_subpoint, 'data', 'long_text',
-          'Jakie dane klienta będziecie mieć i kto poza tą firmą może je zobaczyć?', 'Dane osobowe, dane firmy, pliki. Jeśli dwóch klientów nie może widzieć swoich materiałów, napisz to wprost. Gdy danych klienta nie przetwarzacie, napisz „Nie przetwarzamy danych klienta”.', 'Mamy imiona pracowników i treść zgłoszeń. Widzi je tylko ta firma i osoba z naszego teamu, która prowadzi wdrożenie. Inny klient tego nie widzi.',
+          'Jakie dane klienta będziecie mieć i kto poza tą firmą może je zobaczyć?', 'Dane osobowe, dane firmy, pliki. Jeśli dwóch klientów nie może widzieć swoich materiałów, napisz to wprost. Gdy danych klienta nie przetwarzacie, napisz „Nie przetwarzamy danych klienta”.', 'Mamy imiona pracowników i treść zgłoszeń. Widzi je tylko ta firma i osoba z naszego zespołu, która prowadzi wdrożenie. Inny klient tego nie widzi.',
           true, 'preparation.kickoff.start.data',
           '{"max":1500}'::jsonb, 2)
   on conflict (subpoint_id, key) do update set

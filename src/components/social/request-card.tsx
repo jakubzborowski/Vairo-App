@@ -91,7 +91,7 @@ export function RequestCard({ request }: { request: JoinRequest }) {
           ) : null}
 
           {isApplication && request.profileHeadline ? (
-            <p className="mt-1 text-[12.5px] text-[var(--text-faint)]">
+            <p className="mt-1 text-[12.5px] text-[var(--text-subtle)]">
               {request.profileHeadline}
             </p>
           ) : null}
@@ -137,7 +137,7 @@ export function RequestCard({ request }: { request: JoinRequest }) {
             <>
               <Button size="sm" loading={busy} onClick={() => act("accept")}>
                 <Check className="size-4" />
-                {isApplication ? "Przyjmij do teamu" : "Dołącz"}
+                {isApplication ? "Przyjmij do zespołu" : "Dołącz"}
               </Button>
               <Button
                 size="sm"
@@ -162,9 +162,9 @@ export function RequestCard({ request }: { request: JoinRequest }) {
           ) : null}
         </div>
       ) : pending ? (
-        <p className="mt-4 text-[12.5px] text-[var(--text-faint)]">
+        <p className="mt-4 text-[12.5px] text-[var(--text-subtle)]">
           {isApplication
-            ? "Czeka na odpowiedź osób zarządzających teamem."
+            ? "Czeka na odpowiedź osób zarządzających zespołem."
             : "Czeka na odpowiedź zaproszonej osoby."}
         </p>
       ) : null}

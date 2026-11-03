@@ -43,10 +43,10 @@ async function guardManage(
 
 function translate(message: string) {
   if (isLastFounderError(message)) {
-    return "To jedyny Founder tego teamu. Najpierw przekaż tę rolę komuś innemu.";
+    return "To jedyny Founder tego zespołu. Najpierw przekaż tę rolę komuś innemu.";
   }
   if (message.includes("startup_limit_reached")) {
-    return "Ta osoba jest już w 3 teamach — to maksimum na konto.";
+    return "Ta osoba jest już w 3 zespołach — to maksimum na konto.";
   }
   // Reszta idzie przez wspólny tłumacz, żeby nie wyciekł surowy błąd bazy.
   return translateDbError(message) ?? message;
@@ -110,7 +110,7 @@ export async function updateJobTitle(input: {
   if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const myRole = await getStartupRole(supabase, input.startupId, user.id);
-  if (!myRole) return { error: "Nie należysz do tego teamu." };
+  if (!myRole) return { error: "Nie należysz do tego zespołu." };
 
   const isSelf = input.profileId === user.id;
   if (!isSelf && teamManageError(myRole)) {
@@ -145,7 +145,7 @@ export async function removeMember(input: {
   if (denied) return { error: denied };
 
   if (input.profileId === user.id) {
-    return { error: "Żeby wyjść z teamu, użyj przycisku „Opuść team”." };
+    return { error: "Żeby wyjść z zespołu, użyj przycisku „Opuść zespół”." };
   }
 
   const { error } = await supabase
@@ -215,7 +215,7 @@ export async function transferFounder(input: {
   }
 
   const target = await getStartupRole(supabase, input.startupId, input.toProfileId);
-  if (!target) return { error: "Ta osoba nie należy do teamu." };
+  if (!target) return { error: "Ta osoba nie należy do zespołu." };
 
   const { error: promoteError } = await supabase
     .from("startup_members")
@@ -237,7 +237,7 @@ export async function transferFounder(input: {
     return {
       error:
         "Rola Foundera została nadana, ale nie udało się zmienić Twojej. " +
-        "Teraz team ma dwóch Founderów — zmień swoją rolę ręcznie na liście.",
+        "Teraz zespół ma dwóch Founderów — zmień swoją rolę ręcznie na liście.",
     };
   }
 
@@ -451,7 +451,7 @@ export async function saveTeamProfile(input: {
 
   const tagline = input.tagline.trim();
   if (tagline.length > 160) {
-    return { error: "Jedno zdanie o teamie: maksymalnie 160 znaków." };
+    return { error: "Jedno zdanie o zespole: maksymalnie 160 znaków." };
   }
 
   const description = input.description.trim();
@@ -550,7 +550,7 @@ export async function uploadTeamLogo(formData: FormData) {
   if (!user) return { error: "Sesja wygasła — zaloguj się ponownie.", logoUrl: null };
 
   const startupId = String(formData.get("startup_id") ?? "");
-  if (!startupId) return { error: "Brak kontekstu teamu.", logoUrl: null };
+  if (!startupId) return { error: "Brak kontekstu zespołu.", logoUrl: null };
 
   const { error: denied } = await guardManage(supabase, startupId, user.id);
   if (denied) return { error: denied, logoUrl: null };

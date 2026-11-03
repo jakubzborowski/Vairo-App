@@ -17,7 +17,7 @@ async function context(startupId: string) {
   } = await supabase.auth.getUser();
   if (!user) return { ok: false as const, error: "Sesja wygasła — zaloguj się ponownie." };
   const active = await getActiveStartupId();
-  if (active && active !== startupId) return { ok: false as const, error: "Przełącz team i spróbuj ponownie." };
+  if (active && active !== startupId) return { ok: false as const, error: "Przełącz zespół i spróbuj ponownie." };
   const role = await getStartupRole(supabase, startupId, user.id);
   if (!role) return { ok: false as const, error: NOT_A_MEMBER };
   return { ok: true as const, supabase, user, role };

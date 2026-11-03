@@ -33,7 +33,7 @@ export async function switchTeam(startupId: string) {
     .eq("profile_id", user.id)
     .maybeSingle();
 
-  if (!membership) return { error: "Nie należysz do tego teamu." };
+  if (!membership) return { error: "Nie należysz do tego zespołu." };
 
   await setActiveStartupId(startupId);
 

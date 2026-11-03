@@ -25,7 +25,7 @@ async function context(startupId: string): Promise<Gate> {
   if (!user) return { ok: false, error: "Sesja wygasła — zaloguj się ponownie." };
   const active = await getActiveStartupId();
   if (active && active !== startupId) {
-    return { ok: false, error: "Przełącz team i spróbuj ponownie." };
+    return { ok: false, error: "Przełącz zespół i spróbuj ponownie." };
   }
   const role = await getStartupRole(supabase, startupId, user.id);
   if (!role) return { ok: false, error: NOT_A_MEMBER };

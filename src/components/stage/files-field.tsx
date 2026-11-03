@@ -111,7 +111,7 @@ export function StageFilesInput({
               >
                 {file.name}
               </button>
-              <span className="tabular shrink-0 text-[12px] text-[var(--text-faint)]">
+              <span className="tabular shrink-0 text-[12px] text-[var(--text-subtle)]">
                 {formatSize(file.size)}
               </span>
               <button

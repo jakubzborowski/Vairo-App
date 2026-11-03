@@ -15,7 +15,7 @@ export async function acceptInvite(token: string): Promise<{ error: string | nul
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("accept_invite_link", { p_token: token });
   if (error) {
-    return { error: translateDbError(error.message) ?? "Nie udało się dołączyć do teamu." };
+    return { error: translateDbError(error.message) ?? "Nie udało się dołączyć do zespołu." };
   }
 
   const jar = await cookies();

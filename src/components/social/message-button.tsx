@@ -74,7 +74,7 @@ export function MessageButton({
 
   if (blockedReason) {
     return (
-      <span className="text-[12px] text-[var(--text-faint)]">{blockedReason}</span>
+      <span className="text-[12px] text-[var(--text-subtle)]">{blockedReason}</span>
     );
   }
 
@@ -187,7 +187,7 @@ export function MessageButton({
                     selected={contextId === context.id}
                     onSelect={() => setContextId(context.id)}
                     title={`W imieniu ${context.name}`}
-                    description="Odbiorca zobaczy, że piszesz z tego teamu, i jego publiczną kartę."
+                    description="Odbiorca zobaczy, że piszesz z tego zespołu, i jego publiczną kartę."
                   />
                 ))}
               </div>
@@ -206,7 +206,7 @@ export function MessageButton({
                 onChange={(event) => setMessage(event.target.value)}
                 rows={5}
                 maxLength={600}
-                placeholder="Np. Widzę, że robisz hardware — sam składam prototyp czujnika i szukam kogoś do elektroniki."
+                placeholder="Np. Widzę, że robisz hardware — składam prototyp czujnika i szukam kogoś do elektroniki."
                 autoFocus
               />
             )}

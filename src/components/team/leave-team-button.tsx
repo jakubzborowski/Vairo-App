@@ -51,7 +51,7 @@ export function LeaveTeamButton({
   return (
     <>
       {asMenu ? (
-        <Menu label="Więcej akcji teamu">
+        <Menu label="Więcej akcji zespołu">
           {(close) => (
             <>
               {canManage ? (
@@ -74,7 +74,7 @@ export function LeaveTeamButton({
                   setOpen(true);
                 }}
               >
-                Opuść team
+                Opuść zespół
               </MenuItem>
             </>
           )}
@@ -82,14 +82,14 @@ export function LeaveTeamButton({
       ) : (
         <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
           <LogOut className="size-4" />
-          Opuść team
+          Opuść zespół
         </Button>
       )}
 
       {open ? (
         <Modal
           title={`Opuścić ${teamName}?`}
-          description="Stracisz dostęp do etapów, dokumentów i wszystkiego, co należy do tego teamu. To, co już zostało wypełnione, zostaje z zespołem."
+          description="Stracisz dostęp do etapów, dokumentów i wszystkiego, co należy do tego zespołu. To, co już zostało wypełnione, zostaje z zespołem."
           onClose={() => setOpen(false)}
           footer={
             <>
@@ -98,7 +98,7 @@ export function LeaveTeamButton({
               </Button>
               <Button variant="danger" loading={busy} onClick={confirm}>
                 <LogOut className="size-4" />
-                Opuszczam team
+                Opuszczam zespół
               </Button>
             </>
           }

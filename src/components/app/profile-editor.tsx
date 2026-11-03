@@ -275,7 +275,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                   W Odkrywaj to zdjęcie decyduje o kliknięciu bardziej niż
                   cokolwiek innego w profilu.
                 </p>
-                <p className="text-[12px] text-[var(--text-faint)]">
+                <p className="text-[12px] text-[var(--text-subtle)]">
                   JPG, PNG albo WebP, do {AVATAR_MAX_MB} MB.
                 </p>
               </div>
@@ -296,7 +296,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
           <CardBody className="flex flex-col gap-4">
             <Field
               label="Imię i nazwisko"
-              hint="Tak podpisujesz się w teamie: w składzie, celach i zadaniach."
+              hint="Tak podpisujesz się w zespole: w składzie, celach i zadaniach."
             >
               {({ id }) => (
                 <Input
@@ -314,7 +314,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                 na karcie, trafiał tutaj i nie miał gdzie jej wpisać. */}
             <Field
               label="Nazwa w Odkrywaj"
-              hint="Opcjonalne. Tak widzą Cię osoby spoza teamu: na karcie, w zaczepkach i rozmowach. Puste pole = imię i nazwisko."
+              hint="Opcjonalne. Tak widzą Cię osoby spoza zespołu: na karcie, w zaczepkach i rozmowach. Puste pole = imię i nazwisko."
             >
               {({ id }) => (
                 <Input
@@ -350,7 +350,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
           <CardHeader>
             <div>
               <CardTitle>Co potrafisz</CardTitle>
-              <CardDescription>Po tym znajdują Cię teamy.</CardDescription>
+              <CardDescription>Po tym znajdują Cię zespoły.</CardDescription>
             </div>
             <span className="tabular shrink-0 text-[12px] text-[var(--text-subtle)]">
               {draft.skillIds.length} wybranych

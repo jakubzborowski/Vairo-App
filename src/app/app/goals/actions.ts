@@ -41,7 +41,7 @@ async function context(startupId: string): Promise<Gate> {
 
   const active = await getActiveStartupId();
   if (active && active !== startupId) {
-    return { ok: false, error: "Przełącz team i spróbuj ponownie." };
+    return { ok: false, error: "Przełącz zespół i spróbuj ponownie." };
   }
 
   const role = await getStartupRole(supabase, startupId, user.id);

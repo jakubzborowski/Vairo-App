@@ -176,7 +176,7 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
       // Mówimy wprost, że konto zostaje nietknięte — inaczej ktoś, kto wpisze
       // tu pseudonim, nie wie, jak będzie podpisany w swoim teamie.
       help: initial.fullName
-        ? `Imię i nazwisko z konta (${initial.fullName}) zostaje bez zmian — widzi je Twój team.`
+        ? `Imię i nazwisko z konta (${initial.fullName}) zostaje bez zmian — widzi je Twój zespół.`
         : undefined,
       canContinue: publicName.trim().length >= 2,
       render: () => (
@@ -267,7 +267,7 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
       key: "skills",
       title: "Co potrafisz?",
       description:
-        "Wybierz co najmniej trzy rzeczy. Teamy szukają po umiejętnościach, nie po nazwiskach.",
+        "Wybierz co najmniej trzy rzeczy. Zespoły szukają po umiejętnościach, nie po nazwiskach.",
       optional: true,
       help: "Nie znajdujesz swojej? Wpisz ją i naciśnij Enter — dodamy ją do listy.",
       render: () => (
@@ -370,8 +370,8 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
               </span>
               <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
                 {discoverable
-                  ? "Inni mogą Cię znaleźć, napisać i zaprosić do teamu. Twój e-mail zobaczą dopiero osoby z tego samego zespołu."
-                  : "Nie pojawisz się w wyszukiwarce. Nadal możesz sam pisać i zgłaszać się do projektów."}
+                  ? "Inni mogą Cię znaleźć, napisać i zaprosić do zespołu. Twój e-mail zobaczą dopiero osoby z tego samego zespołu."
+                  : "Nie pojawisz się w wyszukiwarce. Nadal możesz samodzielnie pisać i zgłaszać się do projektów."}
               </span>
             </span>
           </button>

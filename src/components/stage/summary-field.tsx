@@ -94,7 +94,7 @@ export function SummaryField({
                 <p
                   className={cn(
                     "mt-1 text-[14px] leading-relaxed",
-                    filled ? "text-white" : "text-[var(--text-faint)] italic"
+                    filled ? "text-white" : "text-[var(--text-subtle)] italic"
                   )}
                 >
                   {skipped

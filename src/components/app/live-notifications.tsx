@@ -101,15 +101,15 @@ function liveTitle(kind: NotificationKind) {
     case "message_received":
       return "Nowa wiadomość";
     case "join_application":
-      return "Nowe zgłoszenie do teamu";
+      return "Nowe zgłoszenie do zespołu";
     case "join_invite":
-      return "Zaproszenie do teamu";
+      return "Zaproszenie do zespołu";
     case "join_accepted":
       return "Zgłoszenie przyjęte";
     case "join_declined":
       return "Zgłoszenie odrzucone";
     case "invite_link_joined":
-      return "Nowa osoba w teamie — z Twojego linku";
+      return "Nowa osoba w zespole — z Twojego linku";
     default:
       return "Nowe zdarzenie";
   }

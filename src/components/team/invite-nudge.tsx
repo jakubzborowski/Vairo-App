@@ -44,7 +44,7 @@ export function InviteNudge({ data, variant }: { data: TeamNudgeData; variant: "
 
   const text =
     variant === "help" && !alone
-      ? `W teamie ${plural(data.members, "jest", "są", "jest")} ${data.members} ${plural(data.members, "osoba", "osoby", "osób")}. Brakuje kogoś z konkretną umiejętnością? Dodaj otwartą rolę — team pojawi się w Odkrywaj — albo poszukaj w „Szukam ludzi”.`
+      ? `W zespole ${plural(data.members, "jest", "są", "jest")} ${data.members} ${plural(data.members, "osoba", "osoby", "osób")}. Brakuje kogoś z konkretną umiejętnością? Dodaj otwartą rolę — zespół pojawi się w Odkrywaj — albo poszukaj w „Szukam ludzi”.`
       : data.hasLink
         ? "Link zaproszenia jest gotowy, ale nikt jeszcze z niego nie dołączył. Wyślij go komuś, z kim chcesz to budować — np. na Messengerze."
         : variant === "help"

@@ -79,7 +79,7 @@ export function FieldInput({
         <p className="text-[15px] font-medium leading-snug text-white">
           {field.question}
           {!field.isRequired ? (
-            <span className="ml-2 align-middle text-[12px] font-normal text-[var(--text-faint)]">
+            <span className="ml-2 align-middle text-[12px] font-normal text-[var(--text-subtle)]">
               opcjonalne
             </span>
           ) : null}
@@ -121,7 +121,7 @@ export function FieldInput({
                 aria-hidden="true"
               />
               <span>
-                Tak będzie nazywał się Twój team w całej aplikacji. Zmienisz to
+                Tak będzie nazywał się Twój zespół w całej aplikacji. Zmienisz to
                 później w ustawieniach.
               </span>
             </p>
@@ -243,7 +243,7 @@ function Control(props: FieldInputProps & { startupStageId: string; returnTo?: s
     default:
       // `summary` renderuje się osobno, poza listą pól — patrz summary-field.tsx
       return (
-        <p className="text-[13px] text-[var(--text-faint)]">
+        <p className="text-[13px] text-[var(--text-subtle)]">
           Nieobsługiwany typ pola: {field.kind}
         </p>
       );

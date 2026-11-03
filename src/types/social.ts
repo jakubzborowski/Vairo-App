@@ -17,7 +17,7 @@ export const LOOKING_FOR = [
 export type LookingFor = (typeof LOOKING_FOR)[number];
 
 export const LOOKING_FOR_LABELS: Record<LookingFor, string> = {
-  team: "Szukam teamu",
+  team: "Szukam zespołu",
   cofounder: "Szukam współzałożyciela",
   collaborators: "Szukam ludzi do swojego projektu",
   not_looking: "Na razie nie szukam",
@@ -30,7 +30,7 @@ export const LOOKING_FOR_OPTIONS: {
 }[] = [
   {
     value: "team",
-    label: "Szukam teamu",
+    label: "Szukam zespołu",
     description: "Chcę dołączyć do istniejącego startupu.",
   },
   {
@@ -167,12 +167,12 @@ export function translateJoinError(
 ) {
   if (!message) return null;
   if (message.includes("already_member")) {
-    return "Ta osoba jest już w tym teamie.";
+    return "Ta osoba jest już w tym zespole.";
   }
   if (message.includes("startup_limit_reached")) {
     return limitSubject === "them"
-      ? "Ta osoba należy już do 3 teamów — to maksimum na konto i nie da się jej dodać."
-      : "Należysz już do 3 teamów — to maksimum na konto.";
+      ? "Ta osoba należy już do 3 zespołów — to maksimum na konto i nie da się jej dodać."
+      : "Należysz już do 3 zespołów — to maksimum na konto.";
   }
   if (message.includes("join_requests_one_pending")) {
     return "Rozmowa z tą osobą już trwa — sprawdź Zaproszenia.";
@@ -246,7 +246,7 @@ export function translateContactError(message: string | null | undefined) {
     return "Zaczepka do tej osoby już czeka na odpowiedź.";
   }
   if (message.includes("not_a_member_of_context")) {
-    return "Możesz pisać w imieniu teamu, do którego należysz.";
+    return "Możesz pisać w imieniu zespołu, do którego należysz.";
   }
   if (message.includes("signal_not_pending")) {
     return "Ta zaczepka została już rozpatrzona.";

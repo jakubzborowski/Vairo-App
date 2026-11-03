@@ -112,7 +112,7 @@ export function TeamsDeck({
         icon={Compass}
         title={
           teams.length === 0
-            ? "Żaden team nie pasuje do tych filtrów"
+            ? "Żaden zespół nie pasuje do tych filtrów"
             : "To już wszystkie projekty"
         }
         description="Widoczne są tylko aktywne startupy z włączonym profilem publicznym. Możesz też założyć własny."
@@ -203,10 +203,10 @@ export function TeamsDeck({
         atTeamLimit ? (
           <DeckAction
             variant="primary"
-            label={`Masz już ${MAX_STARTUPS} teamy`}
+            label={`Masz już ${MAX_STARTUPS} zespoły`}
             icon={<Send className="size-6" />}
             disabled
-            title={`Jesteś już w ${MAX_STARTUPS} teamach`}
+            title={`Jesteś już w ${MAX_STARTUPS} zespołach`}
           />
         ) : (
           <ApplyButton
@@ -253,7 +253,7 @@ export function TeamsDeck({
                   </li>
                 ))}
                 {openRoles.length > 3 ? (
-                  <li className="text-[12.5px] text-[var(--text-faint)]">
+                  <li className="text-[12.5px] text-[var(--text-subtle)]">
                     i jeszcze {openRoles.length - 3}
                   </li>
                 ) : null}
@@ -280,7 +280,7 @@ export function TeamsDeck({
           href={`/app/social/teams/${team.id}`}
           className="underline-offset-2 transition-colors hover:text-white hover:underline"
         >
-          Zobacz pełny profil teamu
+          Zobacz pełny profil zespołu
         </Link>
       }
     />

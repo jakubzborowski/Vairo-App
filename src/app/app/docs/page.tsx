@@ -38,7 +38,7 @@ export default async function DocsPage() {
     body: row.body ?? "",
     createdBy: row.created_by,
     // Na karcie stoi ten, kto zmieniał ostatnio (031); bez migracji — autor.
-    authorName: names.get(row.updated_by ?? row.created_by ?? "") ?? "Była osoba z teamu",
+    authorName: names.get(row.updated_by ?? row.created_by ?? "") ?? "Była osoba z zespołu",
     updatedAt: row.updated_at,
     usedAsProof: usedAsProof.has(row.id),
   }));

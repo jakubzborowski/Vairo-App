@@ -57,7 +57,7 @@ type Props = {
 const STATUS_COPY: Record<StartupStatus, { label: string; description: string }> = {
   active: {
     label: "Aktywny",
-    description: "Normalna praca. Team może być widoczny w Odkrywaj.",
+    description: "Normalna praca. Zespół może być widoczny w Odkrywaj.",
   },
   paused: {
     label: "Na pauzie",
@@ -67,7 +67,7 @@ const STATUS_COPY: Record<StartupStatus, { label: string; description: string }>
   archived: {
     label: "W archiwum",
     description:
-      "Pomysł zamknięty. Dane zostają, team znika z wyszukiwarki.",
+      "Pomysł zamknięty. Dane zostają, zespół znika z wyszukiwarki.",
   },
 };
 
@@ -268,7 +268,7 @@ export function TeamProfileEditor({
         <p className="flex items-start gap-2 rounded-xl border border-[var(--warning)]/25 bg-[var(--warning)]/8 px-4 py-3 text-[12.5px] leading-relaxed text-[var(--warning)]">
           <EyeOff className="mt-0.5 size-4 shrink-0" />
           <span>
-            Ta karta nie pojawia się teraz w Odkrywaj — team ma wyłączoną widoczność.
+            Ta karta nie pojawia się teraz w Odkrywaj — zespół ma wyłączoną widoczność.
           </span>
         </p>
       ) : null}
@@ -396,7 +396,7 @@ export function TeamProfileEditor({
 
               <Field
                 label="O projekcie"
-                hint="Dłuższy opis na stronie teamu — nie na karcie. Tyle, ile chcecie pokazać obcym."
+                hint="Dłuższy opis na stronie zespołu — nie na karcie. Tyle, ile chcecie pokazać obcym."
                 counter={{ value: description.length, max: 1200 }}
               >
                 {() => (
@@ -447,7 +447,7 @@ export function TeamProfileEditor({
             <Toggle
               on={discoverable}
               disabled={busy}
-              title="Team widoczny w Odkrywaj"
+              title="Zespół widoczny w Odkrywaj"
               effect={
                 discoverable
                   ? "Ludzie mogą Was znaleźć i wysłać zgłoszenie. Opis pomysłu z Idea Stage zostaje prywatny."
@@ -462,7 +462,7 @@ export function TeamProfileEditor({
                 title="Pokazujcie, na którym etapie jesteście"
                 effect={
                   stagePublic
-                    ? "Na karcie widać nazwę etapu. Same odpowiedzi zostają w teamie."
+                    ? "Na karcie widać nazwę etapu. Same odpowiedzi zostają w zespole."
                     : "Nikt z zewnątrz nie widzi, jak daleko jesteście."
                 }
                 onChange={() => toggleVisibility({ isDiscoverable: discoverable, showStagePublicly: !stagePublic })}
@@ -480,7 +480,7 @@ export function TeamProfileEditor({
           <details className="group mt-6 rounded-[18px] border border-white/[0.07] bg-[var(--surface)]">
             <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-5 text-[13.5px] font-medium text-[var(--text-muted)] hover:text-white">
               <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
-              Zaawansowane: status, archiwizacja i usunięcie teamu
+              Zaawansowane: status, archiwizacja i usunięcie zespołu
             </summary>
             <div className="flex flex-col gap-5 border-t border-white/[0.06] px-5 py-5">
               <div>

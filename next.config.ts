@@ -15,7 +15,10 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=()",
+    // Mikrofon dla własnej domeny: dyktowanie w polach tekstowych
+    // (`dictation-button.tsx`). `microphone=()` blokowało je u każdego —
+    // przeglądarka zwracała „not-allowed”, zanim zapytała człowieka.
+    value: "camera=(), microphone=(self), geolocation=()",
   },
   {
     key: "Content-Security-Policy",
@@ -33,7 +36,9 @@ const securityHeaders = [
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
       `connect-src 'self' ${supabaseOrigin} https://*.supabase.co wss://*.supabase.co`,
-      "frame-src 'none'",
+      // Podgląd PDF w Plikach to <iframe> z podpisanym adresem Storage —
+      // przy `'none'` zamiast podglądu był pusty, zablokowany prostokąt.
+      `frame-src ${supabaseOrigin}`,
     ].join("; "),
   },
 ];

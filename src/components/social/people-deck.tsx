@@ -206,10 +206,10 @@ export function PeopleDeck({
         invitableTeams.length === 0 ? null : full ? (
           <DeckAction
             variant="extra"
-            label="Komplet teamów"
+            label="Komplet zespołów"
             icon={<UserPlus className="size-5" />}
             disabled
-            title={`Ta osoba jest w ${MAX_STARTUPS} teamach`}
+            title={`Ta osoba jest w ${MAX_STARTUPS} zespołach`}
           />
         ) : (
           <InviteButton
@@ -248,8 +248,8 @@ export function PeopleDeck({
             <span className="inline-flex items-center gap-1.5">
               <Users className="size-3.5 shrink-0" />
               {person.team_count === 0
-                ? "Bez teamu"
-                : `${person.team_count} z ${MAX_STARTUPS} teamów`}
+                ? "Bez zespołu"
+                : `${person.team_count} z ${MAX_STARTUPS} zespołów`}
             </span>
           </div>
 

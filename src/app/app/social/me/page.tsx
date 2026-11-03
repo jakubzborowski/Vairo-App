@@ -116,7 +116,7 @@ export default async function MyPublicProfilePage({
             Mój profil publiczny
           </h1>
           <p className="mt-1 max-w-2xl text-[14px] leading-relaxed text-[var(--text-muted)]">
-            Tak widzą Cię ludzie, którzy szukają kogoś do teamu.
+            Tak widzą Cię ludzie, którzy szukają kogoś do zespołu.
           </p>
         </div>
         <Button href="/app/settings/profile" variant="secondary">
@@ -176,7 +176,7 @@ export default async function MyPublicProfilePage({
           {hidden ? (
             <p className="flex items-start gap-2 px-1 text-[13px] leading-relaxed text-[var(--text-muted)]">
               <EyeOff className="mt-0.5 size-4 shrink-0" />
-              Nie pojawiasz się teraz w Szukam ludzi. Teamy, do których się zgłosisz, nadal Cię widzą.
+              Nie pojawiasz się teraz w Szukam ludzi. Zespoły, do których się zgłosisz, nadal Cię widzą.
             </p>
           ) : null}
         </div>

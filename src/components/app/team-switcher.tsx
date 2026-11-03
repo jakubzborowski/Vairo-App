@@ -87,7 +87,7 @@ export function TeamSwitcher({ teams, activeTeamId }: Props) {
         </span>
         <span className="min-w-0">
           <span className="block truncate text-[13px] font-medium text-white">
-            Brak teamu
+            Brak zespołu
           </span>
           <span className="block truncate text-[11px] text-[var(--text-subtle)]">
             Stwórz startup
@@ -154,11 +154,11 @@ export function TeamSwitcher({ teams, activeTeamId }: Props) {
           {atLimit ? (
             <span
               aria-disabled="true"
-              title={`Limit ${MAX_TEAMS} teamów na konto`}
+              title={`Limit ${MAX_TEAMS} zespołów na konto`}
               className="flex cursor-not-allowed items-center gap-2.5 px-3 py-2 text-[13px] text-[var(--text-faint)]"
             >
               <Plus className="size-3.5 shrink-0" />
-              Limit {MAX_TEAMS} teamów
+              Limit {MAX_TEAMS} zespołów
             </span>
           ) : (
             <Link

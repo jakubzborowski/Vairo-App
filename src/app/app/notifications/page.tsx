@@ -44,7 +44,7 @@ const KIND_ICON: Record<NotificationKind, LucideIcon> = {
 const EMPTY_KINDS: [LucideIcon, string][] = [
   [UserPlus, "Ktoś doda Cię do kontaktów"],
   [MessageSquare, "Nowa wiadomość"],
-  [Users, "Zgłoszenie do Waszego teamu"],
+  [Users, "Zgłoszenie do Waszego zespołu"],
   [MailCheck, "Odpowiedź na Twoją prośbę"],
 ];
 

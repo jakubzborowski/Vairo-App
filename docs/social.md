@@ -57,7 +57,7 @@ i zadaniach sprawca jest z teamu, więc obowiązuje imię z konta.
 
 **Zaproszenie linkiem (migracja 035).** Zaproszenie z `startup_join_requests`
 wymaga istniejącego konta (`profile_id not null`), więc znajomego spoza Vairo
-nie dało się ściągnąć do teamu. Link tworzy Founder albo Admin na stronie Team
+nie dało się ściągnąć do teamu. Link tworzy Founder albo Admin na stronie Zespół
 (jeden aktywny na team, 7 dni, do 10 dołączeń); kto go otworzy, dołącza jako
 Member przez `accept_invite_link()` — zwykły INSERT, więc limit 3 teamów
 pilnuje ten sam trigger co zawsze. Gość widzi nazwę teamu przed rejestracją
@@ -214,7 +214,7 @@ Stan docelowy menu:
 
 | Grupa | Pozycje |
 |---|---|
-| **Twój team** (tylko gdy jesteś w teamie) | Start · Etap startupu · Cele\*\* · Taski\*\* · Rozpiska\*\* · Terminy\*\* · Dokumenty · Pliki · Team · Profil publiczny\* |
+| **Twój zespół** (tylko gdy jesteś w zespole) | Start · Etap startupu · Cele\*\* · Taski\*\* · Rozpiska\*\* · Terminy\*\* · Dokumenty · Pliki · Zespół · Profil publiczny\* |
 | **Social** | Szukam projektu · Szukam ludzi · Wiadomości · Zaproszenia · Mój profil publiczny |
 | **Stopka** | Powiadomienia · Jak to działa · Ustawienia |
 

@@ -189,7 +189,7 @@ export function TasksView({
             ? ` ${overdueCount === 1 ? "Jedno jest" : `${overdueCount} są`} po terminie.`
             : ""
         }`
-    : `Cały team · ${rows.length} ${plural(rows.length, "zadanie", "zadania", "zadań")} w ${goalsWithTasks} ${plural(goalsWithTasks, "celu", "celach", "celach")}.`;
+    : `Cały zespół · ${rows.length} ${plural(rows.length, "zadanie", "zadania", "zadań")} w ${goalsWithTasks} ${plural(goalsWithTasks, "celu", "celach", "celach")}.`;
 
   // „Zrobione w tym tygodniu" — tylko gdy baza zna datę ukończenia (029).
   const weekStart = (() => {
@@ -304,7 +304,7 @@ export function TasksView({
         >
           {[
             [true, "Moje"],
-            [false, "Cały team"],
+            [false, "Cały zespół"],
           ].map(([value, label]) => (
             <button
               key={String(label)}
@@ -474,8 +474,8 @@ export function TasksView({
           {/* Bez otwartego celu nie ma gdzie dodać zadania — kolumna mówi to
               sama, więc tu nie odsyłamy do przycisku, którego nie ma. */}
           {openGoals.length > 0
-            ? "Nie masz jeszcze żadnego zadania. Dodaj pierwsze w kolumnie „Do zrobienia” albo zobacz, nad czym pracuje cały team."
-            : "Nie masz otwartych zadań. Zadania dodaje się pod celem — załóż nowy cel w Celach albo zobacz, nad czym pracuje cały team."}
+            ? "Nie masz jeszcze żadnego zadania. Dodaj pierwsze w kolumnie „Do zrobienia” albo zobacz, nad czym pracuje cały zespół."
+            : "Nie masz otwartych zadań. Zadania dodaje się pod celem — załóż nowy cel w Celach albo zobacz, nad czym pracuje cały zespół."}
         </EmptyNote>
       ) : null}
 
@@ -926,7 +926,7 @@ function NoGoals() {
 
 function taskEventLabel(event: TaskEvent, members: TeamMemberOption[]) {
   const name = (id: unknown) =>
-    typeof id === "string" ? (members.find((member) => member.id === id)?.name ?? "osoba spoza teamu") : "nikt";
+    typeof id === "string" ? (members.find((member) => member.id === id)?.name ?? "osoba spoza zespołu") : "nikt";
   if (event.kind === "created") return "Zadanie dodane";
   if (event.kind === "owner") return `Przypisane: ${name(event.payload.to)}`;
   if (event.kind === "deadline") {

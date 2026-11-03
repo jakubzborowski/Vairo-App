@@ -83,7 +83,7 @@ export function CreateStartupForm({ tags, teamCount, categoryCounts }: Props) {
     return (
       <div className="mx-auto max-w-[520px] rounded-2xl border border-white/10 bg-[var(--surface)] p-7 text-center">
         <p className="font-heading text-[18px] font-semibold text-white">
-          Masz już {MAX_STARTUPS} teamy
+          Masz już {MAX_STARTUPS} zespoły
         </p>
         <p className="mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-[var(--text-muted)]">
           To maksimum na jedno konto. Żeby założyć kolejny projekt, opuść jeden

@@ -26,6 +26,21 @@ export function translateDbError(message: string | null | undefined) {
   if (message.includes("row-level security")) {
     return "Nie masz uprawnień do tej zmiany. Jeśli to pomyłka, poproś Foundera o wyższą rolę.";
   }
+  if (message.includes("support_rate_limited")) {
+    return "Wysłano już sporo zgłoszeń w ciągu ostatniej godziny. Spróbuj za chwilę — poprzednie na pewno dotarły.";
+  }
+  if (message.includes("support_no_email")) {
+    return "Konto nie ma adresu e-mail, na który dałoby się odpisać. Napisz do nas bezpośrednio z poczty.";
+  }
+  if (message.includes("support_message_length")) {
+    return "Zgłoszenie musi mieć od 10 do 4000 znaków.";
+  }
+  if (
+    message.includes("submit_support_request") &&
+    (message.includes("does not exist") || message.includes("Could not find"))
+  ) {
+    return "Wysyłka zgłoszeń jeszcze nie działa w tej bazie (brakuje migracji 043). Daj znać zespołowi Vairo inną drogą.";
+  }
   if (message.includes("invite_not_allowed")) {
     return "Linki zaproszeń tworzą i wyłączają Founder oraz Admin.";
   }
@@ -41,10 +56,10 @@ export function translateDbError(message: string | null | undefined) {
     return "Brakuje migracji 035 — odpal ją w Supabase → SQL Editor, a zaproszenia linkiem zaczną działać.";
   }
   if (message.includes("startup_limit_reached")) {
-    return "Limit 3 teamów na konto został osiągnięty.";
+    return "Limit 3 zespołów na konto został osiągnięty.";
   }
   if (message.includes("cannot_remove_last_founder")) {
-    return "To jedyny Founder tego teamu. Najpierw przekaż tę rolę komuś innemu.";
+    return "To jedyny Founder tego zespołu. Najpierw przekaż tę rolę komuś innemu.";
   }
   if (message.includes("general_category_required")) {
     return "Kategorii „Ogólna walidacja” nie da się usunąć — jest obowiązkowa.";
@@ -77,7 +92,7 @@ export function translateDbError(message: string | null | undefined) {
     return "Cel i warunek muszą należeć do tego samego startupu.";
   }
   if (message.includes("goal_owner_not_in_team")) {
-    return "Właścicielem może być tylko osoba z tego teamu.";
+    return "Właścicielem może być tylko osoba z tego zespołu.";
   }
   if (message.includes("goal_blocker_needs_note")) {
     return "Napisz, co blokuje pracę — samo oznaczenie nic nie mówi.";

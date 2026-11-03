@@ -1,13 +1,12 @@
 import { ComingSoon } from "@/components/app/coming-soon";
 
-export const metadata = { title: "Możliwości — Vairo" };
+export const metadata = { title: "Możliwości partnerskie — Vairo" };
 
 export default function Page() {
   return (
     <ComingSoon
-      title="Możliwości"
-      description="Programy, konkursy i nabory dobrane do tego, na jakim etapie jest Twój startup."
-      unlocksAt="po domknięciu MVP Stage"
+      title="Możliwości partnerskie"
+      description="Programy, konkursy i oferty partnerów Vairo dla startupów. Dodamy je w kolejnej wersji."
     />
   );
 }

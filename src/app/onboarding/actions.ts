@@ -249,7 +249,7 @@ async function createStartupForUser(
 
   if (error) {
     if (isStartupLimitError(error.message)) {
-      return { error: "Masz już 3 teamy — to maksimum na jedno konto." };
+      return { error: "Masz już 3 zespoły — to maksimum na jedno konto." };
     }
     return { error: translateDbError(error.message) };
   }

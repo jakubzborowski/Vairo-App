@@ -311,7 +311,7 @@ export function GoalDetail({
         <div className="mt-6 flex flex-col gap-4">
           {goal.needsReassign ? (
             <Notice tone="danger">
-              Poprzednia osoba odeszła z teamu. {canAssign
+              Poprzednia osoba odeszła z zespołu. {canAssign
                 ? "Wskaż nowego właściciela w „Edytuj”."
                 : "Nowego właściciela wskaże Founder albo Admin."}
             </Notice>
@@ -926,7 +926,7 @@ function Tasks({
                   </span>
                   {task.needsReassign ? (
                     <span className="block text-[12px] text-[var(--danger-text)]">
-                      Osoba odeszła z teamu — zadanie czeka na przypisanie.
+                      Osoba odeszła z zespołu — zadanie czeka na przypisanie.
                     </span>
                   ) : null}
                 </span>

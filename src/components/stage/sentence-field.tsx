@@ -62,7 +62,7 @@ export function SentenceField({ field, value, onChange, disabled }: Props) {
       </div>
 
       <div className="mt-3 flex items-start justify-between gap-4">
-        <p className="text-[12px] text-[var(--text-faint)]">
+        <p className="text-[12px] text-[var(--text-subtle)]">
           Wypełnione {filled} z {slots.length}
         </p>
       </div>

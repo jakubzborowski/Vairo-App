@@ -171,7 +171,7 @@ export function MemberRow({
           ) : (
             <p className="mt-0.5 text-[13px] text-[var(--text-subtle)]">
               {member.jobTitle ?? (
-                <span className="italic text-[var(--text-faint)]">
+                <span className="italic text-[var(--text-subtle)]">
                   Bez stanowiska
                 </span>
               )}
@@ -262,7 +262,7 @@ export function MemberRow({
                           close();
                         }}
                       >
-                        Usuń z teamu
+                        Usuń z zespołu
                       </MenuItem>
                     </>
                   ) : null}
@@ -281,8 +281,8 @@ export function MemberRow({
 
       {roleOpen ? (
         <Modal
-          title={`Uprawnienia: ${member.fullName ?? "członek teamu"}`}
-          description="To jest jedyne miejsce, które decyduje, kto może zmieniać dane etapów i skład teamu. Stanowisko (CEO, CTO) nie daje uprawnień."
+          title={`Uprawnienia: ${member.fullName ?? "członek zespołu"}`}
+          description="To jest jedyne miejsce, które decyduje, kto może zmieniać dane etapów i skład zespołu. Stanowisko (CEO, CTO) nie daje uprawnień."
           onClose={() => setRoleOpen(false)}
           footer={
             <Button variant="ghost" onClick={() => setRoleOpen(false)} disabled={busy}>
@@ -384,7 +384,7 @@ export function MemberRow({
       {confirmTransfer ? (
         <Modal
           title="Przekazać rolę Foundera?"
-          description={`${member.fullName ?? "Ta osoba"} przejmie prowadzenie teamu. Ty zostaniesz Adminem — nadal zarządzasz składem i etapami, ale nie usuniesz startupu ani nie nadasz nikomu roli Foundera.`}
+          description={`${member.fullName ?? "Ta osoba"} przejmie prowadzenie zespołu. Ty zostaniesz Adminem — nadal zarządzasz składem i etapami, ale nie usuniesz startupu ani nie nadasz nikomu roli Foundera.`}
           onClose={() => setConfirmTransfer(false)}
           footer={
             <>
@@ -429,8 +429,8 @@ export function MemberRow({
 
       {confirmRemove ? (
         <Modal
-          title="Usunąć z teamu?"
-          description={`${member.fullName ?? "Ta osoba"} straci dostęp do wszystkiego, co należy do tego teamu. To, co już wypełniła, zostaje.`}
+          title="Usunąć z zespołu?"
+          description={`${member.fullName ?? "Ta osoba"} straci dostęp do wszystkiego, co należy do tego zespołu. To, co już wypełniła, zostaje.`}
           onClose={() => setConfirmRemove(false)}
           footer={
             <>
@@ -452,7 +452,7 @@ export function MemberRow({
                 }
               >
                 <X className="size-4" />
-                Usuń z teamu
+                Usuń z zespołu
               </Button>
             </>
           }

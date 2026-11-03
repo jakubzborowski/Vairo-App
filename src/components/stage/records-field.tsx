@@ -69,7 +69,7 @@ export function RecordsInput({ field, value, onChange, disabled }: FieldInputPro
           className="rounded-xl border border-white/10 bg-[var(--surface-2)] p-3"
         >
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-[12px] font-medium text-[var(--text-faint)]">
+            <p className="text-[12px] font-medium text-[var(--text-subtle)]">
               Pozycja {index + 1}
             </p>
             {rows.length > 1 || field.config.empty_ok ? (
@@ -140,7 +140,7 @@ export function RecordsInput({ field, value, onChange, disabled }: FieldInputPro
       ) : null}
 
       {field.config.empty_ok ? (
-        <p className="text-[12.5px] leading-relaxed text-[var(--text-faint)]">
+        <p className="text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
           Jeśli niczego nie brakuje, zostaw listę pustą i zapisz. To też jest
           odpowiedź.
         </p>

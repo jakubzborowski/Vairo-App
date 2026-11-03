@@ -62,8 +62,8 @@ export function PersonCard({
             <span className="inline-flex items-center gap-1">
               <Users className="size-3.5 shrink-0" />
               {person.team_count === 0
-                ? "Bez teamu"
-                : `${person.team_count} z ${MAX_STARTUPS} teamów`}
+                ? "Bez zespołu"
+                : `${person.team_count} z ${MAX_STARTUPS} zespołów`}
             </span>
           </div>
         </div>
@@ -99,7 +99,7 @@ export function PersonCard({
             <Pill key={skill.id}>{skill.label}</Pill>
           ))}
           {skills.length > MAX_VISIBLE_SKILLS ? (
-            <span className="inline-flex h-8 items-center text-[12.5px] text-[var(--text-faint)]">
+            <span className="inline-flex h-8 items-center text-[12.5px] text-[var(--text-subtle)]">
               +{skills.length - MAX_VISIBLE_SKILLS}
             </span>
           ) : null}
@@ -116,8 +116,8 @@ export function PersonCard({
         {/* Limit 3 teamów pokazujemy zawczasu, żeby nikt nie wysyłał
             zaproszenia, które baza i tak odrzuci. */}
         {full ? (
-          <span className="text-[12px] text-[var(--text-faint)]">
-            Komplet teamów
+          <span className="text-[12px] text-[var(--text-subtle)]">
+            Komplet zespołów
           </span>
         ) : (
           action

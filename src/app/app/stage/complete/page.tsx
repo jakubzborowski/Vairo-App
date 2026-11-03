@@ -131,7 +131,7 @@ export default async function StageCompletePage() {
       </Card>
 
       <p className="mt-6 text-center text-[12.5px] text-[var(--text-subtle)]">
-        Tracker, team i pliki działają jak wcześniej.{" "}
+        Tracker, zespół i pliki działają jak wcześniej.{" "}
         <Link href="/app/program" className="text-[var(--text-muted)] underline-offset-2 hover:text-white hover:underline">
           Zobacz cały program
         </Link>

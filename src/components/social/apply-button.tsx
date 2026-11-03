@@ -68,7 +68,7 @@ export function ApplyButton({
 
   if (blockedReason) {
     return (
-      <span className="text-[12px] text-[var(--text-faint)]">{blockedReason}</span>
+      <span className="text-[12px] text-[var(--text-subtle)]">{blockedReason}</span>
     );
   }
 
@@ -121,7 +121,7 @@ export function ApplyButton({
       {open ? (
         <Modal
           title={`Zgłoś się do ${startupName}`}
-          description="Zgłoszenie trafi do osób zarządzających teamem. Zobaczą Twój profil publiczny i to, co tutaj napiszesz."
+          description="Zgłoszenie trafi do osób zarządzających zespołem. Zobaczą Twój profil publiczny i to, co tutaj napiszesz."
           onClose={() => setOpen(false)}
           footer={
             <>
@@ -137,7 +137,7 @@ export function ApplyButton({
           {openRoles.length > 0 ? (
             <div>
               <p className="mb-2 text-[13px] font-medium text-[var(--text-muted)]">
-                Na którą rolę? <span className="text-[var(--text-faint)]">(opcjonalnie)</span>
+                Na którą rolę? <span className="text-[var(--text-subtle)]">(opcjonalnie)</span>
               </p>
               <div className="flex flex-col gap-1.5">
                 {openRoles.map((role) => {

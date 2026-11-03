@@ -226,8 +226,17 @@ with checks(nr, migracja, co, ok, napraw) as (
   (49, '039–042', 'treść etapów bez form męskich (Ambition, Idea, Preparation, Execution)',
     exists (select 1 from public.stage_templates where key = 'ambition' and intro like 'Kiedy ostatnio przyszło%')
     and exists (select 1 from public.stage_fields where question = 'Na czym opiera się ta ocena?')
-    and not exists (select 1 from public.stage_subpoints where title = 'Zapisz, kogo pytałeś'),
-    'odpal 039, 040, 041 i 042 (po 038), w tej kolejności'),
+    and not exists (select 1 from public.stage_subpoints where title = 'Zapisz, kogo pytałeś')
+    and not exists (select 1 from public.stage_fields where question like 'Team jest gotowy%'),
+    'odpal 039, 040, 041 i 042 (po 038), w tej kolejności — 041 jeszcze raz, jeśli biegła przed zamianą „team” na „zespół”'),
+
+  (49, '043', 'Pomoc i opinie: zapis zgłoszeń i numer VA-…',
+    to_regclass('public.support_requests') is not null
+    and exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                 where n.nspname = 'public' and p.proname = 'submit_support_request')
+    and exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                 where n.nspname = 'public' and p.proname = 'mark_support_delivery'),
+    'odpal 043_support_feedback (po 042) — bez niej formularz Pomocy zwraca błąd'),
 
   -- --- Treść etapów ---------------------------------------------------------
   (50, '006–028', 'wszystkie 5 etapów ma opublikowaną treść',

@@ -92,7 +92,7 @@ export function DeleteAccountButton({ email, soleFounderOf, teamCount }: Props) 
               {teamCount > 0 ? (
                 <li>
                   Członkostwo w{" "}
-                  {teamCount === 1 ? "jednym teamie" : `${teamCount} teamach`}.
+                  {teamCount === 1 ? "jednym zespole" : `${teamCount} zespołach`}.
                 </li>
               ) : null}
               {soleFounderOf.length > 0 ? (
@@ -112,10 +112,10 @@ export function DeleteAccountButton({ email, soleFounderOf, teamCount }: Props) 
           {soleFounderOf.length > 0 ? (
             <p className="rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/8 px-4 py-3 text-[12.5px] leading-relaxed text-[var(--warning)]">
               Jeśli ten projekt ma żyć dalej, najpierw przekaż komuś rolę
-              Foundera w składzie teamu. Wtedy startup zostanie, a Ty tylko
+              Foundera w składzie zespołu. Wtedy startup zostanie, a Ty tylko
               z niego wyjdziesz.{" "}
               <Link href="/app/team" className="font-medium text-white underline underline-offset-4">
-                Przekaż rolę Foundera w Team
+                Przekaż rolę Foundera w zakładce Zespół
               </Link>
             </p>
           ) : null}

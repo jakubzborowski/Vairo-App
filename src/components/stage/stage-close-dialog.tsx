@@ -276,7 +276,7 @@ export function StageCloseDialog({
     optional: true,
     help:
       decision === "archive"
-        ? "Startup trafi do archiwum. Cała praca zostaje — możesz do niej wrócić z ustawień teamu."
+        ? "Startup trafi do archiwum. Cała praca zostaje — możesz do niej wrócić z ustawień zespołu."
         : decision === "pause"
           ? "Startup dostanie status „na pauzie”. Wracasz do niego, kiedy chcesz."
           : undefined,

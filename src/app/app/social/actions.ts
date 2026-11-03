@@ -92,7 +92,7 @@ export async function inviteToStartup(input: {
 
   const role = await getStartupRole(supabase, input.startupId, user.id);
   if (!role || !canManageTeam(role)) {
-    return { error: "Tylko Founder i Admin mogą zapraszać do teamu." };
+    return { error: "Tylko Founder i Admin mogą zapraszać do zespołu." };
   }
 
   const jobTitle = input.jobTitle?.trim();

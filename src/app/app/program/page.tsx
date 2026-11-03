@@ -136,7 +136,7 @@ export default async function ProgramPage() {
                     </span>
                   ) : null}
                   {!item.hasContent ? (
-                    <span className="rounded-md bg-white/8 px-2 py-0.5 text-[11.5px] text-[var(--text-faint)]">
+                    <span className="rounded-md bg-white/8 px-2 py-0.5 text-[11.5px] text-[var(--text-subtle)]">
                       w przygotowaniu
                     </span>
                   ) : null}
@@ -177,7 +177,7 @@ export default async function ProgramPage() {
 
       <section className="mt-8 rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-5 py-4">
         <h2 className="text-[15px] font-semibold text-white">
-          Nie musisz robić tego sam
+          Nie musisz robić tego w pojedynkę
         </h2>
         <p className="mt-1.5 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
           Równolegle do etapów działa Social — znajdujesz tam ludzi do zespołu

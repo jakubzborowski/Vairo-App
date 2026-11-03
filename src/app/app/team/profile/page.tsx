@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { canManageTeam, canTransferOwnership, type StartupStatus } from "@/types/startup";
 
-export const metadata = { title: "Profil publiczny teamu — Vairo" };
+export const metadata = { title: "Profil publiczny zespołu — Vairo" };
 export const dynamic = "force-dynamic";
 
 export default async function TeamProfilePage() {
@@ -41,7 +41,7 @@ export default async function TeamProfilePage() {
                 Zobacz profil publiczny
               </Button>
               <Button href="/app/team" variant="ghost">
-                Wróć do teamu
+                Wróć do zespołu
               </Button>
             </>
           }
@@ -124,7 +124,7 @@ export default async function TeamProfilePage() {
         className="mb-5 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white"
       >
         <ArrowLeft className="size-4" />
-        Wróć do teamu
+        Wróć do zespołu
       </Link>
 
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">

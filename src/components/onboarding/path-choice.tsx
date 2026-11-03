@@ -41,7 +41,7 @@ const OPTIONS: Option[] = [
     icon: Compass,
     title: "Chcę dołączyć do kogoś",
     description:
-      "Uzupełnisz profil i trafisz do Social, gdzie znajdziesz teamy szukające ludzi — albo one znajdą Ciebie.",
+      "Uzupełnisz profil i trafisz do Social, gdzie znajdziesz zespoły szukające ludzi — albo one znajdą Ciebie.",
     outcome: "Zaczynasz od Social",
   },
 ];

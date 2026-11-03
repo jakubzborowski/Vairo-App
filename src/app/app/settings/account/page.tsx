@@ -112,7 +112,7 @@ export default async function AccountSettingsPage() {
             </span>
           }
         >
-          Teamy
+          Zespoły
         </SectionLabel>
         <div className="mt-2 overflow-hidden rounded-[22px] bg-[var(--surface)] lift-1 divide-y divide-white/[0.05]">
           {startups.map((startup) => (
@@ -138,12 +138,12 @@ export default async function AccountSettingsPage() {
                 <Plus className="size-4" />
               </span>
               {startups.length === 0
-                ? "Załóż startup albo dołącz do teamu przez Odkrywaj"
-                : "Dołącz do kolejnego teamu przez Odkrywaj"}
+                ? "Załóż startup albo dołącz do zespołu przez Odkrywaj"
+                : "Dołącz do kolejnego zespołu przez Odkrywaj"}
             </Link>
           ) : (
             <p className="px-5 py-4 text-[13px] text-[var(--text-subtle)]">
-              To maksimum na konto. Żeby dołączyć gdzie indziej, najpierw wyjdź z jednego teamu.
+              To maksimum na konto. Żeby dołączyć gdzie indziej, najpierw wyjdź z jednego zespołu.
             </p>
           )}
         </div>
@@ -156,7 +156,7 @@ export default async function AccountSettingsPage() {
           <p className="text-[14.5px] font-medium text-white">Usuń konto</p>
           <p className="mt-0.5 text-[13px] leading-relaxed text-[var(--text-muted)]">
             Kasuje profil, rozmowy i członkostwa. Przed usunięciem pokażemy, co stanie się
-            z Twoimi teamami.
+            z Twoimi zespołami.
           </p>
         </div>
         <DeleteAccountButton

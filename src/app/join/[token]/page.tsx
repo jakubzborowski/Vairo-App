@@ -8,7 +8,11 @@ import { plural } from "@/lib/utils";
 import { JoinActions } from "./join-actions";
 import { dismissInvite } from "./actions";
 
-export const metadata: Metadata = { title: "Zaproszenie do teamu — Vairo" };
+// Link niesie sekret — strona nie może trafić do indeksu (patrz też robots.ts).
+export const metadata: Metadata = {
+  title: "Zaproszenie do zespołu — Vairo",
+  robots: { index: false, follow: false },
+};
 export const dynamic = "force-dynamic";
 
 type Info = {
@@ -26,14 +30,14 @@ const PROBLEMS: Record<Exclude<Info["status"], "ok">, { title: string; body: str
   },
   revoked: {
     title: "Ten link został wyłączony",
-    body: "Osoba z teamu utworzyła nowy link albo wyłączyła ten. Poproś o aktualny.",
+    body: "Osoba z zespołu utworzyła nowy link albo wyłączyła ten. Poproś o aktualny.",
   },
   used_up: {
     title: "Ten link został już wykorzystany",
     body: "Przez jeden link może dołączyć do 10 osób. Poproś o nowy.",
   },
   inactive: {
-    title: "Ten team jest teraz nieaktywny",
+    title: "Ten zespół jest teraz nieaktywny",
     body: "Startup został wstrzymany albo zarchiwizowany, więc nie przyjmuje nowych osób.",
   },
   not_found: {
@@ -85,22 +89,22 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
               <div className="flex items-center gap-3.5">
                 <TeamLogo src={info.logo_url} name={info.startup_name} size="lg" />
                 <div className="min-w-0">
-                  <p className="text-[12.5px] text-[var(--text-subtle)]">Zaproszenie do teamu</p>
+                  <p className="text-[12.5px] text-[var(--text-subtle)]">Zaproszenie do zespołu</p>
                   <h1 className="truncate font-heading text-[1.45rem] font-semibold text-white">
                     {info.startup_name}
                   </h1>
                   <p className="text-[13px] text-[var(--text-muted)]">
                     {info.member_count ?? 0}{" "}
-                    {plural(info.member_count ?? 0, "osoba", "osoby", "osób")} w teamie
+                    {plural(info.member_count ?? 0, "osoba", "osoby", "osób")} w zespole
                   </p>
                 </div>
               </div>
               <p className="mt-5 text-[14px] leading-relaxed text-[var(--text-muted)]">
                 {alreadyMember
-                  ? "Już należysz do tego teamu. Link niczego nie zmieni w Twojej roli."
+                  ? "Już należysz do tego zespołu. Link niczego nie zmieni w Twojej roli."
                   : user
-                  ? "Dołączysz jako Członek: zobaczysz etapy, cele i pliki teamu i od razu dołączysz do wspólnej pracy."
-                  : "Załóż konto albo zaloguj się — zaraz potem wrócisz tutaj i dołączysz do teamu."}
+                  ? "Dołączysz jako Członek: zobaczysz etapy, cele i pliki zespołu i od razu dołączysz do wspólnej pracy."
+                  : "Załóż konto albo zaloguj się — zaraz potem wrócisz tutaj i dołączysz do zespołu."}
               </p>
               <JoinActions
                 token={token}

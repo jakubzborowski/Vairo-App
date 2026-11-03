@@ -121,7 +121,7 @@ export function OpenRolesManager({
           <UserPlus className="size-4" />
           Otwarte role
           {roles.length > 0 ? (
-            <span className="tabular font-normal normal-case tracking-normal text-[var(--text-faint)]">
+            <span className="tabular font-normal normal-case tracking-normal text-[var(--text-subtle)]">
               {roles.length}
             </span>
           ) : null}
@@ -144,8 +144,8 @@ export function OpenRolesManager({
       {roles.length === 0 ? (
         <p className="rounded-xl border border-dashed border-white/10 px-5 py-6 text-center text-[13px] leading-relaxed text-[var(--text-subtle)]">
           {canManage
-            ? "Nie szukacie teraz nikogo. Dodaj rolę, a team pojawi się w Odkrywaj wśród tych, które rekrutują."
-            : "Ten team nie ma teraz otwartych ról."}
+            ? "Nie szukacie teraz nikogo. Dodaj rolę, a zespół pojawi się w Odkrywaj wśród tych, które rekrutują."
+            : "Ten zespół nie ma teraz otwartych ról."}
         </p>
       ) : (
         <ul className="flex flex-col gap-2.5">
@@ -188,7 +188,7 @@ export function OpenRolesManager({
                 ) : canManage ? (
                   // Brak umiejętności nie jest błędem, ale ma konkretny skutek,
                   // więc mówimy o nim tam, gdzie da się go naprawić.
-                  <p className="mt-2 text-[12.5px] text-[var(--text-faint)]">
+                  <p className="mt-2 text-[12.5px] text-[var(--text-subtle)]">
                     Bez umiejętności ta rola nie dopasuje się do niczyjego
                     profilu w Odkrywaj.
                   </p>
@@ -321,7 +321,7 @@ export function OpenRolesManager({
           <div>
             <p className="mb-2 text-[13px] font-medium text-[var(--text-muted)]">
               Jakich umiejętności szukacie
-              <span className="ml-2 font-normal text-[var(--text-faint)]">
+              <span className="ml-2 font-normal text-[var(--text-subtle)]">
                 po tym dopasujemy ludzi
               </span>
             </p>

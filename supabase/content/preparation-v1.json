@@ -465,7 +465,7 @@
                 {
                   "key": "ready",
                   "kind": "checkmark",
-                  "question": "Team jest gotowy do dalszej pracy.",
+                  "question": "Zespół jest gotowy do dalszej pracy.",
                   "help": "Zaznacz, gdy macie uzgodniony skład. Jedna próba nie musi rozwiązać wszystkiego.",
                   "config": {
                     "confirm_label": "Team gotowy"
@@ -1216,7 +1216,7 @@
           "key": "sales",
           "title": "Przygotuj proces sprzedaży",
           "duration_hint": "Około 20 minut",
-          "guide_body": "Zostaw krótką drogę, zwykle trzy albo cztery kroki: rozmowa o potrzebie, pokazanie rozwiązania, oferta, decyzja. Usuń etapy, które u was nie występują. Dalej przesuwa firmę konkretne zdarzenie, na przykład udział osoby z budżetem albo prośba o ofertę, a nie miła rozmowa. Firmy, z którymi rozmawiacie, prowadzicie na liście w tym punkcie: etap, następne działanie i osoba z waszego teamu. To jest arkusz, nie osobny system do sprzedaży. Wystarczy, że cały team widzi następny krok i termin.",
+          "guide_body": "Zostaw krótką drogę, zwykle trzy albo cztery kroki: rozmowa o potrzebie, pokazanie rozwiązania, oferta, decyzja. Usuń etapy, które u was nie występują. Dalej przesuwa firmę konkretne zdarzenie, na przykład udział osoby z budżetem albo prośba o ofertę, a nie miła rozmowa. Firmy, z którymi rozmawiacie, prowadzicie na liście w tym punkcie: etap, następne działanie i osoba z waszego zespołu. To jest arkusz, nie osobny system do sprzedaży. Wystarczy, że cały zespół widzi następny krok i termin.",
           "guide_sources": [
             "Forum Ventures, Customer-Driven Product Development"
           ],
@@ -1258,7 +1258,7 @@
                   "key": "companies",
                   "kind": "records",
                   "question": "Wpisz firmy, z którymi już rozmawiacie albo do których chcecie się odezwać.",
-                  "help": "Przy każdej: aktualny etap, następne działanie i kto z waszego teamu za to odpowiada. Jeśli działasz w pojedynkę, wpisz swoje imię.",
+                  "help": "Przy każdej: aktualny etap, następne działanie i kto z waszego zespołu za to odpowiada. Jeśli działasz w pojedynkę, wpisz swoje imię.",
                   "example": "Studio Nord. Po pierwszej rozmowie. Wysłać ofertę w czwartek. Kuba.",
                   "config": {
                     "add_label": "Dodaj firmę",
@@ -1281,7 +1281,7 @@
                       },
                       {
                         "key": "owner",
-                        "label": "Kto z waszego teamu",
+                        "label": "Kto z waszego zespołu",
                         "placeholder": "Imię"
                       }
                     ]
@@ -1381,7 +1381,7 @@
                 {
                   "key": "ours",
                   "kind": "list_long",
-                  "question": "Co przed startem musi zrobić wasz team?",
+                  "question": "Co przed startem musi zrobić wasz zespół?",
                   "help": "Jedno działanie w pozycji.",
                   "example": "Założyć przestrzeń firmy.\nWysłać umowę do podpisu.",
                   "config": {
@@ -1422,7 +1422,7 @@
                   "kind": "long_text",
                   "question": "Jakie dane klienta będziecie mieć i kto poza tą firmą może je zobaczyć?",
                   "help": "Dane osobowe, dane firmy, pliki. Jeśli dwóch klientów nie może widzieć swoich materiałów, napisz to wprost. Gdy danych klienta nie przetwarzacie, napisz „Nie przetwarzamy danych klienta”.",
-                  "example": "Mamy imiona pracowników i treść zgłoszeń. Widzi je tylko ta firma i osoba z naszego teamu, która prowadzi wdrożenie. Inny klient tego nie widzi.",
+                  "example": "Mamy imiona pracowników i treść zgłoszeń. Widzi je tylko ta firma i osoba z naszego zespołu, która prowadzi wdrożenie. Inny klient tego nie widzi.",
                   "config": {
                     "max": 1500
                   }

@@ -95,7 +95,7 @@ export function InboxRow(props: Props) {
           {view.avatar}
           <span
             className="absolute -bottom-1 -right-1 inline-flex size-5 items-center justify-center rounded-full border-2 border-[var(--surface)] bg-[var(--surface-3)] text-white"
-            aria-label={props.kind === "signal" ? "Kontakt od osoby" : "Sprawa teamu"}
+            aria-label={props.kind === "signal" ? "Kontakt od osoby" : "Sprawa zespołu"}
           >
             {props.kind === "signal" ? <UserRound className="size-2.5" /> : <Users className="size-2.5" />}
           </span>
@@ -203,7 +203,7 @@ function describeSignal({
         : "— zaczepka wysłana",
     message: signal.message,
     note: signal.contextStartupName
-      ? `Kontakt w imieniu teamu ${signal.contextStartupName}. Odpowiadasz zespołowi, nie osobie prywatnie.`
+      ? `Kontakt w imieniu zespołu ${signal.contextStartupName}. Odpowiadasz zespołowi, nie osobie prywatnie.`
       : null,
     createdAt: signal.createdAt,
     actions: (run, busy, accept) => (
@@ -334,7 +334,7 @@ function describeRequest({ request }: { request: JoinRequest }): RowView {
         {request.status === "accepted" && !isApplication ? (
           <Button size="sm" variant="ghost" href="/app/team">
             <ArrowRight className="size-4" />
-            <span className="hidden sm:inline">Team</span>
+            <span className="hidden sm:inline">Zespół</span>
           </Button>
         ) : null}
       </>

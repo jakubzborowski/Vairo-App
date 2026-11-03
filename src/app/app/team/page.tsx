@@ -16,7 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { MAX_STARTUPS, ROLE_LABELS, canManageTeam } from "@/types/startup";
 import { plural } from "@/lib/utils";
 
-export const metadata = { title: "Team — Vairo" };
+export const metadata = { title: "Zespół — Vairo" };
 export const dynamic = "force-dynamic";
 
 export default async function TeamPage() {
@@ -36,14 +36,14 @@ export default async function TeamPage() {
       <div className="page">
         <EmptyState
           icon={Users}
-          title="Nie należysz do żadnego teamu"
-          description="Team pojawia się tutaj, kiedy założysz startup albo dołączysz do cudzego. Do tego czasu masz warstwę Social."
+          title="Nie należysz do żadnego zespołu"
+          description="Zespół pojawia się tutaj, kiedy założysz startup albo dołączysz do cudzego. Do tego czasu masz warstwę Social."
           action={
             <>
               <Button href="/app/startups/new">Stwórz startup</Button>
               <Button href="/app/social/discover" variant="secondary">
                 <Compass className="size-4" />
-                Znajdź team
+                Znajdź zespół
               </Button>
             </>
           }
@@ -164,7 +164,7 @@ export default async function TeamPage() {
       {!canManage ? (
         <p className="mt-4 flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-[var(--surface)] px-4 py-2.5 text-[13px] text-[var(--text-subtle)]">
           <Eye className="size-4 shrink-0 text-[var(--info)]" />
-          Skład i role zmieniają Founder i Admin. Swoje stanowisko zmieniasz sam.
+          Skład i role zmieniają Founder i Admin. Swoje stanowisko każdy zmienia samodzielnie.
         </p>
       ) : null}
 
@@ -192,8 +192,8 @@ export default async function TeamPage() {
       {canManage && toReassign > 0 ? (
         <p className="mt-5 flex flex-wrap items-center gap-3 rounded-[18px] border border-[var(--warning)]/25 bg-[var(--warning)]/[0.06] px-5 py-3.5 text-[13.5px] text-[var(--text-muted)]">
           <span className="min-w-0 flex-1">
-            {toReassign} {plural(toReassign, "rzecz czeka", "rzeczy czekają", "rzeczy czeka")} na nowego właściciela — ktoś
-            odszedł z teamu, a jego cele albo zadania zostały.
+            {toReassign} {plural(toReassign, "rzecz czeka", "rzeczy czekają", "rzeczy czeka")} na nowego właściciela — zostały
+            po osobie, która odeszła z zespołu.
           </span>
           <Button size="sm" variant="secondary" href="/app/goals?view=all">
             Przypisz ponownie
@@ -211,7 +211,7 @@ export default async function TeamPage() {
           <div className="min-w-0 flex-1">
             <p className="text-[15px] font-medium text-white">Nie szukacie teraz nikogo</p>
             <p className="mt-0.5 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-              Dodaj otwartą rolę — z liczbą godzin i umiejętnościami — a team pojawi się
+              Dodaj otwartą rolę — z liczbą godzin i umiejętnościami — a zespół pojawi się
               w Szukam projektu wśród tych, którzy rekrutują.
             </p>
           </div>
@@ -268,7 +268,7 @@ export default async function TeamPage() {
       </div>
 
       <p className="mt-6 text-[12.5px] text-[var(--text-subtle)]">
-        Jesteś w {startups.length} z {MAX_STARTUPS} teamów.
+        Jesteś w {startups.length} z {MAX_STARTUPS} zespołów.
         {seatsLeft > 0
           ? ` ${seatsLeft === 1 ? "Zostało 1 miejsce" : `Zostały ${seatsLeft} miejsca`}.`
           : " To maksimum na konto."}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/brand-logo";
+import { OnboardingHelp } from "@/components/support/onboarding-help";
 
 type OnboardingShellProps = {
   children: React.ReactNode;
@@ -52,6 +53,8 @@ export function OnboardingShell({
           </Link>
         </div>
 
+        <div className="flex items-center gap-3">
+        <OnboardingHelp />
         {showProgress ? (
           <div className="flex items-center gap-3">
             <div className="flex gap-1.5" aria-hidden="true">
@@ -77,6 +80,7 @@ export function OnboardingShell({
             Wyloguj
           </Link>
         )}
+        </div>
       </header>
 
       <main className="relative z-10 flex flex-1 items-center justify-center px-5 py-10 md:py-14">

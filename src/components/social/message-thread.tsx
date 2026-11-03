@@ -177,7 +177,7 @@ export function MessageThread({
             return (
               <div key={message.id}>
                 {newDay ? (
-                  <p className="my-3 text-center text-[11.5px] text-[var(--text-faint)]">
+                  <p className="my-3 text-center text-[11.5px] text-[var(--text-subtle)]">
                     {dayLabel(message.createdAt)}
                   </p>
                 ) : null}

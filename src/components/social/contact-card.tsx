@@ -119,7 +119,7 @@ export function ContactCard({
               {signal.contextStartupName}
             </span>
             <span className="block truncate text-[12px] text-[var(--text-subtle)]">
-              {signal.contextStartupTagline ?? "Zobacz publiczną stronę teamu"}
+              {signal.contextStartupTagline ?? "Zobacz publiczną stronę zespołu"}
             </span>
           </span>
         </Link>
@@ -168,7 +168,7 @@ export function ContactCard({
         ) : null}
 
         {signal.status === "pending" && !signal.canRespond && !signal.canWithdraw ? (
-          <p className="text-[12.5px] text-[var(--text-faint)]">
+          <p className="text-[12.5px] text-[var(--text-subtle)]">
             Czeka na odpowiedź drugiej strony.
           </p>
         ) : null}

@@ -66,9 +66,10 @@ export default async function AppLayout({
     logoUrl: startup.logoUrl,
     stageLabel: startup.stage?.title ?? null,
     stageKey: startup.stage?.key ?? null,
-    progressLabel: startup.stage
-      ? `${startup.stage.done}/${startup.stage.total}`
-      : null,
+    // Bez „3/13” całego etapu: w menu, widocznym na każdym ekranie, ta
+    // liczba straszyła najbardziej. Miejsce w programie pokazują kreski pod
+    // nazwą, a postęp w etapie — ekran etapu, tam, gdzie się nad nim pracuje.
+    progressLabel: null,
   }));
 
   const name =

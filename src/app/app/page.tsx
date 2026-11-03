@@ -89,7 +89,7 @@ export default async function AppPage() {
           {greeting}
         </h1>
         <p className="mt-1 text-[14px] text-[var(--text-subtle)]">
-          Nie należysz jeszcze do żadnego teamu.
+          Nie należysz jeszcze do żadnego zespołu.
         </p>
 
         <Card className="mt-6">
@@ -100,11 +100,11 @@ export default async function AppPage() {
               </span>
               <div className="min-w-0">
                 <h2 className="font-heading text-[19px] font-semibold text-white">
-                  Dołącz do teamu albo stwórz własny startup
+                  Dołącz do zespołu albo stwórz własny startup
                 </h2>
                 <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-[var(--text-muted)]">
                   Dashboard i walidacja pomysłu działają w kontekście konkretnego
-                  startupu. Dopóki nie jesteś w żadnym teamie, korzystasz
+                  startupu. Dopóki nie jesteś w żadnym zespole, korzystasz
                   z warstwy Social — tam poznajesz ludzi i znajdujesz projekty,
                   do których możesz dołączyć.
                 </p>
@@ -115,7 +115,7 @@ export default async function AppPage() {
                   </Button>
                   <Button href="/app/social/discover" variant="secondary">
                     <Compass className="size-4" />
-                    Znajdź team
+                    Znajdź zespół
                   </Button>
                   <Button href="/app/program" variant="ghost">
                     <HelpCircle className="size-4" />
@@ -224,6 +224,16 @@ export default async function AppPage() {
       : null);
   // „Następny podpunkt" w karcie etapu — ten sam wybór co na ekranie etapu.
   const nextSubpoint = tree && tree.status !== "completed" ? findNextSubpoints(tree, 1)[0] ?? null : null;
+  // Pasek mówi o bieżącym punkcie, nie o całym etapie — jak w grze, gdzie
+  // widać aktualne zadanie, a nie „2 z 1000 questów”. „3 z 35” na starcie
+  // straszy, zanim ktoś zacznie (uwaga recenzenta).
+  const quest = nextSubpoint ? nextSubpoint.point : null;
+  const questPercent =
+    stage?.status === "completed"
+      ? 100
+      : quest && quest.total > 0
+        ? Math.round((quest.done / quest.total) * 100)
+        : percent;
 
   // Liczby do paneli (memberCount, waitingCount, skillCount) pochodzą z bazy —
   // panel z wymyśloną metryką („wynik gotowości: 72") wyglądałby mądrze
@@ -357,7 +367,7 @@ export default async function AppPage() {
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/8">
                   <div
                     className="grow-bar h-full rounded-full bg-[var(--vairo)]"
-                    style={{ width: `${nextUp ? 0 : percent}%` }}
+                    style={{ width: `${nextUp ? 0 : questPercent}%` }}
                   />
                 </div>
                 <span className="tabular shrink-0 text-[12.5px] text-[var(--text-subtle)]">
@@ -367,7 +377,11 @@ export default async function AppPage() {
                     ? canEdit
                       ? "Możesz tu wrócić i poprawić odpowiedzi"
                       : "Tylko do odczytu"
-                    : `${stage.done} z ${stage.total}`}
+                    : quest
+                      ? `Ten punkt: ${quest.done} z ${quest.total}`
+                      : stage.total > 0 && stage.done >= stage.total
+                        ? "Wszystko gotowe do domknięcia"
+                        : "Postęp zapisuje się automatycznie"}
                 </span>
               </div>
             </CardBody>
@@ -385,7 +399,7 @@ export default async function AppPage() {
         <StatPanel
           href={buildsAlone ? "/app/team#zaproszenie" : "/app/team"}
           icon={Users}
-          label="Team"
+          label="Zespół"
           value={<CountUp value={memberCount ?? 0} />}
           hint={
             buildsAlone
@@ -431,8 +445,14 @@ export default async function AppPage() {
         <StatusStrip
           items={[
             {
-              label: "wymagania etapu",
-              value: stage ? `${stage.done}/${stage.total}` : "—",
+              // Ten sam bieżący punkt co na pasku wyżej — nie „2/13” całego
+              // etapu, które przy dłuższym etapie zniechęca.
+              label: quest ? "bieżący punkt" : "wymagania etapu",
+              value: quest
+                ? `${quest.done}/${quest.total}`
+                : stage && stage.total > 0 && stage.done >= stage.total
+                  ? "gotowe"
+                  : "—",
               href: "/app/stage",
             },
             { label: "cele z dowodem", value: String(status.goalsDone), href: "/app/goals?view=all" },
@@ -503,17 +523,16 @@ export default async function AppPage() {
             }
           />
         )}
+        {/* Jedyny świadomy wyjątek od „zero fake UI” („Vairo rozwój
+            socialu”): miejsce na oferty partnerów jest nazwane już teraz,
+            żeby „Możliwości społecznościowe” (prośby, testy, role) nie
+            zajęły go później i nie pomieszały się z programami partnerów.
+            Panel niczego nie obiecuje terminem i nie jest klikalny. */}
         <LockedPanel
           icon={Sparkles}
-          title="Możliwości"
-          note={
-            // „Po MVP Stage" jest prawdą tylko do chwili, w której ktoś MVP
-            // domknie — a od scalenia z MVP da się to zrobić. Wtedy obietnica
-            // zamieniłaby się w nieprawdę, bo tej części Vairo jeszcze nie ma.
-            programDone
-              ? "Programy, konkursy i partnerzy dla startupów po MVP — tej części Vairo jeszcze nie ma."
-              : "Programy, konkursy i partnerzy dopasowani do etapu — po MVP Stage."
-          }
+          title="Możliwości partnerskie"
+          badge="Wkrótce"
+          note="Programy, konkursy i oferty partnerów Vairo dla startupów. Dodamy je w kolejnej wersji."
         />
       </div>
 
@@ -789,10 +808,12 @@ function LockedPanel({
   icon: Icon,
   title,
   note,
+  badge,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   note: string;
+  badge?: string;
 }) {
   return (
     // Cicha karta z powodem — bez kłódki-ozdobnika. Tekst to treść, więc
@@ -801,6 +822,11 @@ function LockedPanel({
       <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
         <Icon className="size-3.5" />
         {title}
+        {badge ? (
+          <span className="ml-auto rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] font-medium normal-case tracking-normal text-[var(--text-muted)]">
+            {badge}
+          </span>
+        ) : null}
       </p>
       <p className="mt-2 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
         {note}

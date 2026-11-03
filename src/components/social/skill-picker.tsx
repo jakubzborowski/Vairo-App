@@ -132,7 +132,7 @@ export function SkillPicker({
         )}
       </div>
 
-      <p className="mt-3 text-[12.5px] text-[var(--text-faint)]">
+      <p className="mt-3 text-[12.5px] text-[var(--text-subtle)]">
         Wybrane: {selectedIds.length}
       </p>
     </div>

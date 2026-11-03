@@ -71,8 +71,8 @@ export function PersonPreviewCard({
           <span className="inline-flex items-center gap-1.5">
             <Users className="size-3.5 shrink-0" />
             {person.team_count === 0
-              ? "Bez teamu"
-              : `${person.team_count} z ${MAX_STARTUPS} teamów`}
+              ? "Bez zespołu"
+              : `${person.team_count} z ${MAX_STARTUPS} zespołów`}
           </span>
         </div>
 

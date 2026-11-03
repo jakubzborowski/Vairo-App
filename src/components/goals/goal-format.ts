@@ -77,7 +77,7 @@ export function goalHint(goal: GoalItem): { text: string; tone: "warning" | "dan
     return { text: `Ukończony z dowodem ${formatDay(goal.completedAt)}.`, tone: "success" };
   }
   if (goal.needsReassign) {
-    return { text: "Poprzednia osoba odeszła z teamu — wskaż nowego właściciela.", tone: "danger" };
+    return { text: "Poprzednia osoba odeszła z zespołu — wskaż nowego właściciela.", tone: "danger" };
   }
   if (goal.status === "blocked") {
     return {

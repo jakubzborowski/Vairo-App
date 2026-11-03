@@ -123,7 +123,7 @@ export function TaskCard({
             ) : null}
             {task.needsReassign ? (
               <span className="mt-1.5 block text-[12.5px] text-[var(--danger-text)]">
-                Osoba odeszła z teamu — zadanie czeka na przypisanie.
+                Osoba odeszła z zespołu — zadanie czeka na przypisanie.
               </span>
             ) : null}
             <span className="mt-3 flex items-center gap-2">

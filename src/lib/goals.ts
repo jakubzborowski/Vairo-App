@@ -150,7 +150,7 @@ function nameOf(
   fallback?: string | null
 ) {
   if (!id) return "Do przypisania";
-  return members.find((member) => member.id === id)?.name || fallback?.trim() || "Była osoba w teamie";
+  return members.find((member) => member.id === id)?.name || fallback?.trim() || "Była osoba w zespole";
 }
 
 export async function loadGoalsWorkspace(
@@ -816,7 +816,7 @@ export async function loadTeamActivity(
     loadTeamMembers(supabase, startupId),
   ]);
   const name = (id: string | null) =>
-    id ? (members.find((member) => member.id === id)?.name ?? "Była osoba z teamu") : null;
+    id ? (members.find((member) => member.id === id)?.name ?? "Była osoba z zespołu") : null;
 
   type GoalRow = { id: string; kind: string; created_at: string; actor_id: string | null; goal_id: string; goals: { title: string } | null };
   type TaskRow = { id: string; kind: string; created_at: string; actor_id: string | null; task_id: string; tasks: { title: string } | null };

@@ -7,6 +7,7 @@ import {
   FolderOpen,
   HelpCircle,
   LayoutDashboard,
+  LifeBuoy,
   ListTodo,
   Mail,
   MessageSquare,
@@ -55,12 +56,12 @@ export const navGroups: NavGroup[] = [
     // wyłącznie warstwę Social i nie ma czego wyszarzać. Nagłówek nosi nazwę
     // startupu (app-shell), nie słowo „team".
     id: "team",
-    label: "Twój team",
+    label: "Twój zespół",
     collapsible: false,
     items: [
       { label: "Start", href: "/app", icon: LayoutDashboard },
       { label: "Etap startupu", href: "/app/stage", icon: Route },
-      { label: "Team", href: "/app/team", icon: Users },
+      { label: "Zespół", href: "/app/team", icon: Users },
       // Profil publiczny teamu był dostępny wyłącznie przez przycisk
       // w nagłówku strony Team — czyli trzy kliknięcia do rzeczy, którą
       // widzą obcy i którą najczęściej się poprawia. Teraz stoi w menu,
@@ -155,6 +156,7 @@ export const footerNav: NavItem[] = [
     badgeKey: "notifications",
   },
   { label: "Jak to działa", href: "/app/program", icon: HelpCircle },
+  { label: "Pomoc i opinie", href: "/app/help", icon: LifeBuoy },
   { label: "Ustawienia", href: "/app/settings/profile", icon: Settings },
 ];
 

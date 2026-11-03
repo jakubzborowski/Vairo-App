@@ -145,10 +145,17 @@ export function StageScreen({
   // Pierwsze wejście: nikt jeszcze niczego nie zapisał. Zamiast trzech kolumn
   // bez kontekstu pokazujemy najpierw, czym ten etap w ogóle jest.
   const isFirstVisit = tree.done === 0 && !readOnly && !isCompleted;
-  const pointCount = tree.categories.reduce(
-    (sum, category) => sum + category.points.length,
-    0
-  );
+  const nextPoint = next
+    ? tree.categories
+        .find((c) => c.key === next.categoryKey)
+        ?.points.find((p) => p.key === next.pointKey) ?? null
+    : null;
+  const headerPercent =
+    isCompleted || !nextPoint
+      ? 100
+      : nextPoint.total > 0
+        ? Math.round((nextPoint.done / nextPoint.total) * 100)
+        : 0;
 
   // „Następny podpunkt" z toastu: klik przychodzi już po odświeżeniu drzewa,
   // więc zamiast otwierać to, co było „następne" w chwili zapisu, zapisujemy
@@ -303,15 +310,36 @@ export function StageScreen({
               </p>
             ) : null}
           </div>
-          <div className="text-right">
-            <p className="tabular text-[13px] text-[var(--text-muted)]">
-              <span className="font-semibold text-white">{tree.done}</span> z {tree.total}{" "}
-              podpunktów
-            </p>
-            <div className="mt-1.5 h-1.5 w-40 overflow-hidden rounded-full bg-white/8">
+          {/* Licznik mówi o bieżącym punkcie, nie o całym etapie. „3 z 35”
+              na starcie odstrasza, zanim ktoś zacznie — jak w grze widać
+              aktualne zadanie, a nie wszystkie questy naraz. Członek, który
+              tylko czyta, dostaje stan całego etapu: dla niego to informacja,
+              nie lista do zrobienia. */}
+          <div className="min-w-0 max-w-[260px] text-right">
+            {readOnly ? (
+              <p className="tabular text-[13px] text-[var(--text-muted)]">
+                <span className="font-semibold text-white">{tree.done}</span> z {tree.total}{" "}
+                podpunktów
+              </p>
+            ) : isCompleted || !nextPoint ? (
+              <p className="text-[13px] text-[var(--text-muted)]">
+                {isCompleted ? "Etap domknięty" : "Wszystko gotowe do domknięcia"}
+              </p>
+            ) : (
+              <>
+                <p className="truncate text-[12px] text-[var(--text-subtle)]">
+                  Teraz: {nextPoint.title}
+                </p>
+                <p className="tabular text-[13px] text-[var(--text-muted)]">
+                  <span className="font-semibold text-white">{nextPoint.done}</span> z{" "}
+                  {nextPoint.total} w tym punkcie
+                </p>
+              </>
+            )}
+            <div className="ml-auto mt-1.5 h-1.5 w-40 overflow-hidden rounded-full bg-white/8">
               <div
                 className="h-full rounded-full bg-[var(--vairo)] transition-[width] duration-500"
-                style={{ width: `${percent}%` }}
+                style={{ width: `${readOnly ? percent : headerPercent}%` }}
               />
             </div>
           </div>
@@ -329,14 +357,14 @@ export function StageScreen({
           <p className="mt-4 flex max-w-3xl items-start gap-2.5 rounded-xl border border-[var(--info)]/25 bg-[var(--info)]/8 px-4 py-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
             <Eye className="mt-0.5 size-4 shrink-0 text-[var(--info)]" />
             <span>
-              Masz w tym teamie rolę <strong>{ROLE_LABELS[role]}</strong> —
+              Masz w tym zespole rolę <strong>{ROLE_LABELS[role]}</strong> —
               czytasz wszystko, co zespół uzupełnił, ale nie zmieniasz
               odpowiedzi. Zmienia je Founder albo Admin;{" "}
               <Link
                 href="/app/team"
                 className="text-[var(--info)] underline-offset-2 hover:underline"
               >
-                znajdziesz ich w składzie teamu
+                znajdziesz ich w składzie zespołu
               </Link>
               .
             </span>
@@ -403,12 +431,21 @@ export function StageScreen({
               <ul className="mt-4 flex flex-col gap-2 text-[13.5px] text-[var(--text-muted)]">
                 <li className="flex items-start gap-2.5">
                   <SlidersHorizontal className="mt-0.5 size-4 shrink-0 text-[var(--text-faint)]" />
+                  {/* Bez łącznej liczby podpunktów — „35 podpunktów” na
+                      wejściu brzmi jak ankieta bez końca. Liczy się pierwszy
+                      kawałek, który da się zrobić od razu. */}
                   <span>
-                    <strong className="text-white">{tree.total} podpunktów</strong>{" "}
-                    w {pointCount} {pointCount === 1 ? "punkcie" : "punktach"}
-                    {tree.showCategories
-                      ? `, podzielonych na ${tree.categories.length} kategorie dobrane do Twojego startupu`
-                      : ""}
+                    Etap dzieli się na krótkie punkty
+                    {tree.showCategories ? " w kategoriach dobranych do Twojego startupu" : ""}.
+                    Widzisz zawsze ten, nad którym pracujesz —{" "}
+                    {nextPoint ? (
+                      <strong className="text-white">
+                        pierwszy ma {nextPoint.total}{" "}
+                        {plural(nextPoint.total, "podpunkt", "podpunkty", "podpunktów")}
+                      </strong>
+                    ) : (
+                      "zaczynasz od pierwszego"
+                    )}
                     .
                   </span>
                 </li>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Compass, FolderOpen, Rocket, Route, Users, type LucideIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Compass, FolderOpen, LifeBuoy, Rocket, Route, Users, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ const STEPS: Step[] = [
   },
   {
     icon: Users,
-    title: "Team",
+    title: "Zespół",
     body: "Startupy buduje się w kilka osób. Zaproś znajomych linkiem — nie muszą mieć jeszcze konta w Vairo.",
     teamOnly: true,
   },
@@ -49,7 +49,12 @@ const STEPS: Step[] = [
   {
     icon: Compass,
     title: "Social",
-    body: "„Szukam projektu” i „Szukam ludzi” to karty, które przeglądasz jedna po drugiej. Na swojej karcie możesz używać pseudonimu — imię z konta widzi tylko Twój team.",
+    body: "„Szukam projektu” i „Szukam ludzi” to karty, które przeglądasz jedna po drugiej. Na swojej karcie możesz używać pseudonimu — imię z konta widzi tylko Twój zespół.",
+  },
+  {
+    icon: LifeBuoy,
+    title: "Pomoc i opinie",
+    body: "Coś nie działa, czegoś nie rozumiesz albo masz pomysł? „Pomoc i opinie” jest zawsze na dole menu. Piszesz swoimi słowami, a zespół Vairo odpisuje mailem.",
   },
 ];
 

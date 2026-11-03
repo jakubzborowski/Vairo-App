@@ -335,7 +335,7 @@ export async function loadJoinRequests(
     return {
       id: row.id,
       startupId: row.startup_id,
-      startupName: row.startups?.name ?? "Team",
+      startupName: row.startups?.name ?? "Zespół",
       startupLogoUrl: row.startups?.logo_url ?? null,
       profileId: row.profile_id,
       // Zgłoszenie przychodzi z Odkrywaj, więc podpisujemy je tak, jak ta osoba

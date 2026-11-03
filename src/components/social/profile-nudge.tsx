@@ -63,7 +63,7 @@ export function ProfileNudge({
         <span className="min-w-0 flex-1 truncate text-[13px] text-white">
           {score < 40
             ? subject === "team"
-              ? "Karta teamu jest prawie pusta"
+              ? "Karta zespołu jest prawie pusta"
               : "Twoja karta jest prawie pusta"
             : "Do kompletnego profilu jeszcze trochę brakuje"}
           <span className="tabular ml-2 text-[var(--text-subtle)]">{score}%</span>
@@ -93,7 +93,7 @@ export function ProfileNudge({
               <>
                 <Check className="size-4 shrink-0 text-[var(--success)]" />
                 {subject === "team"
-                  ? "Profil teamu jest kompletny"
+                  ? "Profil zespołu jest kompletny"
                   : "Twój profil jest kompletny"}
               </>
             ) : (
@@ -101,7 +101,7 @@ export function ProfileNudge({
                 <AlertTriangle className="size-4 shrink-0 text-[var(--warning)]" />
                 {score < 40
                   ? subject === "team"
-                    ? "Karta teamu jest prawie pusta"
+                    ? "Karta zespołu jest prawie pusta"
                     : "Twoja karta jest prawie pusta"
                   : "Do kompletnego profilu jeszcze trochę brakuje"}
               </>

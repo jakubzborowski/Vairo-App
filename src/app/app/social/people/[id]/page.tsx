@@ -133,8 +133,8 @@ export default async function PublicProfilePage({
                 <span className="inline-flex items-center gap-1.5">
                   <Users className="size-4 shrink-0" />
                   {person.team_count === 0
-                    ? "Nie należy do żadnego teamu"
-                    : `W ${person.team_count} z ${MAX_STARTUPS} teamów`}
+                    ? "Nie należy do żadnego zespołu"
+                    : `W ${person.team_count} z ${MAX_STARTUPS} zespołów`}
                 </span>
               </div>
 
@@ -177,11 +177,11 @@ export default async function PublicProfilePage({
             {sharedTeams.length > 0
               ? `Jesteście razem w: ${sharedTeams.map((t) => t.name).join(", ")}.`
               : atLimit
-                ? `Ta osoba jest już w ${MAX_STARTUPS} teamach — to maksimum na konto, więc zaproszenie nie przejdzie.`
+                ? `Ta osoba jest już w ${MAX_STARTUPS} zespołach — to maksimum na konto, więc zaproszenie nie przejdzie.`
                 : pendingIn.size > 0 && invitable.length === 0
                   ? "Zaproszenie do tej osoby już czeka na odpowiedź — sprawdź Zaproszenia."
                   : invitable.length === 0
-                    ? "Do teamu zapraszają Founder i Admin. Napisać możesz zawsze."
+                    ? "Do zespołu zapraszają Founder i Admin. Napisać możesz zawsze."
                     : ""}
           </p>
         </CardBody>
@@ -197,7 +197,7 @@ export default async function PublicProfilePage({
               {person.weekly_focus}
             </p>
             {person.weekly_focus_updated_at ? (
-              <p className="mt-3 text-[12px] text-[var(--text-faint)]">
+              <p className="mt-3 text-[12px] text-[var(--text-subtle)]">
                 Zaktualizowane{" "}
                 {new Date(person.weekly_focus_updated_at).toLocaleDateString("pl-PL", {
                   day: "numeric",
@@ -222,7 +222,7 @@ export default async function PublicProfilePage({
               ))}
             </div>
           ) : (
-            <p className="mt-2 inline-flex items-center gap-2 text-[13px] text-[var(--text-faint)]">
+            <p className="mt-2 inline-flex items-center gap-2 text-[13px] text-[var(--text-subtle)]">
               <UserRound className="size-4" />
               Ta osoba nie dodała jeszcze umiejętności.
             </p>
@@ -230,9 +230,9 @@ export default async function PublicProfilePage({
         </CardBody>
       </Card>
 
-      <p className="mt-4 text-[12px] text-[var(--text-faint)]">
+      <p className="mt-4 text-[12px] text-[var(--text-subtle)]">
         Widzisz tylko to, co ta osoba świadomie udostępniła. Adres e-mail
-        pojawia się dopiero wtedy, gdy jesteście w jednym teamie.
+        pojawia się dopiero wtedy, gdy jesteście w jednym zespole.
       </p>
     </div>
   );

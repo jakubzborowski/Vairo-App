@@ -417,7 +417,7 @@ export async function chooseCategoriesAfterAmbition(
   if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
 
   const startupId = String(formData.get("startup_id") ?? "");
-  if (!startupId) return { error: "Brak kontekstu teamu." };
+  if (!startupId) return { error: "Brak kontekstu zespołu." };
 
   const role = await getStartupRole(supabase, startupId, user.id);
   const denied = stageWriteError(role);

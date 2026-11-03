@@ -44,6 +44,10 @@ pierwszy raz słyszy o walidacji pomysłu, ma przejść przez aplikację bez poc
 **Zero fake UI.** Przycisk, który nic nie robi, jest usuwany albo `disabled`
 z konkretnym powodem w tooltipie. Liczba, która nie pochodzi z bazy, nie istnieje.
 Ikona sugerująca akcję, której nie ma (np. uchwyt przeciągania), jest błędem.
+Jedyny wyjątek: panel **„Możliwości partnerskie — Wkrótce”** na Start
+(„Vairo rozwój socialu” — miejsce nazwane z góry, żeby nie pomieszało się
+z „Możliwościami społecznościowymi”). Nieklikalny, bez terminu. Kolejnych
+„wkrótce” nie dokładamy.
 
 ---
 
@@ -82,7 +86,7 @@ WIDOKI PUBLICZNE (jedyne wyjście danych poza team)
 | Warstwa | Nazwa |
 |---|---|
 | **Baza i kod** | `startups`, `startup_members`, `startup_id`, `stage_*` |
-| **Interfejs** | „Team" albo nazwa startupu |
+| **Interfejs** | „Zespół" albo nazwa startupu — nigdy „team" (od 11.2026; słowo z angielskiego brzmiało w polskim UI obco) |
 
 Nazwa „Validation Milestones" **wyszła z użycia** — to, co dokument tak nazywał,
 to po prostu Milestones, czyli treść etapów przygotowana przez Vairo. „Milestones"
@@ -256,6 +260,7 @@ src/
       social/invites/       jedna skrzynka: zaczepki i sprawy teamu
       social/messages/      skrzynka i wątki rozmów
       notifications/        dzwonek: wszystkie zdarzenia w jednym miejscu
+      help/                 Pomoc i opinie: zgłoszenie → mail do skrzynki zespołu (Reply-To = autor)
       program/              jak działa Vairo — pięć etapów, z bazy
       stage/summary/        wszystko, co zespół ustalił w jednym etapie
       stage/complete/       koniec programu po MVP: wyniki i kontakt (bez płatności)
@@ -450,15 +455,16 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `037_carry_answers_between_stages` | `carry_answers_into_stage()` + trigger na `startup_stages`: odpowiedź pod kluczem pola z innego etapu startupu kopiuje się do nowego etapu; wyrównanie dla istniejących |
 | `038_invite_link_joined` | powiadomienie dla autora linku zaproszenia, gdy ktoś przez niego dołączy (`invite_link_joined`) |
 | `039`–`042_content_*` | Ambition, Idea, Preparation, Execution — ta sama treść z formami bezosobowymi zamiast męskich; wcześniejsze pliki treści zostają historyczne |
+| `043_support_feedback` | Pomoc i opinie: `support_requests` (skrzynka nadawcza zgłoszeń z zapisanym kontaktem, numer VA-…, status wysyłki maila), `submit_support_request()` (e-mail autora z `auth.users`, limit 10/h), `mark_support_delivery()`. Bez polityk RLS — tylko przez funkcje |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`042`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`043`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 
-Pomocnicze: `SPRAWDZ_MIGRACJE.sql` (**po każdym scaleniu** — wyłapuje złą kolejność, która nie daje błędu), `DIAGNOSTYKA.sql` (co faktycznie wjechało), `BACKUP_export.sql`
+Pomocnicze: `SUPPORT_zgloszenia.sql` (niedostarczone zgłoszenia, usuwanie na prośbę, retencja), `SPRAWDZ_MIGRACJE.sql` (**po każdym scaleniu** — wyłapuje złą kolejność, która nie daje błędu), `DIAGNOSTYKA.sql` (co faktycznie wjechało), `BACKUP_export.sql`
 (zrzut danych bez `pg_dump`), `CLEANUP_puste_etapy.sql`, `ROLLBACK_003_007.sql`, `METRYKI_social.sql`
 (zaproszenia, zgłoszenia, zaczepki — tylko odczyt).
 `profile_social.sql` w katalogu `supabase/` jest **wycofany** — zastąpiła go

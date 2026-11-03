@@ -46,11 +46,11 @@ export async function getStageRole(
   return { role, startupId: stage.startup_id };
 }
 
-export const NOT_A_MEMBER = "Nie należysz do tego teamu.";
+export const NOT_A_MEMBER = "Nie należysz do tego zespołu.";
 export const READ_ONLY_STAGE =
   "Tylko Founder i Admin mogą zmieniać odpowiedzi w etapach. Poproś o zmianę roli albo o podniesienie uprawnień.";
 export const READ_ONLY_TEAM =
-  "Tylko Founder i Admin mogą zarządzać składem teamu.";
+  "Tylko Founder i Admin mogą zarządzać składem zespołu.";
 
 /** Zwraca komunikat błędu albo null, gdy operacja jest dozwolona. */
 export function stageWriteError(role: StartupRole | null) {

@@ -75,7 +75,7 @@ export function scoreProfile(profile: ProfileForScoring) {
     add({
       key: "skills",
       label: `Dodaj co najmniej ${MIN_SKILLS} umiejętności`,
-      why: "Teamy szukają po konkretnych umiejętnościach, nie po nazwiskach.",
+      why: "Zespoły szukają po konkretnych umiejętnościach, nie po nazwiskach.",
       weight: 20,
     });
   }
@@ -146,7 +146,7 @@ export function scoreTeamProfile(team: TeamForScoring) {
     missing.push({
       key: "focus",
       label: "Opisz projekt szerzej",
-      why: "Bez opisu strona teamu nie odpowiada na pytanie „o co tu chodzi”.",
+      why: "Bez opisu strona zespołu nie odpowiada na pytanie „o co tu chodzi”.",
       weight: 15,
     });
   }

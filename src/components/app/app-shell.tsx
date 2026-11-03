@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronDown, GraduationCap, HelpCircle, LogOut, Menu as MenuIcon, Settings } from "lucide-react";
+import { Bell, ChevronDown, GraduationCap, HelpCircle, LifeBuoy, LogOut, Menu as MenuIcon, Settings } from "lucide-react";
 import { signOut } from "@/app/app/actions";
 import { Avatar } from "@/components/ui/avatar";
 import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
@@ -67,6 +67,10 @@ export function AppShell({
   const router = useRouter();
   const [signingOut, startSigningOut] = useTransition();
   const hasTeam = teams.length > 0;
+  // Pomoc dostaje adres strony, z której ktoś przyszedł — zgłoszenie
+  // „coś nie działa” bez tej informacji zaczyna się od dopytywania.
+  const helpActive = isActivePath(pathname, "/app/help");
+  const helpHref = helpActive ? "/app/help" : `/app/help?from=${encodeURIComponent(pathname)}`;
   // Nagłówek grupy nosi NAZWĘ startupu, nie słowo „team".
   //
   // Vairo pozwala należeć do trzech zespołów naraz, a cały workspace — etapy,
@@ -187,6 +191,16 @@ export function AppShell({
         })}
       </nav>
 
+      {/* Pomoc stoi na wierzchu, nie w menu ⋮: kto ma problem, szuka
+          wyjścia wzrokiem, a nie po ikonach z trzema kropkami. Przed
+          launchem to jedyna droga kontaktu z zespołem Vairo. */}
+      <div className="-mb-2">
+        <NavRow
+          item={{ label: "Pomoc i opinie", href: helpHref, icon: LifeBuoy }}
+          active={helpActive}
+        />
+      </div>
+
       {/* Stopka to OSOBA, nie lista linków. Trzy pozycje, które tu stały
           (Powiadomienia, Jak to działa, Ustawienia), zabierały miejsce
           menu, a używa się ich rzadko — poza dzwonkiem, który ma licznik
@@ -203,7 +217,7 @@ export function AppShell({
                 {user.name}
               </span>
               <span className="block truncate text-[11.5px] text-[var(--text-subtle)]">
-                {activeRole ? ROLE_LABELS[activeRole] : "Bez teamu"}
+                {activeRole ? ROLE_LABELS[activeRole] : "Bez zespołu"}
               </span>
             </span>
           </Link>
@@ -243,6 +257,16 @@ export function AppShell({
                   }}
                 >
                   Jak to działa
+                </MenuItem>
+                <MenuItem
+                  icon={LifeBuoy}
+                  onClick={() => {
+                    close();
+                    setMobileOpen(false);
+                    router.push(helpHref);
+                  }}
+                >
+                  Pomoc i opinie
                 </MenuItem>
                 <MenuItem
                   icon={GraduationCap}
@@ -323,7 +347,18 @@ export function AppShell({
           <Link href="/app" className="inline-flex items-center" aria-label="Vairo — dashboard">
             <BrandLogo height={24} />
           </Link>
-          <Link href="/app/settings/profile" className="ml-auto">
+          <Link
+            href={helpHref}
+            aria-label="Pomoc i opinie"
+            className="ml-auto inline-flex size-9 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-white/[0.06] hover:text-white"
+          >
+            <LifeBuoy className="size-4" strokeWidth={1.75} />
+          </Link>
+          <Link
+            href="/app/settings/profile"
+            aria-label="Twój profil"
+            className="inline-flex size-9 items-center justify-center rounded-lg"
+          >
             <Avatar src={user.avatarUrl} name={user.name} size="sm" />
           </Link>
         </header>

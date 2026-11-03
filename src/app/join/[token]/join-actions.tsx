@@ -54,10 +54,10 @@ export function JoinActions({
             {mode === "already"
               ? pending
                 ? "Przechodzę…"
-                : "Przejdź do teamu"
+                : "Przejdź do zespołu"
               : pending
                 ? "Dołączam…"
-                : "Dołącz do teamu"}
+                : "Dołącz do zespołu"}
           </Button>
           <Button
             variant="ghost"

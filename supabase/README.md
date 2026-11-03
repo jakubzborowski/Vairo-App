@@ -60,6 +60,7 @@ tabeli. Każdy plik jest idempotentny, więc ponowne odpalenie niczego nie psuje
 | 44 | `migrations/040_content_idea_v1.sql` | treść Idei bez form męskich (wygenerowana) — obowiązuje zamiast 034 |
 | 45 | `migrations/041_content_preparation_v1.sql` | treść Preparation bez form męskich (wygenerowana) — obowiązuje zamiast 036 |
 | 46 | `migrations/042_content_execution_v1.sql` | treść Execution bez form męskich (wygenerowana) — obowiązuje zamiast 027 |
+| 47 | `migrations/043_support_feedback.sql` | Pomoc i opinie: zapis zgłoszeń przed wysyłką maila (numer VA-…, status dostarczenia). Do działania potrzebne zmienne `RESEND_API_KEY`, `MAIL_FROM`, `SUPPORT_INBOX_EMAIL` — patrz `.env.example` |
 
 > **022 i 023 to wcześniejsze wygenerowania tej samej treści co 024.** Każde
 > jest idempotentne i usuwa to, czego nie ma w swoim JSON-ie, więc odpalenie

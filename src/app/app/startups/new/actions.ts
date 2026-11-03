@@ -60,7 +60,7 @@ export async function createStartup(formData: FormData) {
   if (error) {
     if (isStartupLimitError(error.message)) {
       return {
-        error: `Masz już ${MAX_STARTUPS} teamy — to maksimum na jedno konto. Opuść któryś, żeby założyć nowy.`,
+        error: `Masz już ${MAX_STARTUPS} zespoły — to maksimum na jedno konto. Opuść któryś, żeby założyć nowy.`,
       };
     }
     return { error: translateDbError(error.message) };

@@ -151,7 +151,7 @@ function describe(
   startup: string | null
 ) {
   const who = actor ?? "Ktoś";
-  const team = startup ?? "teamu";
+  const team = startup ?? "zespołu";
 
   switch (kind) {
     case "contact_received":
@@ -171,9 +171,9 @@ function describe(
     case "join_declined":
       return `Zgłoszenie do ${team} zostało odrzucone`;
     case "goal_assigned":
-      return `${who} przypisał Ci cel w ${team}`;
+      return `Nowy cel dla Ciebie w ${team} — od ${who}`;
     case "task_assigned":
-      return `${who} przypisał Ci zadanie w ${team}`;
+      return `Nowe zadanie dla Ciebie w ${team} — od ${who}`;
     case "goal_blocked":
       return `Przeszkoda przy celu w ${team}`;
     case "goal_due":
