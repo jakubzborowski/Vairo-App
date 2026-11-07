@@ -538,7 +538,8 @@ przyciski się nie pokazują (`AiProvider` na stronie etapu). Etap czytany
 klientem zalogowanej osoby — RLS wpuszcza tylko członków teamu. Limity na
 osobę w pamięci instancji (`src/lib/rate-limit.ts`). Modele przez
 `AI_MODEL_FAST` / `AI_MODEL_SMART` (domyślnie `claude-haiku-5-5` /
-`claude-sonnet-5-5`); stała część instrukcji z cache promptów. Do śledzenia
-kosztów w bazie — tabela pod numerem 042 (038–041 czekają na SCORE).
+`claude-sonnet-5-5`); stała część instrukcji z cache promptów. Śledzenie kosztów
+w bazie (gdy będzie potrzebne) — pierwszy wolny numer po `043`; SCORE
+z `codex/score-test` też musi dostać numery za ostatnią migracją na `dev`.
 
 Ścieżka Partner — dopiero w alfie.

@@ -175,7 +175,7 @@ export function VoiceButton({
       } else if (data?.text) {
         onTextRef.current(data.text);
       } else {
-        setError("Nic nie usłyszałem. Mów bliżej mikrofonu i spróbuj jeszcze raz.");
+        setError("W nagraniu nie słychać mowy. Mów bliżej mikrofonu i spróbuj jeszcze raz.");
       }
     } catch {
       setError("Brak połączenia — nagranie nie zostało przetworzone. Spróbuj jeszcze raz.");

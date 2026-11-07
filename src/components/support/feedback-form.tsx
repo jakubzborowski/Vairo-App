@@ -14,7 +14,7 @@ import { sendFeedback } from "@/app/app/help/actions";
 import { Button } from "@/components/ui/button";
 import { ChoiceCard } from "@/components/ui/choice-card";
 import { Field, Textarea } from "@/components/ui/input";
-import { DictationButton, appendDictation } from "@/components/stage/dictation-button";
+import { VoiceButton, appendDictation } from "@/components/ui/voice-button";
 import {
   SUPPORT_KINDS,
   SUPPORT_KIND_HINTS,
@@ -163,7 +163,7 @@ export function FeedbackForm({ from, initialKind, errorCode, onSent }: Props) {
                     : "Napisz, o co chodzi…"
               }
             />
-            <DictationButton
+            <VoiceButton
               disabled={pending}
               onText={(text) => setMessage((prev) => appendDictation(prev, text, SUPPORT_MESSAGE_MAX))}
             />
