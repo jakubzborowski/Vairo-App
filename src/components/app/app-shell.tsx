@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronDown, GraduationCap, HelpCircle, LifeBuoy, LogOut, Menu as MenuIcon, Settings } from "lucide-react";
+import { Bell, ChevronDown, GraduationCap, HelpCircle, LifeBuoy, LogOut, Menu as MenuIcon, Settings, Trophy } from "lucide-react";
 import { signOut } from "@/app/app/actions";
 import { Avatar } from "@/components/ui/avatar";
 import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
@@ -248,6 +248,19 @@ export function AppShell({
           <Menu label="Konto i pomoc">
             {(close) => (
               <>
+                {/* SCORE (codex/score-test) stał w stopce menu, której po redesignie
+                    już nie ma jako listy — bez tej pozycji strona byłaby
+                    nieosiągalna z interfejsu. */}
+                <MenuItem
+                  icon={Trophy}
+                  onClick={() => {
+                    close();
+                    setMobileOpen(false);
+                    router.push("/app/score");
+                  }}
+                >
+                  SCORE
+                </MenuItem>
                 <MenuItem
                   icon={HelpCircle}
                   onClick={() => {

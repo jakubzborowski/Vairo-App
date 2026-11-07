@@ -61,6 +61,11 @@ tabeli. Każdy plik jest idempotentny, więc ponowne odpalenie niczego nie psuje
 | 45 | `migrations/041_content_preparation_v1.sql` | treść Preparation bez form męskich (wygenerowana) — obowiązuje zamiast 036 |
 | 46 | `migrations/042_content_execution_v1.sql` | treść Execution bez form męskich (wygenerowana) — obowiązuje zamiast 027 |
 | 47 | `migrations/043_support_feedback.sql` | Pomoc i opinie: zapis zgłoszeń przed wysyłką maila (numer VA-…, status dostarczenia). Do działania potrzebne zmienne `RESEND_API_KEY`, `MAIL_FROM`, `SUPPORT_INBOX_EMAIL` — patrz `.env.example` |
+| 48 | `migrations/044_score.sql` | SCORE: punkty za realną pracę (cele, zadania, punkty programu), ocena skali przed startem |
+| 49 | `migrations/045_score_verification.sql` | SCORE: niezależne recenzje, pule zespołu, kolejka z dziennymi limitami |
+| 50 | `migrations/046_score_mentors_and_condition_limits.sql` | SCORE: mentorzy programu, sloty warunków celów |
+| 51 | `migrations/047_score_cron.sql` | SCORE: `pg_cron` co 5 min rozlicza kolejkę. Wymaga włączonego `pg_cron` (Database → Extensions) |
+| 52 | `migrations/048_score_deletion_and_privacy.sql` | SCORE nie blokuje usuwania konta (klucze do profili `set null`, trigger bez zapisu w kaskadzie) + pseudonim w „Doceń wiadomość” |
 
 > **022 i 023 to wcześniejsze wygenerowania tej samej treści co 024.** Każde
 > jest idempotentne i usuwa to, czego nie ma w swoim JSON-ie, więc odpalenie

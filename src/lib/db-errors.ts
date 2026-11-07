@@ -107,6 +107,10 @@ export function translateDbError(message: string | null | undefined) {
     return "Zarchiwizowanego celu nie da się ukończyć.";
   }
 
+  if (/score_[a-z_]+/.test(message) && /does not exist|could not find/i.test(message)) {
+    return "Brakuje migracji SCORE (044–048) — odpal je w Supabase → SQL Editor.";
+  }
+
   // Nieznany błąd: user dostaje zdanie, z którym da się coś zrobić, a pełna
   // treść trafia do logu serwera — nie na ekran.
   console.error("[db]", message);

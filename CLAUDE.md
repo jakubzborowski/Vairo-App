@@ -456,11 +456,13 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `038_invite_link_joined` | powiadomienie dla autora linku zaproszenia, gdy ktoś przez niego dołączy (`invite_link_joined`) |
 | `039`–`042_content_*` | Ambition, Idea, Preparation, Execution — ta sama treść z formami bezosobowymi zamiast męskich; wcześniejsze pliki treści zostają historyczne |
 | `043_support_feedback` | Pomoc i opinie: `support_requests` (skrzynka nadawcza zgłoszeń z zapisanym kontaktem, numer VA-…, status wysyłki maila), `submit_support_request()` (e-mail autora z `auth.users`, limit 10/h), `mark_support_delivery()`. Bez polityk RLS — tylko przez funkcje |
+| `044`–`047_score*` | SCORE z gałęzi `codex/score-test` (tam 022–025): punkty, recenzje, kolejka, mentorzy, `pg_cron`. Zasady: [docs/SCORE-V2.md](docs/SCORE-V2.md), operacje: [docs/SCORE-OPERATIONS.md](docs/SCORE-OPERATIONS.md) |
+| `048_score_deletion_and_privacy` | SCORE nie blokuje `delete_own_account()` (klucze do profili `set null`, `score_freeze` milczy w kaskadzie) + w „Doceń wiadomość” nazwa publiczna nadawcy |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`043`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`048`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 
@@ -501,6 +503,11 @@ dopiero na świeżej bazie. Przy każdym scaleniu sprawdź dwie rzeczy:
   kaskady z 015, `skip_when` z 021 i warunki celów. Gdyby 021 biegła później,
   postęp etapu przestałby liczyć Goals bez żadnego błędu.
 
+SCORE z `codex/score-test` miał numery `022`–`025` z czasów przed
+przenumerowaniem; po scaleniu to `044`–`047`. Test pełnego łańcucha
+(wszystkie migracje od `profiles.sql` na świeżym Postgresie) wyłapał przy tym
+blokadę usuwania konta — stąd `048`.
+
 Ten sam błąd wrócił przy MVP: gałąź nadała treści MVP numer `021`, który
 `dev` miał już zajęty przez Preparation. Treść MVP zapisuje warunki do
 `stage_goal_conditions` (025), więc pod 021 biegłaby przed powstaniem tej
@@ -539,7 +546,6 @@ klientem zalogowanej osoby — RLS wpuszcza tylko członków teamu. Limity na
 osobę w pamięci instancji (`src/lib/rate-limit.ts`). Modele przez
 `AI_MODEL_FAST` / `AI_MODEL_SMART` (domyślnie `claude-haiku-5-5` /
 `claude-sonnet-5-5`); stała część instrukcji z cache promptów. Śledzenie kosztów
-w bazie (gdy będzie potrzebne) — pierwszy wolny numer po `043`; SCORE
-z `codex/score-test` też musi dostać numery za ostatnią migracją na `dev`.
+w bazie (gdy będzie potrzebne) — pierwszy wolny numer po `048`.
 
 Ścieżka Partner — dopiero w alfie.

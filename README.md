@@ -1,5 +1,11 @@
 # Vairo App
 
+SCORE: po `044_score.sql` i `045_score_verification.sql` uruchom
+`046_score_mentors_and_condition_limits.sql`, potem `047_score_cron.sql`.
+Punkty wymagają niezależnej akceptacji wyniku; ekran: `/app/score`.
+Zasady i punktacja: [docs/SCORE-V2.md](docs/SCORE-V2.md).
+Mentorzy, min_count, cron i kontrola wdrożenia: [docs/SCORE-OPERATIONS.md](docs/SCORE-OPERATIONS.md).
+
 Aplikacja Vairo (Next.js, Supabase, TypeScript). Workspace startupu, pięć etapów programu i warstwa Social.
 
 ## Uruchomienie lokalnie

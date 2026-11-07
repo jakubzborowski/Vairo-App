@@ -238,6 +238,36 @@ with checks(nr, migracja, co, ok, napraw) as (
                  where n.nspname = 'public' and p.proname = 'mark_support_delivery'),
     'odpal 043_support_feedback (po 042) — bez niej formularz Pomocy zwraca błąd'),
 
+  -- --- SCORE (gałąź codex/score-test, przenumerowana z 022–025) -------------
+  (49, '044', 'SCORE: score_events, score_assessments, triggery punktów',
+    to_regclass('public.score_events') is not null
+    and to_regclass('public.score_assessments') is not null,
+    'odpal 044_score (po 043)'),
+  (49, '045', 'SCORE: recenzje, pule programu, kolejka nagród',
+    to_regclass('public.score_reviews') is not null
+    and to_regclass('public.score_reward_queue') is not null,
+    'odpal 045_score_verification (po 044)'),
+  (49, '046', 'SCORE: mentorzy programu i sloty warunków celów',
+    to_regclass('public.program_mentors') is not null
+    and to_regclass('public.score_condition_slots') is not null,
+    'odpal 046_score_mentors_and_condition_limits (po 045)'),
+  (49, '047', 'SCORE: zadanie pg_cron rozliczające kolejkę co 5 minut',
+    -- Bez pg_cron schematu `cron` nie ma, a bezpośrednie `cron.job` wywaliłoby
+    -- cały skrypt już przy planowaniu. query_to_xml czyta tabelę dopiero
+    -- w trakcie, a CASE nie dochodzi do niej, gdy jej brak.
+    case when to_regclass('cron.job') is null then false
+         else (xpath('count(//row)', query_to_xml(
+           'select 1 from cron.job where jobname = ''vairo-score-reward-queue''',
+           false, false, '')))[1]::text::int > 0
+    end,
+    'włącz pg_cron (Database → Extensions) i odpal 047_score_cron — bez niej punkty czekające na kolejny dzień nie rozliczą się same'),
+  (49, '048', 'SCORE nie blokuje usuwania konta (klucze set null) + pseudonim w „Doceń wiadomość”',
+    exists (select 1 from pg_constraint
+             where conname = 'score_reviews_reviewer_id_fkey' and confdeltype = 'n')
+    and exists (select 1 from pg_constraint
+                 where conname = 'score_assessments_assessed_by_fkey' and confdeltype = 'n'),
+    'odpal 048_score_deletion_and_privacy (po 047) — bez niej usunięcie konta osoby, która pracowała nad celem albo recenzowała, kończy się błędem'),
+
   -- --- Treść etapów ---------------------------------------------------------
   (50, '006–028', 'wszystkie 5 etapów ma opublikowaną treść',
     (select count(distinct key) = 5 from public.stage_templates
