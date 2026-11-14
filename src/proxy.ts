@@ -10,8 +10,9 @@ export default proxy;
 export const config = {
   matcher: [
     /*
-     * Auth refresh + route gates. Exclude Next internals and static files.
+     * Auth refresh + route gates. Exclude Next internals, static files i /ingest
+     * (proxy do PostHog — nie ma tam sesji do odświeżania).
      */
-    "/((?!_next/static|_next/image|favicon.ico|brand/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|webmanifest)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|brand/|ingest(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|webmanifest)$).*)",
   ],
 };

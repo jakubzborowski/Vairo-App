@@ -9,6 +9,12 @@ try {
   // keep wildcard fallback for build without env
 }
 
+// PostHog idzie przez nasz serwer (/ingest), nie wprost z przeglądarki: CSP
+// zostaje na 'self', a blokery reklam nie wycinają zapytań. Region (EU/US)
+// wynika z adresu API; domyślnie EU — dane użytkowników zostają w Unii.
+const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com";
+const posthogAssetsHost = posthogHost.replace(".i.posthog.com", "-assets.i.posthog.com");
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
@@ -65,6 +71,15 @@ const nextConfig: NextConfig = {
         pathname: "/storage/v1/object/public/**",
       },
     ],
+  },
+  // Wymagane przez PostHog: bez tego Next dopisuje `/` do /ingest/e/ i ucina POST.
+  skipTrailingSlashRedirect: true,
+  async rewrites() {
+    return [
+      { source: "/ingest/static/:path*", destination: `${posthogAssetsHost}/static/:path*` },
+      { source: "/ingest/array/:path*", destination: `${posthogAssetsHost}/array/:path*` },
+      { source: "/ingest/:path*", destination: `${posthogHost}/:path*` },
+    ];
   },
   async headers() {
     return [
