@@ -75,6 +75,7 @@ export function OnboardingShell({
         ) : (
           <Link
             href="/start"
+            prefetch={false}
             className="text-[13px] font-medium text-[var(--text-subtle)] transition-colors hover:text-white"
           >
             Wyloguj
