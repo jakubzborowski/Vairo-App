@@ -12,6 +12,7 @@ import { canManageTeam } from "@/types/startup";
 import { ToastProvider } from "@/components/ui/toast";
 import { LiveNotifications } from "@/components/app/live-notifications";
 import type { TeamSummary } from "@/components/app/team-switcher";
+import { PosthogIdentify } from "@/components/analytics/posthog-identify";
 
 export const dynamic = "force-dynamic";
 
@@ -125,6 +126,7 @@ export default async function AppLayout({
       executionUnlocked={executionUnlocked}
     >
       <ToastProvider>
+        <PosthogIdentify userId={user.id} />
         <LiveNotifications profileId={user.id} />
         {children}
       </ToastProvider>

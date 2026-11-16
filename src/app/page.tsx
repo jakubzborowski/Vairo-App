@@ -1,14 +1,19 @@
 import { redirect } from "next/navigation";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
-import { HeroSection } from "@/components/hero-section";
-import { FeaturesSection } from "@/components/features-section";
 import { safeNextPath } from "@/lib/supabase/config";
 
 type HomeProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+/**
+ * Aplikacja żyje na app.vairo-network.com, a strona główna Vairo jest osobnym
+ * projektem na vairo-network.com. Tutaj nie ma już czego pokazywać — wejście
+ * na `/` prowadzi prosto do logowania. Zalogowanego proxy przerzuca z
+ * `/login` dalej (do `/app` albo do onboardingu), więc nikt nie utyka.
+ *
+ * `?code=` zostaje obsłużony jak wcześniej: Supabase potrafi odesłać link
+ * z maila na Site URL zamiast na `/auth/callback`.
+ */
 export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;
   const code = typeof params.code === "string" ? params.code : null;
@@ -23,14 +28,5 @@ export default async function Home({ searchParams }: HomeProps) {
     );
   }
 
-  return (
-    <div className="flex min-h-full flex-col bg-background text-foreground">
-      <SiteHeader />
-      <main className="flex-1">
-        <HeroSection />
-        <FeaturesSection />
-      </main>
-      <SiteFooter />
-    </div>
-  );
+  redirect("/login");
 }

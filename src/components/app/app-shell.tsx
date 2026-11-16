@@ -14,6 +14,7 @@ import { AppBackdrop } from "./app-backdrop";
 import { NavRow } from "./nav-item";
 import { TeamSwitcher, type TeamSummary } from "./team-switcher";
 import { BrandLogo } from "@/components/brand-logo";
+import { resetAnalytics } from "@/lib/analytics";
 import { OPEN_TOUR_EVENT, WelcomeTour } from "./welcome-tour";
 
 const SOCIAL_OPEN_KEY = "vairo:nav:social-open";
@@ -305,7 +306,12 @@ export function AppShell({
                 <MenuItem
                   icon={LogOut}
                   disabled={signingOut}
-                  onClick={() => startSigningOut(() => signOut())}
+                  onClick={() =>
+                    startSigningOut(() => {
+                      resetAnalytics();
+                      return signOut();
+                    })
+                  }
                 >
                   {signingOut ? "Wylogowuję…" : "Wyloguj się"}
                 </MenuItem>
