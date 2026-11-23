@@ -4,6 +4,13 @@
  *
  *   node scripts/i18n.mjs index   przebudowuje pliki index.ts z listy JSON-ów
  *   node scripts/i18n.mjs check   sprawdza kompletność tłumaczeń względem `pl`
+ *   node scripts/i18n.mjs sync    zapamiętuje, które polskie teksty są już przetłumaczone
+ *
+ * Zmiana polskiego tekstu pod istniejącym kluczem: `check` porównuje skrót
+ * (sha1) obecnego zdania ze skrótem zapisanym przy ostatnim `sync`
+ * (src/i18n/messages/pl.sync.json) i wypisuje klucze, których tłumaczenia
+ * mogą być nieaktualne. Po poprawieniu DE/UK/ES odpal `sync`. Przetłumaczyć
+ * trzeba tylko te klucze — reszta zostaje.
  *
  * `check` zgłasza: brakujące klucze, klucze, których nie ma w `pl` (sieroty),
  * różne zmienne `{name}` niż w polskim oryginale oraz niezbalansowane nawiasy.
@@ -11,6 +18,7 @@
  *
  * Treść etapów ma własne sprawdzanie w `content:build` (supabase/content/i18n).
  */
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -148,6 +156,20 @@ function check() {
     }
   }
 
+  const synced = readSync();
+  const stale = [];
+  for (const ns of namespaces(SOURCE)) {
+    for (const [key, text] of Object.entries(load(SOURCE, ns))) {
+      const id = `${ns}:${key}`;
+      if (synced[id] && synced[id] !== hash(text)) stale.push(id);
+    }
+  }
+  if (stale.length) {
+    console.log(`\nZmieniony polski tekst — sprawdź tłumaczenia (de, uk, es), potem \`npm run i18n:sync\`:`);
+    for (const id of stale) console.log(`  ${id}`);
+    problems += stale.length;
+  }
+
   if (problems) {
     console.log(`✗ ${problems} problemów`);
     process.exit(1);
@@ -155,10 +177,34 @@ function check() {
   console.log("✓ słowniki kompletne");
 }
 
+const SYNC_FILE = path.join(DIR, "pl.sync.json");
+
+function hash(text) {
+  return crypto.createHash("sha1").update(text).digest("hex").slice(0, 12);
+}
+
+function readSync() {
+  return fs.existsSync(SYNC_FILE) ? JSON.parse(fs.readFileSync(SYNC_FILE, "utf8")) : {};
+}
+
+/** Zapamiętuje skróty polskich tekstów, które mają tłumaczenie we wszystkich językach. */
+function sync() {
+  const out = {};
+  for (const ns of namespaces(SOURCE)) {
+    const others = LOCALES.filter((l) => l !== SOURCE).map((l) => load(l, ns));
+    for (const [key, text] of Object.entries(load(SOURCE, ns))) {
+      if (others.every((dict) => key in dict)) out[`${ns}:${key}`] = hash(text);
+    }
+  }
+  fs.writeFileSync(SYNC_FILE, JSON.stringify(out, Object.keys(out).sort(), 0).replace(/,"/g, ',\n"') + "\n");
+  console.log(`✓ zapamiętano ${Object.keys(out).length} przetłumaczonych tekstów`);
+}
+
 const cmd = process.argv[2];
 if (cmd === "index") buildIndex();
 else if (cmd === "check") check();
+else if (cmd === "sync") sync();
 else {
-  console.log("użycie: node scripts/i18n.mjs index|check");
+  console.log("użycie: node scripts/i18n.mjs index|check|sync");
   process.exit(1);
 }
