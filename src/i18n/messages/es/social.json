@@ -381,5 +381,6 @@
   "card.whyYouSee": "Por qué ves esto:",
   "chips.noMatch": "Nada coincide con «{query}».",
   "inbox.writesOnBehalf": "Escribe en nombre de {team}",
-  "inbox.writtenOnBehalf": "Escrito en nombre de {team}"
+  "inbox.writtenOnBehalf": "Escrito en nombre de {team}",
+  "messages.allConversations": "Todas las conversaciones"
 }

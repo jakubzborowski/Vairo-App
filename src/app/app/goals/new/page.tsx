@@ -1,8 +1,12 @@
 import { GoalWizard } from "@/components/goals/goal-wizard";
 import { GoalsUnavailable } from "@/components/goals/goals-unavailable";
 import { loadGoalsContext } from "../load";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Nowy cel — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("goals");
+  return { title: t("meta.newGoal") };
+}
 export const dynamic = "force-dynamic";
 
 function answerLines(value: unknown): string[] {

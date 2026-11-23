@@ -4,9 +4,11 @@ import { Flag, Lock, OctagonAlert } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { TaskStatus } from "@/types/goals";
-import { formatDay } from "./goal-format";
+
 import { StatusIcon } from "./status";
 
+import { useT } from "@/i18n/client";
+import { useGoalFormat } from "@/components/goals/goal-format-hook";
 export type BoardTask = {
   id: string;
   title: string;
@@ -60,6 +62,8 @@ export function TaskCard({
   onDragStart?: (event: React.DragEvent) => void;
   onDragEnd?: () => void;
 }) {
+  const { formatDay } = useGoalFormat();
+  const t = useT("goals");
   const done = task.status === "done";
   const overdue = isTaskOverdue(task, today);
 
@@ -93,7 +97,7 @@ export function TaskCard({
             onKeyMove(-1);
           }
         }}
-        aria-label={`${task.title}. Otwórz zadanie.${canEdit ? " Strzałki w lewo i w prawo zmieniają kolumnę." : ""}`}
+        aria-label={`${task.title}${t("taskCard.otworzZadanie")}${canEdit ? ` ${t("taskCard.arrowsHint")}` : ""}`}
         className={cn(
           "block w-full rounded-2xl text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--vairo)]",
           done ? "px-3 py-2.5" : "p-3.5"
@@ -123,7 +127,7 @@ export function TaskCard({
             ) : null}
             {task.needsReassign ? (
               <span className="mt-1.5 block text-[12.5px] text-[var(--danger-text)]">
-                Osoba odeszła z zespołu — zadanie czeka na przypisanie.
+                {t("taskCard.osobaOdeszlaZZespolu")}
               </span>
             ) : null}
             <span className="mt-3 flex items-center gap-2">
@@ -139,7 +143,7 @@ export function TaskCard({
               >
                 {task.dueDate
                   ? overdue
-                    ? `minął ${formatDay(task.dueDate)}`
+                    ? t("taskCard.overdue", { date: formatDay(task.dueDate) })
                     : `do ${formatDay(task.dueDate)}`
                   : "Bez terminu"}
               </span>
@@ -147,7 +151,7 @@ export function TaskCard({
                 {!canEdit ? (
                   <Lock
                     className="size-3 text-[var(--text-subtle)]"
-                    aria-label={`Zmienia je ${task.ownerName}, Founder albo Admin`}
+                    aria-label={t("taskCard.zmieniaJeOwnernameFounder", { ownerName: task.ownerName })}
                   />
                 ) : null}
                 <Avatar name={task.ownerName} size="xs" />

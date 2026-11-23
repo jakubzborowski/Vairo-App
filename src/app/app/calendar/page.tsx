@@ -3,11 +3,15 @@ import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { isExecutionUnlocked, loadGoalsWorkspace } from "@/lib/goals";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
-import { GOAL_STATUS_LABELS, TASK_STATUS_LABELS, type GoalStatus, type TaskStatus } from "@/types/goals";
+import { type GoalStatus, type TaskStatus } from "@/types/goals";
 import { CalendarView, type DeadlineItem } from "@/components/calendar/calendar-view";
 import { GoalsUnavailable } from "@/components/goals/goals-unavailable";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Terminy — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("goals");
+  return { title: t("calendar.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 const GOAL_TONE: Record<GoalStatus, DeadlineItem["statusTone"]> = {
@@ -25,6 +29,7 @@ const TASK_TONE: Record<TaskStatus, DeadlineItem["statusTone"]> = {
 };
 
 export default async function CalendarPage() {
+  const t = await getT("goals");
   const supabase = await createClient();
   const user = await getCurrentUser();
   if (!user) redirect("/register?next=/app/calendar");
@@ -44,7 +49,7 @@ export default async function CalendarPage() {
   ]);
   if (!unlocked) redirect("/app");
   if (!workspace.ready || workspace.loadError) {
-    return <GoalsUnavailable missingMigration={!workspace.ready} title="Terminy" href="/app/calendar" />;
+    return <GoalsUnavailable missingMigration={!workspace.ready} title={t("calendar.title")} href="/app/calendar" />;
   }
 
   // Terminy to daty z celów i zadań — nic więcej. Zarchiwizowane cele (i ich
@@ -56,11 +61,11 @@ export default async function CalendarPage() {
         id: goal.id,
         kind: "goal" as const,
         title: goal.title,
-        what: `Cel · ${goal.goalTypeLabel}`,
+        what: t("calendar.goalWhat", { type: goal.goalTypeLabel }),
         due: goal.dueDate,
         ownerId: goal.ownerId,
         ownerName: goal.ownerName,
-        statusLabel: GOAL_STATUS_LABELS[goal.status],
+        statusLabel: t(`goalStatus.${goal.status}`),
         statusTone: GOAL_TONE[goal.status],
         open: goal.status !== "completed",
         href: `/app/goals/${goal.id}`,
@@ -71,11 +76,11 @@ export default async function CalendarPage() {
           id: task.id,
           kind: "task" as const,
           title: task.title,
-          what: `Zadanie w celu „${goal.title}”`,
+          what: t("calendar.taskWhat", { title: goal.title }),
           due: task.dueDate as string,
           ownerId: task.ownerId,
           ownerName: task.ownerName,
-          statusLabel: TASK_STATUS_LABELS[task.status],
+          statusLabel: t(`taskStatus.${task.status}`),
           statusTone: TASK_TONE[task.status],
           open: task.status !== "done",
           href: `/app/tasks?task=${task.id}`,

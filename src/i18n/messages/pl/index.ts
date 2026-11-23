@@ -5,6 +5,7 @@ import auth from "./auth.json";
 import common from "./common.json";
 import dashboard from "./dashboard.json";
 import errors from "./errors.json";
+import goals from "./goals.json";
 import labels from "./labels.json";
 import nav from "./nav.json";
 import notifications from "./notifications.json";
@@ -21,6 +22,7 @@ const messages = {
   "common": common,
   "dashboard": dashboard,
   "errors": errors,
+  "goals": goals,
   "labels": labels,
   "nav": nav,
   "notifications": notifications,

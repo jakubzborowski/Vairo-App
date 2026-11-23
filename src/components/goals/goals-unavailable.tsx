@@ -1,19 +1,22 @@
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { getT } from "@/i18n/server";
 /**
  * Cele nie dały się wczytać. Stoi tam, gdzie miała być treść, po polsku
  * i z jednym wyjściem — zamiast pustej listy, która udaje, że celów nie ma.
  */
-export function GoalsUnavailable({
+export async function GoalsUnavailable({
   missingMigration,
-  title = "Cele",
+  title: titleProp,
   href = "/app/goals",
 }: {
   missingMigration: boolean;
   title?: string;
   href?: string;
 }) {
+  const t = await getT("goals");
+  const title = titleProp ?? t("goalsUnavailable.title");
   return (
     <div className="page">
       <h1 className="font-heading text-[1.65rem] font-semibold text-white">{title}</h1>
@@ -22,17 +25,17 @@ export function GoalsUnavailable({
         <div>
           <p className="text-[15px] font-medium text-white">
             {missingMigration
-              ? "Moduły pracy nie są jeszcze włączone w bazie"
-              : `Nie udało się wczytać: ${title}`}
+              ? t("goalsUnavailable.modulyPracyNieSa")
+              : t("goalsUnavailable.nieUdaloSieWczytac", { title })}
           </p>
           <p className="mt-1 text-[14px] leading-relaxed text-[var(--text-muted)]">
             {missingMigration
-              ? "Brakuje migracji 025. Wklej ją w Supabase → SQL Editor, po migracji 024. Dopiero wtedy da się zapisywać cele, dowody i zadania."
-              : "Odśwież stronę. Jeśli komunikat wraca, sprawdź, czy migracja 025 jest odpalona w całości."}
+              ? t("goalsUnavailable.brakujeMigracji025Wklej")
+              : t("goalsUnavailable.odswiezStroneJesliKomunikat")}
           </p>
           {missingMigration ? null : (
             <Button className="mt-4" variant="secondary" href={href}>
-              Odśwież
+              {t("goalsUnavailable.odswiez")}
             </Button>
           )}
         </div>

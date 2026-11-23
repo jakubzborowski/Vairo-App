@@ -3,9 +3,11 @@ import { ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { GoalItem } from "@/types/goals";
-import { dueLine, formatDay, tasksLine } from "./goal-format";
+
 import { StatusBadge, StatusIcon } from "./status";
 
+import { useT } from "@/i18n/client";
+import { useGoalFormat } from "@/components/goals/goal-format-hook";
 /**
  * Lista celów: jedna karta, wiersze rozdzielone kreską. Osobna karta na każdy
  * cel dawała ścianę ramek, w której oko nie miało gdzie się zatrzymać.
@@ -30,6 +32,8 @@ export function GoalList({ children, className }: { children: React.ReactNode; c
  * Spóźnienie jest napisane słowem, nie tylko kolorem.
  */
 export function GoalRow({ goal }: { goal: GoalItem }) {
+  const { formatDay, tasksLine, dueLine } = useGoalFormat();
+  const t = useT("goals");
   const done = goal.status === "completed";
   const countsForStage = goal.conditions.length > 0;
 
@@ -53,7 +57,7 @@ export function GoalRow({ goal }: { goal: GoalItem }) {
             <StatusBadge status={goal.status} />
             {countsForStage ? (
               <span className="inline-flex h-[22px] items-center rounded-[7px] border border-white/12 px-2 text-[12px] font-medium text-[var(--text-muted)]">
-                Do etapu
+                {t("goalRow.doEtapu")}
               </span>
             ) : null}
           </span>
@@ -61,7 +65,7 @@ export function GoalRow({ goal }: { goal: GoalItem }) {
             <span>{goal.ownerName}</span>
             <span aria-hidden="true">·</span>
             <span className={cn(goal.overdue && "font-medium text-[var(--warning)]")}>
-              {goal.overdue ? `Po terminie od ${formatDay(goal.dueDate)}` : dueLine(goal)}
+              {goal.overdue ? t("goalRow.overdueSince", { date: formatDay(goal.dueDate) }) : dueLine(goal)}
             </span>
             <span aria-hidden="true">·</span>
             <span>{tasksLine(goal)}</span>
@@ -71,7 +75,7 @@ export function GoalRow({ goal }: { goal: GoalItem }) {
               <>
                 <span aria-hidden="true">·</span>
                 <span className={cn(goal.status === "awaiting_proof" && "text-[var(--warning)]")}>
-                  bez dowodu
+                  {t("goalRow.bezDowodu")}
                 </span>
               </>
             )}

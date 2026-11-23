@@ -16,6 +16,11 @@ import type {
   TeamMemberOption,
   WorkflowPick,
 } from "@/types/goals";
+import { getLocale, getT } from "@/i18n/server";
+import type { Locale } from "@/i18n/config";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
+import { isMissingTranslations, localizeRow, selectTranslations, type Translations } from "@/lib/stage-i18n";
 
 function missingRelation(message: string) {
   return (
@@ -43,17 +48,31 @@ export const isExecutionUnlocked = cache(async function isExecutionUnlocked(
 export async function loadGoalTypes(
   supabase: SupabaseClient
 ): Promise<GoalTypeOption[]> {
-  const { data, error } = await supabase
-    .from("goal_types")
-    .select("id, label, description")
-    .order("position", { ascending: true });
+  const [{ data, error }, tg] = await Promise.all([
+    supabase.from("goal_types").select("id, label, description").order("position", { ascending: true }),
+    getT("goals"),
+  ]);
 
   if (error || !data) return [];
   return data.map((row) => ({
     id: row.id as string,
-    label: row.label as string,
-    description: (row.description as string | null) ?? null,
+    label: goalTypeLabel(tg, row.id as string, row.label as string),
+    description: tg.maybe(`goalType.${row.id}.description`, (row.description as string | null) ?? "") || null,
   }));
+}
+
+/**
+ * Nazwa typu celu w języku użytkownika. Typy z seeda (025) mają tłumaczenia
+ * w słowniku `goals` (`goalType.<id>.label`); typ dopisany później w bazie
+ * zostaje w brzmieniu z bazy.
+ */
+export function goalTypeLabel(tg: Translate<MessageKey<"goals">>, id: string, fallback: string | null | undefined) {
+  return tg.maybe(`goalType.${id}.label`, fallback ?? id);
+}
+
+/** Tytuł wiersza `stage_*` z tłumaczeniem z 049, jeśli zapytanie je pobrało. */
+function localTitle(row: { title: string; translations?: Translations } | null | undefined, locale: Locale) {
+  return row ? localizeRow(row, locale).title : undefined;
 }
 
 export async function loadTeamMembers(
@@ -145,12 +164,13 @@ function todayIso() {
 }
 
 function nameOf(
+  tg: Translate<MessageKey<"goals">>,
   members: TeamMemberOption[],
   id: string | null,
   fallback?: string | null
 ) {
-  if (!id) return "Do przypisania";
-  return members.find((member) => member.id === id)?.name || fallback?.trim() || "Była osoba w zespole";
+  if (!id) return tg("lib.unassigned");
+  return members.find((member) => member.id === id)?.name || fallback?.trim() || tg("lib.formerMember");
 }
 
 export async function loadGoalsWorkspace(
@@ -187,6 +207,11 @@ export async function loadGoalsWorkspace(
   // Szczegóły zadań (notatka, powód blokady, data ukończenia) przychodzą
   // z migracją 029. Bez niej `select` z tymi kolumnami kończy się błędem —
   // wtedy pytamy jeszcze raz bez nich, zamiast wywracać cały tracker.
+  const locale = await getLocale();
+  const tg = await getT("goals");
+  // Tytuły podpunktów i etapów w języku użytkownika (049). Bez tej migracji
+  // kolumny `translations` nie ma — wtedy pytamy jeszcze raz bez niej.
+  let tr = selectTranslations(locale);
   const selectGoals = (withTaskDetails: boolean) =>
     supabase
         .from("goals")
@@ -203,25 +228,21 @@ export async function loadGoalsWorkspace(
              condition_id,
              startup_goal_conditions(
                id, startup_id, goal_type_id, min_count, proof_kind, counts_when, match_any_type,
-               stage_subpoints(title)
+               stage_subpoints(${tr}title)
              )
            )`
         )
         .eq("startup_id", startupId)
         .order("due_date", { ascending: true });
 
-  const [types, members, goalsFirst, conditionsResult, filesResult, flowsResult] =
-    await Promise.all([
-      loadGoalTypes(supabase),
-      loadTeamMembers(supabase, startupId),
-      selectGoals(true),
+  const selectConditions = () =>
       supabase
         .from("startup_goal_conditions")
         .select(
           `id, subpoint_id, goal_type_id, min_count, proof_kind, counts_when, match_any_type, startup_id,
            goal_types(label),
-           startup_stages(stage_templates(key, title, position)),
-           stage_subpoints(title, position, stage_points(position, stage_categories(position))),
+           startup_stages(stage_templates(${tr}key, title, position)),
+           stage_subpoints(${tr}title, position, stage_points(position, stage_categories(position))),
            goal_condition_links(
              goal_id,
              goals(
@@ -230,7 +251,14 @@ export async function loadGoalsWorkspace(
              )
            )`
         )
-        .eq("startup_id", startupId),
+        .eq("startup_id", startupId);
+
+  const [types, members, goalsInitial, conditionsInitial, filesResult, flowsResult] =
+    await Promise.all([
+      loadGoalTypes(supabase),
+      loadTeamMembers(supabase, startupId),
+      selectGoals(true),
+      selectConditions(),
       supabase
         .from("startup_files")
         .select("id, name, storage_path, size_bytes")
@@ -242,6 +270,13 @@ export async function loadGoalsWorkspace(
         .eq("startup_id", startupId)
         .order("updated_at", { ascending: false }),
     ]);
+
+  let goalsFirst = goalsInitial;
+  let conditionsResult = conditionsInitial;
+  if (tr && (isMissingTranslations(goalsFirst.error?.message) || isMissingTranslations(conditionsResult.error?.message))) {
+    tr = "";
+    [goalsFirst, conditionsResult] = await Promise.all([selectGoals(true), selectConditions()]);
+  }
 
   let goalsResult = goalsFirst;
   if (goalsResult.error && goalsResult.error.message.includes("column")) {
@@ -323,12 +358,12 @@ export async function loadGoalsWorkspace(
         ids.add(goal.id);
       }
     }
-    const label = row.goal_types?.label ?? row.goal_type_id;
-    const subpoint = row.stage_subpoints?.title ?? "Podpunkt";
+    const label = goalTypeLabel(tg, row.goal_type_id, row.goal_types?.label);
+    const subpoint = localTitle(row.stage_subpoints, locale) ?? tg("lib.subpoint");
     const point = row.stage_subpoints?.stage_points;
     conditionDone.set(row.id, { done: ids.size, label, subpoint });
     conditions.push({
-      stageTitle: row.startup_stages?.stage_templates?.title ?? "Etap",
+      stageTitle: localTitle(row.startup_stages?.stage_templates, locale) ?? tg("lib.stage"),
       stageKey: row.startup_stages?.stage_templates?.key ?? null,
       stagePosition: row.startup_stages?.stage_templates?.position ?? 0,
       order:
@@ -379,7 +414,7 @@ export async function loadGoalsWorkspace(
       conditionsForGoal.push({
         id: condition.id,
         label: stats?.label ?? condition.goal_type_id,
-        subpointTitle: condition.stage_subpoints?.title ?? stats?.subpoint ?? "Podpunkt",
+        subpointTitle: localTitle(condition.stage_subpoints, locale) ?? stats?.subpoint ?? tg("lib.subpoint"),
         minCount: condition.min_count,
         done: stats?.done ?? 0,
         counts,
@@ -390,7 +425,7 @@ export async function loadGoalsWorkspace(
       id: task.id,
       title: task.title,
       ownerId: task.owner_id,
-      ownerName: nameOf(members, task.owner_id, task.profiles?.full_name),
+      ownerName: nameOf(tg, members, task.owner_id, task.profiles?.full_name),
       status: task.status,
       dueDate: task.due_date,
       needsReassign: task.needs_reassign,
@@ -420,7 +455,7 @@ export async function loadGoalsWorkspace(
         kind: event.kind,
         createdAt: event.created_at,
         actorName: event.actor_id
-          ? nameOf(members, event.actor_id)
+          ? nameOf(tg, members, event.actor_id)
           : null,
         payload: event.payload ?? {},
       }));
@@ -430,9 +465,9 @@ export async function loadGoalsWorkspace(
       title: row.title,
       description: row.description,
       goalTypeId: row.goal_type_id,
-      goalTypeLabel: row.goal_types?.label ?? row.goal_type_id,
+      goalTypeLabel: goalTypeLabel(tg, row.goal_type_id, row.goal_types?.label),
       ownerId: row.owner_id,
-      ownerName: nameOf(members, row.owner_id, row.profiles?.full_name),
+      ownerName: nameOf(tg, members, row.owner_id, row.profiles?.full_name),
       dueDate: row.due_date,
       status: row.status,
       proofRequirement: requirement,
@@ -487,6 +522,7 @@ export async function loadSubpointGoalConditions(
   startupStageId: string
 ): Promise<Map<string, SubpointGoalCondition[]>> {
   const map = new Map<string, SubpointGoalCondition[]>();
+  const tg = await getT("goals");
 
   const { error: ensureError } = await supabase.rpc("ensure_goal_condition_snapshots", {
     p_startup_id: startupId,
@@ -568,9 +604,9 @@ export async function loadSubpointGoalConditions(
       goalTypeId: row.goal_type_id,
       label: row.match_any_type
         ? countsWhen === "defined"
-          ? "Cel zapisany"
-          : "Cel ukończony"
-        : (row.goal_types?.label ?? row.goal_type_id),
+          ? tg("lib.anyGoalDefined")
+          : tg("lib.anyGoalCompleted")
+        : goalTypeLabel(tg, row.goal_type_id, row.goal_types?.label),
       minCount: row.min_count,
       done: ids.size,
       proofKind: row.proof_kind,
@@ -780,15 +816,7 @@ export type ActivityItem = {
 };
 
 // Bezosobowo: polszczyzna odmienia czasownik przez rodzaj, a my go nie znamy.
-const GOAL_EVENT_TEXT: Record<string, string> = {
-  created: "Nowy cel",
-  proof: "Cel ukończony z dowodem",
-  reopened: "Cel otwarty ponownie",
-  archived: "Cel zarchiwizowany",
-  deadline: "Nowy termin celu",
-  owner: "Nowy właściciel celu",
-  status: "Zmiana statusu celu",
-};
+// Teksty: słownik `goals`, `activity.goal.<kind>` (nieznany rodzaj → `activity.goalOther`).
 
 /**
  * Ostatnia aktywność zespołu — z prawdziwych zdarzeń: historii celów (025)
@@ -815,8 +843,9 @@ export async function loadTeamActivity(
       .limit(limit),
     loadTeamMembers(supabase, startupId),
   ]);
+  const tg = await getT("goals");
   const name = (id: string | null) =>
-    id ? (members.find((member) => member.id === id)?.name ?? "Była osoba z zespołu") : null;
+    id ? (members.find((member) => member.id === id)?.name ?? tg("lib.formerMember")) : null;
 
   type GoalRow = { id: string; kind: string; created_at: string; actor_id: string | null; goal_id: string; goals: { title: string } | null };
   type TaskRow = { id: string; kind: string; created_at: string; actor_id: string | null; task_id: string; tasks: { title: string } | null };
@@ -824,7 +853,10 @@ export async function loadTeamActivity(
   const items: ActivityItem[] = [
     ...((goalEvents.data ?? []) as unknown as GoalRow[]).map((row) => ({
       id: `g-${row.id}`,
-      text: `${GOAL_EVENT_TEXT[row.kind] ?? "Zmiana w celu"}: „${row.goals?.title ?? "cel"}”`,
+      text: tg("activity.line", {
+        event: tg.maybe(`activity.goal.${row.kind}`, tg("activity.goalOther")),
+        title: row.goals?.title ?? tg("activity.goalFallback"),
+      }),
       actorName: name(row.actor_id),
       createdAt: row.created_at,
       href: `/app/goals/${row.goal_id}`,
@@ -834,8 +866,8 @@ export async function loadTeamActivity(
       id: `t-${row.id}`,
       text:
         row.kind === "created"
-          ? `Nowe zadanie: „${row.tasks?.title ?? "zadanie"}”`
-          : `Zmiana w zadaniu: „${row.tasks?.title ?? "zadanie"}”`,
+          ? tg("activity.line", { event: tg("activity.taskCreated"), title: row.tasks?.title ?? tg("activity.taskFallback") })
+          : tg("activity.line", { event: tg("activity.taskOther"), title: row.tasks?.title ?? tg("activity.taskFallback") }),
       actorName: name(row.actor_id),
       createdAt: row.created_at,
       href: `/app/tasks?task=${row.task_id}`,

@@ -18,6 +18,9 @@ import type {
 } from "@/types/goals";
 import { notAMember, sessionExpired } from "@/lib/server-errors";
 
+import { getT } from "@/i18n/server";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
 type Result = { error: string | null; id?: string };
 
 function refresh() {
@@ -34,6 +37,7 @@ type Gate =
   | { ok: true; supabase: SupabaseClient; user: User; role: StartupRole };
 
 async function context(startupId: string): Promise<Gate> {
+  const t = await getT("goals");
   const supabase = await createClient();
   const {
     data: { user },
@@ -42,7 +46,7 @@ async function context(startupId: string): Promise<Gate> {
 
   const active = await getActiveStartupId();
   if (active && active !== startupId) {
-    return { ok: false, error: "Przełącz zespół i spróbuj ponownie." };
+    return { ok: false, error: t("actions.przelaczZespolISprobuj") };
   }
 
   const role = await getStartupRole(supabase, startupId, user.id);
@@ -51,10 +55,13 @@ async function context(startupId: string): Promise<Gate> {
   return { ok: true, supabase, user, role };
 }
 
-function cleanRequirement(input: ProofRequirement): { error: string } | { requirement: ProofRequirement } {
-  if (!isProofKind(input.kind)) return { error: "Wybierz, czym pokażesz ukończenie." };
+function cleanRequirement(
+  t: Translate<MessageKey<"goals">>,
+  input: ProofRequirement
+): { error: string } | { requirement: ProofRequirement } {
+  if (!isProofKind(input.kind)) return { error: t("actions.wybierzCzymPokazeszUkonczenie") };
   const label = input.label.trim();
-  if (label.length < 2) return { error: "Napisz, czego będzie dowodem. Na przykład: link do wersji testowej." };
+  if (label.length < 2) return { error: t("actions.napiszCzegoBedzieDowodem") };
 
   if (input.kind === "select") {
     const options = (input.options ?? [])
@@ -63,14 +70,14 @@ function cleanRequirement(input: ProofRequirement): { error: string } | { requir
         label: option.label.trim(),
       }))
       .filter((option) => option.value && option.label);
-    if (options.length < 2) return { error: "Lista wyboru potrzebuje co najmniej dwóch opcji." };
+    if (options.length < 2) return { error: t("actions.listaWyboruPotrzebujeCo") };
     return { requirement: { kind: "select", label, options } };
   }
 
   if (input.kind === "scale") {
     const min = input.min ?? 1;
     const max = input.max ?? 5;
-    if (min >= max) return { error: "Skala musi mieć początek niższy niż koniec." };
+    if (min >= max) return { error: t("actions.skalaMusiMiecPoczatek") };
     return { requirement: { kind: "scale", label, min, max } };
   }
 
@@ -114,15 +121,16 @@ export async function createGoal(input: {
   conditionId?: string | null;
   addAnother?: boolean;
 }): Promise<Result> {
+  const t = await getT("goals");
   const ctx = await context(input.startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { supabase, user, role } = ctx;
 
   const title = input.title.trim();
-  if (title.length < 3) return { error: "Napisz, co ma być gotowe. Jedno zdanie wystarczy." };
-  if (!input.dueDate) return { error: "Ustal termin. Da się go później zmienić." };
+  if (title.length < 3) return { error: t("actions.napiszCoMaByc") };
+  if (!input.dueDate) return { error: t("actions.ustalTerminDaSie") };
 
-  const built = cleanRequirement(input.proofRequirement);
+  const built = cleanRequirement(t, input.proofRequirement);
   if ("error" in built) return { error: built.error };
 
   let ownerId = input.ownerId || user.id;
@@ -141,7 +149,7 @@ export async function createGoal(input: {
       .eq("id", input.conditionId)
       .eq("startup_id", input.startupId)
       .maybeSingle();
-    if (!data) return { error: "Nie ma takiego warunku w tym startupie." };
+    if (!data) return { error: t("actions.nieMaTakiegoWarunku") };
     condition = data;
 
     if (!input.addAnother) {
@@ -160,9 +168,9 @@ export async function createGoal(input: {
   // „Wynik budowy” w podsumowaniu, „Własny cel” w bazie.
   const goalTypeId =
     condition && !condition.match_any_type ? condition.goal_type_id : input.goalTypeId;
-  if (!goalTypeId) return { error: "Wybierz typ celu." };
+  if (!goalTypeId) return { error: t("actions.wybierzTypCelu") };
   if (condition?.proof_kind && built.requirement.kind !== condition.proof_kind) {
-    return { error: "Ten punkt programu oczekuje innego formatu dowodu." };
+    return { error: t("actions.tenPunktProgramuOczekuje") };
   }
 
   const { data: created, error } = await supabase
@@ -211,24 +219,25 @@ export async function updateGoal(input: {
   note?: string | null;
   blockerNote?: string | null;
 }): Promise<Result> {
+  const t = await getT("goals");
   const ctx = await context(input.startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { supabase, user, role } = ctx;
 
   const goal = await loadGoal(supabase, input.startupId, input.goalId);
-  if (!goal) return { error: "Nie ma takiego celu." };
+  if (!goal) return { error: t("actions.nieMaTakiegoCelu") };
   if (!canChangeOwnWork(role, user.id, goal.owner_id)) {
-    return { error: "Ten cel prowadzi ktoś inny. Poproś Foundera albo Admina." };
+    return { error: t("actions.tenCelProwadziKtos") };
   }
   if (input.status === "completed") {
-    return { error: "Cel kończy się dowodem, nie samą zmianą statusu." };
+    return { error: t("actions.celKonczySieDowodem") };
   }
 
   const patch: Record<string, unknown> = {};
 
   if (input.title !== undefined) {
     const title = input.title.trim();
-    if (title.length < 3) return { error: "Tytuł jest za krótki." };
+    if (title.length < 3) return { error: t("actions.tytulJestZaKrotki") };
     patch.title = title;
   }
   if (input.description !== undefined) patch.description = input.description?.trim() || null;
@@ -238,13 +247,13 @@ export async function updateGoal(input: {
 
   if (input.ownerId) {
     if (input.ownerId !== goal.owner_id && !canAssignToOthers(role)) {
-      return { error: "Przypisać pracę komuś innemu może Founder albo Admin." };
+      return { error: t("actions.przypisacPraceKomusInnemu") };
     }
     patch.owner_id = input.ownerId;
   }
 
   if (input.proofRequirement) {
-    const built = cleanRequirement(input.proofRequirement);
+    const built = cleanRequirement(t, input.proofRequirement);
     if ("error" in built) return { error: built.error };
     patch.proof_requirement = built.requirement;
   }
@@ -253,7 +262,7 @@ export async function updateGoal(input: {
     patch.status = input.status;
     if (input.status === "blocked") {
       const note = (input.blockerNote ?? "").trim();
-      if (!note) return { error: "Napisz, co blokuje pracę." };
+      if (!note) return { error: t("actions.napiszCoBlokujePrace") };
       patch.blocker_note = note;
     }
   }
@@ -273,20 +282,21 @@ export async function completeGoal(input: {
   goalId: string;
   proof: ProofDraft;
 }): Promise<Result> {
+  const t = await getT("goals");
   const ctx = await context(input.startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { supabase, user, role } = ctx;
 
   const goal = await loadGoal(supabase, input.startupId, input.goalId);
-  if (!goal) return { error: "Nie ma takiego celu." };
-  if (goal.archived_at) return { error: "Zarchiwizowanego celu nie da się ukończyć." };
+  if (!goal) return { error: t("actions.nieMaTakiegoCelu") };
+  if (goal.archived_at) return { error: t("actions.zarchiwizowanegoCeluNieDa") };
   if (!canChangeOwnWork(role, user.id, goal.owner_id)) {
-    return { error: "Ten cel kończy osoba, która za niego odpowiada." };
+    return { error: t("actions.tenCelKonczyOsoba") };
   }
 
   const requirement = parseRequirement(goal.proof_requirement);
   if (input.proof.kind !== requirement.kind) {
-    return { error: "Dowód musi być w formacie ustalonym przy tworzeniu celu." };
+    return { error: t("actions.dowodMusiBycW") };
   }
 
   const snapshot = await buildSnapshot(supabase, input.startupId, user.id, requirement, input.proof);
@@ -317,6 +327,7 @@ async function buildSnapshot(
   requirement: ProofRequirement,
   proof: ProofDraft
 ): Promise<{ error: string } | { snapshot: ProofSnapshot }> {
+  const t = await getT("goals");
   const base = { kind: requirement.kind, captured_at: new Date().toISOString(), captured_by: userId };
 
   if (proof.kind === "sentence" || proof.kind === "long_text") {
@@ -336,26 +347,26 @@ async function buildSnapshot(
     const snapshot = { ...base, text: proof.text.trim(), ...(source ?? {}) };
     return proofMatches(requirement, snapshot)
       ? { snapshot }
-      : { error: proof.kind === "sentence" ? "Wpisz jedno zdanie, bez enteru." : "Opisz wynik." };
+      : { error: proof.kind === "sentence" ? t("actions.wpiszJednoZdanieBez") : t("actions.describeResult") };
   }
 
   if (proof.kind === "select") {
     const snapshot = { ...base, option: proof.option };
     return proofMatches(requirement, snapshot)
       ? { snapshot }
-      : { error: "Wybierz jedną z opcji." };
+      : { error: t("actions.wybierzJednaZOpcji") };
   }
 
   if (proof.kind === "scale") {
     const snapshot = { ...base, scale: proof.scale };
-    return proofMatches(requirement, snapshot) ? { snapshot } : { error: "Zaznacz wartość na skali." };
+    return proofMatches(requirement, snapshot) ? { snapshot } : { error: t("actions.zaznaczWartoscNaSkali") };
   }
 
   if (proof.kind === "link") {
     const snapshot = { ...base, url: proof.url.trim(), note: proof.note.trim() };
     return proofMatches(requirement, snapshot)
       ? { snapshot }
-      : { error: "Podaj adres zaczynający się od https oraz krótki opis, co tam jest." };
+      : { error: t("actions.podajAdresZaczynajacySie") };
   }
 
   if (proof.kind === "file") {
@@ -364,7 +375,7 @@ async function buildSnapshot(
     const snapshot = { ...base, file: file.file };
     return proofMatches(requirement, snapshot)
       ? { snapshot }
-      : { error: "Wybierz plik z tego startupu." };
+      : { error: t("actions.wybierzPlikZTego") };
   }
 
   if (proof.kind === "module_result") {
@@ -374,7 +385,7 @@ async function buildSnapshot(
       .eq("id", proof.workflowId)
       .eq("startup_id", startupId)
       .maybeSingle();
-    if (!flow) return { error: "Nie ma takiej Rozpiski w tym startupie." };
+    if (!flow) return { error: t("actions.nieMaTakiejRozpiski") };
 
     const { data: version } = await supabase
       .from("workflow_versions")
@@ -394,19 +405,19 @@ async function buildSnapshot(
     };
     return proofMatches(requirement, snapshot)
       ? { snapshot }
-      : { error: "Najpierw zapisz Rozpiskę." };
+      : { error: t("actions.najpierwZapiszRozpiske") };
   }
 
   if (proof.kind === "goal_set") {
     const ids = [...new Set(proof.goalIds)];
     const snapshot = { ...base, goal_ids: ids };
     if (!proofMatches(requirement, snapshot)) {
-      return { error: "Wskaż wystarczającą liczbę różnych celów." };
+      return { error: t("actions.wskazWystarczajacaLiczbeRoznych") };
     }
     return { snapshot };
   }
 
-  return { error: "Tego formatu dowodu nie da się tu zapisać." };
+  return { error: t("actions.tegoFormatuDowoduNie") };
 }
 
 async function resolveFile(
@@ -414,6 +425,7 @@ async function resolveFile(
   startupId: string,
   proof: Extract<ProofDraft, { kind: "file" }>
 ): Promise<{ error: string } | { file: { id: string | null; path: string; name: string; size: number } }> {
+  const t = await getT("goals");
   if (proof.fileId) {
     const { data } = await supabase
       .from("startup_files")
@@ -421,7 +433,7 @@ async function resolveFile(
       .eq("id", proof.fileId)
       .eq("startup_id", startupId)
       .maybeSingle();
-    if (!data) return { error: "Nie ma takiego pliku w bibliotece tego startupu." };
+    if (!data) return { error: t("actions.nieMaTakiegoPliku") };
     return {
       file: {
         id: data.id,
@@ -432,7 +444,7 @@ async function resolveFile(
     };
   }
 
-  if (!proof.path || !proof.name) return { error: "Wybierz plik." };
+  if (!proof.path || !proof.name) return { error: t("actions.wybierzPlik") };
   if (proof.path.split("/")[0] === startupId) {
     return {
       file: { id: null, path: proof.path, name: proof.name, size: proof.size ?? 0 },
@@ -445,7 +457,7 @@ async function resolveFile(
     .eq("startup_id", startupId);
   const stageIds = new Set((stages ?? []).map((stage) => stage.id as string));
   if (!stageIds.has(proof.path.split("/")[0] ?? "")) {
-    return { error: "Ten plik nie należy do tego startupu." };
+    return { error: t("actions.tenPlikNieNalezy") };
   }
   return {
     file: { id: null, path: proof.path, name: proof.name, size: proof.size ?? 0 },
@@ -453,14 +465,15 @@ async function resolveFile(
 }
 
 export async function reopenGoal(startupId: string, goalId: string): Promise<Result> {
+  const t = await getT("goals");
   const ctx = await context(startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { supabase, user, role } = ctx;
 
   const goal = await loadGoal(supabase, startupId, goalId);
-  if (!goal) return { error: "Nie ma takiego celu." };
+  if (!goal) return { error: t("actions.nieMaTakiegoCelu") };
   if (!canChangeOwnWork(role, user.id, goal.owner_id)) {
-    return { error: "Ten cel może otworzyć ponownie jego właściciel, Founder albo Admin." };
+    return { error: t("actions.tenCelMozeOtworzyc") };
   }
 
   const { error } = await supabase
@@ -474,14 +487,15 @@ export async function reopenGoal(startupId: string, goalId: string): Promise<Res
 }
 
 export async function archiveGoal(startupId: string, goalId: string): Promise<Result> {
+  const t = await getT("goals");
   const ctx = await context(startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { supabase, user, role } = ctx;
 
   const goal = await loadGoal(supabase, startupId, goalId);
-  if (!goal) return { error: "Nie ma takiego celu." };
+  if (!goal) return { error: t("actions.nieMaTakiegoCelu") };
   if (!canChangeOwnWork(role, user.id, goal.owner_id)) {
-    return { error: "Archiwizuje właściciel, Founder albo Admin." };
+    return { error: t("actions.archiwizujeWlascicielFounderAlbo") };
   }
 
   const { error } = await supabase
@@ -496,14 +510,15 @@ export async function archiveGoal(startupId: string, goalId: string): Promise<Re
 
 /** Przywrócenie z archiwum — cel wraca na listy i znów może się liczyć. */
 export async function unarchiveGoal(startupId: string, goalId: string): Promise<Result> {
+  const t = await getT("goals");
   const ctx = await context(startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { supabase, user, role } = ctx;
 
   const goal = await loadGoal(supabase, startupId, goalId);
-  if (!goal) return { error: "Nie ma takiego celu." };
+  if (!goal) return { error: t("actions.nieMaTakiegoCelu") };
   if (!canChangeOwnWork(role, user.id, goal.owner_id)) {
-    return { error: "Przywraca właściciel, Founder albo Admin." };
+    return { error: t("actions.przywracaWlascicielFounderAlbo") };
   }
 
   const { error } = await supabase.from("goals").update({ archived_at: null }).eq("id", goalId);
@@ -517,14 +532,15 @@ export async function linkGoal(
   goalId: string,
   conditionId: string
 ): Promise<Result> {
+  const t = await getT("goals");
   const ctx = await context(startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { supabase, user, role } = ctx;
 
   const goal = await loadGoal(supabase, startupId, goalId);
-  if (!goal) return { error: "Nie ma takiego celu." };
+  if (!goal) return { error: t("actions.nieMaTakiegoCelu") };
   if (!canAssignToOthers(role) && goal.owner_id !== user.id) {
-    return { error: "Podpiąć cudzy cel może Founder albo Admin. Własny — jego właściciel." };
+    return { error: t("actions.podpiacCudzyCelMoze") };
   }
 
   const { error } = await supabase.from("goal_condition_links").insert({
@@ -549,14 +565,15 @@ export async function unlinkGoal(
   goalId: string,
   conditionId: string
 ): Promise<Result> {
+  const t = await getT("goals");
   const ctx = await context(startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { supabase, user, role } = ctx;
 
   const goal = await loadGoal(supabase, startupId, goalId);
-  if (!goal) return { error: "Nie ma takiego celu." };
+  if (!goal) return { error: t("actions.nieMaTakiegoCelu") };
   if (!canAssignToOthers(role) && goal.owner_id !== user.id) {
-    return { error: "Odpiąć cudzy cel może Founder albo Admin." };
+    return { error: t("actions.odpiacCudzyCelMoze") };
   }
 
   const { error } = await supabase
@@ -577,20 +594,21 @@ export async function createTask(input: {
   ownerId: string;
   dueDate?: string | null;
 }): Promise<Result> {
+  const t = await getT("goals");
   const ctx = await context(input.startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { supabase, user, role } = ctx;
 
   const goal = await loadGoal(supabase, input.startupId, input.goalId);
-  if (!goal) return { error: "Najpierw wybierz cel, do którego należy zadanie." };
+  if (!goal) return { error: t("actions.najpierwWybierzCelDo") };
 
   const title = input.title.trim();
-  if (title.length < 2) return { error: "Napisz, co jest do zrobienia." };
+  if (title.length < 2) return { error: t("actions.napiszCoJestDo") };
 
   let ownerId = input.ownerId || user.id;
   if (!canAssignToOthers(role)) {
     if (!canChangeOwnWork(role, user.id, goal.owner_id) && ownerId !== user.id) {
-      return { error: "Możesz dodać zadanie sobie. Przypisanie komuś innemu zostaw Founderowi." };
+      return { error: t("actions.mozeszDodacZadanieSobie") };
     }
     ownerId = user.id;
   }
@@ -625,6 +643,7 @@ export async function updateTask(input: {
   note?: string | null;
   blockerNote?: string | null;
 }): Promise<Result> {
+  const t = await getT("goals");
   const ctx = await context(input.startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { supabase, user, role } = ctx;
@@ -636,15 +655,15 @@ export async function updateTask(input: {
     .eq("startup_id", input.startupId)
     .maybeSingle();
 
-  if (!task) return { error: "Nie ma takiego zadania." };
+  if (!task) return { error: t("actions.nieMaTakiegoZadania") };
   if (!canChangeOwnWork(role, user.id, task.owner_id)) {
-    return { error: "To zadanie należy do kogoś innego." };
+    return { error: t("actions.toZadanieNalezyDo") };
   }
 
   const patch: Record<string, unknown> = {};
   if (input.title !== undefined) {
     const title = input.title.trim();
-    if (title.length < 2) return { error: "Tytuł zadania jest za krótki." };
+    if (title.length < 2) return { error: t("actions.tytulZadaniaJestZa") };
     patch.title = title;
   }
   if (input.status) patch.status = input.status;
@@ -655,7 +674,7 @@ export async function updateTask(input: {
   }
   if (input.ownerId) {
     if (input.ownerId !== task.owner_id && !canAssignToOthers(role)) {
-      return { error: "Przypisać zadanie komuś innemu może Founder albo Admin." };
+      return { error: t("actions.przypisacZadanieKomusInnemu") };
     }
     patch.owner_id = input.ownerId;
   }
@@ -663,7 +682,7 @@ export async function updateTask(input: {
   const { error } = await supabase.from("tasks").update(patch).eq("id", task.id);
   if (error) {
     if (error.message.includes("note") && error.message.includes("column")) {
-      return { error: "Notatka i powód blokady zadania potrzebują migracji 029. Odpal ją w Supabase → SQL Editor." };
+      return { error: t("actions.notatkaIPowodBlokady") };
     }
     return { error: await translateDbError(error.message) };
   }
@@ -714,6 +733,7 @@ export async function loadTaskEvents(
  * Zadanie nie ma nic pod sobą, więc nie ma czego kaskadować ani sprzątać.
  */
 export async function deleteTask(startupId: string, taskId: string): Promise<Result> {
+  const t = await getT("goals");
   const ctx = await context(startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { supabase, user, role } = ctx;
@@ -725,13 +745,13 @@ export async function deleteTask(startupId: string, taskId: string): Promise<Res
     .eq("startup_id", startupId)
     .maybeSingle();
 
-  if (!task) return { error: "Nie ma takiego zadania." };
+  if (!task) return { error: t("actions.nieMaTakiegoZadania") };
   if (
     !canAssignToOthers(role) &&
     task.owner_id !== user.id &&
     task.created_by !== user.id
   ) {
-    return { error: "Usunąć cudze zadanie może Founder albo Admin." };
+    return { error: t("actions.usunacCudzeZadanieMoze") };
   }
 
   const { error } = await supabase.from("tasks").delete().eq("id", task.id);
@@ -748,16 +768,17 @@ export async function addGoalMaterial(input: {
   url?: string;
   fileId?: string;
 }): Promise<Result> {
+  const t = await getT("goals");
   const ctx = await context(input.startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { supabase, user } = ctx;
 
   const goal = await loadGoal(supabase, input.startupId, input.goalId);
-  if (!goal) return { error: "Nie ma takiego celu." };
+  if (!goal) return { error: t("actions.nieMaTakiegoCelu") };
 
   if (input.kind === "note") {
     const body = input.body?.trim() ?? "";
-    if (body.length < 1) return { error: "Notatka jest pusta." };
+    if (body.length < 1) return { error: t("actions.notatkaJestPusta") };
     const { error } = await supabase.from("goal_materials").insert({
       startup_id: input.startupId,
       goal_id: input.goalId,
@@ -768,7 +789,7 @@ export async function addGoalMaterial(input: {
     if (error) return { error: await translateDbError(error.message) };
   } else if (input.kind === "link") {
     const url = input.url?.trim() ?? "";
-    if (!/^https?:\/\/\S+$/i.test(url)) return { error: "Link musi zaczynać się od https." };
+    if (!/^https?:\/\/\S+$/i.test(url)) return { error: t("actions.linkMusiZaczynacSie") };
     const { error } = await supabase.from("goal_materials").insert({
       startup_id: input.startupId,
       goal_id: input.goalId,

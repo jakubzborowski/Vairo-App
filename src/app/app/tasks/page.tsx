@@ -5,8 +5,12 @@ import { loadGoalsWorkspace } from "@/lib/goals";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { TasksView } from "@/components/goals/tasks-view";
 import { GoalsUnavailable } from "@/components/goals/goals-unavailable";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Taski — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("goals");
+  return { title: t("meta.tasks") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function TasksPage({
@@ -14,6 +18,7 @@ export default async function TasksPage({
 }: {
   searchParams: Promise<{ task?: string }>;
 }) {
+  const t = await getT("goals");
   const { task } = await searchParams;
   const supabase = await createClient();
   const user = await getCurrentUser();
@@ -28,7 +33,7 @@ export default async function TasksPage({
 
   const workspace = await loadGoalsWorkspace(supabase, active.id);
   if (!workspace.ready || workspace.loadError) {
-    return <GoalsUnavailable missingMigration={!workspace.ready} title="Taski" href="/app/tasks" />;
+    return <GoalsUnavailable missingMigration={!workspace.ready} title={t("tasksView.title")} href="/app/tasks" />;
   }
 
   return (

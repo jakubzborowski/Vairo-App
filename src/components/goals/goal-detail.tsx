@@ -42,9 +42,8 @@ import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { canAssignToOthers, canChangeOwnWork, type StartupRole } from "@/types/startup";
 import {
-  GOAL_STATUS_LABELS,
+  GOAL_STATUSES,
   TASK_STATUSES,
-  TASK_STATUS_LABELS,
   type GoalItem,
   type GoalStatus,
   type GoalTypeOption,
@@ -56,17 +55,14 @@ import {
   type WorkflowPick,
 } from "@/types/goals";
 import { GoalEditForm } from "./goal-edit-form";
-import {
-  allTasksDone,
-  formatDay,
-  formatDayLong,
-  formatMoment,
-  plural,
-  proofKindWord,
-} from "./goal-format";
+import { allTasksDone, plural } from "./goal-format";
 import { ProofModal } from "./proof-modal";
 import { StatusBadge, StatusIcon, StatusTriggerContent } from "./status";
 
+import { useT } from "@/i18n/client";
+import { useGoalFormat } from "@/components/goals/goal-format-hook";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
 type Result = { error: string | null; id?: string };
 
 /** Statusy, które da się ustawić ręcznie. „Ukończony" daje tylko dowód. */
@@ -106,6 +102,8 @@ export function GoalDetail({
   userId: string;
   role: StartupRole;
 }) {
+  const { formatDay } = useGoalFormat();
+  const t = useT("goals");
   const { toast } = useToast();
   const [pending, start] = useTransition();
   const [editing, setEditing] = useState(false);
@@ -134,7 +132,7 @@ export function GoalDetail({
     start(async () => {
       const result = await work();
       if (result.error) {
-        toast({ tone: "error", title: "Nie udało się zapisać", description: result.error });
+        toast({ tone: "error", title: t("detail.nieUdaloSieZapisac"), description: result.error });
         return;
       }
       toast({ title: success });
@@ -151,7 +149,7 @@ export function GoalDetail({
     }
     run(
       () => updateGoal({ startupId, goalId: goal.id, status }),
-      `Status: ${GOAL_STATUS_LABELS[status]}`
+      t("detail.statusToast", { status: t(`goalStatus.${status}`) })
     );
   };
 
@@ -166,14 +164,13 @@ export function GoalDetail({
         className="inline-flex min-h-11 items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white sm:min-h-0"
       >
         <ArrowLeft className="size-3.5" aria-hidden="true" />
-        Cele
+        {t("detail.cele")}
       </Link>
 
       {!editable && !archived ? (
         <p className="mt-3 flex items-start gap-2 rounded-xl border border-white/[0.08] bg-[var(--surface)] px-4 py-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
           <Lock className="mt-0.5 size-3.5 shrink-0 text-[var(--text-subtle)]" aria-hidden="true" />
-          Tylko do odczytu. Ten cel zmienia {goal.ownerName}, Founder albo Admin. Własne
-          zadania możesz prowadzić normalnie.
+          {t("detail.tylkoDoOdczytuTen", { ownerName: goal.ownerName })}
         </p>
       ) : null}
 
@@ -181,17 +178,16 @@ export function GoalDetail({
         <p className="mt-3 flex items-start gap-2 rounded-xl border border-white/[0.08] bg-[var(--surface)] px-4 py-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
           <Archive className="mt-0.5 size-3.5 shrink-0 text-[var(--text-subtle)]" aria-hidden="true" />
           <span className="min-w-0 flex-1">
-            Zarchiwizowany {formatDay(goal.archivedAt)}. Nie liczy się do etapu, dopóki go
-            nie przywrócisz.
+            {t("detail.zarchiwizowanyArchivedatNieLiczy", { archivedAt: formatDay(goal.archivedAt) })}
           </span>
           {owns ? (
             <Button
               size="sm"
               variant="secondary"
               loading={pending}
-              onClick={() => run(() => unarchiveGoal(startupId, goal.id), "Cel przywrócony")}
+              onClick={() => run(() => unarchiveGoal(startupId, goal.id), t("detail.celPrzywrocony"))}
             >
-              Przywróć
+              {t("detail.przywroc")}
             </Button>
           ) : null}
         </p>
@@ -208,14 +204,14 @@ export function GoalDetail({
                 variant="secondary"
                 size="sm"
                 disabled={!editable}
-                title={editable ? undefined : "Edytować cudzy cel może Founder albo Admin."}
+                title={editable ? undefined : t("detail.edytowacCudzyCelMoze")}
                 onClick={() => setEditing(true)}
               >
                 {editable ? <Pencil className="size-3.5" /> : <Lock className="size-3.5" />}
-                Edytuj
+                {t("detail.edytuj")}
               </Button>
             ) : null}
-            <Menu label="Więcej akcji">
+            <Menu label={t("detail.wiecejAkcji")}>
               {(close) => (
                 <>
                   {editable && linkable.length > 0 ? (
@@ -226,7 +222,7 @@ export function GoalDetail({
                         setLinkOpen(true);
                       }}
                     >
-                      Podepnij do warunku etapu
+                      {t("detail.podepnijDoWarunkuEtapu")}
                     </MenuItem>
                   ) : null}
                   <MenuItem
@@ -235,28 +231,28 @@ export function GoalDetail({
                       close();
                       void navigator.clipboard
                         ?.writeText(window.location.href)
-                        .then(() => toast({ title: "Link do celu skopiowany" }))
+                        .then(() => toast({ title: t("detail.linkDoCeluSkopiowany") }))
                         .catch(() =>
                           toast({
                             tone: "error",
-                            title: "Nie udało się skopiować linku",
-                            description: "Skopiuj adres z paska przeglądarki.",
+                            title: t("detail.nieUdaloSieSkopiowac"),
+                            description: t("detail.skopiujAdresZPaska"),
                           })
                         );
                     }}
                   >
-                    Kopiuj link do celu
+                    {t("detail.kopiujLinkDoCelu")}
                   </MenuItem>
                   {completed && editable ? (
                     <MenuItem
                       icon={RotateCcw}
-                      hint="Wraca do pracy. Dowód zostaje, ale cel przestaje się liczyć, dopóki znów go nie ukończycie."
+                      hint={t("detail.wracaDoPracyDowod")}
                       onClick={() => {
                         close();
-                        run(() => reopenGoal(startupId, goal.id), "Cel otwarty ponownie");
+                        run(() => reopenGoal(startupId, goal.id), t("detail.celOtwartyPonownie"));
                       }}
                     >
-                      Otwórz ponownie
+                      {t("detail.otworzPonownie")}
                     </MenuItem>
                   ) : null}
                   {editable ? (
@@ -265,13 +261,13 @@ export function GoalDetail({
                       <MenuItem
                         icon={Archive}
                         tone="danger"
-                        hint="Zniknie z listy i przestanie liczyć się do etapu."
+                        hint={t("detail.zniknieZListyI")}
                         onClick={() => {
                           close();
                           setArchiveOpen(true);
                         }}
                       >
-                        Archiwizuj
+                        {t("detail.archive")}
                       </MenuItem>
                     </>
                   ) : null}
@@ -292,7 +288,7 @@ export function GoalDetail({
           onStatus={setStatus}
           onLink={() => setLinkOpen(true)}
           onUnlink={(conditionId) =>
-            run(() => unlinkGoal(startupId, goal.id, conditionId), "Cel odpięty od warunku")
+            run(() => unlinkGoal(startupId, goal.id, conditionId), t("detail.celOdpietyOdWarunku"))
           }
         />
       ) : null}
@@ -311,9 +307,9 @@ export function GoalDetail({
         <div className="mt-6 flex flex-col gap-4">
           {goal.needsReassign ? (
             <Notice tone="danger">
-              Poprzednia osoba odeszła z zespołu. {canAssign
-                ? "Wskaż nowego właściciela w „Edytuj”."
-                : "Nowego właściciela wskaże Founder albo Admin."}
+              {t("detail.poprzedniaOsobaOdeszlaZ")}{" "}{canAssign
+                ? t("detail.wskazNowegoWlascicielaW")
+                : t("detail.nowegoWlascicielaWskazeFounder")}
             </Notice>
           ) : null}
 
@@ -323,7 +319,7 @@ export function GoalDetail({
                 <OctagonAlert className="mt-0.5 size-5 shrink-0 text-[var(--danger)]" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <p className="text-[15px] font-medium text-white">
-                    {goal.blockerNote || "Nie opisano, co blokuje pracę."}
+                    {goal.blockerNote || t("detail.nieOpisanoCoBlokuje")}
                   </p>
                   {blockedEvent ? (
                     <p className="mt-1 text-[12.5px] text-[var(--text-subtle)]">
@@ -350,7 +346,7 @@ export function GoalDetail({
                       )
                     }
                   >
-                    Wznów pracę
+                    {t("detail.wznowPrace")}
                   </Button>
                 ) : null}
               </div>
@@ -414,11 +410,11 @@ export function GoalDetail({
               }
               setProofOpen(false);
               toast({
-                title: "Cel ukończony",
+                title: t("detail.celUkonczony"),
                 description:
                   goal.conditions.length > 0
-                    ? "Dowód zapisany. Cel liczy się teraz do etapu."
-                    : "Dowód zapisany jako kopia.",
+                    ? t("detail.dowodZapisanyCelLiczy")
+                    : t("detail.dowodZapisanyJakoKopia"),
               });
             });
           }}
@@ -445,7 +441,7 @@ export function GoalDetail({
                 return;
               }
               setBlockOpen(false);
-              toast({ title: "Status: Zablokowany", description: note });
+              toast({ title: t("detail.statusZablokowany"), description: note });
             });
           }}
         />
@@ -453,8 +449,8 @@ export function GoalDetail({
 
       {linkOpen ? (
         <Modal
-          title="Podepnij do warunku etapu"
-          description={`Cel typu ${goal.goalTypeLabel} pasuje do tych warunków.`}
+          title={t("detail.podepnijDoWarunkuEtapu")}
+          description={t("detail.celTypuGoaltypelabelPasuje", { goalTypeLabel: goal.goalTypeLabel })}
           onClose={() => setLinkOpen(false)}
         >
           <ul className="flex flex-col gap-2">
@@ -466,7 +462,7 @@ export function GoalDetail({
                   onClick={() =>
                     run(
                       () => linkGoal(startupId, goal.id, condition.id),
-                      "Cel podpięty",
+                      t("detail.celPodpiety"),
                       () => setLinkOpen(false)
                     )
                   }
@@ -474,28 +470,27 @@ export function GoalDetail({
                 >
                   <span className="text-[14px] font-medium text-white">{condition.subpointTitle}</span>
                   <span className="mt-0.5 text-[12.5px] text-[var(--text-subtle)]">
-                    {condition.stageTitle} · {condition.done} z {condition.minCount}{" "}
-                    {plural(condition.minCount, "celu", "celów", "celów")} gotowe
+                    {condition.stageTitle} · {t("detail.conditionProgress", { done: condition.done, count: condition.minCount })}
                   </span>
                 </button>
               </li>
             ))}
           </ul>
           <p className="text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-            Podpięty cel zacznie się liczyć do etapu, gdy będzie ukończony z dowodem.
+            {t("detail.podpietyCelZacznieSie")}
           </p>
         </Modal>
       ) : null}
 
       {archiveOpen ? (
         <Modal
-          title="Zarchiwizować ten cel?"
-          description="Zniknie z list i przestanie liczyć się do etapu. Znajdziesz go pod „Pokaż zarchiwizowane” i stamtąd przywrócisz."
+          title={t("detail.zarchiwizowacTenCel")}
+          description={t("detail.zniknieZListI")}
           onClose={() => setArchiveOpen(false)}
           footer={
             <>
               <Button variant="ghost" onClick={() => setArchiveOpen(false)}>
-                Zostaw
+                {t("detail.keep")}
               </Button>
               <Button
                 variant="danger"
@@ -503,12 +498,12 @@ export function GoalDetail({
                 onClick={() =>
                   run(
                     () => archiveGoal(startupId, goal.id),
-                    "Cel zarchiwizowany",
+                    t("detail.celZarchiwizowany"),
                     () => setArchiveOpen(false)
                   )
                 }
               >
-                Archiwizuj
+                {t("detail.archive")}
               </Button>
             </>
           }
@@ -542,6 +537,8 @@ function Facts({
   onLink: () => void;
   onUnlink: (conditionId: string) => void;
 }) {
+  const { formatDay, formatDayLong } = useGoalFormat();
+  const t = useT("goals");
   const completed = goal.status === "completed";
   return (
     <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13.5px] text-[var(--text-muted)]">
@@ -552,7 +549,7 @@ function Facts({
 
       {editable && !completed ? (
         <Menu
-          label={`Status: ${GOAL_STATUS_LABELS[goal.status]}. Zmień`}
+          label={t("detail.statusChange", { status: t(`goalStatus.${goal.status}`) })}
           align="left"
           disabled={pending}
           trigger={<StatusTriggerContent status={goal.status} />}
@@ -569,16 +566,16 @@ function Facts({
                 >
                   <span className="inline-flex items-center gap-2">
                     <StatusIcon status={status} className="size-4" />
-                    {GOAL_STATUS_LABELS[status]}
+                    {t(`goalStatus.${status}`)}
                     {status === goal.status ? (
-                      <span className="text-[12px] text-[var(--text-subtle)]">· teraz</span>
+                      <span className="text-[12px] text-[var(--text-subtle)]">{t("detail.teraz")}</span>
                     ) : null}
                   </span>
                 </MenuItem>
               ))}
               <MenuSeparator />
               <p className="px-3.5 py-2 text-[12px] leading-snug text-[var(--text-subtle)]">
-                „Ukończony” ustawia dowód, nie lista.
+                {t("detail.ukonczonyUstawiaDowodNie")}
               </p>
             </>
           )}
@@ -589,12 +586,12 @@ function Facts({
 
       <span className={cn(goal.overdue && "font-medium text-[var(--warning)]")}>
         {completed
-          ? `Ukończony ${formatDay(goal.completedAt)}${
-              goal.completedAt && goal.completedAt.slice(0, 10) <= goal.dueDate ? ", w terminie" : ""
-            }`
+          ? goal.completedAt && goal.completedAt.slice(0, 10) <= goal.dueDate
+            ? t("detail.completedOnTime", { date: formatDay(goal.completedAt) })
+            : t("detail.completedOn", { date: formatDay(goal.completedAt) })
           : goal.overdue
-            ? `Termin minął ${formatDay(goal.dueDate)}`
-            : `do ${formatDayLong(goal.dueDate)}`}
+            ? t("detail.overdueSince", { date: formatDay(goal.dueDate) })
+            : t("detail.dueBy", { date: formatDayLong(goal.dueDate) })}
       </span>
 
       <span>{goal.goalTypeLabel}</span>
@@ -603,7 +600,7 @@ function Facts({
         goal.conditions.map((condition) => (
           <span key={condition.id} className="inline-flex items-center gap-1.5">
             <span className={cn(condition.counts ? "text-[var(--success)]" : "text-[var(--text-muted)]")}>
-              {condition.counts ? "Liczy się do:" : "Podpięty do:"}{" "}
+              {condition.counts ? t("detail.liczySieDo") : t("detail.podpietyDo")}{" "}
               {(() => {
                 // Z karty celu da się wrócić do podpunktu, któremu służy.
                 const source = conditions.find((item) => item.id === condition.id);
@@ -624,8 +621,8 @@ function Facts({
                 type="button"
                 onClick={() => onUnlink(condition.id)}
                 disabled={pending}
-                aria-label={`Odepnij od: ${condition.subpointTitle}`}
-                title="Odepnij od warunku"
+                aria-label={t("detail.odepnijOdSubpointtitle", { subpointTitle: condition.subpointTitle })}
+                title={t("detail.odepnijOdWarunku")}
                 className="inline-flex size-6 items-center justify-center rounded-md text-[var(--text-subtle)] hover:bg-white/[0.06] hover:text-white"
               >
                 <X className="size-3.5" />
@@ -635,7 +632,7 @@ function Facts({
         ))
       ) : (
         <span>
-          Nie liczy się jeszcze do etapu
+          {t("detail.nieLiczySieJeszcze")}
           {canLink ? (
             <>
               {" · "}
@@ -644,7 +641,7 @@ function Facts({
                 onClick={onLink}
                 className="font-medium text-white underline decoration-white/30 underline-offset-4 hover:decoration-white"
               >
-                Podepnij
+                {t("detail.link")}
               </button>
             </>
           ) : null}
@@ -677,37 +674,39 @@ function NextMove({
   editable: boolean;
   onProof: () => void;
 }) {
+  const { proofKindWord } = useGoalFormat();
+  const t = useT("goals");
   return (
     <section className="edge-accent topo overflow-hidden rounded-[22px] border border-[var(--vairo)]/25 bg-[var(--vairo)]/[0.06] p-5 sm:p-6">
       <h2 className="font-heading text-[1.3rem] font-semibold leading-snug text-white">
-        Dodaj dowód, żeby ukończyć cel
+        {t("detail.dodajDowodZebyUkonczyc")}
       </h2>
       <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-[var(--text-muted)]">
-        {goal.overdue ? "Termin minął, ale dowód dodany teraz nadal się liczy. " : ""}
+        {goal.overdue ? t("detail.terminMinalAleDowod") : ""}
         {allTasksDone(goal)
-          ? "Zadania są zrobione — brakuje już tylko dowodu."
-          : "Zadania nie muszą być skończone — cel kończy wynik."}
+          ? t("detail.zadaniaSaZrobioneBrakuje")
+          : t("detail.zadaniaNieMuszaByc")}
       </p>
       <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-white/[0.07] bg-[var(--bg)]/60 p-4 sm:flex-row sm:items-center">
         <div className="min-w-0 flex-1">
           <p className="text-[12px] text-[var(--text-subtle)]">
-            Czego oczekujecie · {proofKindWord(goal.proofRequirement.kind)}
+            {t("detail.czegoOczekujecieKind", { kind: proofKindWord(goal.proofRequirement.kind) })}
           </p>
           <p className="mt-0.5 text-[14.5px] text-white">{goal.proofRequirement.label}</p>
         </div>
         {editable ? (
           <Button onClick={onProof} className="w-full sm:w-auto">
             <Plus className="size-4" />
-            Dodaj dowód
+            {t("detail.dodajDowod")}
           </Button>
         ) : (
           <div className="flex flex-col gap-1 sm:items-end">
             <Button disabled variant="secondary" className="w-full sm:w-auto">
               <Lock className="size-4" />
-              Dodaj dowód
+              {t("detail.dodajDowod")}
             </Button>
             <span className="text-[12px] text-[var(--text-subtle)]">
-              Dowód dodaje {goal.ownerName}, Founder albo Admin.
+              {t("detail.dowodDodajeOwnernameFounder", { ownerName: goal.ownerName })}
             </span>
           </div>
         )}
@@ -718,22 +717,24 @@ function NextMove({
 
 /** Ukończenie to chwila, którą widać: zielona karta i dowód jako cytat. */
 function Achieved({ goal }: { goal: GoalItem }) {
+  const { formatMoment } = useGoalFormat();
+  const t = useT("goals");
   const snap = goal.proofSnapshot;
   return (
     <section className="rounded-[22px] border border-[var(--success)]/25 bg-[var(--success)]/[0.07] p-5 sm:p-6">
       <p className="inline-flex items-center gap-2 text-[13px] font-semibold text-[var(--success)]">
         <CircleCheck className="size-4" aria-hidden="true" />
-        Cel osiągnięty
+        {t("detail.celOsiagniety")}
       </p>
-      <p className="mt-3 text-[12px] text-[var(--text-subtle)]">Wasz dowód</p>
+      <p className="mt-3 text-[12px] text-[var(--text-subtle)]">{t("detail.waszDowod")}</p>
       <ProofValue goal={goal} />
       {snap?.captured_at ? (
         <p className="mt-2 text-[12.5px] text-[var(--text-subtle)]">
-          Zatwierdzona kopia · {formatMoment(snap.captured_at)}
+          {t("detail.zatwierdzonaKopiaCapturedAt", { captured_at: formatMoment(snap.captured_at) })}
         </p>
       ) : null}
       <p className="mt-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
-        Oczekiwanie było: {goal.proofRequirement.label}
+        {t("detail.oczekiwanieByloLabel", { label: goal.proofRequirement.label })}
       </p>
       {goal.conditions.some((condition) => condition.counts) ? (
         <div className="mt-4 border-t border-white/[0.07] pt-3">
@@ -741,7 +742,7 @@ function Achieved({ goal }: { goal: GoalItem }) {
             .filter((condition) => condition.counts)
             .map((condition) => (
               <p key={condition.id} className="text-[13.5px] text-white">
-                Liczy się do etapu: {condition.subpointTitle}
+                {t("detail.liczySieDoEtapu", { subpointTitle: condition.subpointTitle })}
                 <span className="text-[var(--text-subtle)]">
                   {" "}
                   · {condition.done} z {condition.minCount}
@@ -755,9 +756,10 @@ function Achieved({ goal }: { goal: GoalItem }) {
 }
 
 function ProofValue({ goal }: { goal: GoalItem }) {
+  const t = useT("goals");
   const snap = goal.proofSnapshot;
   if (!snap) {
-    return <p className="mt-1 text-[14px] text-[var(--text-muted)]">Brak zapisanego dowodu.</p>;
+    return <p className="mt-1 text-[14px] text-[var(--text-muted)]">{t("detail.brakZapisanegoDowodu")}</p>;
   }
   if (snap.url) {
     return (
@@ -786,7 +788,7 @@ function ProofValue({ goal }: { goal: GoalItem }) {
             ? `${snap.scale} z ${goal.proofRequirement.max ?? 5}`
             : snap.goal_ids
               ? `${snap.goal_ids.length} ${plural(snap.goal_ids.length, "ukończony cel", "ukończone cele", "ukończonych celów")}`
-              : "Dowód zapisany.";
+              : t("detail.dowodZapisany");
   return <p className="mt-1 whitespace-pre-line text-[15px] leading-relaxed text-white">{text}</p>;
 }
 
@@ -809,6 +811,8 @@ function Tasks({
   run: (work: () => Promise<Result>, success: string, after?: () => void) => void;
   pending: boolean;
 }) {
+  const { formatDay } = useGoalFormat();
+  const t = useT("goals");
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState<string | null>(null);
@@ -819,7 +823,7 @@ function Tasks({
 
   const add = () => {
     if (title.trim().length < 2) {
-      setTitleError("Napisz, co jest do zrobienia.");
+      setTitleError(t("detail.napiszCoJestDo"));
       return;
     }
     const value = title.trim();
@@ -831,7 +835,7 @@ function Tasks({
           title: value,
           ownerId: canAssign ? goal.ownerId || userId : userId,
         }),
-      "Zadanie dodane",
+      t("detail.zadanieDodane"),
       () => {
         setTitle("");
         setTitleError(null);
@@ -845,7 +849,7 @@ function Tasks({
       className="scroll-mt-6 rounded-[18px] border border-white/[0.07] bg-[var(--surface)] p-4 lift-1 sm:p-5"
     >
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <h2 className="font-heading text-[15px] font-semibold text-white">Zadania</h2>
+        <h2 className="font-heading text-[15px] font-semibold text-white">{t("detail.zadania")}</h2>
         {total > 0 ? (
           <>
             <span className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10" aria-hidden="true">
@@ -855,7 +859,7 @@ function Tasks({
               />
             </span>
             <span className="tabular text-[12.5px] text-[var(--text-subtle)]">
-              {done} z {total} zrobione
+              {t("detail.doneZTotalZrobione", { done, total })}
             </span>
           </>
         ) : null}
@@ -863,8 +867,7 @@ function Tasks({
 
       {total === 0 ? (
         <p className="mt-2 text-[13px] leading-relaxed text-[var(--text-subtle)]">
-          Rozpisz, co trzeba zrobić, żeby dojść do wyniku. Zadania pomagają — cel i tak
-          kończy dowód.
+          {t("detail.rozpiszCoTrzebaZrobic")}
         </p>
       ) : (
         <ul className="mt-3 flex flex-col">
@@ -878,7 +881,7 @@ function Tasks({
               >
                 {canChange ? (
                   <Menu
-                    label={`Status zadania: ${TASK_STATUS_LABELS[task.status]}. Zmień`}
+                    label={t("detail.taskStatusChange", { status: t(`taskStatus.${task.status}`) })}
                     align="left"
                     disabled={pending}
                     triggerClassName="size-9 justify-center sm:size-8"
@@ -898,20 +901,20 @@ function Tasks({
                                   taskId: task.id,
                                   status: status as TaskStatus,
                                 }),
-                              `Zadanie: ${TASK_STATUS_LABELS[status].toLowerCase()}`
+                              t("detail.taskToast", { status: t(`taskStatus.${status}`).toLowerCase() })
                             );
                           }}
                         >
                           <span className="inline-flex items-center gap-2">
                             <StatusIcon status={status} task className="size-4" />
-                            {TASK_STATUS_LABELS[status]}
+                            {t(`taskStatus.${status}`)}
                           </span>
                         </MenuItem>
                       ))
                     }
                   </Menu>
                 ) : (
-                  <span className="inline-flex size-9 items-center justify-center sm:size-8" title={TASK_STATUS_LABELS[task.status]}>
+                  <span className="inline-flex size-9 items-center justify-center sm:size-8" title={t(`taskStatus.${task.status}`)}>
                     <StatusIcon status={task.status} task />
                   </span>
                 )}
@@ -926,7 +929,7 @@ function Tasks({
                   </span>
                   {task.needsReassign ? (
                     <span className="block text-[12px] text-[var(--danger-text)]">
-                      Osoba odeszła z zespołu — zadanie czeka na przypisanie.
+                      {t("detail.osobaOdeszlaZZespolu")}
                     </span>
                   ) : null}
                 </span>
@@ -942,7 +945,7 @@ function Tasks({
 
       {total > 0 && done === total && goal.status !== "completed" ? (
         <p className="mt-2 text-[12.5px] text-[var(--text-subtle)]">
-          Zadania są zrobione. Cel i tak czeka na dowód.
+          {t("detail.zadaniaSaZrobioneCel")}
         </p>
       ) : null}
 
@@ -959,7 +962,7 @@ function Tasks({
               <Input
                 id={id}
                 aria-invalid={invalid}
-                aria-label="Nowe zadanie"
+                aria-label={t("detail.noweZadanie")}
                 autoFocus
                 value={title}
                 maxLength={200}
@@ -967,16 +970,16 @@ function Tasks({
                 onKeyDown={(event) => {
                   if (event.key === "Escape") setAdding(false);
                 }}
-                placeholder="Co jest do zrobienia?"
+                placeholder={t("detail.coJestDoZrobienia")}
               />
             )}
           </Field>
           <div className="flex gap-2">
             <Button type="submit" variant="secondary" loading={pending}>
-              Dodaj
+              {t("detail.dodaj")}
             </Button>
             <Button type="button" variant="ghost" onClick={() => setAdding(false)}>
-              Anuluj
+              {t("detail.anuluj")}
             </Button>
           </div>
         </form>
@@ -989,7 +992,7 @@ function Tasks({
           <span className="inline-flex size-5 items-center justify-center rounded-full border border-dashed border-white/25">
             <Plus className="size-3" aria-hidden="true" />
           </span>
-          {ownGoal || canAssign ? "Dodaj zadanie" : "Dodaj sobie zadanie"}
+          {ownGoal || canAssign ? t("detail.dodajZadanie") : t("detail.dodajSobieZadanie")}
         </button>
       )}
     </section>
@@ -1015,6 +1018,7 @@ function Materials({
   run: (work: () => Promise<Result>, success: string, after?: () => void) => void;
   pending: boolean;
 }) {
+  const t = useT("goals");
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<MaterialKind>("note");
   const [value, setValue] = useState("");
@@ -1030,7 +1034,7 @@ function Materials({
           : kind === "link"
             ? addGoalMaterial({ startupId, goalId: goal.id, kind, url: body })
             : addGoalMaterial({ startupId, goalId: goal.id, kind, body }),
-      "Materiał dodany",
+      t("detail.materialDodany"),
       () => setValue("")
     );
   };
@@ -1038,18 +1042,17 @@ function Materials({
   return (
     <Collapsible
       icon={Paperclip}
-      title="Materiały robocze"
+      title={t("detail.materialyRobocze")}
       summary={
         count > 0
           ? `${count} ${plural(count, "materiał", "materiały", "materiałów")}`
-          : "Notatki, linki i pliki po drodze"
+          : t("detail.notatkiLinkiIPliki")
       }
       open={open}
       onToggle={() => setOpen((value) => !value)}
     >
       <p className="text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-        Wszystko, co powstaje po drodze. To jeszcze nie dowód — dowód zatwierdza się
-        wyżej i zostaje jako osobna kopia.
+        {t("detail.wszystkoCoPowstajePo")}
       </p>
       {count > 0 ? (
         <ul className="mt-3 flex flex-col gap-1.5">
@@ -1078,9 +1081,9 @@ function Materials({
                   <button
                     type="button"
                     disabled={pending}
-                    aria-label="Usuń materiał"
+                    aria-label={t("detail.usunMaterial")}
                     onClick={() =>
-                      run(() => removeGoalMaterial(startupId, item.id), "Materiał usunięty")
+                      run(() => removeGoalMaterial(startupId, item.id), t("detail.materialUsuniety"))
                     }
                     className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-[var(--text-subtle)] hover:bg-white/[0.06] hover:text-white"
                   >
@@ -1095,12 +1098,12 @@ function Materials({
 
       {editable ? (
         <div className="mt-3 flex flex-col gap-2">
-          <div role="radiogroup" aria-label="Rodzaj materiału" className="inline-flex w-fit rounded-lg bg-[var(--surface-2)] p-0.5">
+          <div role="radiogroup" aria-label={t("detail.rodzajMaterialu")} className="inline-flex w-fit rounded-lg bg-[var(--surface-2)] p-0.5">
             {(
               [
-                ["note", "Notatka"],
+                ["note", t("detail.notatka")],
                 ["link", "Link"],
-                ["file", "Plik"],
+                ["file", t("detail.plik")],
               ] as const
             ).map(([id, label]) => (
               <button
@@ -1121,26 +1124,26 @@ function Materials({
           {kind === "file" ? (
             files.length > 0 ? (
               <MenuSelect
-                ariaLabel="Plik z biblioteki"
+                ariaLabel={t("detail.plikZBiblioteki")}
                 value={fileId}
                 onChange={setFileId}
                 options={files.map((file) => ({ value: file.id, label: file.name }))}
               />
             ) : (
               <p className="text-[12.5px] text-[var(--text-subtle)]">
-                Biblioteka jest pusta. Pliki dodasz w{" "}
+                {t("detail.bibliotekaJestPustaPliki")}
                 <Link href="/app/files" className="text-white underline underline-offset-4">
-                  Plikach
+                  {t("detail.inFiles")}
                 </Link>
                 .
               </p>
             )
           ) : (
             <Input
-              aria-label={kind === "link" ? "Adres" : "Notatka"}
+              aria-label={kind === "link" ? "Adres" : t("detail.notatka")}
               value={value}
               inputMode={kind === "link" ? "url" : undefined}
-              placeholder={kind === "link" ? "https://" : "Krótka notatka"}
+              placeholder={kind === "link" ? "https://" : t("detail.krotkaNotatka")}
               onChange={(event) => setValue(event.target.value)}
             />
           )}
@@ -1152,7 +1155,7 @@ function Materials({
             disabled={kind === "file" && files.length === 0}
             onClick={add}
           >
-            Dodaj materiał
+            {t("detail.dodajMaterial")}
           </Button>
         </div>
       ) : null}
@@ -1161,18 +1164,20 @@ function Materials({
 }
 
 function Timeline({ goal }: { goal: GoalItem }) {
+  const { formatDay, formatDayLong, formatMoment } = useGoalFormat();
+  const t = useT("goals");
   const [open, setOpen] = useState(false);
   const last = goal.events[0];
   return (
     <Collapsible
       icon={History}
-      title={`Historia · ${goal.events.length} ${plural(goal.events.length, "wpis", "wpisy", "wpisów")}`}
-      summary={last ? `Ostatnio: ${eventLabel(last.kind, last.payload).toLowerCase()}, ${formatDay(last.createdAt)}` : "Nic się jeszcze nie wydarzyło"}
+      title={t("detail.history", { count: goal.events.length })}
+      summary={last ? t("detail.lastEvent", { event: eventLabel(t, formatDayLong, last.kind, last.payload).toLowerCase(), date: formatDay(last.createdAt) }) : t("detail.nicSieJeszczeNie")}
       open={open}
       onToggle={() => setOpen((value) => !value)}
     >
       {goal.events.length === 0 ? (
-        <p className="text-[13px] text-[var(--text-subtle)]">Brak wpisów.</p>
+        <p className="text-[13px] text-[var(--text-subtle)]">{t("detail.brakWpisow")}</p>
       ) : (
         <ol className="flex flex-col gap-3 border-l border-white/10 pl-4">
           {goal.events.map((event) => (
@@ -1181,7 +1186,7 @@ function Timeline({ goal }: { goal: GoalItem }) {
                 className="absolute -left-[21px] top-1.5 size-2 rounded-full bg-white/30"
                 aria-hidden="true"
               />
-              <p className="text-[13.5px] text-white">{eventLabel(event.kind, event.payload)}</p>
+              <p className="text-[13.5px] text-white">{eventLabel(t, formatDayLong, event.kind, event.payload)}</p>
               <p className="text-[12px] text-[var(--text-subtle)]">
                 {formatMoment(event.createdAt)}
                 {event.actorName ? ` · ${event.actorName}` : ""}
@@ -1247,17 +1252,18 @@ function BlockModal({
   onSubmit: (note: string) => void;
   onClose: () => void;
 }) {
+  const t = useT("goals");
   const [note, setNote] = useState(initial);
   const [missing, setMissing] = useState(false);
   return (
     <Modal
-      title="Co blokuje pracę?"
-      description="Jedno zdanie wystarczy. Zobaczy je cały zespół nad tym celem."
+      title={t("detail.coBlokujePrace")}
+      description={t("detail.jednoZdanieWystarczyZobaczy")}
       onClose={onClose}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Anuluj
+            {t("detail.anuluj")}
           </Button>
           <Button
             loading={pending}
@@ -1269,22 +1275,22 @@ function BlockModal({
               onSubmit(note.trim());
             }}
           >
-            Oznacz jako zablokowany
+            {t("detail.oznaczJakoZablokowany")}
           </Button>
         </>
       }
     >
-      <Field error={missing && !note.trim() ? "Napisz, co blokuje pracę." : error}>
+      <Field error={missing && !note.trim() ? t("detail.napiszCoBlokujePrace") : error}>
         {({ id, invalid }) => (
           <Textarea
             id={id}
             aria-invalid={invalid}
-            aria-label="Co blokuje pracę"
+            aria-label={t("detail.coBlokujePrace2")}
             autoFocus
             rows={3}
             value={note}
             onChange={(event) => setNote(event.target.value)}
-            placeholder="Na przykład: czekamy na podpis po stronie firmy"
+            placeholder={t("detail.naPrzykladCzekamyNa")}
           />
         )}
       </Field>
@@ -1292,22 +1298,27 @@ function BlockModal({
   );
 }
 
-function eventLabel(kind: string, payload: Record<string, unknown>) {
-  if (kind === "created") return "Cel założony";
-  if (kind === "reopened") return "Otwarty ponownie";
-  if (kind === "archived") return "Zarchiwizowany";
-  if (kind === "proof") return "Zatwierdzony dowód";
+function eventLabel(
+  t: Translate<MessageKey<"goals">>,
+  formatDayLong: (iso: string | null | undefined) => string,
+  kind: string,
+  payload: Record<string, unknown>
+) {
+  if (kind === "created") return t("detail.celZalozony");
+  if (kind === "reopened") return t("detail.eventReopened");
+  if (kind === "archived") return t("detail.eventArchived");
+  if (kind === "proof") return t("detail.zatwierdzonyDowod");
   if (kind === "deadline") {
     return typeof payload.due_date === "string"
-      ? `Termin przesunięty na ${formatDayLong(payload.due_date)}`
-      : "Zmiana terminu";
+      ? t("detail.eventDeadlineMoved", { date: formatDayLong(payload.due_date) })
+      : t("detail.eventDeadline");
   }
-  if (kind === "owner") return "Zmiana właściciela";
+  if (kind === "owner") return t("detail.zmianaWlasciciela");
   if (kind === "status") {
     const to = payload.to;
-    return typeof to === "string" && to in GOAL_STATUS_LABELS
-      ? `Status: ${GOAL_STATUS_LABELS[to as GoalStatus]}`
-      : "Zmiana statusu";
+    return typeof to === "string" && (GOAL_STATUSES as readonly string[]).includes(to)
+      ? t("detail.statusToast", { status: t(`goalStatus.${to as GoalStatus}`) })
+      : t("detail.eventStatus");
   }
-  return "Zmiana";
+  return t("detail.eventOther");
 }

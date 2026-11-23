@@ -18,7 +18,7 @@ import type {
   ProofKind,
   TeamMemberOption,
 } from "@/types/goals";
-import { formatDayLong } from "./goal-format";
+
 import {
   COMMON_PROOF_KINDS,
   PROOF_KIND_META,
@@ -27,7 +27,9 @@ import {
   optionsCount,
 } from "./goal-options";
 
-const EXAMPLES = ["Działający formularz zamówienia", "Raport z 5 rozmów", "Podpisana umowa"];
+import { useT } from "@/i18n/client";
+import { useGoalFormat } from "@/components/goals/goal-format-hook";
+const EXAMPLE_KEYS = ["goalWizard.example1", "goalWizard.example2", "goalWizard.example3"] as const;
 
 /**
  * Nowy cel — jedno pytanie na ekran.
@@ -57,6 +59,8 @@ export function GoalWizard({
   initialTitle: string;
   initialDescription: string;
 }) {
+  const { formatDayLong } = useGoalFormat();
+  const t = useT("goals");
   const router = useRouter();
   const { toast } = useToast();
   const [pending, start] = useTransition();
@@ -106,10 +110,10 @@ export function GoalWizard({
         addAnother: Boolean(preset && preset.linkedGoalIds.length > 0),
       });
       if (result.error || !result.id) {
-        setError(result.error ?? "Nie udało się założyć celu. Spróbuj jeszcze raz.");
+        setError(result.error ?? t("goalWizard.nieUdaloSieZalozyc"));
         return;
       }
-      toast({ title: "Cel zapisany", description: title.trim() });
+      toast({ title: t("goalWizard.celZapisany"), description: title.trim() });
       setCreated(result.id);
     });
   };
@@ -117,14 +121,14 @@ export function GoalWizard({
   const steps: WizardStep[] = [
     {
       key: "result",
-      title: "Jaki wynik chcecie pokazać?",
+      title: t("goalWizard.jakiWynikChceciePokazac"),
       validate: () =>
-        title.trim().length < 3 ? "Napisz, co ma być gotowe. Jedno zdanie wystarczy." : null,
+        title.trim().length < 3 ? t("goalWizard.napiszCoMaByc") : null,
       render: ({ error: stepError }) => (
         <div>
           <Field
             error={stepError}
-            hint="Jedna rzecz, którą da się komuś pokazać palcem. To będzie nazwa celu."
+            hint={t("goalWizard.jednaRzeczKtoraDa")}
           >
             {({ id, invalid }) => (
               <Input
@@ -135,16 +139,16 @@ export function GoalWizard({
                 value={title}
                 maxLength={160}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="Na przykład: pakiet przekazania dla pierwszej firmy"
+                placeholder={t("goalWizard.naPrzykladPakietPrzekazania")}
                 className="h-[52px] text-[16px]"
               />
             )}
           </Field>
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="w-full text-[12.5px] text-[var(--text-subtle)]">
-              Albo zacznij od przykładu:
+              {t("goalWizard.alboZacznijOdPrzykladu")}
             </span>
-            {EXAMPLES.map((example) => (
+            {EXAMPLE_KEYS.map((key) => t(key)).map((example) => (
               <button
                 key={example}
                 type="button"
@@ -160,12 +164,12 @@ export function GoalWizard({
     },
     {
       key: "type",
-      title: "Jakiego rodzaju to wynik?",
+      title: t("goalWizard.jakiegoRodzajuToWynik"),
       description: lockedType
         ? undefined
-        : "Rodzaj decyduje, do których warunków etapu cel da się później podpiąć.",
+        : t("goalWizard.rodzajDecydujeDoKtorych"),
       render: () => (
-        <div role="radiogroup" aria-label="Rodzaj celu" className="flex flex-col gap-2.5">
+        <div role="radiogroup" aria-label={t("goalWizard.rodzajCelu")} className="flex flex-col gap-2.5">
           {goalTypes.map((type) => {
             const locked = Boolean(lockedType && type.id !== lockedType);
             return (
@@ -190,17 +194,17 @@ export function GoalWizard({
     },
     {
       key: "when",
-      title: "Do kiedy ma być gotowe?",
-      validate: () => (dueDate ? null : "Wybierz termin — można go później przesunąć."),
+      title: t("goalWizard.doKiedyMaByc"),
+      validate: () => (dueDate ? null : t("goalWizard.wybierzTerminMoznaGo")),
       render: ({ error: stepError }) => (
         <div className="flex flex-col gap-5">
-          <Field error={stepError} hint="Termin da się przesunąć w szczególe celu.">
+          <Field error={stepError} hint={t("goalWizard.terminDaSiePrzesunac")}>
             {({ id, invalid }) => (
               <Input
                 id={id}
                 type="date"
                 aria-invalid={invalid}
-                aria-label="Termin"
+                aria-label={t("goalWizard.termin")}
                 value={dueDate}
                 onChange={(event) => setDueDate(event.target.value)}
                 className="h-[52px] text-[16px] [color-scheme:dark]"
@@ -210,10 +214,10 @@ export function GoalWizard({
           {canAssign ? (
             <div className="flex flex-col gap-1.5">
               <span className="text-[13px] font-medium text-[var(--text-muted)]">
-                Kto odpowiada za wynik
+                {t("goalWizard.ktoOdpowiadaZaWynik")}
               </span>
               <MenuSelect
-                ariaLabel="Kto odpowiada za wynik"
+                ariaLabel={t("goalWizard.ktoOdpowiadaZaWynik")}
                 value={ownerId}
                 onChange={setOwnerId}
                 options={members.map((member) => ({
@@ -222,12 +226,12 @@ export function GoalWizard({
                 }))}
               />
               <span className="text-[12px] text-[var(--text-subtle)]">
-                Jedna osoba odpowiada za wynik. Inni mogą dostać zadania pod nim.
+                {t("goalWizard.jednaOsobaOdpowiadaZa")}
               </span>
             </div>
           ) : (
             <p className="text-[13.5px] leading-relaxed text-[var(--text-subtle)]">
-              Za wynik odpowiadasz Ty. Cel komuś innemu przypisuje Founder albo Admin.
+              {t("goalWizard.zaWynikOdpowiadaszTy")}
             </p>
           )}
         </div>
@@ -235,19 +239,19 @@ export function GoalWizard({
     },
     {
       key: "proof",
-      title: "W jakiej formie pokażecie, że jest gotowe?",
-      validate: () => (kind ? null : "Wybierz formę dowodu."),
+      title: t("goalWizard.wJakiejFormiePokazecie"),
+      validate: () => (kind ? null : t("goalWizard.wybierzFormeDowodu")),
       render: ({ error: stepError }) => (
         <div>
-          <div role="radiogroup" aria-label="Forma dowodu" className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          <div role="radiogroup" aria-label={t("goalWizard.formaDowodu")} className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {kinds.map((item) => {
               const meta = PROOF_KIND_META[item];
               return (
                 <ChoiceCard
                   key={item}
                   icon={meta.icon}
-                  label={meta.label}
-                  description={meta.example}
+                  label={t(`proofMeta.${item}.label`)}
+                  description={t(`proofMeta.${item}.example`)}
                   selected={kind === item}
                   disabled={Boolean(lockedKind && item !== lockedKind)}
                   onSelect={() => setKind(item)}
@@ -257,7 +261,7 @@ export function GoalWizard({
           </div>
           {lockedKind && preset ? (
             <p className="mt-3 text-[13px] text-[var(--text-subtle)]">
-              Warunek „{preset.subpointTitle}” przyjmuje tylko tę formę.
+              {t("goalWizard.warunekSubpointtitlePrzyjmujeTylko", { subpointTitle: preset.subpointTitle })}
             </p>
           ) : null}
           {stepError ? (
@@ -266,19 +270,18 @@ export function GoalWizard({
             </p>
           ) : null}
           <p className="mt-4 text-[13px] leading-relaxed text-[var(--text-subtle)]">
-            Tego będziemy oczekiwać przy kończeniu celu. Cel kończy dowód, nie
-            odhaczenie zadań.
+            {t("goalWizard.tegoBedziemyOczekiwacPrzy")}
           </p>
         </div>
       ),
     },
     {
       key: "expect",
-      title: kind ? PROOF_KIND_META[kind].question : "Co ma pokazać dowód?",
+      title: kind ? t(`proofMeta.${kind}.question`) : t("goalWizard.coMaPokazacDowod"),
       validate: () => {
         if (label.trim().length < 2) return "Napisz jednym zdaniem, czego oczekujecie.";
         if (kind === "select" && optionsCount(optionsText) < 2) {
-          return "Lista wyboru potrzebuje co najmniej dwóch odpowiedzi — każda w osobnej linijce.";
+          return t("goalWizard.listaWyboruPotrzebujeCo");
         }
         return null;
       },
@@ -286,27 +289,27 @@ export function GoalWizard({
         <div className="flex flex-col gap-5">
           <Field
             error={stepError && label.trim().length < 2 ? stepError : null}
-            hint="Jednym zdaniem — tak, żeby osoba kończąca cel wiedziała, co dodać."
+            hint={t("goalWizard.jednymZdaniemTakZeby")}
           >
             {({ id, invalid }) => (
               <Input
                 id={id}
                 aria-invalid={invalid}
-                aria-label="Czego oczekujecie"
+                aria-label={t("goalWizard.czegoOczekujecie")}
                 autoFocus
                 value={label}
                 maxLength={200}
                 onChange={(event) => setLabel(event.target.value)}
-                placeholder={kind ? PROOF_KIND_META[kind].placeholder : ""}
+                placeholder={kind ? t(`proofMeta.${kind}.placeholder`) : ""}
                 className="h-[52px] text-[16px]"
               />
             )}
           </Field>
           {kind === "select" ? (
             <Field
-              label="Możliwe odpowiedzi"
+              label={t("goalWizard.mozliweOdpowiedzi")}
               error={stepError && label.trim().length >= 2 ? stepError : null}
-              hint="Każda odpowiedź w osobnej linijce."
+              hint={t("goalWizard.kazdaOdpowiedzWOsobnej")}
             >
               {({ id, invalid }) => (
                 <Textarea
@@ -315,7 +318,7 @@ export function GoalWizard({
                   rows={4}
                   value={optionsText}
                   onChange={(event) => setOptionsText(event.target.value)}
-                  placeholder={"Tak\nNie"}
+                  placeholder={t("goalWizard.takNie")}
                 />
               )}
             </Field>
@@ -323,7 +326,7 @@ export function GoalWizard({
 
           <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[var(--surface)]">
             <p className="px-4 pt-3.5 text-[12px] font-semibold uppercase tracking-[0.05em] text-[var(--text-subtle)]">
-              Tak będzie wyglądał cel
+              {t("goalWizard.takBedzieWygladalCel")}
             </p>
             <dl className="mt-1.5 divide-y divide-white/[0.06]">
               <SummaryRow label="Wynik" value={title.trim()} onChange={() => goTo(0)} />
@@ -333,16 +336,16 @@ export function GoalWizard({
                 onChange={lockedType ? undefined : () => goTo(1)}
               />
               <SummaryRow
-                label="Kto i do kiedy"
+                label={t("goalWizard.ktoIDoKiedy")}
                 value={`${ownerName} · do ${formatDayLong(dueDate)}`}
                 onChange={() => goTo(2)}
               />
               <SummaryRow
-                label="Dowód"
-                value={`${kind ? PROOF_KIND_META[kind].label : ""}${label.trim() ? ` · ${label.trim()}` : ""}`}
+                label={t("goalWizard.dowod")}
+                value={`${kind ? t(`proofMeta.${kind}.label`) : ""}${label.trim() ? ` · ${label.trim()}` : ""}`}
                 onChange={lockedKind ? undefined : () => goTo(3)}
               />
-              {preset ? <SummaryRow label="Liczy się do" value={preset.subpointTitle} /> : null}
+              {preset ? <SummaryRow label={t("goalWizard.liczySieDo")} value={preset.subpointTitle} /> : null}
             </dl>
           </div>
         </div>
@@ -354,17 +357,17 @@ export function GoalWizard({
     <div className="page py-2 sm:py-6">
       <StepWizard
         steps={steps}
-        finishLabel="Załóż cel"
+        finishLabel={t("goalWizard.zalozCel")}
         finishing={pending}
         error={error}
         onFinish={finish}
         onExit={() => router.push("/app/goals")}
-        exitLabel="Wróć do celów"
+        exitLabel={t("goalWizard.wrocDoCelow")}
         footerBack
         crumb={
           preset
-            ? `Nowy cel · podepnie się do „${preset.subpointTitle}”`
-            : "Nowy cel"
+            ? t("goalWizard.nowyCelPodepnieSie", { subpointTitle: preset.subpointTitle })
+            : t("goalWizard.nowyCel")
         }
       />
     </div>
@@ -380,6 +383,7 @@ function SummaryRow({
   value: string;
   onChange?: () => void;
 }) {
+  const t = useT("goals");
   return (
     <div className="flex items-baseline gap-3 px-4 py-2.5">
       <dt className="w-28 shrink-0 text-[12.5px] text-[var(--text-subtle)]">{label}</dt>
@@ -390,7 +394,7 @@ function SummaryRow({
           onClick={onChange}
           className="inline-flex min-h-11 shrink-0 items-center text-[12.5px] font-medium text-[var(--text-muted)] underline decoration-white/25 underline-offset-4 hover:text-white sm:min-h-0"
         >
-          Zmień
+          {t("goalWizard.zmien")}
         </button>
       ) : null}
     </div>
@@ -399,6 +403,7 @@ function SummaryRow({
 
 /** Po założeniu: co się właśnie stało i jeden następny ruch. */
 function Created({ goalId, preset }: { goalId: string; preset: MilestoneCondition | null }) {
+  const t = useT("goals");
   return (
     <div className="page py-6">
       <div className="mx-auto max-w-[560px] app-enter">
@@ -406,21 +411,21 @@ function Created({ goalId, preset }: { goalId: string; preset: MilestoneConditio
           <CircleCheck className="size-6" strokeWidth={1.75} aria-hidden="true" />
         </span>
         <h1 className="mt-5 font-heading text-[1.8rem] font-semibold leading-tight text-white">
-          Cel założony
+          {t("goalWizard.celZalozony")}
         </h1>
         <p className="mt-2.5 text-[15px] leading-relaxed text-[var(--text-muted)]">
           {preset
             ? preset.countsWhen === "defined"
-              ? `Jest podpięty do warunku „${preset.subpointTitle}” i już się do niego liczy.`
-              : `Jest podpięty do warunku „${preset.subpointTitle}”. Kreska etapu zapali się, gdy cel będzie ukończony z dowodem.`
-            : "Jest na liście zespołu. Do etapu możesz go podpiąć później, z jego strony."}
+              ? t("goalWizard.jestPodpietyDoWarunku", { subpointTitle: preset.subpointTitle })
+              : t("goalWizard.jestPodpietyDoWarunku2", { subpointTitle: preset.subpointTitle })
+            : t("goalWizard.jestNaLiscieZespolu")}
         </p>
         <p className="mt-2 text-[14px] leading-relaxed text-[var(--text-subtle)]">
-          Następny krok: rozpisz, co trzeba zrobić, żeby do niego dojść.
+          {t("goalWizard.nastepnyKrokRozpiszCo")}
         </p>
         <div className={cn("mt-8 flex flex-wrap items-center gap-3")}>
           <Button size="lg" href={`/app/goals/${goalId}#zadania`}>
-            Rozpisz zadania
+            {t("goalWizard.rozpiszZadania")}
             <ArrowRight className="size-4" />
           </Button>
           {/* Cel założony z podpunktu etapu: człowiek przyszedł z etapu i tam
@@ -431,11 +436,11 @@ function Created({ goalId, preset }: { goalId: string; preset: MilestoneConditio
               variant="ghost"
               href={`/app/stage?stage=${preset.stageKey}&subpoint=${preset.subpointId}`}
             >
-              Wróć do etapu
+              {t("goalWizard.wrocDoEtapu")}
             </Button>
           ) : (
             <Button size="lg" variant="ghost" href="/app/goals">
-              Wróć do celów
+              {t("goalWizard.wrocDoCelow")}
             </Button>
           )}
         </div>

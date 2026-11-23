@@ -1,14 +1,16 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { GoalListSkeleton } from "@/components/goals/goal-row";
+import { getT } from "@/i18n/server";
 
 /**
  * Szkielet w kształcie prawdziwej listy celów: nagłówek z zakładkami, karta
  * następnego kroku i wiersze. Po wczytaniu nic nie skacze.
  */
-export default function GoalsLoading() {
+export default async function GoalsLoading() {
+  const t = await getT("goals");
   return (
     <div role="status" aria-busy="true" className="page-wide">
-      <span className="sr-only">Ładowanie celów…</span>
+      <span className="sr-only">{t("loading.goals")}</span>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <Skeleton className="h-8 w-28" />

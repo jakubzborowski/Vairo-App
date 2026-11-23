@@ -15,23 +15,19 @@ import { cn } from "@/lib/utils";
 import type { StartupRole } from "@/types/startup";
 import {
   GOAL_STATUSES,
-  GOAL_STATUS_LABELS,
   type GoalItem,
   type MilestoneCondition,
   type TeamMemberOption,
 } from "@/types/goals";
-import {
-  formatDay,
-  goalHint,
-  plural,
-  tasksLine,
-  teamState,
-  urgency,
-} from "./goal-format";
+import { urgency } from "./goal-format";
 import { GoalList, GoalRow } from "./goal-row";
 import { LinkGoalModal } from "./link-goal-modal";
 import { StatusChip } from "./status";
 
+import { useT } from "@/i18n/client";
+import { useGoalFormat } from "@/components/goals/goal-format-hook";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
 export type GoalsView = "now" | "all" | "stage";
 
 /**
@@ -65,6 +61,7 @@ export function GoalsScreen({
   initialView: GoalsView;
   initialLinkConditionId: string | null;
 }) {
+  const t = useT("goals");
   const router = useRouter();
   const { toast } = useToast();
   const [view, setView] = useState<GoalsView>(initialView);
@@ -97,12 +94,12 @@ export function GoalsScreen({
   return (
     <div className="page-wide">
       <ModuleHeader
-        title="Cele"
-        subtitle={subtitleFor(view, stage, mineOpen.length, active.length)}
+        title={t("goalsScreen.cele")}
+        subtitle={subtitleFor(t, view, stage, mineOpen.length, active.length)}
         action={
           <Button variant="secondary" href="/app/goals/new">
             <Plus className="size-4" />
-            Nowy cel
+            {t("goalsScreen.nowyCel")}
           </Button>
         }
       >
@@ -152,8 +149,8 @@ export function GoalsScreen({
               }
               setLinkConditionId(null);
               toast({
-                title: "Cel podpięty",
-                description: `Liczy się teraz do warunku „${linkTarget.subpointTitle}”.`,
+                title: t("goalsScreen.celPodpiety"),
+                description: t("goalsScreen.liczySieTerazDo", { subpointTitle: linkTarget.subpointTitle }),
               });
             });
           }}
@@ -195,24 +192,30 @@ function isMet(condition: MilestoneCondition) {
   return condition.done >= condition.minCount;
 }
 
-function subtitleFor(view: GoalsView, stage: StageSummary, mine: number, all: number) {
+function subtitleFor(
+  t: Translate<MessageKey<"goals">>,
+  view: GoalsView,
+  stage: StageSummary,
+  mine: number,
+  all: number
+) {
   if (view === "stage") {
     return stage
-      ? "Cel liczy się do etapu, gdy jest ukończony i podpięty do warunku."
-      : "Ten etap nie ma warunków opartych na celach.";
+      ? t("goalsScreen.celLiczySieDo")
+      : t("goalsScreen.tenEtapNieMa");
   }
   if (view === "all") {
     return all === 0
-      ? "Zespół nie ma jeszcze żadnego celu."
-      : `${all} ${plural(all, "cel", "cele", "celów")} zespołu, od najbliższego terminu.`;
+      ? t("goalsScreen.zespolNieMaJeszcze")
+      : t("goalsScreen.allSubtitle", { count: all });
   }
   const parts: string[] = [];
-  if (stage?.next) parts.push("Jedna rzecz na teraz");
+  if (stage?.next) parts.push(t("goalsScreen.jednaRzeczNaTeraz"));
   if (mine > 0) {
-    parts.push(`${mine} ${plural(mine, "cel czeka", "cele czekają", "celów czeka")} na Ciebie`);
+    parts.push(t("goalsScreen.mineWaiting", { count: mine }));
   }
-  if (parts.length === 0) return "Nic nie czeka na Ciebie. Zobacz, co robi zespół.";
-  return `${parts.join(" i ")}.`;
+  if (parts.length === 0) return t("goalsScreen.nicNieCzekaNa");
+  return `${parts.join(t("goalsScreen.and"))}.`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -228,17 +231,18 @@ function Tabs({
   allCount: number;
   stage: StageSummary;
 }) {
+  const t = useT("goals");
   const tabs: { id: GoalsView; label: string; count?: string }[] = [
-    { id: "now", label: "Teraz" },
-    { id: "all", label: "Wszystkie cele", count: String(allCount) },
+    { id: "now", label: t("goalsScreen.teraz") },
+    { id: "all", label: t("goalsScreen.wszystkieCele"), count: String(allCount) },
     ...(stage
-      ? [{ id: "stage" as const, label: "Etap", count: `${stage.done}/${stage.conditions.length}` }]
+      ? [{ id: "stage" as const, label: t("goalsScreen.etap"), count: `${stage.done}/${stage.conditions.length}` }]
       : []),
   ];
   return (
     <div
       role="tablist"
-      aria-label="Widok celów"
+      aria-label={t("goalsScreen.widokCelow")}
       className="inline-flex rounded-xl border border-white/[0.08] bg-[var(--surface)] p-1"
     >
       {tabs.map((tab) => {
@@ -289,6 +293,8 @@ function NowView({
   onCreate: (conditionId: string | null) => void;
   onShowAll: () => void;
 }) {
+  const { formatDay, teamState } = useGoalFormat();
+  const t = useT("goals");
   const teamOpen = goals
     .filter((goal) => goal.status !== "completed" && goal.ownerId !== userId)
     .sort((a, b) => urgency(a) - urgency(b));
@@ -311,11 +317,10 @@ function NowView({
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
         <section>
-          <SectionLabel count={mineOpen.length}>Twoje cele</SectionLabel>
+          <SectionLabel count={mineOpen.length}>{t("goalsScreen.twojeCele")}</SectionLabel>
           {mineOpen.length === 0 ? (
             <EmptyNote className="mt-2">
-              Żaden otwarty cel nie jest teraz na Tobie. Nowy założysz przyciskiem
-              „Nowy cel” albo z karty wyżej.
+              {t("goalsScreen.zadenOtwartyCelNie")}
             </EmptyNote>
           ) : (
             <ul className="mt-2 flex flex-col gap-2">
@@ -336,10 +341,10 @@ function NowView({
 
         <div className="flex flex-col gap-6">
           <section>
-            <SectionLabel count={teamOpen.length}>Co robi zespół</SectionLabel>
+            <SectionLabel count={teamOpen.length}>{t("goalsScreen.coRobiZespol")}</SectionLabel>
             {teamOpen.length === 0 ? (
               <EmptyNote className="mt-2">
-                Reszta zespołu nie ma teraz otwartych celów.
+                {t("goalsScreen.resztaZespoluNieMa")}
               </EmptyNote>
             ) : (
               <ul className="mt-2 overflow-hidden rounded-[18px] border border-white/[0.07] bg-[var(--surface)] divide-y divide-white/[0.06]">
@@ -375,7 +380,7 @@ function NowView({
             <section className="rounded-[18px] border border-[var(--success)]/20 bg-[var(--success)]/[0.06] px-4 py-3.5">
               <h2 className="inline-flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.05em] text-[var(--success)]">
                 <PartyPopper className="size-3.5" aria-hidden="true" />
-                Za Wami · {done.length} {plural(done.length, "cel", "cele", "celów")} z dowodem
+                {t("goalsScreen.doneWithProof", { count: done.length })}
               </h2>
               <ul className="mt-2 flex flex-col">
                 {done.slice(0, 5).map((goal) => (
@@ -403,6 +408,7 @@ function NowView({
 
 /** Wiersz „Twoje cele": jedno zdanie o tym, czego cel potrzebuje. */
 function MineRow({ goal }: { goal: GoalItem }) {
+  const { tasksLine, goalHint } = useGoalFormat();
   const hint = goalHint(goal);
   return (
     <li>
@@ -451,6 +457,7 @@ function NextStepCard({
   onLink: (conditionId: string) => void;
   onCreate: (conditionId: string | null) => void;
 }) {
+  const t = useT("goals");
   const next = stage.next;
   const total = stage.conditions.length;
   const allMet = stage.done === total;
@@ -469,22 +476,21 @@ function NextStepCard({
           {next ? (
             <>
               <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-[var(--vairo)]">
-                Następny krok
+                {t("goalsScreen.nastepnyKrok")}
               </p>
               <h2 className="mt-1.5 font-heading text-[1.3rem] font-semibold leading-snug text-white sm:text-[1.45rem]">
                 {next.subpointTitle}
               </h2>
               <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-[var(--text-muted)]">
-                To następny warunek etapu {stage.title}. Potrzebny jest{" "}
-                {next.minCount === 1 ? "jeden" : next.minCount}{" "}
-                {next.countsWhen === "defined" ? "ustawiony" : "ukończony"}{" "}
-                {plural(next.minCount, "cel", "cele", "celów")}
-                {next.matchAnyType ? "" : ` typu ${next.goalTypeLabel}`} — kreator
-                przeprowadzi przez pięć krótkich pytań.
+                {t(next.countsWhen === "defined" ? "goalsScreen.nextNeedsDefined" : "goalsScreen.nextNeedsCompleted", {
+                  title: stage.title,
+                  count: next.minCount,
+                })}
+                {next.matchAnyType ? "" : ` ${t("goalsScreen.ofType", { type: next.goalTypeLabel })}`}{" "}{t("goalsScreen.kreatorPrzeprowadziPrzezPiec")}
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
                 <Button onClick={() => onCreate(next.id)}>
-                  Załóż cel do tego warunku
+                  {t("goalsScreen.zalozCelDoTego")}
                   <ArrowRight className="size-4" />
                 </Button>
                 <button
@@ -492,7 +498,7 @@ function NextStepCard({
                   onClick={() => onLink(next.id)}
                   className="min-h-11 text-[13.5px] font-medium text-[var(--text-muted)] underline decoration-white/25 underline-offset-4 transition-colors hover:text-white sm:min-h-0"
                 >
-                  albo podepnij istniejący
+                  {t("goalsScreen.alboPodepnijIstniejacy")}
                 </button>
               </div>
             </>
@@ -500,17 +506,17 @@ function NextStepCard({
             <>
               <h2 className="font-heading text-[1.2rem] font-semibold text-white">
                 {allMet
-                  ? `Wszystkie warunki etapu ${stage.title} są spełnione`
-                  : "Każdy warunek ma już swój cel"}
+                  ? t("goalsScreen.wszystkieWarunkiEtapuTitle", { title: stage.title })
+                  : t("goalsScreen.kazdyWarunekMaJuz")}
               </h2>
               <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-[var(--text-muted)]">
                 {allMet
-                  ? "Cele zrobiły swoje. Zamknięcie etapu czeka na ekranie etapu."
-                  : "Zostało doprowadzić je do końca — cel liczy się, gdy ma zatwierdzony dowód."}
+                  ? t("goalsScreen.celeZrobilySwojeZamkniecie")
+                  : t("goalsScreen.zostaloDoprowadzicJeDo")}
               </p>
               {allMet ? (
                 <Button className="mt-4" variant="secondary" href="/app/stage">
-                  Przejdź do etapu
+                  {t("goalsScreen.przejdzDoEtapu")}
                 </Button>
               ) : null}
             </>
@@ -519,19 +525,19 @@ function NextStepCard({
 
         <div className="rounded-2xl border border-white/[0.07] bg-[var(--bg)]/60 p-4">
           <p className="text-[11.5px] font-semibold uppercase tracking-[0.05em] text-[var(--text-subtle)]">
-            Postęp etapu {stage.title}
+            {t("goalsScreen.postepEtapuTitle", { title: stage.title })}
           </p>
           <p className="mt-1.5 flex items-baseline gap-2">
             <span className="tabular font-heading text-[1.6rem] font-semibold text-white">
-              {stage.done} z {total}
+              {t("goalsScreen.doneOf", { done: stage.done, total })}
             </span>
             <span className="text-[13px] text-[var(--text-subtle)]">
-              {plural(total, "warunku", "warunków", "warunków")} gotowych
+              {t("goalsScreen.conditionsReady", { count: total })}
             </span>
           </p>
           <ConditionTicks conditions={stage.conditions} />
           <p className="mt-2.5 text-[12px] leading-relaxed text-[var(--text-subtle)]">
-            Każdy ukończony i podpięty cel zapala jedną kreskę.
+            {t("goalsScreen.kazdyUkonczonyIPodpiety")}
           </p>
         </div>
       </div>
@@ -561,32 +567,30 @@ function ConditionTicks({ conditions }: { conditions: MilestoneCondition[] }) {
 
 /** Pierwsze wejście: całe wyjaśnienie, które dawniej wisiało nad każdą listą. */
 function FirstVisit({ hasStage, onCreate }: { hasStage: boolean; onCreate: () => void }) {
+  const t = useT("goals");
   return (
     <section className="rounded-[25px] border border-dashed border-white/10 px-6 py-8 sm:px-8">
       <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-[var(--surface-2)] text-[var(--text-subtle)]">
         <Flag className="size-6" strokeWidth={1.5} />
       </span>
       <h2 className="mt-4 font-heading text-[17px] font-semibold text-white">
-        Jak działają cele
+        {t("goalsScreen.jakDzialajaCele")}
       </h2>
       <ol className="mt-3 flex max-w-2xl flex-col gap-2.5 text-[14px] leading-relaxed text-[var(--text-muted)]">
         <li>
-          <span className="font-medium text-white">Cel to wynik</span>, który da się komuś
-          pokazać — działająca wersja, raport z rozmów, podpisana umowa.
+          <span className="font-medium text-white">{t("goalsScreen.celToWynik")}</span>{t("goalsScreen.ktoryDaSieKomus")}
         </li>
         <li>
-          <span className="font-medium text-white">Kończy go dowód</span>, nie odhaczenie
-          zadań. Zadania pod celem pomagają do niego dojść.
+          <span className="font-medium text-white">{t("goalsScreen.konczyGoDowod")}</span>{t("goalsScreen.nieOdhaczenieZadanZadania")}
         </li>
         <li>
-          <span className="font-medium text-white">Do etapu liczą się cele podpięte pod warunek.</span>{" "}
-          Inne cele są Wasze — nie poszerzają programu.
+          <span className="font-medium text-white">{t("goalsScreen.doEtapuLiczaSie")}</span>{t("goalsScreen.inneCeleSaWasze")}
         </li>
       </ol>
       {hasStage ? null : (
         <Button className="mt-6" onClick={onCreate}>
           <Plus className="size-4" />
-          Załóż pierwszy cel
+          {t("goalsScreen.zalozPierwszyCel")}
         </Button>
       )}
     </section>
@@ -604,6 +608,7 @@ function AllView({
   members: TeamMemberOption[];
   userId: string;
 }) {
+  const t = useT("goals");
   const [owner, setOwner] = useState("all");
   const [status, setStatus] = useState("all");
   const [archived, setArchived] = useState(false);
@@ -623,7 +628,7 @@ function AllView({
         <MenuSelect
           size="sm"
           className="w-auto min-w-[150px]"
-          ariaLabel="Czyje cele"
+          ariaLabel={t("goalsScreen.czyjeCele")}
           value={owner}
           onChange={setOwner}
           options={[
@@ -637,12 +642,12 @@ function AllView({
         <MenuSelect
           size="sm"
           className="w-auto min-w-[150px]"
-          ariaLabel="Status"
+          ariaLabel={t("goalsScreen.status")}
           value={status}
           onChange={setStatus}
           options={[
-            { value: "all", label: "Każdy status" },
-            ...GOAL_STATUSES.map((value) => ({ value, label: GOAL_STATUS_LABELS[value] })),
+            { value: "all", label: t("goalsScreen.kazdyStatus") },
+            ...GOAL_STATUSES.map((value) => ({ value, label: t(`goalStatus.${value}`) })),
           ]}
         />
         <button
@@ -651,27 +656,27 @@ function AllView({
           aria-pressed={archived}
           className="ml-auto inline-flex min-h-11 items-center rounded-lg px-2 text-[13px] text-[var(--text-muted)] transition-colors hover:text-white sm:min-h-9"
         >
-          {archived ? "Pokaż aktywne" : "Pokaż zarchiwizowane"}
+          {archived ? t("goalsScreen.pokazAktywne") : t("goalsScreen.pokazZarchiwizowane")}
         </button>
       </div>
 
       {visible.length === 0 ? (
         archived ? (
-          <EmptyNote className="mt-4">Nie ma zarchiwizowanych celów.</EmptyNote>
+          <EmptyNote className="mt-4">{t("goalsScreen.nieMaZarchiwizowanychCelow")}</EmptyNote>
         ) : filtered ? (
           <EmptyNote className="mt-4">
-            Żaden cel nie pasuje do tych filtrów. Zmień osobę albo status.
+            {t("goalsScreen.zadenCelNiePasuje")}
           </EmptyNote>
         ) : (
           <EmptyState
             className="mt-4"
             icon={Flag}
-            title="Nie ma jeszcze celów"
-            description="Cel to wynik, który da się pokazać. Kończy go dowód, nie odhaczenie zadań."
+            title={t("goalsScreen.nieMaJeszczeCelow")}
+            description={t("goalsScreen.celToWynikKtory")}
             action={
               <Button href="/app/goals/new">
                 <Plus className="size-4" />
-                Załóż pierwszy cel
+                {t("goalsScreen.zalozPierwszyCel")}
               </Button>
             }
           />
@@ -705,12 +710,13 @@ function StageView({
   onLink: (conditionId: string) => void;
   onCreate: (conditionId: string | null) => void;
 }) {
+  const t = useT("goals");
   if (!stage) {
     return (
       <EmptyState
         icon={Flag}
-        title="Bieżący etap nie ma warunków z celami"
-        description="Warunki oparte na celach pojawiają się od etapu Execution. Do tego czasu cele są Wasze — możecie je zakładać i kończyć bez wpływu na etap."
+        title={t("goalsScreen.biezacyEtapNieMa")}
+        description={t("goalsScreen.warunkiOparteNaCelach")}
       />
     );
   }
@@ -734,12 +740,12 @@ function StageView({
           <span className="tabular font-heading text-[1.5rem] font-semibold text-white">
             {stage.done} z {stage.conditions.length}
           </span>
-          <span className="text-[13px] text-[var(--text-subtle)]">gotowe w etapie {stage.title}</span>
+          <span className="text-[13px] text-[var(--text-subtle)]">{t("goalsScreen.gotoweWEtapieTitle", { title: stage.title })}</span>
         </p>
         {inFlight > 0 ? (
           <p className="inline-flex items-center gap-1.5 text-[13px] text-[var(--text-muted)]">
             <span className="size-2 rounded-full bg-[var(--info)]" aria-hidden="true" />
-            {inFlight} w drodze
+            {t("goalsScreen.inflightWDrodze", { inFlight })}
           </p>
         ) : null}
       </div>
@@ -808,17 +814,17 @@ function StageView({
                           )}
                         >
                           {met
-                            ? "Spełniony"
+                            ? t("goalsScreen.spelniony")
                             : linked.length > 0
                               ? linked.map((goal) => goal.title).join(", ")
-                              : "Nie ma jeszcze celu"}
+                              : t("goalsScreen.nieMaJeszczeCelu")}
                           {condition.minCount > 1
                             ? ` · ${condition.done} z ${condition.minCount}`
                             : ""}
                         </p>
                         {isNext ? (
                           <Button size="sm" className="mt-2.5" onClick={() => onCreate(condition.id)}>
-                            Załóż cel
+                            {t("goalsScreen.zalozCel")}
                           </Button>
                         ) : null}
                       </div>

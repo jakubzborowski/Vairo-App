@@ -2,8 +2,12 @@ import { redirect } from "next/navigation";
 import { GoalsScreen, type GoalsView } from "@/components/goals/goals-screen";
 import { GoalsUnavailable } from "@/components/goals/goals-unavailable";
 import { loadGoalsContext } from "./load";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Cele — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("goals");
+  return { title: t("meta.goals") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function GoalsPage({

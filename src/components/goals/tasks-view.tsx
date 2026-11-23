@@ -19,16 +19,19 @@ import { cn } from "@/lib/utils";
 import { canAssignToOthers, canChangeOwnWork, type StartupRole } from "@/types/startup";
 import {
   TASK_STATUSES,
-  TASK_STATUS_LABELS,
   type GoalItem,
   type TaskEvent,
   type TaskStatus,
   type TeamMemberOption,
 } from "@/types/goals";
-import { formatDay, formatMoment, plural } from "./goal-format";
+import { plural } from "./goal-format";
 import { StatusIcon } from "./status";
 import { TaskCard, isTaskOverdue, type BoardTask } from "./task-card";
 
+import { useT } from "@/i18n/client";
+import { useGoalFormat } from "@/components/goals/goal-format-hook";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
 type Result = { error: string | null; id?: string };
 
 function todayIso() {
@@ -65,6 +68,8 @@ export function TasksView({
   goals: GoalItem[];
   initialTaskId: string | null;
 }) {
+  const { formatDay } = useGoalFormat();
+  const t = useT("goals");
   const router = useRouter();
   const { toast } = useToast();
   const [pending, start] = useTransition();
@@ -132,7 +137,7 @@ export function TasksView({
     start(async () => {
       const result = await work();
       if (result.error) {
-        toast({ tone: "error", title: "Nie udało się zapisać", description: result.error });
+        toast({ tone: "error", title: t("tasksView.nieUdaloSieZapisac"), description: result.error });
         return;
       }
       toast({ title: success });
@@ -145,8 +150,8 @@ export function TasksView({
     if (!canEditTask(task)) {
       toast({
         tone: "error",
-        title: "To zadanie prowadzi ktoś inny",
-        description: `Zmienia je ${task.ownerName}, Founder albo Admin.`,
+        title: t("tasksView.toZadanieProwadziKtos"),
+        description: t("tasksView.zmieniaJeOwnernameFounder", { ownerName: task.ownerName }),
       });
       return;
     }
@@ -160,10 +165,10 @@ export function TasksView({
           delete next[task.id];
           return next;
         });
-        toast({ tone: "error", title: "Nie udało się przenieść zadania", description: result.error });
+        toast({ tone: "error", title: t("tasksView.nieUdaloSiePrzeniesc"), description: result.error });
         return;
       }
-      toast({ title: `${task.title}: ${TASK_STATUS_LABELS[status].toLowerCase()}` });
+      toast({ title: `${task.title}: ${t(`taskStatus.${status}`).toLowerCase()}` });
       // Zablokowane zadanie potrzebuje powodu — otwieramy panel z polem.
       if (status === "blocked" && task.note !== undefined) setOpen(task.id);
     });
@@ -172,7 +177,7 @@ export function TasksView({
   if (liveGoals.length === 0) {
     return (
       <div className="page-wide">
-        <ModuleHeader title="Taski" subtitle="Jeszcze nic do zrobienia." />
+        <ModuleHeader title={t("tasksView.title")} subtitle={t("tasksView.jeszczeNicDoZrobienia")} />
         <NoGoals />
       </div>
     );
@@ -183,13 +188,11 @@ export function TasksView({
   const goalsWithTasks = new Set(rows.map((task) => task.goalId)).size;
   const subtitle = mine
     ? openCount === 0
-      ? "Nie masz otwartych zadań."
-      : `Masz ${openCount} ${plural(openCount, "otwarte zadanie", "otwarte zadania", "otwartych zadań")}.${
-          overdueCount > 0
-            ? ` ${overdueCount === 1 ? "Jedno jest" : `${overdueCount} są`} po terminie.`
-            : ""
+      ? t("tasksView.nieMaszOtwartychZadan")
+      : `${t("tasksView.mineOpen", { count: openCount })}${
+          overdueCount > 0 ? ` ${t("tasksView.mineOverdue", { count: overdueCount })}` : ""
         }`
-    : `Cały zespół · ${rows.length} ${plural(rows.length, "zadanie", "zadania", "zadań")} w ${goalsWithTasks} ${plural(goalsWithTasks, "celu", "celach", "celach")}.`;
+    : t("tasksView.teamSummary", { count: rows.length, goals: goalsWithTasks });
 
   // „Zrobione w tym tygodniu" — tylko gdy baza zna datę ukończenia (029).
   const weekStart = (() => {
@@ -204,7 +207,7 @@ export function TasksView({
   const menuFor = (task: BoardTask) => {
     const editable = canEditTask(task);
     return (
-      <Menu label={`Akcje zadania: ${task.title}`}>
+      <Menu label={t("tasksView.akcjeZadaniaTitle", { title: task.title })}>
         {(close) => (
           <>
             {TASK_STATUSES.map((status) => (
@@ -218,9 +221,9 @@ export function TasksView({
               >
                 <span className="inline-flex items-center gap-2">
                   <StatusIcon status={status} task className="size-4" />
-                  {TASK_STATUS_LABELS[status]}
+                  {t(`taskStatus.${status}`)}
                   {status === task.status ? (
-                    <span className="text-[12px] text-[var(--text-subtle)]">· teraz</span>
+                    <span className="text-[12px] text-[var(--text-subtle)]">{t("tasksView.teraz")}</span>
                   ) : null}
                 </span>
               </MenuItem>
@@ -234,7 +237,7 @@ export function TasksView({
               disabled={!editable}
               hint={editable ? undefined : `Zmienia je ${task.ownerName}, Founder albo Admin.`}
             >
-              Zmień termin {task.dueDate ? `(${formatDay(task.dueDate)})` : ""}
+              {t("tasksView.zmienTermin")}{" "}{task.dueDate ? `(${formatDay(task.dueDate)})` : ""}
             </MenuItem>
             <MenuItem
               onClick={() => {
@@ -242,9 +245,9 @@ export function TasksView({
                 setOpen(task.id);
               }}
               disabled={!canAssign}
-              hint={canAssign ? undefined : "Przypisać pracę innej osobie może Founder albo Admin."}
+              hint={canAssign ? undefined : t("tasksView.przypisacPraceInnejOsobie")}
             >
-              Przypisz komuś
+              {t("tasksView.przypiszKomus")}
             </MenuItem>
             <MenuItem
               onClick={() => {
@@ -252,7 +255,7 @@ export function TasksView({
                 router.push(`/app/goals/${task.goalId}`);
               }}
             >
-              Otwórz cel „{task.goalTitle.length > 28 ? `${task.goalTitle.slice(0, 28)}…` : task.goalTitle}”
+              {t("tasksView.openGoal", { title: task.goalTitle.length > 28 ? `${task.goalTitle.slice(0, 28)}…` : task.goalTitle })}
             </MenuItem>
             {canDeleteTask(task) ? (
               <>
@@ -265,7 +268,7 @@ export function TasksView({
                     setDeleting(task);
                   }}
                 >
-                  Usuń zadanie
+                  {t("tasksView.usunZadanie")}
                 </MenuItem>
               </>
             ) : null}
@@ -278,8 +281,8 @@ export function TasksView({
   return (
     <div className="page-wide">
       <ModuleHeader
-        title="Taski"
-        subtitle={`${subtitle}${doneThisWeek ? ` W tym tygodniu zrobione: ${doneThisWeek}.` : ""}`}
+        title={t("tasksView.title")}
+        subtitle={`${subtitle}${doneThisWeek ? ` ${t("tasksView.doneThisWeek", { count: doneThisWeek })}` : ""}`}
         action={
           openGoals.length > 0 ? (
             <Button
@@ -290,7 +293,7 @@ export function TasksView({
               }}
             >
               <Plus className="size-4" />
-              Nowe zadanie
+              {t("tasksView.noweZadanie")}
             </Button>
           ) : null
         }
@@ -299,12 +302,12 @@ export function TasksView({
       <div className="mt-5 flex flex-wrap items-center gap-2">
         <div
           role="tablist"
-          aria-label="Czyje zadania"
+          aria-label={t("tasksView.czyjeZadania")}
           className="inline-flex rounded-xl border border-white/[0.08] bg-[var(--surface)] p-1"
         >
           {[
             [true, "Moje"],
-            [false, "Cały zespół"],
+            [false, t("tasksView.calyZespol")],
           ].map(([value, label]) => (
             <button
               key={String(label)}
@@ -324,11 +327,11 @@ export function TasksView({
         <MenuSelect
           size="sm"
           className="w-auto min-w-[170px] max-w-[260px]"
-          ariaLabel="Cel"
+          ariaLabel={t("tasksView.cel")}
           value={goalFilter}
           onChange={setGoalFilter}
           options={[
-            { value: "all", label: "Każdy cel" },
+            { value: "all", label: t("tasksView.kazdyCel") },
             ...liveGoals.map((goal) => ({ value: goal.id, label: goal.title })),
           ]}
         />
@@ -337,8 +340,8 @@ export function TasksView({
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Szukaj zadania"
-            aria-label="Szukaj zadania"
+            placeholder={t("tasksView.szukajZadania")}
+            aria-label={t("tasksView.szukajZadania")}
             className="min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-[var(--text-subtle)]"
           />
         </label>
@@ -366,7 +369,7 @@ export function TasksView({
               <StatusIcon status={status} task className="size-3.5" />
               <span className="tabular">{rows.filter((task) => task.status === status).length}</span>
             </span>
-            <span className="truncate">{TASK_STATUS_LABELS[status]}</span>
+            <span className="truncate">{t(`taskStatus.${status}`)}</span>
           </button>
         ))}
       </div>
@@ -378,7 +381,7 @@ export function TasksView({
           return (
             <section
               key={status}
-              aria-label={TASK_STATUS_LABELS[status]}
+              aria-label={t(`taskStatus.${status}`)}
               onDragOver={(event) => {
                 if (!dragId) return;
                 event.preventDefault();
@@ -402,7 +405,7 @@ export function TasksView({
             >
               <header className="flex items-center gap-2 px-1.5 pb-2.5 pt-1">
                 <StatusIcon status={status} task className="size-4" />
-                <h2 className="text-[13px] font-semibold text-white">{TASK_STATUS_LABELS[status]}</h2>
+                <h2 className="text-[13px] font-semibold text-white">{t(`taskStatus.${status}`)}</h2>
                 <span className="tabular text-[12px] text-[var(--text-subtle)]">{cards.length}</span>
               </header>
 
@@ -435,7 +438,7 @@ export function TasksView({
                 ))}
                 {cards.length === 0 && status !== "todo" ? (
                   <li className="rounded-xl border border-dashed border-white/[0.08] px-3 py-4 text-center text-[12.5px] text-[var(--text-subtle)]">
-                    {status === "blocked" ? "Nic nie stoi w miejscu." : "Pusto."}
+                    {status === "blocked" ? t("tasksView.nicNieStoiW") : "Pusto."}
                   </li>
                 ) : null}
               </ul>
@@ -450,7 +453,7 @@ export function TasksView({
                   onAdd={(title, goalId) =>
                     run(
                       () => createTask({ startupId, goalId, title, ownerId: userId }),
-                      "Zadanie dodane"
+                      t("tasksView.zadanieDodane")
                     )
                   }
                 />
@@ -459,9 +462,9 @@ export function TasksView({
               {status === "done" ? (
                 <p className="px-1.5 pt-3 text-[12px] leading-relaxed text-[var(--text-subtle)]">
                   {doneThisWeek !== null && doneThisWeek > 0
-                    ? `${doneThisWeek} w tym tygodniu. `
+                    ? t("tasksView.donethisweekWTymTygodniu", { doneThisWeek })
                     : ""}
-                  Zrobione zadania nie kończą celu — kończy go dowód.
+                  {t("tasksView.zrobioneZadaniaNieKoncza")}
                 </p>
               ) : null}
             </section>
@@ -474,8 +477,8 @@ export function TasksView({
           {/* Bez otwartego celu nie ma gdzie dodać zadania — kolumna mówi to
               sama, więc tu nie odsyłamy do przycisku, którego nie ma. */}
           {openGoals.length > 0
-            ? "Nie masz jeszcze żadnego zadania. Dodaj pierwsze w kolumnie „Do zrobienia” albo zobacz, nad czym pracuje cały zespół."
-            : "Nie masz otwartych zadań. Zadania dodaje się pod celem — załóż nowy cel w Celach albo zobacz, nad czym pracuje cały zespół."}
+            ? t("tasksView.nieMaszJeszczeZadnego")
+            : t("tasksView.nieMaszOtwartychZadan2")}
         </EmptyNote>
       ) : null}
 
@@ -499,19 +502,19 @@ export function TasksView({
           onDue={(dueDate) =>
             run(
               () => updateTask({ startupId, taskId: openTask.id, dueDate }),
-              dueDate ? `Termin: ${formatDay(dueDate)}` : "Termin usunięty"
+              dueDate ? `Termin: ${formatDay(dueDate)}` : t("tasksView.terminUsuniety")
             )
           }
           onTitle={(title) =>
-            run(() => updateTask({ startupId, taskId: openTask.id, title }), "Zadanie zapisane")
+            run(() => updateTask({ startupId, taskId: openTask.id, title }), t("tasksView.zadanieZapisane"))
           }
           onNote={(note) =>
-            run(() => updateTask({ startupId, taskId: openTask.id, note }), "Notatka zapisana")
+            run(() => updateTask({ startupId, taskId: openTask.id, note }), t("tasksView.notatkaZapisana"))
           }
           onBlocker={(blockerNote) =>
             run(
               () => updateTask({ startupId, taskId: openTask.id, blockerNote }),
-              "Powód blokady zapisany"
+              t("tasksView.powodBlokadyZapisany")
             )
           }
           startupId={startupId}
@@ -521,25 +524,25 @@ export function TasksView({
 
       {deleting ? (
         <Modal
-          title="Usunąć to zadanie?"
-          description="Zniknie z tablicy i z celu. Tego nie da się cofnąć."
+          title={t("tasksView.usunacToZadanie")}
+          description={t("tasksView.zniknieZTablicyI")}
           onClose={() => setDeleting(null)}
           footer={
             <>
               <Button variant="ghost" onClick={() => setDeleting(null)}>
-                Zostaw
+                {t("tasksView.keep")}
               </Button>
               <Button
                 variant="danger"
                 loading={pending}
                 onClick={() =>
-                  run(() => deleteTask(startupId, deleting.id), "Zadanie usunięte", () => {
+                  run(() => deleteTask(startupId, deleting.id), t("tasksView.zadanieUsuniete"), () => {
                     if (openId === deleting.id) setOpen(null);
                     setDeleting(null);
                   })
                 }
               >
-                Usuń zadanie
+                {t("tasksView.usunZadanie")}
               </Button>
             </>
           }
@@ -569,6 +572,7 @@ function AddTask({
   pending: boolean;
   onAdd: (title: string, goalId: string) => void;
 }) {
+  const t = useT("goals");
   const [open, setOpen] = useState(startOpen);
   const [title, setTitle] = useState("");
   const [lastGoal, setLastGoal] = useState(goals[0]?.id ?? "");
@@ -578,7 +582,7 @@ function AddTask({
   if (goals.length === 0) {
     return (
       <p className="px-1.5 pt-2 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-        Wszystkie cele są ukończone. Nowe zadanie dodasz pod nowym celem.
+        {t("tasksView.wszystkieCeleSaUkonczone")}
       </p>
     );
   }
@@ -593,14 +597,14 @@ function AddTask({
         <span className="inline-flex size-5 items-center justify-center rounded-full border border-dashed border-white/25">
           <Plus className="size-3" aria-hidden="true" />
         </span>
-        Dodaj zadanie
+        {t("tasksView.dodajZadanie")}
       </button>
     );
   }
 
   const submit = () => {
     if (title.trim().length < 2) {
-      setError("Napisz, co jest do zrobienia.");
+      setError(t("tasksView.napiszCoJestDo"));
       return;
     }
     onAdd(title.trim(), goalId);
@@ -612,11 +616,11 @@ function AddTask({
     <div className="mt-2 rounded-2xl bg-[var(--surface)] p-3 lift-1">
       <Input
         autoFocus
-        aria-label="Nowe zadanie"
+        aria-label={t("tasksView.noweZadanie")}
         aria-invalid={Boolean(error)}
         value={title}
         maxLength={180}
-        placeholder="Co jest do zrobienia?"
+        placeholder={t("tasksView.coJestDoZrobienia")}
         onChange={(event) => setTitle(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
@@ -632,7 +636,7 @@ function AddTask({
         <MenuSelect
           size="sm"
           className="min-w-0 flex-1"
-          ariaLabel="Cel zadania"
+          ariaLabel={t("tasksView.celZadania")}
           value={goalId}
           disabled={goalFilter !== "all"}
           onChange={setLastGoal}
@@ -641,14 +645,14 @@ function AddTask({
       </div>
       <div className="mt-2.5 flex items-center justify-between gap-2">
         <span className="hidden text-[11.5px] text-[var(--text-subtle)] sm:inline">
-          Enter dodaje · Esc anuluje
+          {t("tasksView.enterDodajeEscAnuluje")}
         </span>
         <div className="ml-auto flex gap-1.5">
           <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
-            Anuluj
+            {t("tasksView.anuluj")}
           </Button>
           <Button size="sm" variant="secondary" loading={pending} onClick={submit}>
-            Dodaj
+            {t("tasksView.dodaj")}
           </Button>
         </div>
       </div>
@@ -690,6 +694,8 @@ function TaskPanel({
   startupId: string;
   onDelete: () => void;
 }) {
+  const { formatDay, formatMoment } = useGoalFormat();
+  const t = useT("goals");
   const [title, setTitle] = useState(task.title);
   const [note, setNote] = useState(task.note ?? "");
   const [blocker, setBlocker] = useState(task.blockerNote ?? "");
@@ -717,7 +723,7 @@ function TaskPanel({
           className="inline-flex items-center gap-1.5 hover:text-white"
         >
           <Flag className="size-3" aria-hidden="true" />
-          Cel „{task.goalTitle}”
+          {t("tasksView.celGoaltitle", { goalTitle: task.goalTitle })}
         </Link>
       }
       onClose={onClose}
@@ -725,7 +731,7 @@ function TaskPanel({
         canDelete ? (
           <Button variant="ghost" size="sm" onClick={onDelete} className="text-[var(--danger)]">
             <Trash2 className="size-3.5" />
-            Usuń zadanie
+            {t("tasksView.usunZadanie")}
           </Button>
         ) : null
       }
@@ -733,14 +739,14 @@ function TaskPanel({
       {!editable ? (
         <p className="mb-5 flex items-start gap-2 rounded-xl border border-white/[0.08] bg-[var(--surface-2)] px-3.5 py-2.5 text-[13px] text-[var(--text-muted)]">
           <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-          Zmienia je {task.ownerName}, Founder albo Admin.
+          {t("tasksView.zmieniaJeOwnernameFounder", { ownerName: task.ownerName })}
         </p>
       ) : null}
 
       <div className="flex flex-col gap-6">
         {editable ? (
           <div className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-medium text-[var(--text-muted)]">Zadanie</span>
+            <span className="text-[13px] font-medium text-[var(--text-muted)]">{t("tasksView.zadanie")}</span>
             <Input
               value={title}
               maxLength={180}
@@ -753,8 +759,8 @@ function TaskPanel({
         ) : null}
 
         <div>
-          <span className="text-[13px] font-medium text-[var(--text-muted)]">Status</span>
-          <div role="radiogroup" aria-label="Status" className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <span className="text-[13px] font-medium text-[var(--text-muted)]">{t("tasksView.status")}</span>
+          <div role="radiogroup" aria-label={t("tasksView.status")} className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {TASK_STATUSES.map((status) => {
               const on = status === task.status;
               return (
@@ -774,7 +780,7 @@ function TaskPanel({
                   )}
                 >
                   <StatusIcon status={status} task className="size-4" />
-                  {TASK_STATUS_LABELS[status]}
+                  {t(`taskStatus.${status}`)}
                 </button>
               );
             })}
@@ -798,18 +804,18 @@ function TaskPanel({
                 {task.ownerName}
               </p>
               <p className="mt-1 text-[12px] text-[var(--text-subtle)]">
-                Przypisać pracę innej osobie może Founder albo Admin.
+                {t("tasksView.przypisacPraceInnejOsobie")}
               </p>
             </div>
           )}
         </div>
 
         <div>
-          <span className="text-[13px] font-medium text-[var(--text-muted)]">Termin</span>
+          <span className="text-[13px] font-medium text-[var(--text-muted)]">{t("tasksView.termin")}</span>
           <div className="mt-2 flex items-center gap-2">
             <Input
               type="date"
-              aria-label="Termin"
+              aria-label={t("tasksView.termin")}
               disabled={!editable}
               defaultValue={task.dueDate ?? ""}
               onBlur={(event) => {
@@ -820,7 +826,7 @@ function TaskPanel({
             />
             {editable && task.dueDate ? (
               <Button size="sm" variant="ghost" onClick={() => onDue(null)}>
-                Bez terminu
+                {t("tasksView.bezTerminu")}
               </Button>
             ) : null}
           </div>
@@ -829,7 +835,7 @@ function TaskPanel({
         {detailsAvailable && task.status === "blocked" ? (
           <div>
             <label htmlFor="powod-blokady" className="text-[13px] font-medium text-[var(--text-muted)]">
-              Co blokuje
+              {t("tasksView.coBlokuje")}
             </label>
             <Input
               id="powod-blokady"
@@ -837,14 +843,14 @@ function TaskPanel({
               disabled={!editable}
               value={blocker}
               maxLength={300}
-              placeholder="Na przykład: czeka na podpis po stronie firmy"
+              placeholder={t("tasksView.naPrzykladCzekaNa")}
               onChange={(event) => setBlocker(event.target.value)}
               onBlur={() => {
                 if (blocker.trim() !== (task.blockerNote ?? "")) onBlocker(blocker);
               }}
             />
             <p className="mt-1 text-[12px] text-[var(--text-subtle)]">
-              Widać to na karcie, żeby zespół wiedział, na co czekacie.
+              {t("tasksView.widacToNaKarcie")}
             </p>
           </div>
         ) : null}
@@ -852,7 +858,7 @@ function TaskPanel({
         {detailsAvailable ? (
           <div>
             <label htmlFor="notatka-zadania" className="text-[13px] font-medium text-[var(--text-muted)]">
-              Notatka
+              {t("tasksView.notatka")}
             </label>
             <Textarea
               id="notatka-zadania"
@@ -861,7 +867,7 @@ function TaskPanel({
               disabled={!editable}
               value={note}
               maxLength={2000}
-              placeholder="Szczegóły, linki, gdzie co leży"
+              placeholder={t("tasksView.szczegolyLinkiGdzieCo")}
               onChange={(event) => setNote(event.target.value)}
               onBlur={() => {
                 if (note.trim() !== (task.note ?? "")) onNote(note);
@@ -877,7 +883,7 @@ function TaskPanel({
               {history.events.map((event) => (
                 <li key={event.id} className="relative">
                   <span className="absolute -left-[21px] top-1.5 size-2 rounded-full bg-white/30" aria-hidden="true" />
-                  <p className="text-[13px] text-white">{taskEventLabel(event, members)}</p>
+                  <p className="text-[13px] text-white">{taskEventLabel(t, formatDay, event, members)}</p>
                   <p className="text-[12px] text-[var(--text-subtle)]">
                     {formatMoment(event.createdAt)}
                     {event.actorName ? ` · ${event.actorName}` : ""}
@@ -898,16 +904,17 @@ function TaskPanel({
 
 /** Pusty stan bez celów: zadanie zawsze należy do celu, więc prowadzimy do Celów. */
 function NoGoals() {
+  const t = useT("goals");
   return (
     <section className="mt-6 rounded-[25px] border border-dashed border-white/10 px-6 py-8 sm:px-8">
       <h2 className="font-heading text-[17px] font-semibold text-white">
-        Zadania to małe kroki do celu
+        {t("tasksView.zadaniaToMaleKroki")}
       </h2>
       <ol className="mt-4 flex max-w-xl flex-col gap-3 text-[14px] leading-relaxed text-[var(--text-muted)]">
         {[
-          "Każde zadanie należy do jednego celu — najpierw załóż cel.",
-          "Przesuwasz je między kolumnami, gdy zmienia się stan.",
-          "Zrobione zadania nie kończą celu — kończy go dowód.",
+          t("tasksView.kazdeZadanieNalezyDo"),
+          t("tasksView.przesuwaszJeMiedzyKolumnami"),
+          t("tasksView.zrobioneZadaniaNieKoncza"),
         ].map((line, index) => (
           <li key={line} className="flex gap-3">
             <span className="tabular inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--surface-2)] text-[12px] font-semibold text-white">
@@ -918,24 +925,33 @@ function NoGoals() {
         ))}
       </ol>
       <Button className="mt-6" href="/app/goals/new">
-        Załóż pierwszy cel
+        {t("tasksView.zalozPierwszyCel")}
       </Button>
     </section>
   );
 }
 
-function taskEventLabel(event: TaskEvent, members: TeamMemberOption[]) {
+function taskEventLabel(
+  t: Translate<MessageKey<"goals">>,
+  formatDay: (iso: string | null | undefined) => string,
+  event: TaskEvent,
+  members: TeamMemberOption[]
+) {
   const name = (id: unknown) =>
-    typeof id === "string" ? (members.find((member) => member.id === id)?.name ?? "osoba spoza zespołu") : "nikt";
-  if (event.kind === "created") return "Zadanie dodane";
-  if (event.kind === "owner") return `Przypisane: ${name(event.payload.to)}`;
+    typeof id === "string"
+      ? (members.find((member) => member.id === id)?.name ?? t("tasksView.osobaSpozaZespolu"))
+      : t("tasksView.nobody");
+  if (event.kind === "created") return t("tasksView.zadanieDodane");
+  if (event.kind === "owner") return t("tasksView.eventAssigned", { name: name(event.payload.to) });
   if (event.kind === "deadline") {
     return typeof event.payload.due_date === "string"
-      ? `Termin: ${formatDay(event.payload.due_date)}`
-      : "Termin usunięty";
+      ? t("tasksView.eventDeadline", { date: formatDay(event.payload.due_date) })
+      : t("tasksView.terminUsuniety");
   }
   const to = event.payload.to;
   const label =
-    typeof to === "string" && to in TASK_STATUS_LABELS ? TASK_STATUS_LABELS[to as TaskStatus] : "zmiana";
-  return `Status: ${label.toLowerCase()}`;
+    typeof to === "string" && (TASK_STATUSES as readonly string[]).includes(to)
+      ? t(`taskStatus.${to as TaskStatus}`)
+      : t("tasksView.eventChange");
+  return t("tasksView.eventStatus", { status: label.toLowerCase() });
 }

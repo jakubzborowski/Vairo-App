@@ -14,8 +14,9 @@ import type {
   ProofKind,
   TeamMemberOption,
 } from "@/types/goals";
-import { COMMON_PROOF_KINDS, PROOF_KIND_META, buildRequirement, optionsCount } from "./goal-options";
+import { COMMON_PROOF_KINDS, buildRequirement, optionsCount } from "./goal-options";
 
+import { useT } from "@/i18n/client";
 type Errors = Partial<Record<"title" | "dueDate" | "label" | "options", string>>;
 
 /**
@@ -41,6 +42,7 @@ export function GoalEditForm({
   startupId: string;
   onDone: () => void;
 }) {
+  const t = useT("goals");
   const { toast } = useToast();
   const [pending, start] = useTransition();
   const initial = {
@@ -86,17 +88,17 @@ export function GoalEditForm({
 
   const save = () => {
     const next: Errors = {};
-    if (values.title.trim().length < 3) next.title = "Napisz, co ma być gotowe. Jedno zdanie wystarczy.";
+    if (values.title.trim().length < 3) next.title = t("goalEditForm.napiszCoMaByc");
     if (!values.dueDate) next.dueDate = "Ustal termin.";
-    if (values.label.trim().length < 2) next.label = "Napisz jednym zdaniem, czego oczekujecie.";
+    if (values.label.trim().length < 2) next.label = t("goalEditForm.napiszJednymZdaniemCzego");
     if (values.kind === "select" && optionsCount(values.optionsText) < 2) {
-      next.options = "Potrzebne są co najmniej dwie odpowiedzi.";
+      next.options = t("goalEditForm.potrzebneSaCoNajmniej");
     }
     setErrors(next);
     const problems = Object.keys(next).length;
     if (problems > 0) {
       setSaveError(
-        problems === 1 ? "Jedno pole czeka na poprawkę." : `${problems} pola czekają na poprawkę.`
+        problems === 1 ? t("goalEditForm.jednoPoleCzekaNa") : t("goalEditForm.problemsPolaCzekajaNa", { problems })
       );
       return;
     }
@@ -125,7 +127,7 @@ export function GoalEditForm({
         setSaveError(result.error);
         return;
       }
-      toast({ title: "Cel zapisany" });
+      toast({ title: t("goalEditForm.celZapisany") });
       onDone();
     });
   };
@@ -134,20 +136,20 @@ export function GoalEditForm({
     <div className="mt-5">
       <div className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-[var(--surface)] px-4 py-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-medium text-white">Edytujesz cel</p>
+          <p className="text-[14px] font-medium text-white">{t("goalEditForm.edytujeszCel")}</p>
           <p className="mt-0.5 text-[13px] text-[var(--text-subtle)]">
-            Zadania i materiały wrócą po zapisaniu albo odrzuceniu zmian.
+            {t("goalEditForm.zadaniaIMaterialyWroca")}
           </p>
         </div>
         {dirty ? null : (
           <Button size="sm" variant="ghost" onClick={onDone}>
-            Zamknij edycję
+            {t("goalEditForm.zamknijEdycje")}
           </Button>
         )}
       </div>
 
       <div className="mt-5 flex flex-col gap-5">
-        <Field label="Jaki wynik pokażecie?" error={errors.title}>
+        <Field label={t("goalEditForm.jakiWynikPokazecie")} error={errors.title}>
           {({ id, invalid }) => (
             <Input
               id={id}
@@ -159,7 +161,7 @@ export function GoalEditForm({
           )}
         </Field>
 
-        <Field label="Opis · opcjonalnie" hint="Kontekst dla zespołu, jeśli tytuł nie wystarcza.">
+        <Field label={t("goalEditForm.opisOpcjonalnie")} hint={t("goalEditForm.kontekstDlaZespoluJesli")}>
           {({ id }) => (
             <Textarea
               id={id}
@@ -172,9 +174,9 @@ export function GoalEditForm({
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-medium text-[var(--text-muted)]">Właściciel</span>
+            <span className="text-[13px] font-medium text-[var(--text-muted)]">{t("goalEditForm.wlasciciel")}</span>
             <MenuSelect
-              ariaLabel="Właściciel"
+              ariaLabel={t("goalEditForm.wlasciciel")}
               value={values.ownerId}
               disabled={!canAssign}
               onChange={(value) => set("ownerId", value)}
@@ -182,11 +184,11 @@ export function GoalEditForm({
             />
             {!canAssign ? (
               <span className="text-[12px] text-[var(--text-subtle)]">
-                Osobę zmienia Founder albo Admin.
+                {t("goalEditForm.osobeZmieniaFounderAlbo")}
               </span>
             ) : null}
           </div>
-          <Field label="Termin" error={errors.dueDate}>
+          <Field label={t("goalEditForm.termin")} error={errors.dueDate}>
             {({ id, invalid }) => (
               <Input
                 id={id}
@@ -211,30 +213,30 @@ export function GoalEditForm({
           />
           {typeLock ? (
             <span className="text-[12px] text-[var(--text-subtle)]">
-              Rodzaju wymaga warunek „{typeLock.subpointTitle}”. Zmienisz go po odpięciu.
+              {t("goalEditForm.rodzajuWymagaWarunekSubpointtitle", { subpointTitle: typeLock.subpointTitle })}
             </span>
           ) : null}
         </div>
 
         <fieldset className="rounded-2xl border border-white/[0.08] p-4">
-          <legend className="px-1 text-[13px] font-medium text-white">Dowód, którego oczekujecie</legend>
+          <legend className="px-1 text-[13px] font-medium text-white">{t("goalEditForm.dowodKtoregoOczekujecie")}</legend>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-[var(--text-muted)]">W jakiej formie</span>
+              <span className="text-[13px] font-medium text-[var(--text-muted)]">{t("goalEditForm.wJakiejFormie")}</span>
               <MenuSelect
-                ariaLabel="Forma dowodu"
+                ariaLabel={t("goalEditForm.formaDowodu")}
                 value={values.kind}
                 disabled={Boolean(kindLock)}
                 onChange={(value) => set("kind", value as ProofKind)}
-                options={kinds.map((kind) => ({ value: kind, label: PROOF_KIND_META[kind].label }))}
+                options={kinds.map((kind) => ({ value: kind, label: t(`proofMeta.${kind}.label`) }))}
               />
               {kindLock ? (
                 <span className="text-[12px] text-[var(--text-subtle)]">
-                  Formy wymaga warunek „{kindLock.subpointTitle}”.
+                  {t("goalEditForm.formyWymagaWarunekSubpointtitle", { subpointTitle: kindLock.subpointTitle })}
                 </span>
               ) : null}
             </div>
-            <Field label="Co ma się w nim znaleźć" error={errors.label}>
+            <Field label={t("goalEditForm.coMaSieW")} error={errors.label}>
               {({ id, invalid }) => (
                 <Input
                   id={id}
@@ -246,7 +248,7 @@ export function GoalEditForm({
               )}
             </Field>
             {values.kind === "select" ? (
-              <Field label="Możliwe odpowiedzi" hint="Każda w osobnej linijce." error={errors.options}>
+              <Field label={t("goalEditForm.mozliweOdpowiedzi")} hint={t("goalEditForm.kazdaWOsobnejLinijce")} error={errors.options}>
                 {({ id, invalid }) => (
                   <Textarea
                     id={id}
@@ -261,7 +263,7 @@ export function GoalEditForm({
           </div>
         </fieldset>
 
-        <Field label="Notatka dla zespołu · opcjonalnie">
+        <Field label={t("goalEditForm.notatkaDlaZespoluOpcjonalnie")}>
           {({ id }) => (
             <Textarea
               id={id}

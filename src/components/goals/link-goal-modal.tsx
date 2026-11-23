@@ -7,9 +7,11 @@ import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 import { canChangeOwnWork, type StartupRole } from "@/types/startup";
 import type { GoalItem, MilestoneCondition } from "@/types/goals";
-import { dueLine } from "./goal-format";
+
 import { StatusBadge } from "./status";
 
+import { useT } from "@/i18n/client";
+import { useGoalFormat } from "@/components/goals/goal-format-hook";
 /**
  * Podpięcie istniejącego celu do warunku etapu.
  *
@@ -39,6 +41,8 @@ export function LinkGoalModal({
   onCreate: () => void;
   onClose: () => void;
 }) {
+  const { dueLine } = useGoalFormat();
+  const t = useT("goals");
   const matching = goals.filter(
     (goal) =>
       !goal.archivedAt &&
@@ -52,23 +56,23 @@ export function LinkGoalModal({
 
   return (
     <Modal
-      title="Podepnij cel do warunku"
+      title={t("linkGoalModal.podepnijCelDoWarunku")}
       description={condition.subpointTitle}
       onClose={onClose}
       footer={
         <>
           <Button variant="ghost" onClick={onCreate}>
             <Plus className="size-4" />
-            Załóż nowy cel typu {condition.goalTypeLabel}
+            {t("linkGoalModal.zalozNowyCelTypu", { goalTypeLabel: condition.goalTypeLabel })}
           </Button>
           {matching.length > 0 ? (
             <Button
               loading={pending}
               disabled={!picked}
-              title={picked ? undefined : "Wybierz cel z listy"}
+              title={picked ? undefined : t("linkGoalModal.wybierzCelZListy")}
               onClick={() => picked && onPick(picked)}
             >
-              Podepnij wybrany
+              {t("linkGoalModal.podepnijWybrany")}
             </Button>
           ) : null}
         </>
@@ -77,22 +81,20 @@ export function LinkGoalModal({
       {matching.length === 0 ? (
         <div className="rounded-xl border border-dashed border-white/10 px-4 py-4">
           <p className="text-[14px] font-medium text-white">
-            Nie ma jeszcze celu typu {condition.goalTypeLabel}
+            {t("linkGoalModal.nieMaJeszczeCelu", { goalTypeLabel: condition.goalTypeLabel })}
           </p>
           <p className="mt-1 text-[13px] leading-relaxed text-[var(--text-subtle)]">
-            Ten warunek przyjmuje tylko cele tego typu. Załóż nowy — kreator
-            będzie miał już wpisany typ i warunek, do którego cel się podepnie.
+            {t("linkGoalModal.tenWarunekPrzyjmujeTylko")}
           </p>
         </div>
       ) : (
         <>
           {condition.matchAnyType ? null : (
             <p className="text-[13px] text-[var(--text-subtle)]">
-              Pokazujemy tylko cele typu {condition.goalTypeLabel}, bo tylko takie
-              ten warunek przyjmie.
+              {t("linkGoalModal.pokazujemyTylkoCeleTypu", { goalTypeLabel: condition.goalTypeLabel })}
             </p>
           )}
-          <ul role="radiogroup" aria-label="Cele do podpięcia" className="flex flex-col gap-2">
+          <ul role="radiogroup" aria-label={t("linkGoalModal.celeDoPodpiecia")} className="flex flex-col gap-2">
             {matching.map((goal) => {
               const allowed = pickable(goal);
               const on = picked === goal.id;
@@ -131,13 +133,13 @@ export function LinkGoalModal({
                       </span>
                       {goal.conditions[0] ? (
                         <span className="mt-1 block text-[12.5px] text-[var(--text-muted)]">
-                          Liczy się już do: {goal.conditions[0].subpointTitle}
+                          {t("linkGoalModal.liczySieJuzDo", { subpointTitle: goal.conditions[0].subpointTitle })}
                         </span>
                       ) : null}
                       {!allowed ? (
                         <span className="mt-1 inline-flex items-center gap-1 text-[12.5px] text-[var(--text-subtle)]">
                           <Lock className="size-3" aria-hidden="true" />
-                          Podpinasz tylko własne cele. Ten podepnie {goal.ownerName}, Founder albo Admin.
+                          {t("linkGoalModal.podpinaszTylkoWlasneCele", { ownerName: goal.ownerName })}
                         </span>
                       ) : null}
                     </span>
@@ -148,8 +150,8 @@ export function LinkGoalModal({
           </ul>
           <p className="text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
             {condition.countsWhen === "defined"
-              ? "Podpięty cel liczy się do etapu od razu — ten warunek wymaga ustawienia celu, nie ukończenia."
-              : "Podpięty cel zacznie się liczyć do etapu, gdy będzie ukończony z dowodem."}
+              ? t("linkGoalModal.podpietyCelLiczySie")
+              : t("linkGoalModal.podpietyCelZacznieSie")}
           </p>
         </>
       )}

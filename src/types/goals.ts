@@ -14,24 +14,13 @@ export const GOAL_STATUSES = [
 
 export type GoalStatus = (typeof GOAL_STATUSES)[number];
 
-export const GOAL_STATUS_LABELS: Record<GoalStatus, string> = {
-  todo: "Do zrobienia",
-  in_progress: "W trakcie",
-  blocked: "Zablokowany",
-  awaiting_proof: "Czeka na dowód",
-  completed: "Ukończony",
-};
+// Nazwy statusów celu: słownik `goals`, `goalStatus.<status>`.
 
 export const TASK_STATUSES = ["todo", "in_progress", "blocked", "done"] as const;
 
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
-export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
-  todo: "Do zrobienia",
-  in_progress: "W trakcie",
-  blocked: "Zablokowane",
-  done: "Zrobione",
-};
+// Nazwy statusów zadania: słownik `goals`, `taskStatus.<status>`.
 
 export const PROOF_KINDS = [
   "sentence",
@@ -46,16 +35,7 @@ export const PROOF_KINDS = [
 
 export type ProofKind = (typeof PROOF_KINDS)[number];
 
-export const PROOF_KIND_LABELS: Record<ProofKind, string> = {
-  sentence: "Jedno zdanie",
-  long_text: "Dłuższy tekst",
-  select: "Wybór z listy",
-  scale: "Skala",
-  link: "Link",
-  file: "Plik",
-  module_result: "Rozpiska",
-  goal_set: "Zestaw ukończonych celów",
-};
+// Nazwy form dowodu: słownik `goals`, `proofKind.<kind>`.
 
 export type ProofOption = { value: string; label: string };
 

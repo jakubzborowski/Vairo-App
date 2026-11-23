@@ -1,4 +1,6 @@
 import type { ProofRequirement, ProofSnapshot } from "@/types/goals";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
 
 /**
  * Ta sama reguła co `proof_matches` w migracji 025.
@@ -61,27 +63,9 @@ export function proofMatches(
   }
 }
 
-export function proofGap(requirement: ProofRequirement): string {
-  switch (requirement.kind) {
-    case "sentence":
-      return "Wpisz jedno zdanie — bez enteru.";
-    case "long_text":
-      return "Opisz wynik kilkoma zdaniami.";
-    case "select":
-      return "Wybierz jedną z przygotowanych opcji.";
-    case "scale":
-      return "Zaznacz wartość na skali.";
-    case "link":
-      return "Wklej adres https i jednym zdaniem napisz, co tam jest.";
-    case "file":
-      return "Wybierz plik z biblioteki tego startupu.";
-    case "module_result":
-      return "Wybierz zapisaną wersję Rozpiski.";
-    case "goal_set":
-      return "Wskaż ukończone cele z dowodem.";
-    default:
-      return "Dodaj dowód w wymaganym formacie.";
-  }
+/** Czego brakuje dowodowi — tekst ze słownika `goals`, `proofGap.<kind>`. */
+export function proofGap(t: Translate<MessageKey<"goals">>, requirement: ProofRequirement): string {
+  return t.maybe(`proofGap.${requirement.kind}`, t("proofGap.default"));
 }
 
 export function isProofKind(value: string): value is ProofRequirement["kind"] {

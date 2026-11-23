@@ -3,10 +3,14 @@ import { GoalDetail } from "@/components/goals/goal-detail";
 import { GoalsUnavailable } from "@/components/goals/goals-unavailable";
 import { loadGoalsContext } from "../load";
 import { selectDocuments } from "@/app/app/docs/load";
+import { getT } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Cel — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("goals");
+  return { title: t("meta.goal") };
+}
 
 export default async function GoalPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -9,11 +9,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  GOAL_STATUS_LABELS,
-  TASK_STATUS_LABELS,
   type GoalStatus,
   type TaskStatus,
 } from "@/types/goals";
+import { useT } from "@/i18n/client";
 
 /**
  * Jeden język statusów dla celów i zadań.
@@ -87,10 +86,11 @@ export function StatusBadge({
   task?: boolean;
   className?: string;
 }) {
+  const t = useT("goals");
   const look = task ? taskLook(status as TaskStatus) : goalLook(status as GoalStatus);
   const label = task
-    ? TASK_STATUS_LABELS[status as TaskStatus]
-    : GOAL_STATUS_LABELS[status as GoalStatus];
+    ? t(`taskStatus.${status as TaskStatus}`)
+    : t(`goalStatus.${status as GoalStatus}`);
   return <span className={cn(badgeBase, look.text, look.bg, className)}>{label}</span>;
 }
 
@@ -105,10 +105,11 @@ export function StatusTriggerContent({
   status: GoalStatus | TaskStatus;
   task?: boolean;
 }) {
+  const t = useT("goals");
   const look = task ? taskLook(status as TaskStatus) : goalLook(status as GoalStatus);
   const label = task
-    ? TASK_STATUS_LABELS[status as TaskStatus]
-    : GOAL_STATUS_LABELS[status as GoalStatus];
+    ? t(`taskStatus.${status as TaskStatus}`)
+    : t(`goalStatus.${status as GoalStatus}`);
   return (
     <span
       className={cn(

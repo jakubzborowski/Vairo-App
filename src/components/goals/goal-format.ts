@@ -1,121 +1,60 @@
+import { LOCALE_TAGS, type Locale } from "@/i18n/config";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
 import { plural } from "@/lib/utils";
-import {
-  GOAL_STATUS_LABELS,
-  PROOF_KIND_LABELS,
-  type GoalItem,
-  type ProofKind,
-} from "@/types/goals";
+import type { GoalItem, ProofKind } from "@/types/goals";
 
 /**
  * Słowa, którymi cele mówią o sobie. Jedno miejsce, bo te same zdania stoją
  * na liście, w szczególe i w kreatorze — a dwa różne brzmienia tej samej
  * rzeczy czyta się jak dwie różne rzeczy.
+ *
+ * Teksty są w słowniku `goals` (`format.*`), daty w języku użytkownika.
+ * Komponent kliencki bierze gotowy zestaw z `useGoalFormat()`
+ * (goal-format-hook.ts), serwerowy — z `makeGoalFormat(await getT("goals"),
+ * await getLocale())`.
  */
 
-const DAY = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "short" });
-const DAY_LONG = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "long" });
-const DAY_TIME = new Intl.DateTimeFormat("pl-PL", {
-  day: "numeric",
-  month: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-});
+type GoalsT = Translate<MessageKey<"goals">>;
 
 function parseDay(iso: string) {
   const date = new Date(iso.length === 10 ? `${iso}T00:00:00` : iso);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/** „15 paź" */
-export function formatDay(iso: string | null | undefined) {
-  if (!iso) return "";
-  const date = parseDay(iso);
-  return date ? DAY.format(date) : iso;
+/** Same daty — bez słownika, do miejsc spoza celów (Pliki, Dokumenty, Rozpiska). */
+export function makeDateFormat(locale: Locale) {
+  const tag = LOCALE_TAGS[locale];
+  const DAY = new Intl.DateTimeFormat(tag, { day: "numeric", month: "short" });
+  const DAY_LONG = new Intl.DateTimeFormat(tag, { day: "numeric", month: "long" });
+  const DAY_TIME = new Intl.DateTimeFormat(tag, {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const run = (format: Intl.DateTimeFormat) => (iso: string | null | undefined) => {
+    if (!iso) return "";
+    const date = parseDay(iso);
+    return date ? format.format(date) : iso;
+  };
+  return {
+    /** „15 paź" */
+    formatDay: run(DAY),
+    /** „15 października" */
+    formatDayLong: run(DAY_LONG),
+    /** „12 paź, 14:32" */
+    formatMoment: run(DAY_TIME),
+  };
 }
 
-/** „15 października" */
-export function formatDayLong(iso: string | null | undefined) {
-  if (!iso) return "";
-  const date = parseDay(iso);
-  return date ? DAY_LONG.format(date) : iso;
-}
+export type DateFormat = ReturnType<typeof makeDateFormat>;
 
-/** „12 paź, 14:32" */
-export function formatMoment(iso: string | null | undefined) {
-  if (!iso) return "";
-  const date = parseDay(iso);
-  return date ? DAY_TIME.format(date) : iso;
-}
-
-/** Polska odmiana — ta sama co w całej aplikacji. */
+/** Polska odmiana — ta sama co w całej aplikacji (dla miejsc jeszcze bez słownika). */
 export { plural };
-
-export function tasksLine(goal: GoalItem) {
-  if (goal.tasks.length === 0) return "bez zadań";
-  const done = goal.tasks.filter((task) => task.status === "done").length;
-  return `${done} z ${goal.tasks.length} ${plural(goal.tasks.length, "zadania", "zadań", "zadań")}`;
-}
 
 export function allTasksDone(goal: GoalItem) {
   return goal.tasks.length > 0 && goal.tasks.every((task) => task.status === "done");
-}
-
-export function dueLine(goal: GoalItem) {
-  if (goal.status === "completed") {
-    return goal.completedAt ? `ukończony ${formatDay(goal.completedAt)}` : "ukończony";
-  }
-  return goal.overdue ? `po terminie od ${formatDay(goal.dueDate)}` : `do ${formatDay(goal.dueDate)}`;
-}
-
-/**
- * Jedno zdanie o tym, czego cel teraz potrzebuje — zamiast trzech plakietek
- * („Do zrobienia" + „Po terminie" + „Brak dowodu"), które trzeba było samemu
- * złożyć w myśl.
- */
-export function goalHint(goal: GoalItem): { text: string; tone: "warning" | "danger" | "muted" | "success" } {
-  if (goal.status === "completed") {
-    return { text: `Ukończony z dowodem ${formatDay(goal.completedAt)}.`, tone: "success" };
-  }
-  if (goal.needsReassign) {
-    return { text: "Poprzednia osoba odeszła z zespołu — wskaż nowego właściciela.", tone: "danger" };
-  }
-  if (goal.status === "blocked") {
-    return {
-      text: goal.blockerNote
-        ? `Zablokowany — ${goal.blockerNote}`
-        : "Zablokowany. Opisz, co stoi na przeszkodzie.",
-      tone: "muted",
-    };
-  }
-  if (goal.overdue) {
-    return {
-      text: `Termin minął ${formatDay(goal.dueDate)}. Dowód dodany teraz nadal się liczy.`,
-      tone: "warning",
-    };
-  }
-  if (goal.status === "awaiting_proof" || allTasksDone(goal)) {
-    return { text: "Brakuje tylko dowodu — zadania są zrobione.", tone: "warning" };
-  }
-  if (goal.status === "in_progress") {
-    return { text: `W trakcie, termin ${formatDay(goal.dueDate)}.`, tone: "muted" };
-  }
-  return { text: `Do zrobienia, termin ${formatDay(goal.dueDate)}.`, tone: "muted" };
-}
-
-/** Krótki stan do listy „Co robi zespół". */
-export function teamState(goal: GoalItem): { text: string; warning: boolean } {
-  if (goal.status === "blocked") return { text: "zablokowany", warning: false };
-  if (goal.overdue) return { text: "po terminie", warning: true };
-  if (goal.status === "awaiting_proof" || allTasksDone(goal)) {
-    return { text: "brakuje tylko dowodu", warning: true };
-  }
-  if (goal.tasks.length > 0) return { text: tasksLine(goal), warning: false };
-  return { text: GOAL_STATUS_LABELS[goal.status].toLowerCase(), warning: false };
-}
-
-/** „dłuższy tekst", „link" — forma dowodu w zdaniu. */
-export function proofKindWord(kind: ProofKind) {
-  return PROOF_KIND_LABELS[kind].toLowerCase();
 }
 
 /** Kolejność „co najpierw": im pilniejsze, tym wyżej. */
@@ -127,3 +66,77 @@ export function urgency(goal: GoalItem) {
   if (goal.status === "in_progress") return 4;
   return 5;
 }
+
+export function makeGoalFormat(t: GoalsT, locale: Locale) {
+  const dates = makeDateFormat(locale);
+  const { formatDay } = dates;
+
+  function tasksLine(goal: GoalItem) {
+    if (goal.tasks.length === 0) return t("format.noTasks");
+    const done = goal.tasks.filter((task) => task.status === "done").length;
+    return t("format.tasksDone", { done, count: goal.tasks.length });
+  }
+
+  function dueLine(goal: GoalItem) {
+    if (goal.status === "completed") {
+      return goal.completedAt
+        ? t("format.completedOn", { date: formatDay(goal.completedAt) })
+        : t("format.completed");
+    }
+    return goal.overdue
+      ? t("format.overdueSince", { date: formatDay(goal.dueDate) })
+      : t("format.dueBy", { date: formatDay(goal.dueDate) });
+  }
+
+  /**
+   * Jedno zdanie o tym, czego cel teraz potrzebuje — zamiast trzech plakietek
+   * („Do zrobienia" + „Po terminie" + „Brak dowodu"), które trzeba było samemu
+   * złożyć w myśl.
+   */
+  function goalHint(goal: GoalItem): { text: string; tone: "warning" | "danger" | "muted" | "success" } {
+    if (goal.status === "completed") {
+      return { text: t("format.hintCompleted", { date: formatDay(goal.completedAt) }), tone: "success" };
+    }
+    if (goal.needsReassign) {
+      return { text: t("format.hintReassign"), tone: "danger" };
+    }
+    if (goal.status === "blocked") {
+      return {
+        text: goal.blockerNote
+          ? t("format.hintBlockedNote", { note: goal.blockerNote })
+          : t("format.hintBlocked"),
+        tone: "muted",
+      };
+    }
+    if (goal.overdue) {
+      return { text: t("format.hintOverdue", { date: formatDay(goal.dueDate) }), tone: "warning" };
+    }
+    if (goal.status === "awaiting_proof" || allTasksDone(goal)) {
+      return { text: t("format.hintProofOnly"), tone: "warning" };
+    }
+    if (goal.status === "in_progress") {
+      return { text: t("format.hintInProgress", { date: formatDay(goal.dueDate) }), tone: "muted" };
+    }
+    return { text: t("format.hintTodo", { date: formatDay(goal.dueDate) }), tone: "muted" };
+  }
+
+  /** Krótki stan do listy „Co robi zespół". */
+  function teamState(goal: GoalItem): { text: string; warning: boolean } {
+    if (goal.status === "blocked") return { text: t("format.stateBlocked"), warning: false };
+    if (goal.overdue) return { text: t("format.stateOverdue"), warning: true };
+    if (goal.status === "awaiting_proof" || allTasksDone(goal)) {
+      return { text: t("format.stateProofOnly"), warning: true };
+    }
+    if (goal.tasks.length > 0) return { text: tasksLine(goal), warning: false };
+    return { text: t(`goalStatus.${goal.status}`).toLowerCase(), warning: false };
+  }
+
+  /** „dłuższy tekst", „link" — forma dowodu w zdaniu. */
+  function proofKindWord(kind: ProofKind) {
+    return t(`proofKind.${kind}`).toLowerCase();
+  }
+
+  return { ...dates, tasksLine, dueLine, goalHint, teamState, proofKindWord };
+}
+
+export type GoalFormat = ReturnType<typeof makeGoalFormat>;

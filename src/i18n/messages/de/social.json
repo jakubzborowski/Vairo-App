@@ -381,5 +381,6 @@
   "card.whyYouSee": "Warum du das siehst:",
   "chips.noMatch": "Nichts passt zu „{query}“.",
   "inbox.writesOnBehalf": "Schreibt im Namen von {team}",
-  "inbox.writtenOnBehalf": "Im Namen von {team} geschrieben"
+  "inbox.writtenOnBehalf": "Im Namen von {team} geschrieben",
+  "messages.allConversations": "Alle Gespräche"
 }

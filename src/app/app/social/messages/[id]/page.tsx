@@ -44,7 +44,7 @@ export default async function ConversationPage({
         className="mb-3 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white md:hidden"
       >
         <ArrowLeft className="size-4" />
-        Wszystkie rozmowy
+        {t("messages.allConversations")}
       </Link>
 
       <header className="mb-4 flex items-start gap-3.5 rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-4 py-3.5">

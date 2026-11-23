@@ -1,10 +1,12 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { getT } from "@/i18n/server";
 
 /** Szkielet w kształcie szczegółu celu: tytuł, zdanie faktów, karta, zadania. */
-export default function GoalLoading() {
+export default async function GoalLoading() {
+  const t = await getT("goals");
   return (
     <div role="status" aria-busy="true" className="page">
-      <span className="sr-only">Ładowanie celu…</span>
+      <span className="sr-only">{t("loading.goal")}</span>
       <Skeleton className="h-4 w-14" />
       <Skeleton className="mt-4 h-8 w-3/4" />
       <Skeleton className="mt-3 h-4 w-2/3" />

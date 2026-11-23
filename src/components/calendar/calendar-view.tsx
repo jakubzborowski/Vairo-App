@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ModuleHeader } from "@/components/ui/module-header";
 import { cn } from "@/lib/utils";
-import { plural } from "@/components/goals/goal-format";
+import { useLocale } from "@/i18n/client";
+import { LOCALE_TAGS, type Locale } from "@/i18n/config";
 
+import { useT } from "@/i18n/client";
 export type DeadlineItem = {
   id: string;
   kind: "goal" | "task";
@@ -24,9 +26,6 @@ export type DeadlineItem = {
   open: boolean;
   href: string;
 };
-
-const WD_SHORT = ["pon", "wt", "śr", "czw", "pt", "sob", "nd"];
-const WD_LONG = ["poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota", "niedziela"];
 
 function iso(date: Date) {
   const offset = date.getTimezoneOffset() * 60_000;
@@ -49,34 +48,32 @@ function mondayOf(value: string) {
 function weekdayIndex(value: string) {
   return (parse(value).getDay() + 6) % 7;
 }
-const DAY_MONTH = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "short" });
-const MONTH_YEAR = new Intl.DateTimeFormat("pl-PL", { month: "long", year: "numeric" });
-function rangeLabel(from: string, to: string) {
-  const a = parse(from);
-  const b = parse(to);
-  if (a.getMonth() === b.getMonth()) {
-    const month = new Intl.DateTimeFormat("pl-PL", { month: "long" }).format(b);
-    return `${a.getDate()} – ${b.getDate()} ${genitive(month)}`;
+/**
+ * Daty w języku użytkownika. Dni tygodnia od poniedziałku; zakres dni jednego
+ * miesiąca składa `formatRange` — po polsku sam stawia dopełniacz
+ * („1–7 października”), czego nie da się zrobić sklejaniem nazw.
+ */
+function makeCalFormat(locale: Locale) {
+  const tag = LOCALE_TAGS[locale];
+  const DAY_MONTH = new Intl.DateTimeFormat(tag, { day: "numeric", month: "short" });
+  const MONTH_YEAR = new Intl.DateTimeFormat(tag, { month: "long", year: "numeric" });
+  const RANGE = new Intl.DateTimeFormat(tag, { day: "numeric", month: "long" });
+  // 2024-01-01 to poniedziałek.
+  const week = Array.from({ length: 7 }, (_, index) => new Date(2024, 0, 1 + index));
+  const WD_SHORT = week.map((date) => new Intl.DateTimeFormat(tag, { weekday: "short" }).format(date).replace(/\.$/, ""));
+  const WD_LONG = week.map((date) => new Intl.DateTimeFormat(tag, { weekday: "long" }).format(date));
+  function rangeLabel(from: string, to: string) {
+    const a = parse(from);
+    const b = parse(to);
+    if (a.getMonth() === b.getMonth()) return RANGE.formatRange(a, b);
+    return `${DAY_MONTH.format(a)} – ${DAY_MONTH.format(b)}`;
   }
-  return `${DAY_MONTH.format(a)} – ${DAY_MONTH.format(b)}`;
+  return { DAY_MONTH, MONTH_YEAR, WD_SHORT, WD_LONG, rangeLabel };
 }
-/** „październik" → „października" dla zakresu dni. */
-function genitive(month: string) {
-  const map: Record<string, string> = {
-    styczeń: "stycznia",
-    luty: "lutego",
-    marzec: "marca",
-    kwiecień: "kwietnia",
-    maj: "maja",
-    czerwiec: "czerwca",
-    lipiec: "lipca",
-    sierpień: "sierpnia",
-    wrzesień: "września",
-    październik: "października",
-    listopad: "listopada",
-    grudzień: "grudnia",
-  };
-  return map[month] ?? month;
+
+function useCalFormat() {
+  const locale = useLocale();
+  return useMemo(() => makeCalFormat(locale), [locale]);
 }
 
 const TONE: Record<DeadlineItem["statusTone"], string> = {
@@ -97,6 +94,8 @@ const TONE: Record<DeadlineItem["statusTone"], string> = {
  * przegląd, nie do planowania.
  */
 export function CalendarView({ items, userId }: { items: DeadlineItem[]; userId: string }) {
+  const { WD_SHORT, WD_LONG, DAY_MONTH, rangeLabel } = useCalFormat();
+  const t = useT("goals");
   const today = iso(new Date());
   const [mine, setMine] = useState(false);
   const [mode, setMode] = useState<"two" | "month">("two");
@@ -128,20 +127,20 @@ export function CalendarView({ items, userId }: { items: DeadlineItem[]; userId:
   const nearest = upcoming.find((item) => item.open);
 
   const subtitle = (() => {
-    if (visible.length === 0) return "Nie ma jeszcze żadnych terminów.";
+    if (visible.length === 0) return t("calendar.nieMaJeszczeZadnych");
     const parts: string[] = [];
     parts.push(
       thisWeek.length === 0
-        ? "W tym tygodniu nic"
-        : `W tym tygodniu ${thisWeek.length} ${plural(thisWeek.length, "termin", "terminy", "terminów")}`
+        ? t("calendar.wTymTygodniuNic")
+        : t("calendar.thisWeekCount", { count: thisWeek.length })
     );
     if (overdue.length > 0) {
-      parts.push(`${overdue.length} ${plural(overdue.length, "minął", "minęły", "minęło")}`);
+      parts.push(t("calendar.overdueCount", { count: overdue.length }));
     }
     let sentence = `${parts.join(", ")}.`;
     if (nearest) {
       const date = parse(nearest.due);
-      sentence += ` Najbliższy: ${WD_LONG[weekdayIndex(nearest.due)]} ${DAY_MONTH.format(date)}.`;
+      sentence += ` ${t("calendar.nearest", { day: WD_LONG[weekdayIndex(nearest.due)], date: DAY_MONTH.format(date) })}`;
     }
     return sentence;
   })();
@@ -149,13 +148,13 @@ export function CalendarView({ items, userId }: { items: DeadlineItem[]; userId:
   if (items.length === 0) {
     return (
       <div className="page-wide">
-        <ModuleHeader title="Terminy" subtitle="Daty z celów i zadań, w jednym miejscu." />
+        <ModuleHeader title="Terminy" subtitle={t("calendar.datyZCelowI")} />
         <EmptyState
           className="mt-6"
           icon={CalendarDays}
-          title="Nie ma jeszcze terminów"
-          description="Każdy cel ma termin, a zadania mogą go mieć. Gdy je założycie, zobaczycie tu, kiedy jest gęsto."
-          action={<Button href="/app/goals/new">Załóż cel</Button>}
+          title={t("calendar.nieMaJeszczeTerminow")}
+          description={t("calendar.kazdyCelMaTermin")}
+          action={<Button href="/app/goals/new">{t("calendar.zalozCel")}</Button>}
         />
       </div>
     );
@@ -167,7 +166,7 @@ export function CalendarView({ items, userId }: { items: DeadlineItem[]; userId:
     <div className="page-wide">
       <ModuleHeader title="Terminy" subtitle={subtitle}>
         <Segmented
-          label="Czyje terminy"
+          label={t("calendar.czyjeTerminy")}
           value={mine ? "mine" : "all"}
           onChange={(value) => setMine(value === "mine")}
           options={[
@@ -181,7 +180,7 @@ export function CalendarView({ items, userId }: { items: DeadlineItem[]; userId:
           onChange={(value) => setMode(value as "two" | "month")}
           options={[
             ["two", "Dwa tygodnie"],
-            ["month", "Miesiąc"],
+            ["month", t("calendar.miesiac")],
           ]}
         />
       </ModuleHeader>
@@ -194,7 +193,7 @@ export function CalendarView({ items, userId }: { items: DeadlineItem[]; userId:
                 {rangeLabel(strip[0]!, strip[13]!)}
               </p>
               <div className="flex gap-1">
-                <IconButton label="Poprzedni tydzień" onClick={() => setStripStart(addDays(stripStart, -7))}>
+                <IconButton label={t("calendar.poprzedniTydzien")} onClick={() => setStripStart(addDays(stripStart, -7))}>
                   <ChevronLeft className="size-4" />
                 </IconButton>
                 <button
@@ -202,9 +201,9 @@ export function CalendarView({ items, userId }: { items: DeadlineItem[]; userId:
                   onClick={() => setStripStart(thisMonday)}
                   className="h-9 rounded-[10px] bg-[var(--surface-2)] px-3 text-[13px] text-[var(--text-muted)] transition-colors hover:text-white sm:h-8"
                 >
-                  Dziś
+                  {t("calendar.dzis")}
                 </button>
-                <IconButton label="Następny tydzień" onClick={() => setStripStart(addDays(stripStart, 7))}>
+                <IconButton label={t("calendar.nastepnyTydzien")} onClick={() => setStripStart(addDays(stripStart, 7))}>
                   <ChevronRight className="size-4" />
                 </IconButton>
               </div>
@@ -225,7 +224,7 @@ export function CalendarView({ items, userId }: { items: DeadlineItem[]; userId:
                       isToday ? "bg-[var(--vairo)]/10" : weekend ? "" : "bg-[var(--bg)]/45",
                       day < today && !isToday && "opacity-70"
                     )}
-                    aria-label={`${WD_LONG[weekdayIndex(day)]} ${DAY_MONTH.format(parse(day))}: ${list.length} ${plural(list.length, "termin", "terminy", "terminów")}`}
+                    aria-label={`${WD_LONG[weekdayIndex(day)]} ${DAY_MONTH.format(parse(day))}: ${t("calendar.deadlines", { count: list.length })}`}
                     onClick={() =>
                       document.getElementById(`dzien-${day}`)?.scrollIntoView({ behavior: "smooth", block: "center" })
                     }
@@ -268,28 +267,28 @@ export function CalendarView({ items, userId }: { items: DeadlineItem[]; userId:
 
           <div className="mt-6 flex flex-col gap-6">
             <Group
-              name="Minęły"
-              sub="Spóźniony termin nie blokuje dowodu dodanego później."
+              name={t("calendar.groupOverdue")}
+              sub={t("calendar.spoznionyTerminNieBlokuje")}
               items={overdue}
               today={today}
               overdue
             />
             <Group
-              name="Ten tydzień"
-              sub={`do niedzieli ${DAY_MONTH.format(parse(thisSunday))}`}
+              name={t("calendar.groupThisWeek")}
+              sub={t("calendar.untilSunday", { date: DAY_MONTH.format(parse(thisSunday)) })}
               items={thisWeek}
               today={today}
             />
             <Group
-              name="Następny tydzień"
+              name={t("calendar.groupNextWeek")}
               sub={rangeLabel(addDays(thisSunday, 1), nextSunday)}
               items={nextWeek}
               today={today}
             />
-            <Group name="Później" sub="" items={later} today={today} />
+            <Group name={t("calendar.groupLater")} sub="" items={later} today={today} />
             {overdue.length + upcoming.length === 0 ? (
               <p className="rounded-xl border border-dashed border-white/10 px-4 py-3.5 text-[13px] text-[var(--text-subtle)]">
-                {mine ? "Nie masz otwartych terminów." : "Wszystkie terminy są już za Wami."}
+                {mine ? t("calendar.nieMaszOtwartychTerminow") : t("calendar.wszystkieTerminySaJuz")}
               </p>
             ) : null}
           </div>
@@ -377,6 +376,8 @@ function Group({
   today: string;
   overdue?: boolean;
 }) {
+  const { WD_SHORT } = useCalFormat();
+  const t = useT("goals");
   if (items.length === 0) return null;
   return (
     <section>
@@ -421,9 +422,9 @@ function Group({
                   </span>
                 </span>
                 {item.kind === "goal" ? (
-                  <Flag className="size-4 shrink-0 text-white" aria-label="Cel" />
+                  <Flag className="size-4 shrink-0 text-white" aria-label={t("calendar.cel")} />
                 ) : (
-                  <SquareCheck className="size-4 shrink-0 text-[var(--text-muted)]" aria-label="Zadanie" />
+                  <SquareCheck className="size-4 shrink-0 text-[var(--text-muted)]" aria-label={t("calendar.zadanie")} />
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[14.5px] font-medium text-white">{item.title}</span>
@@ -458,6 +459,8 @@ function MonthGrid({
   byDay: Map<string, DeadlineItem[]>;
   today: string;
 }) {
+  const { WD_SHORT, WD_LONG, MONTH_YEAR } = useCalFormat();
+  const t = useT("goals");
   const first = `${anchor}-01`;
   const start = mondayOf(first);
   const month = parse(first).getMonth();
@@ -474,11 +477,11 @@ function MonthGrid({
         <p className="font-heading text-[15px] font-semibold capitalize text-white">
           {MONTH_YEAR.format(parse(first))}
           <span className="ml-2 font-sans text-[13px] font-normal normal-case text-[var(--text-muted)]">
-            {count} {plural(count, "termin", "terminy", "terminów")}
+            {t("calendar.deadlines", { count })}
           </span>
         </p>
         <div className="flex gap-1">
-          <IconButton label="Poprzedni miesiąc" onClick={() => onShift(-1)}>
+          <IconButton label={t("calendar.poprzedniMiesiac")} onClick={() => onShift(-1)}>
             <ChevronLeft className="size-4" />
           </IconButton>
           <button
@@ -486,9 +489,9 @@ function MonthGrid({
             onClick={onToday}
             className="h-9 rounded-[10px] bg-[var(--surface-2)] px-3 text-[13px] text-[var(--text-muted)] hover:text-white sm:h-8"
           >
-            Dziś
+            {t("calendar.dzis")}
           </button>
-          <IconButton label="Następny miesiąc" onClick={() => onShift(1)}>
+          <IconButton label={t("calendar.nastepnyMiesiac")} onClick={() => onShift(1)}>
             <ChevronRight className="size-4" />
           </IconButton>
         </div>
@@ -548,7 +551,7 @@ function MonthGrid({
                     </Link>
                   ))}
                   {list.length > 0 ? (
-                    <span className="flex gap-[3px] px-1.5 md:hidden" aria-label={`${list.length} terminy`}>
+                    <span className="flex gap-[3px] px-1.5 md:hidden" aria-label={t("calendar.deadlines", { count: list.length })}>
                       {list.slice(0, 3).map((item) => (
                         <span
                           key={item.id}
