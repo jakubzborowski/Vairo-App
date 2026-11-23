@@ -33,6 +33,7 @@ import {
   isSkipped,
   type StageField,
 } from "@/types/stage";
+import { useT } from "@/i18n/client";
 
 /**
  * Jedno pytanie w modalu: treść, podpowiedź, składany przykład i kontrolka
@@ -66,13 +67,14 @@ export function FieldInput({
   /** Odpowiedzi z innych pól (`config.show_answers`) do podejrzenia nad pytaniem. */
   references?: { question: string; text: string }[];
 }) {
+  const t = useT("stage");
   const [showExample, setShowExample] = useState(false);
   const skipped = isSkipped(value);
   const offerSkip =
     canSkip && !disabled && !skipped && canSkipField(field) && !fieldAnswered(field, value);
   // Nic nie podpowiadamy w trakcie pisania — człowiek dopiero zaczyna zdanie,
   // a aplikacja już zgłasza problem. Ostrzeżenie pokazuje modal po „Zapisz".
-  const warning = showErrors ? validateField(field, value) : null;
+  const warning = showErrors ? validateField(field, value, t) : null;
 
   return (
     <div className="border-t border-white/[0.06] pt-5 first:border-t-0 first:pt-0">
@@ -92,7 +94,7 @@ export function FieldInput({
             className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg px-2 text-[12.5px] text-[var(--text-subtle)] transition-colors hover:bg-white/[0.06] hover:text-white sm:min-h-8"
           >
             <SkipForward className="size-3.5" aria-hidden="true" />
-            Pomiń
+            {t("fields.skip")}
           </button>
         ) : null}
       </div>
@@ -100,7 +102,7 @@ export function FieldInput({
       {skipped ? (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-white/12 px-4 py-3">
           <p className="text-[13px] leading-relaxed text-[var(--text-muted)]">
-            Pytanie pominięte. Liczy się do postępu — możesz tu wrócić w każdej chwili.
+            {t("fields.skippedNote")}
           </p>
           <Button
             variant="secondary"
@@ -108,7 +110,7 @@ export function FieldInput({
             disabled={disabled}
             onClick={() => onChange(emptyValueFor(field.kind))}
           >
-            Cofnij pominięcie
+            {t("fields.unskip")}
           </Button>
         </div>
       ) : (
@@ -122,8 +124,7 @@ export function FieldInput({
                 aria-hidden="true"
               />
               <span>
-                Tak będzie nazywał się Twój zespół w całej aplikacji. Zmienisz to
-                później w ustawieniach.
+                {t("fields.syncsName")}
               </span>
             </p>
           ) : null}
@@ -144,7 +145,7 @@ export function FieldInput({
             {references && references.length > 0 ? (
               <div className="mb-3 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3.5 py-3">
                 <p className="text-[11.5px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-                  Twoje wcześniejsze odpowiedzi
+                  {t("fields.references")}
                 </p>
                 <dl className="mt-1.5 flex flex-col gap-1.5">
                   {references.map((ref) => (
@@ -197,7 +198,7 @@ export function FieldInput({
                   className={cn("size-3.5 transition-transform", showExample && "rotate-180")}
                   aria-hidden="true"
                 />
-                {showExample ? "Ukryj przykład" : "Zobacz przykład"}
+                {showExample ? t("fields.hideExample") : t("fields.showExample")}
               </button>
               {showExample ? (
                 <p className="mt-2 rounded-lg border-l-2 border-[var(--vairo)]/40 bg-white/[0.03] py-2 pl-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
@@ -214,6 +215,7 @@ export function FieldInput({
 
 function Control(props: FieldInputProps & { startupStageId: string; returnTo?: string }) {
   const { field } = props;
+  const t = useT("stage");
 
   switch (field.kind) {
     case "short_text":
@@ -252,7 +254,7 @@ function Control(props: FieldInputProps & { startupStageId: string; returnTo?: s
       // `summary` renderuje się osobno, poza listą pól — patrz summary-field.tsx
       return (
         <p className="text-[13px] text-[var(--text-subtle)]">
-          Nieobsługiwany typ pola: {field.kind}
+          {t("fields.unsupported", { kind: field.kind })}
         </p>
       );
   }

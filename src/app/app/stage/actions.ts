@@ -23,7 +23,8 @@ import {
   canTransferOwnership,
   type ValidationCategory,
 } from "@/types/startup";
-import { sessionExpired } from "@/lib/server-errors";
+import { missingMigration, sessionExpired } from "@/lib/server-errors";
+import { getT } from "@/i18n/server";
 
 type Result = { error: string | null };
 
@@ -48,7 +49,7 @@ async function guardStageWrite(
   userId: string
 ) {
   const { role } = await getStageRole(supabase, startupStageId, userId);
-  return stageWriteError(role);
+  return await stageWriteError(role);
 }
 
 /**
@@ -74,7 +75,7 @@ export async function saveSubpointAnswers(input: {
       .select("answer_key, kind, config")
       .eq("subpoint_id", input.subpointId),
   ]);
-  const denied = stageWriteError(role);
+  const denied = await stageWriteError(role);
   if (denied) return { error: denied };
 
   const byKey = new Map(
@@ -277,12 +278,12 @@ async function runCloseStage(
   if (!user) return { error: await sessionExpired() };
 
   const { role } = await getStageRole(supabase, input.startupStageId, user.id);
-  const denied = stageWriteError(role);
+  const denied = await stageWriteError(role);
   if (denied) return { error: denied };
   // Archiwum to decyzja Foundera (CLAUDE.md, tabela ról) — tak samo jak
   // w ustawieniach teamu. `close_stage` w bazie wpuszcza też Admina.
   if (input.decision === "archive" && (!role || !canTransferOwnership(role))) {
-    return { error: "Do archiwum może przenieść tylko Founder." };
+    return { error: (await getT("stage"))("close.archiveFounderOnly") };
   }
 
   const { data: stage } = await supabase
@@ -291,7 +292,7 @@ async function runCloseStage(
     .eq("id", input.startupStageId)
     .maybeSingle();
 
-  if (!stage) return { error: "Nie znaleziono etapu." };
+  if (!stage) return { error: (await getT("stage"))("actions.notFound") };
 
   const templateKey =
     (stage.stage_templates as unknown as { key: string } | null)?.key ?? "";
@@ -304,8 +305,7 @@ async function runCloseStage(
     !(await stageReadyToFinish(supabase, input.startupStageId, stage.startup_id))
   ) {
     return {
-      error:
-        "Ten etap ma jeszcze nieuzupełnione podpunkty. Odśwież stronę — lista pokaże, czego brakuje.",
+      error: (await getT("stage"))("actions.notReady"),
     };
   }
 
@@ -371,13 +371,13 @@ export async function finishStage(startupStageId: string) {
 
 async function translateStageError(message: string) {
   if (message.includes("not_allowed")) {
-    return "Tylko Founder i Admin mogą zamknąć etap.";
+    return (await getT("stage"))("actions.closeNotAllowed");
   }
-  if (message.includes("stage_not_found")) return "Nie znaleziono etapu.";
+  if (message.includes("stage_not_found")) return (await getT("stage"))("actions.notFound");
   if (message.includes("close_stage") && message.includes("does not exist")) {
-    return "Brakuje migracji 010 — odpal ją w Supabase → SQL Editor.";
+    return missingMigration("010");
   }
-  return await translateDbError(message) ?? "Nie udało się zapisać decyzji. Spróbuj jeszcze raz.";
+  return (await translateDbError(message)) ?? (await getT("stage"))("actions.decisionFailed");
 }
 
 /** Ponowne otwarcie domkniętego etapu — user może wrócić i poprawić. */
@@ -397,7 +397,7 @@ export async function reopenStage(startupStageId: string): Promise<Result> {
   if (error) return { error: await translateDbError(error.message) };
   // RLS przy braku uprawnień nie zwraca błędu, tylko zero wierszy.
   if (!data || data.length === 0) {
-    return { error: "Nie udało się otworzyć etapu. Odśwież stronę i spróbuj ponownie." };
+    return { error: (await getT("stage"))("actions.reopenFailed") };
   }
 
   revalidatePath("/app", "layout");
@@ -418,10 +418,10 @@ export async function chooseCategoriesAfterAmbition(
   if (!user) return { error: await sessionExpired() };
 
   const startupId = String(formData.get("startup_id") ?? "");
-  if (!startupId) return { error: "Brak kontekstu zespołu." };
+  if (!startupId) return { error: (await getT("stage"))("actions.noTeam") };
 
   const role = await getStartupRole(supabase, startupId, user.id);
-  const denied = stageWriteError(role);
+  const denied = await stageWriteError(role);
   if (denied) return { error: denied };
 
   const categories = String(formData.get("categories") ?? "")
@@ -480,7 +480,7 @@ export async function chooseCategoriesAfterAmbition(
 
   const stageId = await ensureStartupStage(supabase, startupId, "idea");
   if (!stageId) {
-    return { error: "Treść Idea Stage nie jest jeszcze wgrana do bazy." };
+    return { error: (await getT("stage"))("actions.ideaMissing") };
   }
 
   revalidatePath("/app", "layout");
@@ -509,7 +509,7 @@ export async function advanceSkeletonStage(formData: FormData) {
   const active = resolveActiveStartup(startups, activeTeamId);
   if (!active) return;
 
-  const denied = stageWriteError(active.role);
+  const denied = await stageWriteError(active.role);
   if (denied) return;
 
   const { data: template } = await supabase
@@ -558,7 +558,7 @@ export async function openStage(formData: FormData) {
   const active = resolveActiveStartup(startups, activeTeamId);
   if (!active) return;
 
-  const denied = stageWriteError(active.role);
+  const denied = await stageWriteError(active.role);
   if (denied) return;
 
   // Otworzyć da się tylko etap pominięty — czyli leżący przed bieżącym.

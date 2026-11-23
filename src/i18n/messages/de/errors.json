@@ -30,5 +30,7 @@
   "db.goalProofWorkflowMissing": "Diese gespeicherte Version des Arbeitsplans gibt es nicht.",
   "db.goalArchived": "Ein archiviertes Ziel kann nicht abgeschlossen werden.",
   "db.scoreMissingMigration": "SCORE-Migrationen (044–048) fehlen — führe sie in Supabase → SQL Editor aus.",
-  "db.unknown": "In der Datenbank ist etwas schiefgelaufen. Lade die Seite neu und versuch es noch einmal."
+  "db.unknown": "In der Datenbank ist etwas schiefgelaufen. Lade die Seite neu und versuch es noch einmal.",
+  "readOnlyStage": "Nur Founder und Admin können Antworten in den Phasen ändern. Bitte um eine andere Rolle oder höhere Berechtigungen.",
+  "readOnlyTeam": "Nur Founder und Admin können die Teamzusammensetzung verwalten."
 }

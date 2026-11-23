@@ -5,6 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { withStageReturn } from "@/lib/stage-return";
 import type { FieldInputProps } from "./field-inputs";
+import { useT } from "@/i18n/client";
 
 /**
  * Wyjście z modala do istniejącego miejsca w aplikacji.
@@ -17,10 +18,11 @@ export function ActionInput({
   disabled,
   returnTo,
 }: FieldInputProps & { returnTo?: string }) {
+  const t = useT("stage");
   const checked = value === true;
   const rawHref = field.config.href ?? "/app";
   const href = returnTo ? withStageReturn(rawHref, returnTo) : rawHref;
-  const label = field.config.label ?? "Otwórz";
+  const label = field.config.label ?? t("fields.open");
 
   return (
     <div className="flex flex-col gap-2">

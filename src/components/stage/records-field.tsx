@@ -5,6 +5,7 @@ import { Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { asRecords, type RecordColumn, type RecordsValue, type StageField } from "@/types/stage";
 import type { FieldInputProps } from "./field-inputs";
+import { useT } from "@/i18n/client";
 
 function columnsOf(field: StageField, value: RecordsValue): RecordColumn[] {
   const base = field.config.columns ?? [];
@@ -25,6 +26,7 @@ function slug(label: string) {
 }
 
 export function RecordsInput({ field, value, onChange, disabled }: FieldInputProps) {
+  const t = useT("stage");
   const current = asRecords(value);
   const columns = columnsOf(field, current);
   const showBlankRow = current.rows.length === 0 && !field.config.empty_ok;
@@ -77,7 +79,7 @@ export function RecordsInput({ field, value, onChange, disabled }: FieldInputPro
                 type="button"
                 onClick={() => removeRow(index)}
                 disabled={disabled}
-                aria-label={`Usuń pozycję ${index + 1}`}
+                aria-label={t("fields.records.remove", { n: index + 1 })}
                 className="rounded-md p-1 text-[var(--text-faint)] hover:bg-white/6 hover:text-white"
               >
                 <X className="size-3.5" />
@@ -110,7 +112,7 @@ export function RecordsInput({ field, value, onChange, disabled }: FieldInputPro
           className="inline-flex w-fit items-center gap-1.5 rounded-lg px-2 py-1 text-[13px] text-[var(--text-subtle)] hover:bg-white/5 hover:text-white"
         >
           <Plus className="size-3.5" />
-          {field.config.add_label ?? "Dodaj pozycję"}
+          {field.config.add_label ?? t("fields.records.add")}
         </button>
       ) : null}
 
@@ -118,12 +120,12 @@ export function RecordsInput({ field, value, onChange, disabled }: FieldInputPro
         <div className="flex items-end gap-2 border-t border-white/[0.06] pt-3">
           <label className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="text-[12.5px] text-[var(--text-subtle)]">
-              Własne pole w tym profilu
+              {t("fields.records.customField")}
             </span>
             <Input
               value={columnName}
               disabled={disabled}
-              placeholder="Np. miasto albo stawka godzinowa"
+              placeholder={t("fields.records.customPlaceholder")}
               onChange={(event) => setColumnName(event.target.value)}
             />
           </label>
@@ -134,15 +136,14 @@ export function RecordsInput({ field, value, onChange, disabled }: FieldInputPro
             className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-white/10 px-3 text-[13px] text-white hover:bg-white/5 disabled:opacity-40"
           >
             <Plus className="size-3.5" />
-            Dodaj pole
+            {t("fields.records.addField")}
           </button>
         </div>
       ) : null}
 
       {field.config.empty_ok ? (
         <p className="text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-          Jeśli niczego nie brakuje, zostaw listę pustą i zapisz. To też jest
-          odpowiedź.
+          {t("fields.records.emptyOk")}
         </p>
       ) : null}
     </div>

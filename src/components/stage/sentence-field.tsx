@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { templateSlotPattern, type SentenceSlot, type StageField } from "@/types/stage";
+import { useT } from "@/i18n/client";
 
 type Props = {
   field: StageField;
@@ -26,6 +27,7 @@ const WIDTHS: Record<NonNullable<SentenceSlot["size"]>, string> = {
  * zamiast rozpychać jedną linię w bok.
  */
 export function SentenceField({ field, value, onChange, disabled }: Props) {
+  const t = useT("stage");
   const template = field.config.template ?? "";
   const slots = field.config.slots ?? [];
   const values = (value ?? {}) as Record<string, string>;
@@ -63,14 +65,14 @@ export function SentenceField({ field, value, onChange, disabled }: Props) {
 
       <div className="mt-3 flex items-start justify-between gap-4">
         <p className="text-[12px] text-[var(--text-subtle)]">
-          Wypełnione {filled} z {slots.length}
+          {t("fields.sentence.filled", { filled, total: slots.length })}
         </p>
       </div>
 
       {filled > 0 ? (
         <div className="mt-2 rounded-xl border border-[var(--vairo)]/25 bg-[var(--vairo)]/6 px-4 py-3">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--vairo)]">
-            Twoje zdanie
+            {t("fields.sentence.yours")}
           </p>
           <p className="mt-1.5 text-[14px] leading-relaxed text-white">{preview}</p>
         </div>

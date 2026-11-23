@@ -61,5 +61,6 @@
   "opportunities.title": "Oportunidades de socios",
   "opportunities.description": "Programas, concursos y ofertas de socios de Vairo para startups. Los añadiremos en una próxima versión.",
   "actions.cancel": "Cancelar",
-  "fallbackName": "Usuario"
+  "fallbackName": "Usuario",
+  "backToDashboard": "Volver al panel"
 }

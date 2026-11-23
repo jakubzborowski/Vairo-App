@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { canEditStageData, canManageTeam, type StartupRole } from "@/types/startup";
+import { getT } from "@/i18n/server";
 
 /**
  * Sprawdzanie uprawnień po stronie serwera.
@@ -46,21 +47,21 @@ export async function getStageRole(
   return { role, startupId: stage.startup_id };
 }
 
-export const NOT_A_MEMBER = "Nie należysz do tego zespołu.";
-export const READ_ONLY_STAGE =
-  "Tylko Founder i Admin mogą zmieniać odpowiedzi w etapach. Poproś o zmianę roli albo o podniesienie uprawnień.";
-export const READ_ONLY_TEAM =
-  "Tylko Founder i Admin mogą zarządzać składem zespołu.";
-
-/** Zwraca komunikat błędu albo null, gdy operacja jest dozwolona. */
-export function stageWriteError(role: StartupRole | null) {
-  if (!role) return NOT_A_MEMBER;
-  if (!canEditStageData(role)) return READ_ONLY_STAGE;
+/**
+ * Komunikat błędu (w języku użytkownika) albo null, gdy operacja jest
+ * dozwolona. Async, bo język bierze się z żądania — pamiętaj o `await`:
+ * sam Promise jest „prawdziwy” i przepuściłby każdy warunek `if`.
+ */
+export async function stageWriteError(role: StartupRole | null) {
+  const t = await getT("errors");
+  if (!role) return t("notMember");
+  if (!canEditStageData(role)) return t("readOnlyStage");
   return null;
 }
 
-export function teamManageError(role: StartupRole | null) {
-  if (!role) return NOT_A_MEMBER;
-  if (!canManageTeam(role)) return READ_ONLY_TEAM;
+export async function teamManageError(role: StartupRole | null) {
+  const t = await getT("errors");
+  if (!role) return t("notMember");
+  if (!canManageTeam(role)) return t("readOnlyTeam");
   return null;
 }

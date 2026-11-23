@@ -7,6 +7,9 @@ import { cn } from "@/lib/utils";
 import type { StageField } from "@/types/stage";
 import { hasAnswer, isSkipped } from "@/types/stage";
 import { FieldInput } from "./field-input";
+import { useT } from "@/i18n/client";
+import type { Translate } from "@/i18n/translator";
+import type { MessageKey } from "@/i18n/messages";
 
 export type ResolvedSource = {
   label: string;
@@ -41,6 +44,7 @@ export function SummaryField({
   disabled,
   startupStageId,
 }: Props) {
+  const t = useT("stage");
   const [editing, setEditing] = useState<string | null>(null);
   const confirmed = (value as { confirmed?: boolean } | null)?.confirmed === true;
 
@@ -98,10 +102,10 @@ export function SummaryField({
                   )}
                 >
                   {skipped
-                    ? "Pominięte"
+                    ? t("fields.summary.skipped")
                     : filled
-                      ? renderAnswer(answer)
-                      : "Jeszcze nieuzupełnione"}
+                      ? renderAnswer(answer, t)
+                      : t("fields.summary.empty")}
                 </p>
               )}
             </li>
@@ -118,15 +122,15 @@ export function SummaryField({
           {confirmed ? (
             <>
               <CheckCircle2 className="size-4" />
-              Zatwierdzone
+              {t("fields.summary.confirmed")}
             </>
           ) : (
-            (field.config.confirm_label ?? "Zatwierdzam")
+            (field.config.confirm_label ?? t("fields.summary.confirm"))
           )}
         </Button>
         {!confirmed ? (
           <p className="text-[12.5px] text-[var(--text-subtle)]">
-            Sprawdź, czy podsumowanie oddaje to, co chcesz zrobić.
+            {t("fields.summary.check")}
           </p>
         ) : null}
       </div>
@@ -134,10 +138,10 @@ export function SummaryField({
   );
 }
 
-function renderAnswer(value: unknown): string {
+function renderAnswer(value: unknown, t: Translate<MessageKey<"stage">>): string {
   if (typeof value === "string") return value;
   if (typeof value === "number") return String(value);
-  if (typeof value === "boolean") return value ? "Tak" : "Nie";
+  if (typeof value === "boolean") return value ? t("fields.yes") : t("fields.no");
   if (Array.isArray(value)) {
     return value
       .map((item) =>

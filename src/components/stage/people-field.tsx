@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { FieldInputProps } from "./field-inputs";
+import { useT } from "@/i18n/client";
 
 type Person = {
   id: string;
@@ -23,6 +24,7 @@ const asIds = (value: unknown): string[] =>
  * i jest dowodem podpunktu. Zaproszenie do startupu zostaje w Odkrywaj.
  */
 export function PeopleInput({ value, onChange, disabled }: FieldInputProps) {
+  const t = useT("stage");
   const selected = asIds(value);
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +40,7 @@ export function PeopleInput({ value, onChange, disabled }: FieldInputProps) {
       .limit(40)
       .then(({ data, error: loadError }) => {
         if (cancelled) return;
-        if (loadError) setError("Nie udało się wczytać osób z platformy.");
+        if (loadError) setError(t("fields.people.loadFailed"));
         else setPeople((data ?? []) as Person[]);
         setLoading(false);
       });
@@ -60,13 +62,13 @@ export function PeopleInput({ value, onChange, disabled }: FieldInputProps) {
         href="/app/social/discover?tab=people"
         className="text-[13px] text-[var(--vairo)] underline-offset-2 hover:underline"
       >
-        Otwórz Odkrywaj, żeby zobaczyć więcej osób
+        {t("fields.people.openDiscover")}
       </Link>
 
       {loading ? (
         <p className="inline-flex items-center gap-2 text-[13px] text-[var(--text-subtle)]">
           <Loader2 className="size-3.5 animate-spin" />
-          Wczytuję profile
+          {t("fields.people.loading")}
         </p>
       ) : null}
 
@@ -74,8 +76,7 @@ export function PeopleInput({ value, onChange, disabled }: FieldInputProps) {
 
       {!loading && !error && people.length === 0 ? (
         <p className="text-[13px] leading-relaxed text-[var(--text-subtle)]">
-          Na platformie nie ma jeszcze widocznych profili. Uzupełnij swój w
-          Social i wróć tutaj, gdy ktoś się pojawi.
+          {t("fields.people.empty")}
         </p>
       ) : null}
 
@@ -98,12 +99,12 @@ export function PeopleInput({ value, onChange, disabled }: FieldInputProps) {
               >
                 <Avatar
                   src={person.avatar_url}
-                  name={person.full_name ?? "Profil"}
+                  name={person.full_name ?? t("fields.people.profile")}
                   size="sm"
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[14px] text-white">
-                    {person.full_name ?? "Profil bez imienia"}
+                    {person.full_name ?? t("fields.people.noName")}
                   </span>
                   {person.headline ? (
                     <span className="block truncate text-[12.5px] text-[var(--text-subtle)]">

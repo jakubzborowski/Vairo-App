@@ -36,7 +36,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { accentStyle, categoryAccent } from "@/lib/category-colors";
 import { MentorPanel } from "@/components/ai/ai-assist";
-import { cn, plural } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   fieldAnswered,
   isSkipped,
@@ -46,9 +46,12 @@ import {
   type StageSubpoint,
   type StageTree,
 } from "@/types/stage";
-import { ROLE_LABELS, type StartupRole } from "@/types/startup";
+import type { StartupRole } from "@/types/startup";
 import { StageCloseDialog } from "./stage-close-dialog";
 import { SubpointModal } from "./subpoint-modal";
+import { useT } from "@/i18n/client";
+import type { Translate } from "@/i18n/translator";
+import type { MessageKey } from "@/i18n/messages";
 
 type Props = {
   tree: StageTree;
@@ -86,12 +89,7 @@ function locateSubpoint(tree: StageTree, subpointId?: string | null) {
  * Rola Członka daje pełny odczyt i zero zapisu: zamiast wyszarzonego formularza
  * ten sam ekran pokazuje odpowiedzi jako treść do przeczytania.
  */
-const DECISION_TOASTS: Record<StageDecision, string> = {
-  continue: "Etap domknięty",
-  pivot: "Zapisano pivot — wybrane podpunkty są otwarte",
-  pause: "Startup jest na pauzie",
-  archive: "Startup przeniesiony do archiwum",
-};
+// Toast po decyzji: słownik `stage`, klucze `decision.<key>.toast`.
 
 export function StageScreen({
   tree,
@@ -101,6 +99,8 @@ export function StageScreen({
   initialSubpointId,
   team,
 }: Props) {
+  const t = useT("stage");
+  const tl = useT("labels");
   const router = useRouter();
   const { toast } = useToast();
   const located = locateSubpoint(tree, initialSubpointId);
@@ -225,13 +225,13 @@ export function StageScreen({
       setOpenSubpoint(null);
       if (stepMode) {
         setAdvance({ from: tree, subpointId: openSubpoint.id });
-        toast({ title: "Odpowiedź zapisana", description: openSubpoint.title });
+        toast({ title: t("screen.answerSaved"), description: openSubpoint.title });
         return;
       }
       toast({
-        title: "Odpowiedź zapisana",
+        title: t("screen.answerSaved"),
         description: openSubpoint.title,
-        action: { label: "Następny podpunkt", onClick: () => setNextRequested(true) },
+        action: { label: t("screen.nextSubpoint"), onClick: () => setNextRequested(true) },
       });
     });
   };
@@ -252,7 +252,7 @@ export function StageScreen({
         setError(result.error);
         return;
       }
-      toast({ title: "Etap domknięty", description: tree.title });
+      toast({ title: t("decision.continue.toast"), description: tree.title });
       router.push(result.next ?? "/app");
     });
   };
@@ -274,7 +274,7 @@ export function StageScreen({
       }
       setClosing(false);
       toast({
-        title: DECISION_TOASTS[input.decision],
+        title: t(`decision.${input.decision}.toast`),
         description: tree.title,
       });
       router.push(result.next ?? "/app");
@@ -290,8 +290,8 @@ export function StageScreen({
         return;
       }
       toast({
-        title: "Etap otwarty ponownie",
-        description: "Odpowiedzi zostały — możesz je poprawić.",
+        title: t("screen.reopened"),
+        description: t("screen.reopenedBody"),
       });
       router.refresh();
     });
@@ -319,21 +319,19 @@ export function StageScreen({
           <div className="min-w-0 max-w-[260px] text-right">
             {readOnly ? (
               <p className="tabular text-[13px] text-[var(--text-muted)]">
-                <span className="font-semibold text-white">{tree.done}</span> z {tree.total}{" "}
-                podpunktów
+                {t("screen.readOnlyProgress", { done: tree.done, total: tree.total })}
               </p>
             ) : isCompleted || !nextPoint ? (
               <p className="text-[13px] text-[var(--text-muted)]">
-                {isCompleted ? "Etap domknięty" : "Wszystko gotowe do domknięcia"}
+                {isCompleted ? t("decision.continue.toast") : t("screen.readyToClose")}
               </p>
             ) : (
               <>
                 <p className="truncate text-[12px] text-[var(--text-subtle)]">
-                  Teraz: {nextPoint.title}
+                  {t("screen.now", { point: nextPoint.title })}
                 </p>
                 <p className="tabular text-[13px] text-[var(--text-muted)]">
-                  <span className="font-semibold text-white">{nextPoint.done}</span> z{" "}
-                  {nextPoint.total} w tym punkcie
+                  {t("screen.inThisPoint", { done: nextPoint.done, total: nextPoint.total })}
                 </p>
               </>
             )}
@@ -358,14 +356,13 @@ export function StageScreen({
           <p className="mt-4 flex max-w-3xl items-start gap-2.5 rounded-xl border border-[var(--info)]/25 bg-[var(--info)]/8 px-4 py-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
             <Eye className="mt-0.5 size-4 shrink-0 text-[var(--info)]" />
             <span>
-              Masz w tym zespole rolę <strong>{ROLE_LABELS[role]}</strong> —
-              czytasz wszystko, co zespół uzupełnił, ale nie zmieniasz
-              odpowiedzi. Zmienia je Founder albo Admin;{" "}
+              {t("screen.readOnlyBefore")} <strong>{tl(`role.${role}`)}</strong>
+              {t("screen.readOnlyAfter")}{" "}
               <Link
                 href="/app/team"
                 className="text-[var(--info)] underline-offset-2 hover:underline"
               >
-                znajdziesz ich w składzie zespołu
+                {t("screen.readOnlyLink")}
               </Link>
               .
             </span>
@@ -385,14 +382,13 @@ export function StageScreen({
       {!isCurrent ? (
         <p className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-white/[0.07] bg-[var(--surface)] px-4 py-3 text-[13px] text-[var(--text-muted)]">
           <span>
-            To nie jest Twój bieżący etap — możesz tu poprawiać odpowiedzi, ale
-            program czeka gdzie indziej.
+            {t("screen.notCurrent")}
           </span>
           <Link
             href="/app/stage"
             className="text-[var(--vairo)] underline-offset-2 hover:underline"
           >
-            Wróć do {currentTitle ?? "bieżącego etapu"}
+            {currentTitle ? t("screen.backTo", { stage: currentTitle }) : t("screen.backToCurrent")}
           </Link>
         </p>
       ) : null}
@@ -418,7 +414,7 @@ export function StageScreen({
           {isFirstVisit && next ? (
             <section className="edge-accent mb-5 overflow-hidden rounded-2xl border border-[var(--vairo)]/30 bg-[var(--vairo)]/6 px-5 py-5 lift-2 sm:px-6">
               <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--vairo)]">
-                Zaczynasz nowy etap
+                {t("screen.newStage")}
               </p>
               <h2 className="mt-1.5 font-heading text-[20px] font-semibold text-white">
                 {tree.subtitle ?? tree.title}
@@ -436,16 +432,13 @@ export function StageScreen({
                       wejściu brzmi jak ankieta bez końca. Liczy się pierwszy
                       kawałek, który da się zrobić od razu. */}
                   <span>
-                    Etap dzieli się na krótkie punkty
-                    {tree.showCategories ? " w kategoriach dobranych do Twojego startupu" : ""}.
-                    Widzisz zawsze ten, nad którym pracujesz —{" "}
+                    {tree.showCategories ? t("screen.introPointsCategories") : t("screen.introPoints")}{" "}
                     {nextPoint ? (
                       <strong className="text-white">
-                        pierwszy ma {nextPoint.total}{" "}
-                        {plural(nextPoint.total, "podpunkt", "podpunkty", "podpunktów")}
+                        {t("screen.introFirstHas", { count: nextPoint.total })}
                       </strong>
                     ) : (
-                      "zaczynasz od pierwszego"
+                      t("screen.introStartFirst")
                     )}
                     .
                   </span>
@@ -453,15 +446,13 @@ export function StageScreen({
                 <li className="flex items-start gap-2.5">
                   <Save className="mt-0.5 size-4 shrink-0 text-[var(--text-faint)]" />
                   <span>
-                    Każda odpowiedź zapisuje się osobno. Możesz wyjść w połowie
-                    i wrócić — nic nie przepada.
+                    {t("screen.introSaves")}
                   </span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Undo2 className="mt-0.5 size-4 shrink-0 text-[var(--text-faint)]" />
                   <span>
-                    Nie ma złych odpowiedzi ani punktów za szybkość. Wszystko da się
-                    później poprawić.
+                    {t("screen.introNoWrong")}
                   </span>
                 </li>
               </ul>
@@ -469,10 +460,10 @@ export function StageScreen({
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <Button size="lg" onClick={openNext}>
                   <PlayCircle className="size-[18px]" />
-                  Zaczynam
+                  {t("screen.start")}
                 </Button>
                 <span className="text-[12.5px] text-[var(--text-subtle)]">
-                  Pierwsze pytanie: {next.subpoint.title}
+                  {t("screen.firstQuestion", { title: next.subpoint.title })}
                 </span>
               </div>
             </section>
@@ -488,7 +479,7 @@ export function StageScreen({
               />
               <span className="min-w-0 flex-1">
                 <span className="block text-[12px] font-semibold uppercase tracking-wide text-[var(--vairo)]">
-                  Następny krok
+                  {t("screen.nextStep")}
                 </span>
                 <span className="mt-0.5 block truncate text-[15px] font-medium text-white">
                   {next.subpoint.title}
@@ -509,8 +500,7 @@ export function StageScreen({
             <p className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[var(--text-subtle)]">
               {tree.showCategories && !readOnly && !isCompleted ? (
                 <span>
-                  Kategorie i punkty możesz robić w dowolnej kolejności. Każdy zapis
-                  zostaje.
+                  {t("screen.anyOrder")}
                 </span>
               ) : null}
               <Link
@@ -518,7 +508,7 @@ export function StageScreen({
                 className="inline-flex items-center gap-1.5 text-[var(--text-subtle)] underline-offset-2 hover:text-white hover:underline"
               >
                 <FileText className="size-3.5" />
-                Zobacz wszystko, co ustaliliście
+                {t("screen.seeAll")}
               </Link>
             </p>
           ) : null}
@@ -545,8 +535,8 @@ export function StageScreen({
             {tree.showCategories ? (
               <Column
                 icon={Layers}
-                title="Kategorie"
-                subtitle="Dobrane do Twojego startupu"
+                title={t("screen.categories")}
+                subtitle={t("screen.categoriesHint")}
               >
                 {tree.categories.map((item) => (
                   <ListRow
@@ -567,9 +557,9 @@ export function StageScreen({
             <Column
               icon={ListTree}
               accent={accent}
-              title={tree.showCategories ? (category?.title ?? "Punkty") : tree.title}
+              title={tree.showCategories ? (category?.title ?? t("screen.points")) : tree.title}
               subtitle={
-                category ? `${category.done} z ${category.total} ukończonych` : null
+                category ? t("screen.categoryDone", { done: category.done, total: category.total }) : null
               }
             >
               {(category?.points ?? []).map((item) => (
@@ -589,7 +579,7 @@ export function StageScreen({
 
             <Column
               icon={ListChecks}
-              title={readOnly ? "Odpowiedzi zespołu" : "Do zrobienia"}
+              title={readOnly ? t("screen.teamAnswers") : t("screen.todo")}
               subtitle={point?.title}
               accent={accent}
               active
@@ -606,7 +596,7 @@ export function StageScreen({
                 <ListRow
                   key={item.key}
                   title={item.title}
-                  subtitle={subpointStatus(item, answers, readOnly)}
+                  subtitle={subpointStatus(item, answers, readOnly, t)}
                   complete={item.isComplete}
                   active={false}
                   chevron
@@ -623,7 +613,7 @@ export function StageScreen({
                     startupStageId={tree.startupStageId}
                     scope="point"
                     pointKey={point.key}
-                    label="Mentor: przejrzyj ten punkt"
+                    label={t("screen.mentorPoint")}
                   />
                 </li>
               ) : null}
@@ -636,8 +626,8 @@ export function StageScreen({
                 <button
                   type="button"
                   onClick={() => setGuideOpen(true)}
-                  title="Pokaż przewodnik"
-                  aria-label="Pokaż przewodnik"
+                  title={t("screen.showGuide")}
+                  aria-label={t("screen.showGuide")}
                   className="flex h-full min-h-[180px] w-full flex-col items-center gap-3 rounded-2xl border border-white/[0.07] bg-[var(--surface)] py-4 text-[var(--text-subtle)] transition-colors hover:border-white/20 hover:text-white"
                 >
                   <PanelRightOpen className="size-4 shrink-0" />
@@ -645,7 +635,7 @@ export function StageScreen({
                     className="text-[12px] font-medium tracking-wide"
                     style={{ writingMode: "vertical-rl" }}
                   >
-                    Przewodnik
+                    {t("screen.guide")}
                   </span>
                   <BookOpen className="mt-auto size-4 shrink-0 text-[var(--vairo)]" />
                 </button>
@@ -659,37 +649,37 @@ export function StageScreen({
         <div className="min-w-0">
           <p className="text-[14px] font-medium text-white">
             {isCompleted
-              ? "Ten etap jest domknięty."
+              ? t("screen.footer.closed")
               : readOnly
-                ? `Zespół uzupełnił ${tree.done} z ${tree.total} podpunktów.`
+                ? t("screen.footer.teamFilled", { done: tree.done, total: tree.total })
                 : tree.canFinish
-                  ? "Wszystko uzupełnione — możesz domknąć etap."
+                  ? t("screen.footer.allDone")
                   : // Bez liczby pozostałych podpunktów. „Zostało 54” czyta się
                     // jak ankieta bez końca i zniechęca, zanim ktoś zacznie.
-                    "Postęp zapisuje się automatycznie."}
+                    t("screen.footer.autosave")}
           </p>
           <p className="mt-0.5 text-[12.5px] text-[var(--text-subtle)]">
             {isCompleted
-              ? "Możesz go otworzyć ponownie i poprawić odpowiedzi."
+              ? t("screen.footer.closedHint")
               : readOnly
-                ? "Etap domykają Founder i Admin."
+                ? t("screen.footer.readOnlyHint")
                 : tree.canFinish
                   ? needsDecision
-                    ? "Zapytamy Cię, co dalej z tym pomysłem, i zapiszemy Twoją decyzję razem z odpowiedziami. Wrócić da się zawsze."
-                    : "Zapiszemy Twoje odpowiedzi i przejdziemy do kolejnego kroku. Wrócić da się zawsze."
-                  : "Etap domkniesz, gdy wymagane pytania będą uzupełnione albo pominięte. Możesz wyjść i wrócić, kiedy chcesz."}
+                    ? t("screen.footer.decisionHint")
+                    : t("screen.footer.continueHint")
+                  : t("screen.footer.notYetHint")}
           </p>
         </div>
 
         {readOnly ? (
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/6 px-3 py-2 text-[13px] text-[var(--text-subtle)]">
             <Lock className="size-3.5" />
-            Tylko do odczytu
+            {t("screen.readOnly")}
           </span>
         ) : isCompleted ? (
           <Button size="lg" variant="secondary" loading={saving} onClick={onReopen}>
             <RotateCcw className="size-4" />
-            Otwórz ponownie
+            {t("screen.reopen")}
           </Button>
         ) : (
           <Button
@@ -698,7 +688,7 @@ export function StageScreen({
             loading={saving && !closing}
             onClick={onFinish}
           >
-            {tree.finishLabel ?? "Zakończ etap"}
+            {tree.finishLabel ?? t("screen.finish")}
           </Button>
         )}
       </footer>
@@ -757,11 +747,12 @@ export function StageScreen({
 function subpointStatus(
   item: StageSubpoint,
   answers: Record<string, unknown>,
-  readOnly: boolean
+  readOnly: boolean,
+  t: Translate<MessageKey<"stage">>
 ): string {
   if (item.waitingOn) return item.waitingOn;
   // Podpunkt wyłączony warunkiem z treści — nie pojedyncze pominięte pytanie.
-  if (item.skipped) return "Pominięte";
+  if (item.skipped) return t("fields.summary.skipped");
   if (item.goalConditions.length > 0) {
     return item.goalConditions
       .map((condition) => `${condition.label} ${condition.done}/${condition.minCount}`)
@@ -770,16 +761,16 @@ function subpointStatus(
   if (item.isComplete) {
     const skipped = item.fields.filter((f) => isSkipped(answers[f.answerKey])).length;
     return skipped > 0
-      ? `Uzupełnione · ${skipped} ${plural(skipped, "pytanie pominięte", "pytania pominięte", "pytań pominiętych")}`
-      : "Uzupełnione";
+      ? t("screen.status.doneSkipped", { count: skipped })
+      : t("screen.status.done");
   }
-  if (readOnly) return "Jeszcze nieuzupełnione";
-  if (item.isOptional) return "Opcjonalne";
+  if (readOnly) return t("fields.summary.empty");
+  if (item.isOptional) return t("screen.status.optional");
   const missing = item.fields.filter(
     (f) => f.isRequired && !fieldAnswered(f, answers[f.answerKey])
   ).length;
   const count = missing > 0 ? missing : item.fields.length;
-  return `${count} ${plural(count, "pytanie", "pytania", "pytań")} do uzupełnienia`;
+  return t("screen.status.toFill", { count });
 }
 
 function Column({
@@ -1002,6 +993,8 @@ function splitGuide(body: string) {
 }
 
 function GuidePanel({ point, onClose }: { point: StagePoint; onClose: () => void }) {
+  const t = useT("stage");
+  const tc = useT("common");
   const pages = splitGuide(point.guideBody ?? "");
   const [index, setIndex] = useState(0);
   const page = pages[index] ?? pages[0];
@@ -1013,23 +1006,23 @@ function GuidePanel({ point, onClose }: { point: StagePoint; onClose: () => void
       <header className="topo flex items-start justify-between gap-3 border-b border-white/[0.06] bg-[var(--surface-2)]/60 px-5 py-3.5">
         <p className="flex items-center gap-2 text-[13px] font-semibold text-[var(--vairo)]">
           <BookOpen className="size-4 shrink-0" strokeWidth={2} />
-          Przewodnik
+          {t("screen.guide")}
           {several ? (
             <span className="tabular font-medium text-[var(--text-subtle)]">
-              {index + 1} z {pages.length}
+              {t("close.ofTotal", { done: index + 1, total: pages.length })}
             </span>
           ) : null}
         </p>
         <div className="flex shrink-0 items-center gap-2">
           {point.guideSourceLabel ? (
             <span className="text-[11.5px] text-[var(--text-subtle)]">
-              od {point.guideSourceLabel}
+              {t("screen.guideFrom", { source: point.guideSourceLabel })}
             </span>
           ) : null}
           <button
             type="button"
             onClick={onClose}
-            aria-label="Ukryj przewodnik"
+            aria-label={t("screen.hideGuide")}
             className="rounded-md p-1 text-[var(--text-faint)] transition-colors hover:bg-white/6 hover:text-white"
           >
             <PanelRightClose className="size-4" />
@@ -1070,7 +1063,7 @@ function GuidePanel({ point, onClose }: { point: StagePoint; onClose: () => void
             onClick={() => setIndex((current) => Math.max(0, current - 1))}
           >
             <ChevronLeft className="size-4" />
-            Wstecz
+            {tc("actions.back")}
           </Button>
           <Button
             type="button"
@@ -1081,7 +1074,7 @@ function GuidePanel({ point, onClose }: { point: StagePoint; onClose: () => void
               setIndex((current) => Math.min(pages.length - 1, current + 1))
             }
           >
-            Dalej
+            {tc("actions.next")}
             <ChevronRight className="size-4" />
           </Button>
         </div>
@@ -1091,7 +1084,7 @@ function GuidePanel({ point, onClose }: { point: StagePoint; onClose: () => void
         <details className="group border-t border-white/[0.06] px-5 py-3.5">
           <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-[12px] text-[var(--text-subtle)] transition-colors hover:text-white">
             <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
-            Źródła ({point.guideSources.length})
+            {t("screen.sources", { count: point.guideSources.length })}
           </summary>
           <ul className="mt-2.5 flex max-w-[62ch] flex-col gap-2">
             {point.guideSources.map((source, i) => (
@@ -1178,15 +1171,16 @@ function writeView(value: StageView) {
  * włącza się świadomie.
  */
 function ViewSwitch({ view, onChange }: { view: StageView; onChange: (v: StageView) => void }) {
+  const t = useT("stage");
   const options: { value: StageView; label: string; icon: LucideIcon }[] = [
-    { value: "steps", label: "Krok po kroku", icon: Footprints },
-    { value: "list", label: "Lista", icon: List },
+    { value: "steps", label: t("screen.viewSteps"), icon: Footprints },
+    { value: "list", label: t("screen.viewList"), icon: List },
   ];
   return (
     <div className="mb-4 flex justify-end">
       <div
         role="radiogroup"
-        aria-label="Widok etapu"
+        aria-label={t("screen.viewAria")}
         className="inline-flex rounded-full border border-white/[0.08] bg-[var(--surface)] p-1"
       >
         {options.map(({ value, label, icon: Icon }) => (
@@ -1231,6 +1225,7 @@ function StepView({
   onOpen: () => void;
   onShowList: () => void;
 }) {
+  const t = useT("stage");
   const [guideFor, setGuideFor] = useState<string | null>(null);
 
   if (!next) {
@@ -1238,20 +1233,19 @@ function StepView({
       <section className="rounded-2xl bg-[var(--surface)] px-6 py-8 text-center lift-1">
         <Check className="mx-auto size-8 text-[var(--success)]" aria-hidden="true" />
         <h2 className="mt-3 font-heading text-[1.25rem] font-semibold text-white">
-          Wszystkie wymagane podpunkty są gotowe
+          {t("screen.step.allDoneTitle")}
         </h2>
         <p className="mx-auto mt-1.5 max-w-md text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-          Możesz domknąć etap przyciskiem na dole albo przejrzeć wszystko
-          w widoku listy — tam są też podpunkty opcjonalne.
+          {t("screen.step.allDoneBody")}
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-2">
           <Button variant="secondary" onClick={onShowList}>
             <List className="size-4" />
-            Pokaż listę
+            {t("screen.step.showList")}
           </Button>
           <Button href={`/app/stage/summary?stage=${tree.templateKey}`} variant="ghost">
             <FileText className="size-4" />
-            Zobacz wszystko, co ustaliliście
+            {t("screen.seeAll")}
           </Button>
         </div>
       </section>
@@ -1310,7 +1304,7 @@ function StepView({
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <Button size="lg" onClick={onOpen}>
             <PlayCircle className="size-4" />
-            {questions === 1 ? "Odpowiedz" : `Odpowiedz (${questions} ${plural(questions, "pytanie", "pytania", "pytań")})`}
+            {questions === 1 ? t("screen.step.answer") : t("screen.step.answerCount", { count: questions })}
           </Button>
           {point?.guideBody ? (
             <Button
@@ -1318,7 +1312,7 @@ function StepView({
               onClick={() => setGuideFor(showGuide ? null : next.subpoint.id)}
             >
               <BookOpen className="size-4" />
-              {showGuide ? "Schowaj przewodnik" : "Przewodnik"}
+              {showGuide ? t("screen.hideGuide") : t("screen.guide")}
             </Button>
           ) : null}
         </div>
@@ -1329,7 +1323,7 @@ function StepView({
           startupStageId={tree.startupStageId}
           scope="point"
           pointKey={point.key}
-          label="Mentor: przejrzyj ten punkt"
+          label={t("screen.mentorPoint")}
         />
       ) : null}
 
@@ -1343,14 +1337,14 @@ function StepView({
           onClick={onShowList}
           className="underline-offset-2 hover:text-white hover:underline"
         >
-          Wolisz wybrać inną kolejność? Pokaż listę
+          {t("screen.step.otherOrder")}
         </button>
         {tree.done > 0 ? (
           <Link
             href={`/app/stage/summary?stage=${tree.templateKey}`}
             className="underline-offset-2 hover:text-white hover:underline"
           >
-            Zobacz wszystko, co ustaliliście
+            {t("screen.seeAll")}
           </Link>
         ) : null}
       </p>

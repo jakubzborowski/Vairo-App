@@ -10,8 +10,12 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { hasAnswer } from "@/types/stage";
 import { canEditStageData } from "@/types/startup";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Podsumowanie etapu — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("stage");
+  return { title: t("summary.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 /**
@@ -27,6 +31,8 @@ export default async function StageSummaryPage({
 }: {
   searchParams: Promise<{ stage?: string; next?: string }>;
 }) {
+  const t = await getT("stage");
+  const tc = await getT("common");
   const { stage: requestedStage, next } = await searchParams;
 
   const supabase = await createClient();
@@ -61,11 +67,11 @@ export default async function StageSummaryPage({
       <div className="page">
         <EmptyState
           icon={FileText}
-          title="Nie ma jeszcze czego podsumować"
-          description="Ten etap nie został otwarty albo nie ma wgranej treści."
+          title={t("summary.nothingTitle")}
+          description={t("summary.nothingBody")}
           action={
             <Button href="/app/stage" variant="secondary">
-              Wróć do etapu
+              {t("summary.backToStage")}
             </Button>
           }
         />
@@ -104,27 +110,27 @@ export default async function StageSummaryPage({
         className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white"
       >
         <ArrowLeft className="size-4" />
-        Wróć do etapu
+        {t("summary.backToStage")}
       </Link>
 
       <header className="rounded-2xl border border-[var(--vairo)]/25 bg-[var(--vairo)]/6 px-5 py-5 sm:px-6">
         <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--vairo)]">
-          {goesToCategories ? "Masz pierwszy zarys projektu" : "Podsumowanie"}
+          {goesToCategories ? t("summary.firstOutline") : t("summary.eyebrow")}
         </p>
         <h1 className="mt-1.5 font-heading text-[1.5rem] font-semibold tracking-tight text-white">
           {goesToCategories
-            ? "Oto, co właśnie zostało ustalone"
-            : `${tree.title} — wszystko, co ustaliliście`}
+            ? t("summary.justDecided")
+            : t("summary.allDecided", { stage: tree.title })}
         </h1>
         <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-[var(--text-muted)]">
           {goesToCategories
-            ? "To Twoje własne odpowiedzi, zebrane w jednym miejscu. Przeczytaj je na spokojnie — za chwilę dobierzemy do nich pytania w kolejnym etapie."
-            : "Wszystkie odpowiedzi zespołu w jednym kawałku. Możesz to przeczytać, wydrukować albo pokazać komuś z zewnątrz."}
+            ? t("summary.justDecidedBody")
+            : t("summary.allDecidedBody")}
         </p>
 
         <p className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-white/8 px-3 py-1.5 text-[12.5px] text-[var(--text-muted)]">
           <Check className="size-3.5 text-[var(--success)]" />
-          {tree.done} z {tree.total} podpunktów uzupełnionych
+          {t("summary.progress", { done: tree.done, total: tree.total })}
         </p>
       </header>
 
@@ -132,10 +138,10 @@ export default async function StageSummaryPage({
         <div className="mt-6">
           <EmptyState
             icon={FileText}
-            title="Nic jeszcze nie zostało uzupełnione"
-            description="Wróć do etapu i odpowiedz na pierwsze pytanie — pojawi się tutaj od razu."
+            title={t("summary.emptyTitle")}
+            description={t("summary.emptyBody")}
             action={
-              <Button href="/app/stage">Wróć do etapu</Button>
+              <Button href="/app/stage">{t("summary.backToStage")}</Button>
             }
           />
         </div>
@@ -193,8 +199,8 @@ export default async function StageSummaryPage({
       <footer className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-5 py-4">
         <p className="min-w-0 text-[13px] text-[var(--text-subtle)]">
           {goesToCategories
-            ? "Następny krok: powiemy Vairo, co budujesz i komu to sprzedajesz."
-            : "Te odpowiedzi możesz zmieniać w każdej chwili."}
+            ? t("summary.nextCategories")
+            : t("summary.canChange")}
         </p>
 
         {/* Przycisk tylko tam, gdzie jest DALSZY krok. Przy zwykłym podglądzie
@@ -204,7 +210,7 @@ export default async function StageSummaryPage({
             tylko pytaniem, czym te cztery drogi się różnią. */}
         {goesToCategories ? (
           <Button href="/app/stage/categories" size="lg">
-            Dalej
+            {tc("actions.next")}
             <ArrowRight className="size-4" />
           </Button>
         ) : null}

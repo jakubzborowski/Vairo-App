@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Check, ExternalLink, Minus, Paperclip, SkipForward } from "lucide-react";
 import { Pill } from "@/components/ui/pill";
@@ -8,6 +10,9 @@ import {
   templateSlotPattern,
   type StageField,
 } from "@/types/stage";
+import { useLocale, useT } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
+import { formatDate } from "@/i18n/format";
 
 /**
  * Odpowiedź w trybie odczytu — dla osób, które mają w teamie rolę Członka.
@@ -26,6 +31,8 @@ export function AnswerView({
   /** Dokąd prowadzi „Odpowiedz teraz” przy pominiętym pytaniu. Brak = bez linku. */
   answerHref?: string | null;
 }) {
+  const t = useT("stage");
+  const locale = useLocale();
   return (
     <div className="border-t border-white/[0.06] pt-5 first:border-t-0 first:pt-0">
       <p className="text-[15px] font-medium leading-snug text-white">
@@ -36,7 +43,7 @@ export function AnswerView({
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[var(--text-subtle)]">
             <span className="inline-flex items-center gap-1.5">
               <SkipForward className="size-3.5" aria-hidden="true" />
-              Pominięte
+              {t("fields.summary.skipped")}
             </span>
             {answerHref ? (
               <Link
@@ -52,7 +59,7 @@ export function AnswerView({
         ) : (
           <p className="inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)]">
             <Minus className="size-3.5" aria-hidden="true" />
-            Jeszcze nie uzupełnione
+            {t("fields.summary.empty")}
           </p>
         )}
       </div>
@@ -120,13 +127,13 @@ function AnswerBody({ field, value }: { field: StageField; value: unknown }) {
       );
 
     case "date":
-      return <Plain>{formatDate(value)}</Plain>;
+      return <Plain>{formatAnswerDate(value, locale)}</Plain>;
 
     case "checkmark":
       return (
         <p className="inline-flex items-center gap-2 text-[14px] text-[var(--success)]">
           <Check className="size-4" strokeWidth={2.5} />
-          {field.config.confirm_label ?? "Potwierdzone"}
+          {field.config.confirm_label ?? t("fields.summary.acknowledged")}
         </p>
       );
 
@@ -195,7 +202,7 @@ function AnswerBody({ field, value }: { field: StageField; value: unknown }) {
       const filled = record.rows.filter((row) =>
         Object.values(row).some((cell) => String(cell ?? "").trim().length > 0)
       );
-      if (filled.length === 0) return <Plain>Nic nie brakuje.</Plain>;
+      if (filled.length === 0) return <Plain>{t("fields.records.nothingMissing")}</Plain>;
       return (
         <ul className="flex flex-col gap-2">
           {filled.map((row, index) => (
@@ -206,7 +213,7 @@ function AnswerBody({ field, value }: { field: StageField; value: unknown }) {
               {columns
                 .map((column) => row[column.key]?.trim())
                 .filter(Boolean)
-                .join(" · ") || "Pozycja bez treści"}
+                .join(" · ") || t("fields.records.emptyRow")}
             </li>
           ))}
         </ul>
@@ -217,16 +224,14 @@ function AnswerBody({ field, value }: { field: StageField; value: unknown }) {
       return (
         <p className="inline-flex items-center gap-2 text-[14px] text-[var(--success)]">
           <Check className="size-4" strokeWidth={2.5} />
-          {field.config.confirm_label ?? "Zrobione"}
+          {field.config.confirm_label ?? t("fields.check.done")}
         </p>
       );
 
     case "people":
       return (
         <Plain>
-          {asList(value).length === 1
-            ? "Wybrano 1 osobę z platformy"
-            : `Wybrano ${asList(value).length} osób z platformy`}
+          {t("fields.people.selected", { count: asList(value).length })}
         </Plain>
       );
 
@@ -257,11 +262,11 @@ const asFiles = (value: unknown): { path: string; name: string }[] =>
       ) as { path: string; name: string }[])
     : [];
 
-function formatDate(value: unknown) {
+function formatAnswerDate(value: unknown, locale: Locale) {
   if (typeof value !== "string") return String(value);
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("pl-PL", {
+  return formatDate(locale, date, {
     day: "numeric",
     month: "long",
     year: "numeric",

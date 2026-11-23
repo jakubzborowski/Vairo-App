@@ -6,6 +6,9 @@ import { Input, Textarea } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
 import { cn } from "@/lib/utils";
 import type { FieldConfig, StageField } from "@/types/stage";
+import { useT } from "@/i18n/client";
+import type { Translate } from "@/i18n/translator";
+import type { MessageKey } from "@/i18n/messages";
 
 export type FieldInputProps = {
   field: StageField;
@@ -25,18 +28,20 @@ const asList = (value: unknown): string[] =>
 // ---------------------------------------------------------------------------
 
 export function ShortTextInput({ field, value, onChange, disabled }: FieldInputProps) {
+  const t = useT("stage");
   return (
     <Input
       value={asString(value)}
       onChange={(e) => onChange(e.target.value)}
       maxLength={field.config.max}
       disabled={disabled}
-      placeholder="Twoja odpowiedź…"
+      placeholder={t("fields.placeholder")}
     />
   );
 }
 
 export function LongTextInput({ field, value, onChange, disabled }: FieldInputProps) {
+  const t = useT("stage");
   return (
     <Textarea
       value={asString(value)}
@@ -44,7 +49,7 @@ export function LongTextInput({ field, value, onChange, disabled }: FieldInputPr
       maxLength={field.config.max}
       rows={5}
       disabled={disabled}
-      placeholder="Twoja odpowiedź…"
+      placeholder={t("fields.placeholder")}
     />
   );
 }
@@ -65,6 +70,7 @@ export function ListInput({
   multiline,
   rowLabels,
 }: FieldInputProps & { multiline?: boolean }) {
+  const t = useT("stage");
   if (rowLabels && rowLabels.length > 0) {
     return (
       <LabeledRows
@@ -113,7 +119,7 @@ export function ListInput({
             maxLength={config.item_max}
             disabled={disabled}
             rows={multiline ? 3 : undefined}
-            placeholder="Twoja odpowiedź…"
+            placeholder={t("fields.placeholder")}
             className="flex-1"
           />
           {rows.length > 1 ? (
@@ -121,7 +127,7 @@ export function ListInput({
               type="button"
               onClick={() => remove(index)}
               disabled={disabled}
-              aria-label={`Usuń pozycję ${index + 1}`}
+              aria-label={t("fields.records.remove", { n: index + 1 })}
               className="mt-2.5 rounded-lg p-1.5 text-[var(--text-faint)] transition-colors hover:bg-white/6 hover:text-white"
             >
               <X className="size-4" />
@@ -138,14 +144,15 @@ export function ListInput({
           className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-lg px-2 py-1 text-[13px] text-[var(--text-subtle)] transition-colors hover:bg-white/5 hover:text-white"
         >
           <Plus className="size-3.5" />
-          Dodaj kolejną
+          {t("fields.list.addAnother")}
         </button>
       ) : null}
 
       {config.min_items ? (
         <p className="text-[12px] text-[var(--text-subtle)]">
-          Minimum {config.min_items}
-          {max < 20 ? `, maksimum ${max}` : ""}
+          {max < 20
+            ? t("fields.list.minMax", { min: config.min_items, max })
+            : t("fields.list.min", { min: config.min_items })}
         </p>
       ) : null}
     </div>
@@ -174,6 +181,7 @@ function LabeledRows({
   labels: string[];
   multiline?: boolean;
 }) {
+  const t = useT("stage");
   const items = asList(value);
   const prefix = (label: string) => `${label}: `;
   const textFor = (label: string) => {
@@ -207,20 +215,18 @@ function LabeledRows({
             maxLength={field.config.item_max}
             disabled={disabled}
             rows={multiline ? 3 : undefined}
-            placeholder="Co z tej rozmowy wynika?"
+            placeholder={t("fields.rows.placeholder")}
           />
         </label>
       ))}
       {extras.length > 0 ? (
         <p className="text-[12px] text-[var(--text-subtle)]">
-          Masz też {extras.length} {extras.length === 1 ? "wcześniejszą notatkę" : "wcześniejsze notatki"} spoza
-          obecnej listy rozmówców — zostają w odpowiedzi.
+          {t("fields.rows.extras", { count: extras.length })}
         </p>
       ) : null}
       <p className="text-[12px] text-[var(--text-subtle)]">
-        Rubryki biorą się z listy rozmówców w poprzednim podpunkcie. Była
-        jeszcze jakaś rozmowa? Dopisz tę osobę tam.
-        {field.config.min_items ? ` Minimum ${field.config.min_items} uzupełnione.` : ""}
+        {t("fields.rows.hint")}
+        {field.config.min_items ? ` ${t("fields.rows.min", { min: field.config.min_items })}` : ""}
       </p>
     </div>
   );
@@ -231,6 +237,7 @@ function LabeledRows({
 // ---------------------------------------------------------------------------
 
 export function ScaleInput({ field, value, onChange, disabled }: FieldInputProps) {
+  const t = useT("stage");
   const id = useId();
   const min = field.config.min ?? 1;
   const max = field.config.max ?? 5;
@@ -271,7 +278,7 @@ export function ScaleInput({ field, value, onChange, disabled }: FieldInputProps
 
       {current === null ? (
         <p className="mt-2 text-[12px] text-[var(--text-subtle)]">
-          Przesuń suwak, żeby zapisać ocenę.
+          {t("fields.scale.hint")}
         </p>
       ) : null}
     </div>
@@ -362,6 +369,7 @@ export function NumberInput({ field, value, onChange, disabled }: FieldInputProp
  * w formularzu; wynik można też poprawić ręcznie.
  */
 function CalcInput({ field, value, onChange, disabled }: FieldInputProps) {
+  const t = useT("stage");
   const calc = field.config.calc!;
   const [parts, setParts] = useState<Record<string, string>>({});
 
@@ -410,11 +418,11 @@ function CalcInput({ field, value, onChange, disabled }: FieldInputProps) {
         ))}
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-[13px] text-[var(--text-muted)]">Wynik:</span>
+        <span className="text-[13px] text-[var(--text-muted)]">{t("fields.calc.result")}</span>
         <Input
           type="number"
           inputMode="decimal"
-          aria-label="Wynik"
+          aria-label={t("fields.calc.resultAria")}
           value={typeof value === "number" ? String(value) : ""}
           onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
           disabled={disabled}
@@ -446,6 +454,7 @@ export function DateInput({ value, onChange, disabled }: FieldInputProps) {
 // ---------------------------------------------------------------------------
 
 export function LinksInput({ field, value, onChange, disabled }: FieldInputProps) {
+  const t = useT("stage");
   const items = asList(value);
   const rows = items.length > 0 ? items : [""];
 
@@ -474,7 +483,7 @@ export function LinksInput({ field, value, onChange, disabled }: FieldInputProps
                 <button
                   type="button"
                   onClick={() => onChange(rows.filter((_, i) => i !== index))}
-                  aria-label={`Usuń link ${index + 1}`}
+                  aria-label={t("fields.links.remove", { n: index + 1 })}
                   className="rounded-lg p-1.5 text-[var(--text-faint)] transition-colors hover:bg-white/6 hover:text-white"
                 >
                   <X className="size-4" />
@@ -483,7 +492,7 @@ export function LinksInput({ field, value, onChange, disabled }: FieldInputProps
             </div>
             {invalid ? (
               <p className="mt-1 text-[12px] text-[var(--warning)]">
-                To nie wygląda na adres — link powinien zaczynać się od http.
+                {t("fields.links.invalid")}
               </p>
             ) : null}
           </div>
@@ -498,7 +507,7 @@ export function LinksInput({ field, value, onChange, disabled }: FieldInputProps
           className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-lg px-2 py-1 text-[13px] text-[var(--text-subtle)] transition-colors hover:bg-white/5 hover:text-white"
         >
           <Plus className="size-3.5" />
-          Dodaj link
+          {t("fields.links.add")}
         </button>
       ) : null}
     </div>
@@ -519,6 +528,7 @@ function isLikelyUrl(value: string) {
 // ---------------------------------------------------------------------------
 
 export function CheckmarkInput({ value, onChange, disabled }: FieldInputProps) {
+  const t = useT("stage");
   const checked = value === true;
   return (
     <button
@@ -544,7 +554,7 @@ export function CheckmarkInput({ value, onChange, disabled }: FieldInputProps) {
         {checked ? <CheckGlyph /> : null}
       </span>
       <span className="text-[14px] text-white">
-        {checked ? "Zrobione" : "Zaznacz, gdy to zrobisz"}
+        {checked ? t("fields.check.done") : t("fields.check.todo")}
       </span>
     </button>
   );
@@ -565,20 +575,24 @@ function CheckGlyph() {
   );
 }
 
-export function validateField(field: StageField, value: unknown): string | null {
+export function validateField(
+  field: StageField,
+  value: unknown,
+  t: Translate<MessageKey<"stage">>
+): string | null {
   const config: FieldConfig = field.config;
 
   if (typeof value === "string") {
     const length = value.trim().length;
     if (config.min && length > 0 && length < config.min) {
-      return `Za krótka odpowiedź — minimum ${config.min} znaków.`;
+      return t("fields.validate.tooShort", { min: config.min });
     }
   }
 
   if (Array.isArray(value) && config.min_items) {
     const filled = value.filter((v) => String(v ?? "").trim().length > 0);
     if (filled.length > 0 && filled.length < config.min_items) {
-      return `Podaj przynajmniej ${config.min_items}.`;
+      return t("fields.validate.minItems", { min: config.min_items });
     }
   }
 

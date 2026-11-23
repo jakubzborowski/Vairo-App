@@ -61,5 +61,6 @@
   "opportunities.title": "Партнерські можливості",
   "opportunities.description": "Програми, конкурси й пропозиції партнерів Vairo для стартапів. Додамо їх у наступній версії.",
   "actions.cancel": "Скасувати",
-  "fallbackName": "Користувач"
+  "fallbackName": "Користувач",
+  "backToDashboard": "Повернутися на дашборд"
 }

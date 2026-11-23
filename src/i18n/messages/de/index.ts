@@ -8,6 +8,7 @@ import nav from "./nav.json";
 import notifications from "./notifications.json";
 import onboarding from "./onboarding.json";
 import settings from "./settings.json";
+import stage from "./stage.json";
 import startups from "./startups.json";
 
 const messages = {
@@ -19,6 +20,7 @@ const messages = {
   "notifications": notifications,
   "onboarding": onboarding,
   "settings": settings,
+  "stage": stage,
   "startups": startups,
 };
 

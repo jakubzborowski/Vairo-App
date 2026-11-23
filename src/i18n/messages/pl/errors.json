@@ -30,5 +30,7 @@
   "db.goalProofWorkflowMissing": "Nie ma takiej zapisanej wersji Rozpiski.",
   "db.goalArchived": "Zarchiwizowanego celu nie da się ukończyć.",
   "db.scoreMissingMigration": "Brakuje migracji SCORE (044–048) — odpal je w Supabase → SQL Editor.",
-  "db.unknown": "Coś poszło nie tak po stronie bazy. Odśwież stronę i spróbuj jeszcze raz."
+  "db.unknown": "Coś poszło nie tak po stronie bazy. Odśwież stronę i spróbuj jeszcze raz.",
+  "readOnlyStage": "Tylko Founder i Admin mogą zmieniać odpowiedzi w etapach. Poproś o zmianę roli albo o podniesienie uprawnień.",
+  "readOnlyTeam": "Tylko Founder i Admin mogą zarządzać składem zespołu."
 }

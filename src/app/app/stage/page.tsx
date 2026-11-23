@@ -17,8 +17,12 @@ import { Card, CardBody } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { canEditStageData, canManageTeam } from "@/types/startup";
 import { getActiveInviteLink } from "@/lib/invites";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Etap startupu — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("stage");
+  return { title: t("page.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 /**
@@ -30,6 +34,8 @@ export default async function StagePage({
 }: {
   searchParams: Promise<{ stage?: string; subpoint?: string }>;
 }) {
+  const t = await getT("stage");
+  const tc = await getT("common");
   const { stage: requestedStage, subpoint } = await searchParams;
   const supabase = await createClient();
   const user = await getCurrentUser();
@@ -55,11 +61,11 @@ export default async function StagePage({
       <div className="page">
         <EmptyState
           icon={Database}
-          title="Treść etapów nie jest jeszcze wgrana"
-          description="Migracje 005–008 tworzą silnik etapów i wgrywają treść Ambition oraz Idea Stage. Odpal je w Supabase → SQL Editor, a ten ekran zacznie działać."
+          title={t("page.noContentTitle")}
+          description={t("page.noContentBody")}
           action={
             <Button href="/app" variant="secondary">
-              Wróć na dashboard
+              {tc("backToDashboard")}
             </Button>
           }
         />
@@ -115,19 +121,19 @@ export default async function StagePage({
               <CalendarClock className="size-6" strokeWidth={1.5} />
             </span>
             <h1 className="mt-4 font-heading text-[1.4rem] font-semibold text-white">
-              {entry ? entry.title : "Kolejny etap"} — w przygotowaniu
+              {t("page.preparing", { stage: entry ? entry.title : t("page.nextStage") })}
             </h1>
             <p className="mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-[var(--text-muted)]">
               {entry?.intro ??
-                "Ten etap jest już w programie, ale nie ma jeszcze wgranych pytań."}
+                t("page.noQuestions")}
             </p>
             {done.length > 0 ? (
               <p className="mt-4 text-[13px] text-[var(--text-subtle)]">
-                Domknięte etapy:{" "}
+                {t("page.closedStages")}{" "}
                 <span className="text-white">
                   {done.map((item) => item.title).join(", ")}
                 </span>
-                . Możesz do nich wrócić i poprawić odpowiedzi.
+                . {t("page.closedStagesHint")}
               </p>
             ) : null}
             <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -137,24 +143,23 @@ export default async function StagePage({
                   <Button type="submit">
                     {entry.finishLabel ??
                       (nextWithContent
-                        ? `Przejdź do ${nextWithContent.title}`
-                        : "Przejdź dalej")}
+                        ? t("page.goTo", { stage: nextWithContent.title })
+                        : t("page.goOn"))}
                   </Button>
                 </form>
               ) : null}
               {done.length > 0 ? (
                 <Button href={`/app/stage?stage=${done.at(-1)!.key}`} variant="secondary">
-                  Przejrzyj {done.at(-1)!.title}
+                  {t("page.review", { stage: done.at(-1)!.title })}
                 </Button>
               ) : null}
               <Button href="/app" variant="ghost">
-                Wróć na dashboard
+                {tc("backToDashboard")}
               </Button>
             </div>
             {canAdvance && nextWithContent ? (
               <p className="mt-4 text-[12.5px] text-[var(--text-subtle)]">
-                Treść tego etapu jeszcze nie wjechała. Możesz domknąć szkielet
-                i przejść do {nextWithContent.title}. Tracker i materiały zostają.
+                {t("page.skeletonHint", { stage: nextWithContent.title })}
               </p>
             ) : null}
           </CardBody>
@@ -178,13 +183,12 @@ export default async function StagePage({
               <SkipForward className="size-6" strokeWidth={1.5} />
             </span>
             <h1 className="mt-4 font-heading text-[1.4rem] font-semibold text-white">
-              {requested.title} został pominięty
+              {t("page.skippedTitle", { stage: requested.title })}
             </h1>
             <p className="mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-[var(--text-muted)]">
-              Ten startup zaczął się od gotowego pomysłu, więc Vairo przeskoczyło ten etap.
+              {t("page.skippedBody")}
               {requested.subtitle ? ` ${requested.subtitle}.` : ""}{" "}
-              Możesz go uzupełnić, ale <strong>nie musisz</strong> — nie blokuje
-              tego, co robisz teraz.
+              {t("page.skippedOptional")}
             </p>
 
             <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -192,21 +196,21 @@ export default async function StagePage({
                 <form action={openStage}>
                   <input type="hidden" name="stage_key" value={requested.key} />
                   <Button type="submit" variant="secondary">
-                    Uzupełnij mimo to
+                    {t("page.fillAnyway")}
                   </Button>
                 </form>
               ) : null}
 
               {current && current.key !== requested.key ? (
-                <Button href="/app/stage">Wróć do {current.title}</Button>
+                <Button href="/app/stage">{t("screen.backTo", { stage: current.title })}</Button>
               ) : (
-                <Button href="/app">Wróć na dashboard</Button>
+                <Button href="/app">{tc("backToDashboard")}</Button>
               )}
             </div>
 
             {!canOpen ? (
               <p className="mt-4 text-[12.5px] text-[var(--text-subtle)]">
-                Pominięty etap może otworzyć Founder albo Admin.
+                {t("page.skippedManagers")}
               </p>
             ) : null}
           </CardBody>
@@ -227,11 +231,11 @@ export default async function StagePage({
       <div className="page">
         <EmptyState
           icon={Rocket}
-          title="Etap nie jest jeszcze otwarty"
-          description="Founder lub Admin musi wejść w ten etap jako pierwszy. Potem zobaczysz tu wszystko, co zespół uzupełnił."
+          title={t("page.notOpenTitle")}
+          description={t("page.notOpenBody")}
           action={
             <Button href="/app" variant="secondary">
-              Wróć na dashboard
+              {tc("backToDashboard")}
             </Button>
           }
         />
@@ -260,11 +264,11 @@ export default async function StagePage({
       <div className="page">
         <EmptyState
           icon={Rocket}
-          title="Ten etap nie ma jeszcze treści"
-          description="Struktura jest gotowa, ale nie wgrano do niej pytań. Uruchom migrację z treścią etapu."
+          title={t("page.emptyTitle")}
+          description={t("page.emptyBody")}
           action={
             <Button href="/app" variant="secondary">
-              Wróć na dashboard
+              {tc("backToDashboard")}
             </Button>
           }
         />

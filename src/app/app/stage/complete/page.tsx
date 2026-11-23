@@ -8,9 +8,12 @@ import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { loadStageProgram } from "@/lib/stage";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
-import { plural } from "@/lib/utils";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Koniec programu — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("stage");
+  return { title: t("complete.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 /**
@@ -18,6 +21,8 @@ export const dynamic = "force-dynamic";
  * Pokazuje zapisane wyniki i prostą ofertę dalszej współpracy — bez płatności.
  */
 export default async function StageCompletePage() {
+  const t = await getT("stage");
+  const tc = await getT("common");
   const supabase = await createClient();
   const user = await getCurrentUser();
   if (!user) redirect("/register?next=/app/stage/complete");
@@ -58,46 +63,38 @@ export default async function StageCompletePage() {
           <CheckCircle2 className="size-7" strokeWidth={1.5} />
         </span>
         <h1 className="mt-4 font-heading text-[1.6rem] font-semibold text-white">
-          Program Vairo jest domknięty
+          {t("complete.title")}
         </h1>
         <p className="mx-auto mt-2 max-w-lg text-[14px] leading-relaxed text-[var(--text-muted)]">
-          Ukończenie MVP Stage nie oznacza potwierdzonego sukcesu firmy. To zapis
-          tego, co zespół zbudował, sprawdził i poprawił — oraz punkt startu do
-          dalszej pracy.
+          {t("complete.body")}
         </p>
       </div>
 
       <Card className="mt-8">
         <CardBody className="flex flex-col gap-4 pt-5">
           <p className="text-[12px] font-medium tracking-wide text-[var(--text-subtle)] uppercase">
-            Co zostało z programu
+            {t("complete.whatRemains")}
           </p>
           <ul className="flex flex-col gap-3">
             <li className="flex items-start gap-3 text-[14px] text-[var(--text-muted)]">
               <Flag className="mt-0.5 size-4 shrink-0 text-[var(--vairo)]" />
               <span>
-                <span className="text-white">{completedGoals ?? 0}</span>{" "}
-                {plural(completedGoals ?? 0, "ukończony cel", "ukończone cele", "ukończonych celów")}{" "}
-                z dowodem
+                {t("complete.goalsWithProof", { count: completedGoals ?? 0 })}
               </span>
             </li>
             <li className="flex items-start gap-3 text-[14px] text-[var(--text-muted)]">
               <ListTodo className="mt-0.5 size-4 shrink-0 text-[var(--vairo)]" />
               <span>
-                Otwarte u Ciebie:{" "}
-                <span className="text-white">{openGoals}</span>{" "}
-                {plural(openGoals, "cel", "cele", "celów")} ·{" "}
-                <span className="text-white">{openTasks}</span>{" "}
-                {plural(openTasks, "zadanie", "zadania", "zadań")}
+                {t("complete.openForYou", { goals: openGoals, tasks: openTasks })}
               </span>
             </li>
           </ul>
           <div className="flex flex-wrap gap-2 pt-1">
             <Button href="/app/stage/summary?stage=mvp" variant="secondary">
-              Pełne odpowiedzi MVP Stage
+              {t("complete.fullAnswers")}
             </Button>
             <Button href="/app/goals" variant="ghost">
-              Otwórz tracker
+              {t("complete.openTracker")}
             </Button>
           </div>
         </CardBody>
@@ -106,24 +103,21 @@ export default async function StageCompletePage() {
       <Card className="mt-4">
         <CardBody className="pt-5">
           <p className="text-[12px] font-medium tracking-wide text-[var(--text-subtle)] uppercase">
-            Co dalej
+            {t("complete.whatNext")}
           </p>
           <h2 className="mt-2 font-heading text-[1.15rem] font-semibold text-white">
-            Dalsze prowadzenie w Vairo
+            {t("complete.furtherTitle")}
           </h2>
           <p className="mt-2 text-[14px] leading-relaxed text-[var(--text-muted)]">
-            Możemy pomóc utrzymać rytm: kolejne cele, pierwsze skalowanie albo
-            rozmowa o Premium. Cennik, udziały i płatności są poza tym ekranem —
-            tu tylko umawiasz kontakt. Zapisane wyniki i materiały zostają w
-            workspace.
+            {t("complete.furtherBody")}
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Button href={contactUrl}>
               <MessageCircle className="size-4" />
-              Porozmawiaj o współpracy
+              {t("complete.talk")}
             </Button>
             <Button href="/app" variant="secondary">
-              Wróć na Start
+              {tc("notFound.backToStart")}
               <ArrowRight className="size-4" />
             </Button>
           </div>
@@ -131,9 +125,9 @@ export default async function StageCompletePage() {
       </Card>
 
       <p className="mt-6 text-center text-[12.5px] text-[var(--text-subtle)]">
-        Tracker, zespół i pliki działają jak wcześniej.{" "}
+        {t("complete.stillWorks")}{" "}
         <Link href="/app/program" className="text-[var(--text-muted)] underline-offset-2 hover:text-white hover:underline">
-          Zobacz cały program
+          {t("complete.seeProgram")}
         </Link>
         .
       </p>

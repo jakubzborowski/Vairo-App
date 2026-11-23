@@ -39,7 +39,7 @@ async function guardManage(
   userId: string
 ) {
   const role = await getStartupRole(supabase, startupId, userId);
-  return { role, error: teamManageError(role) };
+  return { role, error: await teamManageError(role) };
 }
 
 async function translate(message: string) {
@@ -114,7 +114,7 @@ export async function updateJobTitle(input: {
   if (!myRole) return { error: "Nie należysz do tego zespołu." };
 
   const isSelf = input.profileId === user.id;
-  if (!isSelf && teamManageError(myRole)) {
+  if (!isSelf && await teamManageError(myRole)) {
     return { error: "Cudze stanowisko zmieniają Founder i Admin." };
   }
 

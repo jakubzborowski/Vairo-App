@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { translateDbError } from "@/lib/db-errors";
-import { NOT_A_MEMBER, getStartupRole } from "@/lib/permissions";
+import { getStartupRole } from "@/lib/permissions";
 import { isProofKind, parseRequirement, proofMatches } from "@/lib/proof";
 import { canAssignToOthers, canChangeOwnWork, type StartupRole } from "@/types/startup";
 import type {
@@ -16,7 +16,7 @@ import type {
   TaskEvent,
   TaskStatus,
 } from "@/types/goals";
-import { sessionExpired } from "@/lib/server-errors";
+import { notAMember, sessionExpired } from "@/lib/server-errors";
 
 type Result = { error: string | null; id?: string };
 
@@ -46,7 +46,7 @@ async function context(startupId: string): Promise<Gate> {
   }
 
   const role = await getStartupRole(supabase, startupId, user.id);
-  if (!role) return { ok: false, error: NOT_A_MEMBER };
+  if (!role) return { ok: false, error: await notAMember() };
 
   return { ok: true, supabase, user, role };
 }

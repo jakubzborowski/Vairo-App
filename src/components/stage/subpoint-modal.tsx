@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, Check, Lock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn, plural } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   emptyValueFor,
   fieldAnswered,
@@ -19,6 +19,7 @@ import { AnswerView } from "./answer-view";
 import { FieldInput } from "./field-input";
 import { validateField } from "./field-inputs";
 import { SummaryField, type ResolvedSource } from "./summary-field";
+import { useT } from "@/i18n/client";
 
 type Props = {
   tree: StageTree;
@@ -53,6 +54,8 @@ export function SubpointModal({
   onClose,
   onSave,
 }: Props) {
+  const t = useT("stage");
+  const tc = useT("common");
   const initial = useMemo(() => {
     const draft: Record<string, unknown> = {};
     for (const field of subpoint.fields) {
@@ -133,7 +136,7 @@ export function SubpointModal({
   // Odpowiedzi krótsze niż sugerowane minimum. To wskazówka, nie blokada —
   // pokazujemy ją dopiero po kliknięciu „Zapisz" i nigdy nie zamykamy drogi.
   const tooShort = subpoint.fields.filter(
-    (f) => fieldAnswered(f, draft[f.answerKey]) && validateField(f, draft[f.answerKey])
+    (f) => fieldAnswered(f, draft[f.answerKey]) && validateField(f, draft[f.answerKey], t)
   );
 
   // Focus tylko przy otwarciu. Wcześniej ten efekt zależał od `dirty`,
@@ -173,7 +176,7 @@ export function SubpointModal({
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
       <button
         type="button"
-        aria-label="Zamknij"
+        aria-label={tc("actions.close")}
         onClick={tryClose}
         className="fixed inset-0 bg-black/75 backdrop-blur-sm"
       />
@@ -202,7 +205,7 @@ export function SubpointModal({
             ) : null}
             {subpoint.alsoIn.length > 0 ? (
               <p className="mt-2 text-[12px] text-[var(--text-subtle)]">
-                To pytanie dotyczy też: {subpoint.alsoIn.join(", ")} — odpowiadasz raz.
+                {t("modal.alsoIn", { categories: subpoint.alsoIn.join(", ") })}
               </p>
             ) : null}
             {nudge}
@@ -210,7 +213,7 @@ export function SubpointModal({
           <button
             type="button"
             onClick={tryClose}
-            aria-label="Zamknij"
+            aria-label={tc("actions.close")}
             className="shrink-0 rounded-lg p-1.5 text-[var(--text-faint)] transition-colors hover:bg-white/6 hover:text-white"
           >
             <X className="size-4" />
@@ -256,7 +259,7 @@ export function SubpointModal({
           )}
           {subpoint.goalConditions.length > 0 ? (
             <div className="rounded-xl border border-white/10 px-4 py-3">
-              <p className="text-[13px] font-medium text-white">Cele, które zaliczają ten punkt</p>
+              <p className="text-[13px] font-medium text-white">{t("modal.goalsTitle")}</p>
               <ul className="mt-2 flex flex-col gap-1.5">
                 {subpoint.goalConditions.map((condition) => (
                   <li key={condition.id} className="text-[13px] text-[var(--text-muted)]">
@@ -266,20 +269,20 @@ export function SubpointModal({
               </ul>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button href="/app/goals" variant="secondary" size="sm">
-                  Otwórz powiązane cele
+                  {t("modal.openGoals")}
                 </Button>
                 <Button
                   href={`/app/goals/new?condition=${subpoint.goalConditions[0]?.id ?? ""}`}
                   size="sm"
                 >
-                  Dodaj cel
+                  {t("modal.addGoal")}
                 </Button>
                 <Button
                   href={`/app/goals?condition=${subpoint.goalConditions[0]?.id ?? ""}&link=1`}
                   variant="ghost"
                   size="sm"
                 >
-                  Podepnij istniejący
+                  {t("modal.linkExisting")}
                 </Button>
               </div>
             </div>
@@ -290,10 +293,10 @@ export function SubpointModal({
           <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] px-6 py-4">
             <p className="inline-flex items-center gap-1.5 text-[12.5px] text-[var(--text-subtle)]">
               <Lock className="size-3.5 shrink-0" />
-              Tylko do odczytu — odpowiedzi zmieniają Founder i Admin.
+              {t("modal.readOnly")}
             </p>
             <Button variant="secondary" onClick={onClose}>
-              Zamknij
+              {tc("actions.close")}
             </Button>
           </footer>
         ) : (
@@ -306,31 +309,29 @@ export function SubpointModal({
               </p>
             ) : showSoftHints ? (
               <p className="text-[12.5px] text-[var(--warning)]">
-                {tooShort.length === 1
-                  ? "Jedna odpowiedź jest bardzo krótka."
-                  : `${tooShort.length} odpowiedzi jest bardzo krótkich.`}{" "}
-                Możesz je rozwinąć albo zapisać tak, jak są.
+                {t("modal.tooShort", { count: tooShort.length })}
               </p>
             ) : missing.length > 0 ? (
               <p className="text-[12.5px] text-[var(--text-subtle)]">
-                Do uzupełnienia: {missing.length}{" "}
-                {missing.length === 1 ? "pytanie" : "pytania"}. Możesz zapisać
-                częściowo i wrócić.
+                {t("modal.missing", { count: missing.length })}
               </p>
             ) : goalsOpen.length > 0 ? (
               <p className="text-[12.5px] text-[var(--text-subtle)]">
-                Zostały cele:{" "}
-                {goalsOpen.map((condition) => `${condition.label} ${condition.done}/${condition.minCount}`).join(", ")}.
+                {t("modal.goalsLeft", {
+                  goals: goalsOpen
+                    .map((condition) => `${condition.label} ${condition.done}/${condition.minCount}`)
+                    .join(", "),
+                })}
               </p>
             ) : (
               <span className="inline-flex flex-wrap items-center gap-2">
                 <Badge tone="success">
                   <Check className="size-3" />
-                  Komplet
+                  {t("modal.complete")}
                 </Badge>
                 {skippedCount > 0 ? (
                   <span className="text-[12.5px] text-[var(--text-subtle)]">
-                    {skippedCount} {plural(skippedCount, "pytanie pominięte", "pytania pominięte", "pytań pominiętych")}
+                    {t("modal.skippedCount", { count: skippedCount })}
                   </span>
                 ) : null}
               </span>
@@ -339,15 +340,15 @@ export function SubpointModal({
 
           <div className="flex items-center gap-2">
             <Button variant="ghost" onClick={tryClose} disabled={saving}>
-              Anuluj
+              {tc("actions.cancel")}
             </Button>
             <Button
               onClick={trySave}
               loading={saving}
               disabled={!dirty && !canConfirmEmpty}
-              title={!dirty && !canConfirmEmpty ? "Nic się jeszcze nie zmieniło — wpisz albo zaznacz odpowiedź" : undefined}
+              title={!dirty && !canConfirmEmpty ? t("modal.nothingChanged") : undefined}
             >
-              {showSoftHints ? "Zapisz mimo to" : "Zapisz"}
+              {showSoftHints ? t("modal.saveAnyway") : tc("actions.save")}
             </Button>
           </div>
         </footer>
@@ -357,10 +358,10 @@ export function SubpointModal({
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
             <div className="w-full max-w-sm rounded-xl border border-white/10 bg-[var(--surface-2)] p-5 text-center">
               <p className="text-[15px] font-semibold text-white">
-                Masz niezapisane zmiany
+                {tc("status.unsaved")}
               </p>
               <p className="mt-1.5 text-[13px] text-[var(--text-subtle)]">
-                Jeśli zamkniesz teraz, przepadną.
+                {t("modal.loseChanges")}
               </p>
               <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <Button
@@ -368,10 +369,10 @@ export function SubpointModal({
                   block
                   onClick={() => setConfirmClose(false)}
                 >
-                  Wróć
+                  {tc("actions.return")}
                 </Button>
                 <Button variant="danger" block onClick={onClose}>
-                  Zamknij bez zapisu
+                  {t("modal.closeWithoutSaving")}
                 </Button>
               </div>
             </div>

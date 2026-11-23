@@ -6,8 +6,12 @@ import { getActiveStartupId } from "@/lib/active-team";
 import { CategoriesStepForm } from "@/components/onboarding/categories-step-form";
 import { chooseCategoriesAfterAmbition } from "@/app/app/stage/actions";
 import type { IndustryTag } from "@/types/startup";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Czym to będzie? — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("onboarding");
+  return { title: t("meta.categories") };
+}
 export const dynamic = "force-dynamic";
 
 /**
@@ -18,6 +22,7 @@ export const dynamic = "force-dynamic";
  * o to tutaj, w drodze do Idea Stage.
  */
 export default async function StageCategoriesPage() {
+  const t = await getT("stage");
   const supabase = await createClient();
   const user = await getCurrentUser();
 
@@ -50,15 +55,14 @@ export default async function StageCategoriesPage() {
     <div className="py-6">
       <div className="mx-auto mb-8 max-w-[560px] rounded-2xl border border-[var(--vairo)]/25 bg-[var(--vairo)]/6 px-5 py-4">
         <p className="text-[13px] font-semibold text-[var(--vairo)]">
-          Masz pierwszy zarys projektu
+          {t("summary.firstOutline")}
         </p>
         <p className="mt-1 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
           {/* Było „odpowiedz na trzy pytania" przy kreatorze, który ma dwa
               kroki. Liczba w obietnicy musi zgadzać się z licznikiem obok,
               inaczej pierwszy ekran po domknięciu etapu zaczyna od nieprawdy.
               Bez liczby zdanie nic nie traci. */}
-          Teraz wiesz o swoim pomyśle więcej niż na starcie. Odpowiedz na kilka
-          pytań, a Vairo dobierze do nich pytania w Idea Stage.
+          {t("categories.afterAmbition")}
         </p>
       </div>
 
@@ -66,10 +70,10 @@ export default async function StageCategoriesPage() {
         categoryCounts={categoryCounts}
         tags={(tags ?? []) as IndustryTag[]}
         action={chooseCategoriesAfterAmbition}
-        submitLabel="Przechodzę do Idea Stage"
+        submitLabel={t("categories.submitToIdea")}
         startupId={active.id}
         initialCategories={active.categories.filter((c) => c !== "general")}
-        initialTagIds={(currentTags ?? []).map((t) => t.tag_id)}
+        initialTagIds={(currentTags ?? []).map((row) => row.tag_id)}
       />
     </div>
   );

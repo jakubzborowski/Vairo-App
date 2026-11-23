@@ -14,6 +14,7 @@ import {
   type StageTree,
 } from "@/types/stage";
 import { MentorPanel } from "@/components/ai/ai-assist";
+import { useT } from "@/i18n/client";
 
 type Props = {
   tree: StageTree;
@@ -47,6 +48,8 @@ export function StageCloseDialog({
   onClose,
   onConfirm,
 }: Props) {
+  const t = useT("stage");
+  const tc = useT("common");
   const [decision, setDecision] = useState<StageDecision | null>(null);
   const [note, setNote] = useState("");
   const [reopen, setReopen] = useState<string[]>([]);
@@ -80,30 +83,28 @@ export function StageCloseDialog({
       // Decyzja bez spojrzenia na własne wyniki to zgadywanie. Pierwszy krok
       // nie ocenia pomysłu — pokazuje, na czym ta decyzja ma się oprzeć.
       key: "review",
-      title: "Zanim zdecydujesz",
-      description:
-        "To jest podsumowanie Twojej pracy w tym etapie. Przejrzyj je na spokojnie — decyzja na następnym ekranie ma się opierać właśnie na tym.",
+      title: t("close.reviewTitle"),
+      description: t("close.reviewDescription"),
       render: () => (
         <div className="flex flex-col gap-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Stat
-              value={`${tree.done} z ${tree.total}`}
-              label="wymaganych podpunktów uzupełnionych"
+              value={t("close.ofTotal", { done: tree.done, total: tree.total })}
+              label={t("close.statSubpoints")}
             />
             <Stat
-              value={`${completedPoints} z ${allPoints}`}
-              label="punktów domkniętych w całości"
+              value={t("close.ofTotal", { done: completedPoints, total: allPoints })}
+              label={t("close.statPoints")}
             />
           </div>
 
           {skippedOptional.length > 0 ? (
             <div className="rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-5 py-4">
               <p className="text-[13px] font-medium text-white">
-                Pominięte pytania dodatkowe ({skippedOptional.length})
+                {t("close.skippedOptional", { count: skippedOptional.length })}
               </p>
               <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-                Nie blokują domknięcia. Jeśli któreś wygląda na ważne dla
-                Twojej decyzji, wróć i uzupełnij je teraz.
+                {t("close.skippedOptionalHint")}
               </p>
               <ul className="mt-2.5 flex max-h-[28vh] flex-col gap-1.5 overflow-y-auto pr-1">
                 {skippedOptional.map((item, index) => (
@@ -124,21 +125,19 @@ export function StageCloseDialog({
             className="inline-flex items-center gap-2 self-start rounded-lg border border-white/10 px-3.5 py-2 text-[13px] text-[var(--text-muted)] transition-colors hover:border-white/22 hover:text-white"
           >
             <FileText className="size-4" />
-            Przeczytaj wszystkie odpowiedzi
+            {t("close.readAll")}
           </Link>
 
           <p className="text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-            Vairo nie ocenia pomysłu i nie mówi, czy jest dobry. Zapisujemy to,
-            co zdecydujesz, razem ze zdjęciem Twoich odpowiedzi.
+            {t("close.noJudgement")}
           </p>
         </div>
       ),
     },
     {
       key: "decision",
-      title: `Co dalej z ${tree.title}?`,
-      description:
-        "Wszystkie wymagane podpunkty są uzupełnione. Ta decyzja zostaje zapisana razem ze zdjęciem Twoich odpowiedzi.",
+      title: t("close.decisionTitle", { stage: tree.title }),
+      description: t("close.decisionDescription"),
       canContinue: decision !== null,
       render: () => (
         <div className="flex flex-col gap-2.5">
@@ -147,7 +146,7 @@ export function StageCloseDialog({
             className="mb-1"
             startupStageId={tree.startupStageId}
             scope="stage"
-            label="Zapytaj mentora przed decyzją"
+            label={t("close.askMentor")}
           />
           {STAGE_DECISIONS.map((key) => {
             const copy = STAGE_DECISION_COPY[key];
@@ -159,7 +158,7 @@ export function StageCloseDialog({
                 type="button"
                 onClick={() => setDecision(key)}
                 disabled={locked}
-                title={locked ? "Do archiwum może przenieść tylko Founder." : undefined}
+                title={locked ? t("close.archiveFounderOnly") : undefined}
                 aria-pressed={selected}
                 className={cn(
                   "rounded-2xl border px-5 py-4 text-left transition-colors",
@@ -191,11 +190,11 @@ export function StageCloseDialog({
                           : "text-white"
                     )}
                   >
-                    {copy.label}
+                    {t(`decision.${key}.label`)}
                   </span>
                 </span>
                 <span className="mt-1.5 block pl-[26px] text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-                  {locked ? "Tę decyzję podejmuje Founder." : copy.description}
+                  {locked ? t("close.founderDecides") : t(`decision.${key}.description`)}
                 </span>
               </button>
             );
@@ -208,14 +207,13 @@ export function StageCloseDialog({
   if (decision === "pivot") {
     steps.push({
       key: "reopen",
-      title: "Co chcesz przemyśleć na nowo?",
-      description:
-        "Zaznaczone podpunkty wrócą do wypełnienia. Poprzednie odpowiedzi nie znikają — zostają w historii zamknięcia.",
+      title: t("close.reopenTitle"),
+      description: t("close.reopenDescription"),
       optional: true,
       help:
         reopen.length > 0
-          ? `Do ponownego wypełnienia: ${reopen.length}. Reszta zostaje bez zmian.`
-          : "Możesz nic nie zaznaczać — wtedy zapisujemy samą decyzję o zmianie kierunku.",
+          ? t("close.reopenCount", { count: reopen.length })
+          : t("close.reopenNone"),
       render: () => (
         <div className="flex max-h-[46vh] flex-col gap-4 overflow-y-auto pr-1">
           {tree.categories.map((category) => (
@@ -278,15 +276,14 @@ export function StageCloseDialog({
 
   steps.push({
     key: "note",
-    title: "Zapisz to na później",
-    description:
-      "Kilka zdań o tym, skąd ta decyzja. Za pół roku to będzie najcenniejsza notatka w całym projekcie.",
+    title: t("close.noteTitle"),
+    description: t("close.noteDescription"),
     optional: true,
     help:
       decision === "archive"
-        ? "Startup trafi do archiwum. Cała praca zostaje — możesz do niej wrócić z ustawień zespołu."
+        ? t("close.archiveHelp")
         : decision === "pause"
-          ? "Startup dostanie status „na pauzie”. Wracasz do niego, kiedy chcesz."
+          ? t("close.pauseHelp")
           : undefined,
     render: () => (
       <div>
@@ -295,7 +292,7 @@ export function StageCloseDialog({
           onChange={(event) => setNote(event.target.value)}
           rows={6}
           maxLength={2000}
-          placeholder="Np. „Rozmowy pokazały, że problem jest realny, ale klienci nie chcą płacić abonamentem — przechodzimy na model jednorazowy.”"
+          placeholder={t("close.notePlaceholder")}
         />
         {decision ? (
           <div
@@ -310,8 +307,8 @@ export function StageCloseDialog({
           >
             <AlertTriangle className="mt-0.5 size-4 shrink-0" />
             <span>
-              Twoja decyzja: <strong>{STAGE_DECISION_COPY[decision].label}</strong>.{" "}
-              {STAGE_DECISION_COPY[decision].description}
+              {t("close.yourDecision")} <strong>{t(`decision.${decision}.label`)}</strong>.{" "}
+              {t(`decision.${decision}.description`)}
             </span>
           </div>
         ) : null}
@@ -331,14 +328,14 @@ export function StageCloseDialog({
             className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:bg-white/6 hover:text-white"
           >
             <X className="size-4" />
-            Jeszcze nie teraz
+            {t("close.notNow")}
           </button>
         </div>
 
         <StepWizard
           steps={steps}
           finishLabel={
-            decision ? `${STAGE_DECISION_COPY[decision].label} — zapisz` : "Zapisz"
+            decision ? t("close.saveDecision", { decision: t(`decision.${decision}.label`) }) : tc("actions.save")
           }
           finishing={saving}
           error={error}

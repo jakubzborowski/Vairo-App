@@ -30,5 +30,7 @@
   "db.goalProofWorkflowMissing": "No existe esa versión guardada del plan de trabajo.",
   "db.goalArchived": "Un objetivo archivado no se puede completar.",
   "db.scoreMissingMigration": "Faltan las migraciones de SCORE (044–048) — ejecútalas en Supabase → SQL Editor.",
-  "db.unknown": "Algo ha fallado en la base de datos. Recarga la página e inténtalo de nuevo."
+  "db.unknown": "Algo ha fallado en la base de datos. Recarga la página e inténtalo de nuevo.",
+  "readOnlyStage": "Solo el Founder y el Admin pueden cambiar las respuestas de las etapas. Pide un cambio de rol o más permisos.",
+  "readOnlyTeam": "Solo el Founder y el Admin pueden gestionar la plantilla del equipo."
 }

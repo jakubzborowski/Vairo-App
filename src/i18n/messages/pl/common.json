@@ -61,5 +61,6 @@
   "opportunities.title": "Możliwości partnerskie",
   "opportunities.description": "Programy, konkursy i oferty partnerów Vairo dla startupów. Dodamy je w kolejnej wersji.",
   "actions.cancel": "Anuluj",
-  "fallbackName": "Użytkownik"
+  "fallbackName": "Użytkownik",
+  "backToDashboard": "Wróć na dashboard"
 }

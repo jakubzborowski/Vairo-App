@@ -5,9 +5,9 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { translateDbError } from "@/lib/db-errors";
-import { NOT_A_MEMBER, getStartupRole } from "@/lib/permissions";
+import { getStartupRole } from "@/lib/permissions";
 import type { StartupRole } from "@/types/startup";
-import { sessionExpired } from "@/lib/server-errors";
+import { notAMember, sessionExpired } from "@/lib/server-errors";
 
 export type RozpiskaNode = { id: string; x: number; y: number; label: string };
 export type RozpiskaEdge = { id: string; from: string; to: string };
@@ -29,7 +29,7 @@ async function context(startupId: string): Promise<Gate> {
     return { ok: false, error: "Przełącz zespół i spróbuj ponownie." };
   }
   const role = await getStartupRole(supabase, startupId, user.id);
-  if (!role) return { ok: false, error: NOT_A_MEMBER };
+  if (!role) return { ok: false, error: await notAMember() };
   return { ok: true, supabase, user, role };
 }
 

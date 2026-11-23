@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { translateDbError } from "@/lib/db-errors";
-import { NOT_A_MEMBER, getStartupRole } from "@/lib/permissions";
-import { sessionExpired } from "@/lib/server-errors";
+import { getStartupRole } from "@/lib/permissions";
+import { notAMember, sessionExpired } from "@/lib/server-errors";
 
 type Result = { error: string | null; id?: string };
 
@@ -20,7 +20,7 @@ async function context(startupId: string) {
   const active = await getActiveStartupId();
   if (active && active !== startupId) return { ok: false as const, error: "Przełącz zespół i spróbuj ponownie." };
   const role = await getStartupRole(supabase, startupId, user.id);
-  if (!role) return { ok: false as const, error: NOT_A_MEMBER };
+  if (!role) return { ok: false as const, error: await notAMember() };
   return { ok: true as const, supabase, user, role };
 }
 

@@ -336,34 +336,15 @@ export const STAGE_DECISIONS = ["continue", "pivot", "pause", "archive"] as cons
 
 export type StageDecision = (typeof STAGE_DECISIONS)[number];
 
-export const STAGE_DECISION_COPY: Record<
-  StageDecision,
-  { label: string; description: string; tone: "brand" | "warning" | "danger" }
-> = {
-  continue: {
-    label: "Kontynuuj",
-    description:
-      "Wyniki wystarczają, żeby iść dalej. Etap zostaje domknięty, a kolejny się otwiera.",
-    tone: "brand",
-  },
-  pivot: {
-    label: "Zmień kierunek",
-    description:
-      "Coś się nie potwierdziło. Zapisujemy decyzję, etap zostaje otwarty, a Ty wybierasz, które podpunkty wypełnić na nowo. Poprzednie odpowiedzi zostają w historii.",
-    tone: "warning",
-  },
-  pause: {
-    label: "Wstrzymaj",
-    description:
-      "Odkładasz ten startup na później. Nic nie ginie, kolejny etap się nie otwiera.",
-    tone: "warning",
-  },
-  archive: {
-    label: "Odrzuć pomysł",
-    description:
-      "Zamykasz ten pomysł. Startup trafia do archiwum razem z całą pracą, która została wykonana.",
-    tone: "danger",
-  },
+/**
+ * Ton decyzji. Nazwa i opis są w słowniku `stage`:
+ * `decision.<key>.label`, `decision.<key>.description`.
+ */
+export const STAGE_DECISION_COPY: Record<StageDecision, { tone: "brand" | "warning" | "danger" }> = {
+  continue: { tone: "brand" },
+  pivot: { tone: "warning" },
+  pause: { tone: "warning" },
+  archive: { tone: "danger" },
 };
 
 /** Etapy, które kończą się decyzją. Pozostałe domykamy jednym przyciskiem. */
