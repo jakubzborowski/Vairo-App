@@ -5,8 +5,12 @@ import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { PathChoice } from "@/components/onboarding/path-choice";
 import { ensureOwnProfile } from "@/lib/profile";
 import { INVITE_COOKIE, INVITE_TOKEN_RE } from "@/lib/invites";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Od czego zaczynasz? — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("onboarding");
+  return { title: t("meta.path") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function OnboardingPathPage() {

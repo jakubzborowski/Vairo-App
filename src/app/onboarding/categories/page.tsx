@@ -5,8 +5,12 @@ import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { CategoriesStepForm } from "@/components/onboarding/categories-step-form";
 import { ensureOwnProfile } from "@/lib/profile";
 import type { IndustryTag } from "@/types/startup";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Czym to będzie? — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("onboarding");
+  return { title: t("meta.categories") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function OnboardingCategoriesPage() {

@@ -4,8 +4,12 @@ import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { NameStepForm } from "@/components/onboarding/name-step-form";
 import { ensureOwnProfile } from "@/lib/profile";
 import { stepsForPath, type OnboardingPath } from "@/types/profile";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Twoje imię — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("onboarding");
+  return { title: t("meta.name") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function OnboardingNamePage() {

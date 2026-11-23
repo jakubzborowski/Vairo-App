@@ -4,8 +4,12 @@ import { loadCategoryQuestionCounts } from "@/lib/stage";
 import { getUserStartups } from "@/lib/startup";
 import { CreateStartupForm } from "@/components/app/create-startup-form";
 import type { IndustryTag } from "@/types/startup";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Nowy startup — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("startups");
+  return { title: t("metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function NewStartupPage() {

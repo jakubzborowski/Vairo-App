@@ -1,0 +1,23 @@
+{
+  "metaTitle": "Nowy startup — Vairo",
+  "limitTitle": "Masz już {count} zespoły",
+  "limitBody": "To maksimum na jedno konto. Żeby założyć kolejny projekt, opuść jeden z obecnych albo przekaż w nim rolę Foundera komuś innemu.",
+  "backToDashboard": "Wróć na dashboard",
+  "name.title": "Jak nazwiemy Twój projekt?",
+  "name.description": "Robocza nazwa w zupełności wystarczy — zmienisz ją w każdej chwili.",
+  "hasIdea.title": "Wiesz już, co chcesz zbudować?",
+  "hasIdea.description": "Od tej odpowiedzi zależy, od czego zaczniemy.",
+  "hasIdea.yes": "Tak, mam pomysł",
+  "hasIdea.yesDescription": "Opiszesz go teraz i przejdziemy od razu do sprawdzania, czy ma sens.",
+  "hasIdea.no": "Jeszcze nie wiem",
+  "hasIdea.noDescription": "Przeprowadzimy Cię przez kilkanaście minut pytań, po których będziesz mieć pierwszy zarys.",
+  "idea.title": "Opowiedz, o co chodzi",
+  "idea.help": "Nie musi być idealne. W kolejnych krokach Vairo pomoże Ci to doprecyzować.",
+  "categoriesHelp": "Od tego zależy, o co Vairo będzie pytać podczas walidacji. Ogólna walidacja jest zawsze włączona — reszta tylko ją uzupełnia.",
+  "tagsDescription": "Zaznacz wszystkie, które pasują. Dzięki temu inni znajdą Was w Social.",
+  "finishWithIdea": "Stwórz i zacznij walidację",
+  "finishWithoutIdea": "Stwórz i zacznij od zera",
+  "errors.name": "Nazwa projektu: 2–80 znaków.",
+  "errors.idea": "Opis pomysłu: przynajmniej kilka zdań albo zostaw pusty.",
+  "errors.limit": "Masz już {count} zespoły — to maksimum na jedno konto. Opuść któryś, żeby założyć nowy."
+}

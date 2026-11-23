@@ -3,24 +3,28 @@
 import { createClient } from "@/lib/supabase/server";
 import { translateDbError } from "@/lib/db-errors";
 import { sessionExpired } from "@/lib/server-errors";
+import { getT } from "@/i18n/server";
 
 /**
  * Tworzenie własnej branży. Wspólne dla onboardingu i zakładania startupu
  * spoza onboardingu — obie ścieżki pytają dokładnie o to samo.
  */
 export async function createIndustryTag(label: string) {
+  const t = await getT("onboarding");
   const trimmed = label.trim();
   if (trimmed.length < 1 || trimmed.length > 48) {
-    return { error: "Branża musi mieć 1–48 znaków.", tag: null };
+    return { error: t("errors.tagLength"), tag: null };
   }
 
   const slug = trimmed
     .toLowerCase()
-    .replace(/[^a-z0-9ąćęłńóśźż]+/g, "-")
+    // Litery dowolnego alfabetu (cyrylica, ñ, ß) zostają — inaczej branża
+    // wpisana po ukraińsku dostałaby pusty slug i nie dałoby się jej dodać.
+    .replace(new RegExp("[^\\p{L}\\p{N}]+", "gu"), "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 64);
 
-  if (!slug) return { error: "Nieprawidłowa nazwa.", tag: null };
+  if (!slug) return { error: t("errors.tagInvalid"), tag: null };
 
   const supabase = await createClient();
   const {

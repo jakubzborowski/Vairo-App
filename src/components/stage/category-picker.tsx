@@ -4,7 +4,10 @@ import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
 import { accentStyle, categoryAccent } from "@/lib/category-colors";
-import { cn, plural } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useLocale, useT } from "@/i18n/client";
+import { LOCALE_TAGS } from "@/i18n/config";
+import { industryLabel } from "@/lib/localized";
 import { SELECTABLE_CATEGORIES, type IndustryTag } from "@/types/startup";
 
 /**
@@ -25,9 +28,11 @@ export function CategoryPicker({
   onToggle: (key: string) => void;
   counts?: Record<string, number>;
 }) {
+  const t = useT("onboarding");
+  const tl = useT("labels");
   const groups = [
-    { label: "Rodzaj produktu", items: SELECTABLE_CATEGORIES.filter((c) => c.group === "product") },
-    { label: "Komu sprzedajesz", items: SELECTABLE_CATEGORIES.filter((c) => c.group === "customer") },
+    { label: t("categories.groupProduct"), items: SELECTABLE_CATEGORIES.filter((c) => c.group === "product") },
+    { label: t("categories.groupCustomer"), items: SELECTABLE_CATEGORIES.filter((c) => c.group === "customer") },
   ];
 
   return (
@@ -60,16 +65,14 @@ export function CategoryPicker({
                     className="size-2 shrink-0 rounded-full bg-[var(--accent)]"
                     aria-hidden="true"
                   />
-                  {option.label}
+                  {tl(`category.${option.key}`)}
                 </span>
                 <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[var(--text-muted)]">
-                  {option.description}
+                  {tl(`categoryDescription.${option.key}`)}
                 </span>
                 {counts?.[option.key] ? (
                   <span className="mt-1.5 block text-[12px] text-[var(--text-subtle)]">
-                    + {counts[option.key]}{" "}
-                    {plural(counts[option.key], "podpunkt", "podpunkty", "podpunktów")} do
-                    uzupełnienia
+                    {t("categories.extraSubpoints", { count: counts[option.key] })}
                   </span>
                 ) : null}
               </button>
@@ -105,12 +108,16 @@ export function IndustryPicker({
   canCreate: boolean;
   disabled?: boolean;
 }) {
+  const t = useT("onboarding");
+  const tl = useT("labels");
+  const locale = useLocale();
   const q = query.trim().toLowerCase();
+  const label = (tag: IndustryTag) => industryLabel(tl, tag);
   const visible = q
-    ? catalog.filter((t) => t.label.toLowerCase().includes(q))
+    ? catalog.filter((tag) => label(tag).toLowerCase().includes(q) || tag.label.toLowerCase().includes(q))
     : catalog
-        .filter((t) => t.is_suggested || selected.has(t.id))
-        .sort((a, b) => a.label.localeCompare(b.label, "pl"));
+        .filter((tag) => tag.is_suggested || selected.has(tag.id))
+        .sort((a, b) => label(a).localeCompare(label(b), LOCALE_TAGS[locale]));
 
   return (
     <div>
@@ -122,19 +129,19 @@ export function IndustryPicker({
             disabled={disabled}
             onToggle={() => onToggle(tag.id)}
           >
-            {tag.label}
+            {label(tag)}
           </Pill>
         ))}
         {visible.length === 0 ? (
           <p className="text-[13px] text-[var(--text-subtle)]">
-            Nic nie pasuje — dodaj własną poniżej.
+            {t("categories.tagsNoMatch")}
           </p>
         ) : null}
       </div>
 
       <div className="mt-5 border-t border-white/[0.06] pt-4">
         <p className="mb-2 text-[12.5px] text-[var(--text-subtle)]">
-          Nie ma Twojej branży?
+          {t("categories.tagsMissing")}
         </p>
         <div className="flex gap-2">
           <Input
@@ -146,8 +153,8 @@ export function IndustryPicker({
                 onCreate();
               }
             }}
-            placeholder="Wpisz własną…"
-            aria-label="Dodaj własną branżę"
+            placeholder={t("categories.tagsPlaceholder")}
+            aria-label={t("categories.tagsAddAria")}
             disabled={disabled}
           />
           <button
@@ -157,7 +164,7 @@ export function IndustryPicker({
             className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl border border-white/12 px-3.5 text-[13px] text-[var(--text-muted)] transition-colors hover:border-[var(--vairo)]/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Plus className="size-4" />
-            Dodaj
+            {t("categories.tagsAdd")}
           </button>
         </div>
       </div>

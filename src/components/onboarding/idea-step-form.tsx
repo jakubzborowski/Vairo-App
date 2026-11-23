@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { saveOnboardingIdea } from "@/app/onboarding/actions";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/input";
+import { useT } from "@/i18n/client";
 
 const IDEA_MAX = 4000;
 
@@ -14,6 +15,8 @@ export function IdeaStepForm({
   initialIdea?: string | null;
   initialName?: string | null;
 }) {
+  const t = useT("onboarding");
+  const tc = useT("common");
   const [idea, setIdea] = useState(initialIdea ?? "");
   const [name, setName] = useState(initialName ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -25,10 +28,10 @@ export function IdeaStepForm({
     <div>
       <div className="text-center">
         <h1 className="font-heading text-[1.85rem] font-semibold tracking-tight text-white sm:text-[2.1rem]">
-          Co chcesz zbudować?
+          {t("idea.title")}
         </h1>
         <p className="mt-2.5 text-[15px] text-[var(--text-subtle)]">
-          Nie musi być idealne. Dopracujesz to w kolejnych krokach.
+          {t("idea.subtitle")}
         </p>
       </div>
 
@@ -44,8 +47,8 @@ export function IdeaStepForm({
       >
         <div className="flex flex-col gap-5">
           <Field
-            label="Opis pomysłu"
-            hint="Jaki problem rozwiązujesz i komu pomagasz? Kilka zdań wystarczy."
+            label={t("idea.ideaLabel")}
+            hint={t("idea.ideaHint")}
             counter={{ value: idea.length, max: IDEA_MAX }}
           >
             {({ id }) => (
@@ -56,15 +59,15 @@ export function IdeaStepForm({
                 value={idea}
                 onChange={(e) => setIdea(e.target.value)}
                 maxLength={IDEA_MAX}
-                placeholder="Chcę pomóc… bo dzisiaj muszą…"
+                placeholder={t("idea.ideaPlaceholder")}
                 autoFocus
               />
             )}
           </Field>
 
           <Field
-            label="Nazwa projektu"
-            hint="Robocza nazwa w zupełności wystarczy — zmienisz ją później."
+            label={t("idea.nameLabel")}
+            hint={t("idea.nameHint")}
           >
             {({ id }) => (
               <Input
@@ -73,7 +76,7 @@ export function IdeaStepForm({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 maxLength={80}
-                placeholder="np. Ostatnia Kanapka"
+                placeholder={t("idea.namePlaceholder")}
               />
             )}
           </Field>
@@ -93,7 +96,7 @@ export function IdeaStepForm({
           disabled={!ready}
           className="mt-6"
         >
-          Dalej
+          {tc("actions.next")}
         </Button>
       </form>
     </div>

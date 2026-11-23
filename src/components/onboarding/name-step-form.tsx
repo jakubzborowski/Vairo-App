@@ -5,12 +5,13 @@ import { saveOnboardingName } from "@/app/onboarding/actions";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import type { OnboardingPath } from "@/types/profile";
+import { useT } from "@/i18n/client";
 
-const SUBTITLE: Record<OnboardingPath, string> = {
-  joiner: "Pod tym imieniem zobaczą Cię zespoły szukające ludzi.",
-  founder_idea: "Pod tym imieniem zobaczą Cię ludzie, których zaprosisz do zespołu.",
-  founder_no_idea: "Pod tym imieniem zobaczą Cię ludzie, których zaprosisz do zespołu.",
-};
+const SUBTITLE = {
+  joiner: "name.subtitleJoiner",
+  founder_idea: "name.subtitleFounder",
+  founder_no_idea: "name.subtitleFounder",
+} as const satisfies Record<OnboardingPath, string>;
 
 export function NameStepForm({
   initialName,
@@ -19,6 +20,8 @@ export function NameStepForm({
   initialName?: string | null;
   path: OnboardingPath;
 }) {
+  const t = useT("onboarding");
+  const tc = useT("common");
   const [name, setName] = useState(initialName ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -26,10 +29,10 @@ export function NameStepForm({
   return (
     <div className="text-center">
       <h1 className="font-heading text-[1.85rem] font-semibold tracking-tight text-white sm:text-[2.1rem]">
-        Jak masz na imię?
+        {t("name.title")}
       </h1>
       <p className="mt-2.5 text-[15px] text-[var(--text-subtle)]">
-        {SUBTITLE[path]}
+        {t(SUBTITLE[path])}
       </p>
 
       <form
@@ -42,14 +45,14 @@ export function NameStepForm({
           });
         }}
       >
-        <Field label="Imię i nazwisko" error={error}>
+        <Field label={t("name.label")} error={error}>
           {({ id }) => (
             <Input
               id={id}
               name="full_name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="np. Anna Kowalska"
+              placeholder={t("name.placeholder")}
               autoComplete="name"
               autoFocus
               maxLength={120}
@@ -65,7 +68,7 @@ export function NameStepForm({
           disabled={name.trim().length < 2}
           className="mt-6"
         >
-          Dalej
+          {tc("actions.next")}
         </Button>
       </form>
     </div>

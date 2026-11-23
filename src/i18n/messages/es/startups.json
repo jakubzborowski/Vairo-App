@@ -1,0 +1,23 @@
+{
+  "metaTitle": "Nueva startup — Vairo",
+  "limitTitle": "Ya tienes {count} equipos",
+  "limitBody": "Es el máximo por cuenta. Para crear otro proyecto, sal de uno de los actuales o pasa en él el rol de Founder a otra persona.",
+  "backToDashboard": "Volver al panel",
+  "name.title": "¿Cómo llamamos a tu proyecto?",
+  "name.description": "Un nombre provisional es más que suficiente — puedes cambiarlo cuando quieras.",
+  "hasIdea.title": "¿Ya sabes qué quieres construir?",
+  "hasIdea.description": "De esta respuesta depende por dónde empezamos.",
+  "hasIdea.yes": "Sí, tengo una idea",
+  "hasIdea.yesDescription": "La describirás ahora y pasaremos directamente a comprobar si tiene sentido.",
+  "hasIdea.no": "Todavía no lo sé",
+  "hasIdea.noDescription": "Te guiaremos con unos quince minutos de preguntas y al final tendrás un primer esbozo.",
+  "idea.title": "Cuéntanos de qué se trata",
+  "idea.help": "No tiene que ser perfecto. En los siguientes pasos Vairo te ayudará a precisarlo.",
+  "categoriesHelp": "De esto depende qué te preguntará Vairo durante la validación. La validación general siempre está activa — el resto solo la completa.",
+  "tagsDescription": "Marca todos los que encajen. Así otros os encontrarán en Social.",
+  "finishWithIdea": "Crear y empezar la validación",
+  "finishWithoutIdea": "Crear y empezar desde cero",
+  "errors.name": "Nombre del proyecto: 2–80 caracteres.",
+  "errors.idea": "Descripción de la idea: al menos unas frases o déjala vacía.",
+  "errors.limit": "Ya tienes {count} equipos — es el máximo por cuenta. Sal de alguno para crear uno nuevo."
+}

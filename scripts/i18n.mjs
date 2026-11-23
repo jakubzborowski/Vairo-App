@@ -61,8 +61,16 @@ function buildIndex() {
   console.log(`✓ index.ts dla ${LOCALES.join(", ")} (${sourceNs.length} przestrzeni)`);
 }
 
+// Zmienne: `{name}` albo `{name, plural|select, …}`. Słowa w wariantach
+// („{Startup, w którym…}”) to tekst, nie zmienne.
 const vars = (text) =>
-  [...String(text).matchAll(/\{\s*([a-zA-Z_][\w]*)\s*(?:[,}])/g)].map((m) => m[1]).sort();
+  [
+    ...new Set(
+      [...String(text).matchAll(/\{\s*([a-zA-Z_][\w]*)\s*(?:\}|,\s*(?:plural|select)\s*,)/g)].map(
+        (m) => m[1]
+      )
+    ),
+  ].sort();
 
 function balanced(text) {
   let depth = 0;

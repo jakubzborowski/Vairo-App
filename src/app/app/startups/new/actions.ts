@@ -13,6 +13,7 @@ import {
 } from "@/types/startup";
 import { translateDbError } from "@/lib/db-errors";
 import { sessionExpired } from "@/lib/server-errors";
+import { getT } from "@/i18n/server";
 
 /**
  * Tworzy startup poza onboardingiem — dla Joinera, który zmienił zdanie,
@@ -25,15 +26,16 @@ export async function createStartup(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) return { error: await sessionExpired() };
+  const t = await getT("startups");
 
   const name = String(formData.get("startup_name") ?? "").trim();
   const idea = String(formData.get("idea_description") ?? "").trim();
 
   if (name.length < 2 || name.length > 80) {
-    return { error: "Nazwa projektu: 2–80 znaków." };
+    return { error: t("errors.name") };
   }
   if (idea.length > 0 && idea.length < 10) {
-    return { error: "Opis pomysłu: przynajmniej kilka zdań albo zostaw pusty." };
+    return { error: t("errors.idea") };
   }
 
   const categories = String(formData.get("categories") ?? "")
@@ -61,7 +63,7 @@ export async function createStartup(formData: FormData) {
   if (error) {
     if (isStartupLimitError(error.message)) {
       return {
-        error: `Masz już ${MAX_STARTUPS} zespoły — to maksimum na jedno konto. Opuść któryś, żeby założyć nowy.`,
+        error: t("errors.limit", { count: MAX_STARTUPS }),
       };
     }
     return { error: await translateDbError(error.message) };

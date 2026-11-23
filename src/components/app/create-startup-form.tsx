@@ -11,6 +11,7 @@ import { StepWizard, type WizardStep } from "@/components/ui/step-wizard";
 import { cn } from "@/lib/utils";
 import { MAX_STARTUPS } from "@/types/startup";
 import type { IndustryTag } from "@/types/startup";
+import { useT } from "@/i18n/client";
 
 type Props = {
   tags: IndustryTag[];
@@ -27,6 +28,8 @@ type Props = {
  * taki ekran jest ścianą. Pięć spokojnych kroków przechodzi się bez wysiłku.
  */
 export function CreateStartupForm({ tags, teamCount, categoryCounts }: Props) {
+  const t = useT("startups");
+  const to = useT("onboarding");
   const [name, setName] = useState("");
   const [hasIdea, setHasIdea] = useState<boolean | null>(null);
   const [idea, setIdea] = useState("");
@@ -39,7 +42,7 @@ export function CreateStartupForm({ tags, teamCount, categoryCounts }: Props) {
 
   const canCreateTag =
     query.trim().length > 0 &&
-    !catalog.some((t) => t.label.toLowerCase() === query.trim().toLowerCase());
+    !catalog.some((tag) => tag.label.toLowerCase() === query.trim().toLowerCase());
 
   const onCreateTag = () => {
     const label = query.trim();
@@ -47,11 +50,11 @@ export function CreateStartupForm({ tags, teamCount, categoryCounts }: Props) {
     startTransition(async () => {
       const result = await createIndustryTag(label);
       if (result.error || !result.tag) {
-        setError(result.error ?? "Nie udało się dodać branży.");
+        setError(result.error ?? to("categories.tagFailed"));
         return;
       }
       const tag = result.tag as IndustryTag;
-      setCatalog((prev) => (prev.some((t) => t.id === tag.id) ? prev : [...prev, tag]));
+      setCatalog((prev) => (prev.some((item) => item.id === tag.id) ? prev : [...prev, tag]));
       setSelectedTags((prev) => new Set(prev).add(tag.id));
       setQuery("");
       setError(null);
@@ -83,14 +86,13 @@ export function CreateStartupForm({ tags, teamCount, categoryCounts }: Props) {
     return (
       <div className="mx-auto max-w-[520px] rounded-2xl border border-white/10 bg-[var(--surface)] p-7 text-center">
         <p className="font-heading text-[18px] font-semibold text-white">
-          Masz już {MAX_STARTUPS} zespoły
+          {t("limitTitle", { count: MAX_STARTUPS })}
         </p>
         <p className="mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-[var(--text-muted)]">
-          To maksimum na jedno konto. Żeby założyć kolejny projekt, opuść jeden
-          z obecnych albo przekaż w nim rolę Foundera komuś innemu.
+          {t("limitBody")}
         </p>
         <Button href="/app" variant="secondary" className="mt-6">
-          Wróć na dashboard
+          {t("backToDashboard")}
         </Button>
       </div>
     );
@@ -99,39 +101,39 @@ export function CreateStartupForm({ tags, teamCount, categoryCounts }: Props) {
   const steps: WizardStep[] = [
     {
       key: "name",
-      title: "Jak nazwiemy Twój projekt?",
-      description: "Robocza nazwa w zupełności wystarczy — zmienisz ją w każdej chwili.",
+      title: t("name.title"),
+      description: t("name.description"),
       canContinue: name.trim().length >= 2,
       render: () => (
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={80}
-          placeholder="np. Ostatnia Kanapka"
+          placeholder={to("idea.namePlaceholder")}
           autoFocus
           className="h-14 text-[16px]"
-          aria-label="Nazwa projektu"
+          aria-label={to("idea.nameLabel")}
         />
       ),
     },
     {
       key: "has-idea",
-      title: "Wiesz już, co chcesz zbudować?",
-      description: "Od tej odpowiedzi zależy, od czego zaczniemy.",
+      title: t("hasIdea.title"),
+      description: t("hasIdea.description"),
       canContinue: hasIdea !== null,
       render: () => (
         <div className="grid gap-3">
           <ChoiceTile
             icon={Rocket}
-            title="Tak, mam pomysł"
-            description="Opiszesz go teraz i przejdziemy od razu do sprawdzania, czy ma sens."
+            title={t("hasIdea.yes")}
+            description={t("hasIdea.yesDescription")}
             selected={hasIdea === true}
             onSelect={() => setHasIdea(true)}
           />
           <ChoiceTile
             icon={Lightbulb}
-            title="Jeszcze nie wiem"
-            description="Przeprowadzimy Cię przez kilkanaście minut pytań, po których będziesz mieć pierwszy zarys."
+            title={t("hasIdea.no")}
+            description={t("hasIdea.noDescription")}
             selected={hasIdea === false}
             onSelect={() => setHasIdea(false)}
           />
@@ -142,9 +144,9 @@ export function CreateStartupForm({ tags, teamCount, categoryCounts }: Props) {
       ? [
           {
             key: "idea",
-            title: "Opowiedz, o co chodzi",
-            description: "Jaki problem rozwiązujesz i komu pomagasz? Kilka zdań wystarczy.",
-            help: "Nie musi być idealne. W kolejnych krokach Vairo pomoże Ci to doprecyzować.",
+            title: t("idea.title"),
+            description: to("idea.ideaHint"),
+            help: t("idea.help"),
             canContinue: idea.trim().length >= 10,
             render: () => (
               <Textarea
@@ -152,9 +154,9 @@ export function CreateStartupForm({ tags, teamCount, categoryCounts }: Props) {
                 onChange={(e) => setIdea(e.target.value)}
                 rows={7}
                 maxLength={4000}
-                placeholder="Chcę pomóc… bo dzisiaj muszą…"
+                placeholder={to("idea.ideaPlaceholder")}
                 autoFocus
-                aria-label="Opis pomysłu"
+                aria-label={to("idea.ideaLabel")}
               />
             ),
           } satisfies WizardStep,
@@ -167,9 +169,9 @@ export function CreateStartupForm({ tags, teamCount, categoryCounts }: Props) {
       ? [
           {
             key: "categories",
-            title: "Co budujesz i komu to sprzedajesz?",
-            description: "Zaznacz wszystko, co pasuje. Możesz też nie zaznaczać nic.",
-            help: "Od tego zależy, o co Vairo będzie pytać podczas walidacji. Ogólna walidacja jest zawsze włączona — reszta tylko ją uzupełnia.",
+            title: to("categories.title"),
+            description: to("categories.description"),
+            help: t("categoriesHelp"),
             optional: true,
             render: () => (
               <CategoryPicker
@@ -183,8 +185,8 @@ export function CreateStartupForm({ tags, teamCount, categoryCounts }: Props) {
       : []),
     {
       key: "tags",
-      title: "W jakiej branży to działa?",
-      description: "Zaznacz wszystkie, które pasują. Dzięki temu inni znajdą Was w Social.",
+      title: to("categories.tagsTitle"),
+      description: t("tagsDescription"),
       optional: true,
       render: () => (
         <IndustryPicker
@@ -204,7 +206,7 @@ export function CreateStartupForm({ tags, teamCount, categoryCounts }: Props) {
   return (
     <StepWizard
       steps={steps}
-      finishLabel={hasIdea ? "Stwórz i zacznij walidację" : "Stwórz i zacznij od zera"}
+      finishLabel={hasIdea ? t("finishWithIdea") : t("finishWithoutIdea")}
       onFinish={onFinish}
       finishing={pending}
       error={error}

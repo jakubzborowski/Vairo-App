@@ -3,8 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { IdeaStepForm } from "@/components/onboarding/idea-step-form";
 import { ensureOwnProfile } from "@/lib/profile";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Twój pomysł — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("onboarding");
+  return { title: t("meta.idea") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function OnboardingIdeaPage() {

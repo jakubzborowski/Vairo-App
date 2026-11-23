@@ -12,8 +12,8 @@ import {
 } from "@/types/startup";
 import type { OnboardingPath } from "@/types/profile";
 import { translateDbError } from "@/lib/db-errors";
+import { getT } from "@/i18n/server";
 
-const DEFAULT_PROJECT_NAME = "Mój pierwszy projekt";
 
 async function requireUser() {
   const supabase = await createClient();
@@ -32,7 +32,7 @@ async function requireUser() {
 /** Krok 1 — wybór ścieżki. Różnicuje wyłącznie dalszy onboarding. */
 export async function chooseOnboardingPath(path: OnboardingPath) {
   if (!["joiner", "founder_idea", "founder_no_idea"].includes(path)) {
-    return { error: "Nieznana ścieżka." };
+    return { error: (await getT("onboarding"))("errors.unknownPath") };
   }
 
   const { supabase, user } = await requireUser();
@@ -52,7 +52,7 @@ export async function saveOnboardingName(formData: FormData) {
   const fullName = String(formData.get("full_name") ?? "").trim();
 
   if (fullName.length < 2 || fullName.length > 120) {
-    return { error: "Podaj imię i nazwisko (min. 2 znaki)." };
+    return { error: (await getT("onboarding"))("errors.name") };
   }
 
   const { supabase, user } = await requireUser();
@@ -89,7 +89,8 @@ export async function saveOnboardingName(formData: FormData) {
   // nada mu właściwą w punkcie „Nadaj projektowi roboczą nazwę".
   if (path === "founder_no_idea") {
     const result = await createStartupForUser(supabase, user.id, {
-      name: DEFAULT_PROJECT_NAME,
+      // Nazwa robocza w języku założyciela — i tak zmieni ją pierwszy punkt Ambition.
+      name: (await getT("onboarding"))("defaultProjectName"),
       stageKey: "ambition",
     });
     if (result.error) return { error: result.error };
@@ -108,10 +109,10 @@ export async function saveOnboardingIdea(formData: FormData) {
   const name = String(formData.get("startup_name") ?? "").trim();
 
   if (idea.length < 10 || idea.length > 4000) {
-    return { error: "Opisz pomysł — przynajmniej kilka zdań." };
+    return { error: (await getT("onboarding"))("errors.idea") };
   }
   if (name.length < 2 || name.length > 80) {
-    return { error: "Nazwa projektu: 2–80 znaków." };
+    return { error: (await getT("onboarding"))("errors.projectName") };
   }
 
   const { supabase, user } = await requireUser();
@@ -163,7 +164,7 @@ export async function completeOnboardingWithStartup(formData: FormData) {
   const startupId = await findOwnStartup(supabase, user.id);
 
   if (!startupId) {
-    return { error: "Nie znaleziono projektu. Wróć krok wstecz." };
+    return { error: (await getT("onboarding"))("errors.projectNotFound") };
   }
 
   // Podmiana całego zestawu — user mógł wrócić i odznaczyć kategorię.
@@ -249,7 +250,7 @@ async function createStartupForUser(
 
   if (error) {
     if (isStartupLimitError(error.message)) {
-      return { error: "Masz już 3 zespoły — to maksimum na jedno konto." };
+      return { error: (await getT("onboarding"))("errors.teamLimit") };
     }
     return { error: await translateDbError(error.message) };
   }

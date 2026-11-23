@@ -5,48 +5,19 @@ import { Compass, Lightbulb, Rocket, type LucideIcon } from "lucide-react";
 import { chooseOnboardingPath } from "@/app/onboarding/actions";
 import { cn } from "@/lib/utils";
 import type { OnboardingPath } from "@/types/profile";
+import { useT } from "@/i18n/client";
 
-type Option = {
-  key: OnboardingPath;
-  icon: LucideIcon;
-  title: string;
-  description: string;
-  outcome: string;
-};
+type Option = { key: OnboardingPath; icon: LucideIcon };
 
-/**
- * Trzy kafelki na wejściu. Ścieżka różnicuje wyłącznie onboarding —
- * później wszystkie konta są identyczne, a Joiner w każdej chwili
- * zakłada startup. Dlatego opisy mówią „na start", a nie „jesteś".
- */
+// Teksty: słownik `onboarding`, klucze `path.<key>.title|description|outcome`.
 const OPTIONS: Option[] = [
-  {
-    key: "founder_idea",
-    icon: Rocket,
-    title: "Mam pomysł",
-    description:
-      "Wiesz, co chcesz zbudować. Opiszesz pomysł, nazwiesz projekt i od razu przejdziesz do sprawdzania, czy ma sens.",
-    outcome: "Zaczynasz od Idea Stage",
-  },
-  {
-    key: "founder_no_idea",
-    icon: Lightbulb,
-    title: "Chcę coś zbudować, ale nie wiem co",
-    description:
-      "Przeprowadzimy Cię przez kilka pytań, po których będziesz mieć pierwszy konkretny zarys projektu.",
-    outcome: "Zaczynasz od Ambition Stage · 10–15 min",
-  },
-  {
-    key: "joiner",
-    icon: Compass,
-    title: "Chcę dołączyć do kogoś",
-    description:
-      "Uzupełnisz profil i trafisz do Social, gdzie znajdziesz zespoły szukające ludzi — albo one znajdą Ciebie.",
-    outcome: "Zaczynasz od Social",
-  },
+  { key: "founder_idea", icon: Rocket },
+  { key: "founder_no_idea", icon: Lightbulb },
+  { key: "joiner", icon: Compass },
 ];
 
 export function PathChoice() {
+  const t = useT("onboarding");
   const [selected, setSelected] = useState<OnboardingPath | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -67,15 +38,15 @@ export function PathChoice() {
     <div>
       <div className="text-center">
         <h1 className="font-heading text-[1.9rem] font-semibold tracking-tight text-white sm:text-[2.2rem]">
-          Od czego zaczynasz?
+          {t("path.title")}
         </h1>
         <p className="mt-2.5 text-[15px] text-[var(--text-subtle)]">
-          Wybór dotyczy tylko pierwszych kroków. Później nic Cię nie ogranicza.
+          {t("path.subtitle")}
         </p>
       </div>
 
       <div className="mt-9 grid gap-3">
-        {OPTIONS.map(({ key, icon: Icon, title, description, outcome }) => {
+        {OPTIONS.map(({ key, icon: Icon }) => {
           const isSelected = selected === key;
           return (
             <button
@@ -106,13 +77,13 @@ export function PathChoice() {
 
               <span className="min-w-0 flex-1">
                 <span className="block font-heading text-[17px] font-semibold text-white">
-                  {title}
+                  {t(`path.${key}.title`)}
                 </span>
                 <span className="mt-1 block text-[14px] leading-relaxed text-[var(--text-muted)]">
-                  {description}
+                  {t(`path.${key}.description`)}
                 </span>
                 <span className="mt-2.5 inline-block rounded-md bg-white/6 px-2 py-0.5 text-[12px] font-medium text-[var(--text-subtle)]">
-                  {isSelected && pending ? "Chwileczkę…" : outcome}
+                  {isSelected && pending ? t("path.pending") : t(`path.${key}.outcome`)}
                 </span>
               </span>
             </button>

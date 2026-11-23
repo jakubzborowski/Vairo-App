@@ -1,0 +1,23 @@
+{
+  "metaTitle": "Neues Startup — Vairo",
+  "limitTitle": "Du hast schon {count} Teams",
+  "limitBody": "Das ist das Maximum pro Konto. Um ein weiteres Projekt zu gründen, verlass eines der bestehenden oder übertrage dort die Founder-Rolle an jemand anderen.",
+  "backToDashboard": "Zurück zum Dashboard",
+  "name.title": "Wie soll dein Projekt heißen?",
+  "name.description": "Ein Arbeitstitel reicht völlig — du kannst ihn jederzeit ändern.",
+  "hasIdea.title": "Weißt du schon, was du bauen willst?",
+  "hasIdea.description": "Davon hängt ab, womit wir anfangen.",
+  "hasIdea.yes": "Ja, ich habe eine Idee",
+  "hasIdea.yesDescription": "Du beschreibst sie jetzt und wir prüfen direkt, ob sie Sinn ergibt.",
+  "hasIdea.no": "Noch nicht",
+  "hasIdea.noDescription": "Wir führen dich durch etwa eine Viertelstunde Fragen, danach hast du einen ersten Entwurf.",
+  "idea.title": "Erzähl, worum es geht",
+  "idea.help": "Es muss nicht perfekt sein. In den nächsten Schritten hilft dir Vairo, es zu präzisieren.",
+  "categoriesHelp": "Davon hängt ab, was Vairo bei der Validierung fragt. Die allgemeine Validierung ist immer aktiv — der Rest ergänzt sie nur.",
+  "tagsDescription": "Wähle alle passenden aus. So finden euch andere im Social-Bereich.",
+  "finishWithIdea": "Erstellen und Validierung starten",
+  "finishWithoutIdea": "Erstellen und bei null anfangen",
+  "errors.name": "Projektname: 2–80 Zeichen.",
+  "errors.idea": "Beschreibung der Idee: mindestens ein paar Sätze oder leer lassen.",
+  "errors.limit": "Du hast schon {count} Teams — das ist das Maximum pro Konto. Verlass eines, um ein neues zu gründen."
+}

@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/brand-logo";
 import { OnboardingHelp } from "@/components/support/onboarding-help";
+import { getT } from "@/i18n/server";
 
 type OnboardingShellProps = {
   children: React.ReactNode;
@@ -14,13 +15,14 @@ type OnboardingShellProps = {
   backHref?: string;
 };
 
-export function OnboardingShell({
+export async function OnboardingShell({
   children,
   wide = false,
   step,
   totalSteps,
   backHref,
 }: OnboardingShellProps) {
+  const t = await getT("onboarding");
   const showProgress = Boolean(step && totalSteps && totalSteps > 1);
 
   return (
@@ -43,7 +45,7 @@ export function OnboardingShell({
             <Link
               href={backHref}
               className="inline-flex size-9 items-center justify-center rounded-lg border border-white/10 text-[var(--text-subtle)] transition-colors hover:border-white/20 hover:text-white"
-              aria-label="Wróć do poprzedniego kroku"
+              aria-label={t("shell.back")}
             >
               <ArrowLeft className="size-4" />
             </Link>
@@ -69,7 +71,7 @@ export function OnboardingShell({
               ))}
             </div>
             <span className="tabular text-[12px] text-[var(--text-subtle)]">
-              {step} z {totalSteps}
+              {t("shell.progress", { step: step ?? 0, total: totalSteps ?? 0 })}
             </span>
           </div>
         ) : (
@@ -78,7 +80,7 @@ export function OnboardingShell({
             prefetch={false}
             className="text-[13px] font-medium text-[var(--text-subtle)] transition-colors hover:text-white"
           >
-            Wyloguj
+            {t("shell.signOut")}
           </Link>
         )}
         </div>
