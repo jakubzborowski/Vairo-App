@@ -17,6 +17,7 @@ tam zajrzeć, bez otwierania go.
 | [docs/ux.md](docs/ux.md) | dokładanie nowej funkcji — jak prowadzić kogoś, kto się na tym nie zna |
 | [docs/deletion.md](docs/deletion.md) | nowy trigger `DELETE`, nowy bucket, cokolwiek kasującego |
 | [docs/content.md](docs/content.md) | zmiana pytań w etapach, importer treści, `answer_key` |
+| [docs/i18n.md](docs/i18n.md) | każdy nowy albo zmieniony tekst — interfejs i treść etapów są w 4 językach |
 | [supabase/README.md](supabase/README.md) | kolejność odpalania migracji na świeżej bazie |
 
 > Plany, audyty i rozpiski są w `_plan/` — katalog lokalny, w `.gitignore`.
@@ -338,6 +339,11 @@ przed oczami.
 
 Jedna reguła stąd wiąże każdą nową akcję serwerową:
 
+**Żaden tekst nie trafia do JSX na sztywno.** Interfejs jest w czterech
+językach (PL, DE, UK, ES): tekst idzie do `src/i18n/messages/pl/*.json`
+i od razu do pozostałych trzech; `npm run i18n:check` musi być czysty.
+→ [docs/i18n.md](docs/i18n.md).
+
 **Żaden komunikat błędu nie wychodzi surowy.** `translateDbError()`
 w [db-errors.ts](src/lib/db-errors.ts) zamienia naruszenia RLS i ograniczenia
 bazy na zdania po polsku — z ogonkami, bezosobowo (polszczyzna odmienia przez
@@ -403,9 +409,12 @@ npm run build          build produkcyjny
 npm run typecheck      tsc --noEmit
 npm run lint           eslint
 npm run content:build -- <plik>   JSON treści → migracja SQL
+npm run i18n:check     kompletność słowników + zmienione polskie teksty
+npm run i18n:sync      po dotłumaczeniu: zapamiętaj stan
+node scripts/content-i18n.mjs check   tłumaczenia treści etapów
 ```
 
-Po każdej zmianie: **typecheck + lint + build** muszą być czyste.
+Po każdej zmianie: **typecheck + lint + build + i18n:check** muszą być czyste.
 
 ---
 
@@ -458,11 +467,13 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `043_support_feedback` | Pomoc i opinie: `support_requests` (skrzynka nadawcza zgłoszeń z zapisanym kontaktem, numer VA-…, status wysyłki maila), `submit_support_request()` (e-mail autora z `auth.users`, limit 10/h), `mark_support_delivery()`. Bez polityk RLS — tylko przez funkcje |
 | `044`–`047_score*` | SCORE z gałęzi `codex/score-test` (tam 022–025): punkty, recenzje, kolejka, mentorzy, `pg_cron`. Zasady: [docs/SCORE-V2.md](docs/SCORE-V2.md), operacje: [docs/SCORE-OPERATIONS.md](docs/SCORE-OPERATIONS.md) |
 | `048_score_deletion_and_privacy` | SCORE nie blokuje `delete_own_account()` (klucze do profili `set null`, `score_freeze` milczy w kaskadzie) + w „Doceń wiadomość” nazwa publiczna nadawcy |
+| `049_i18n` | `profiles.locale` (pl/de/uk/es) + `translations jsonb` w tabelach `stage_*` |
+| `050_content_translations` | tłumaczenia treści etapów (generowane: `node scripts/content-i18n.mjs build`); kolejne wersje pod nowymi numerami |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`048`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`050`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 
@@ -546,6 +557,6 @@ klientem zalogowanej osoby — RLS wpuszcza tylko członków teamu. Limity na
 osobę w pamięci instancji (`src/lib/rate-limit.ts`). Modele przez
 `AI_MODEL_FAST` / `AI_MODEL_SMART` (domyślnie `claude-haiku-5-5` /
 `claude-sonnet-5-5`); stała część instrukcji z cache promptów. Śledzenie kosztów
-w bazie (gdy będzie potrzebne) — pierwszy wolny numer po `048`.
+w bazie (gdy będzie potrzebne) — pierwszy wolny numer po `050`.
 
 Ścieżka Partner — dopiero w alfie.

@@ -4,7 +4,7 @@
  *
  *   node scripts/content-i18n.mjs extract [etap]   tekst źródłowy (pl) → supabase/content/i18n/pl/
  *   node scripts/content-i18n.mjs check            kompletność de/uk/es względem pl
- *   node scripts/content-i18n.mjs build            migracja 050_content_translations.sql
+ *   node scripts/content-i18n.mjs build [numer]    migracja <numer>_content_translations.sql (domyślnie 050)
  *
  * Model: polski JSON w `supabase/content/*.json` zostaje jedynym źródłem
  * STRUKTURY. Tłumaczenie to płaska mapa „ścieżka → tekst” w
@@ -37,7 +37,15 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CONTENT = path.join(ROOT, "supabase/content");
 const I18N = path.join(CONTENT, "i18n");
-const MIGRATION = path.join(ROOT, "supabase/migrations/050_content_translations.sql");
+/**
+ * Numer pliku wynikowego. Pierwsza wersja to 050; kolejne tłumaczenia po
+ * zmianach w treści idą pod NOWYM numerem (`build 051`, `build 052`…) —
+ * odpalona migracja się nie zmienia (CLAUDE.md). Każda wersja ustawia
+ * komplet tłumaczeń, więc obowiązuje ta z najwyższym numerem.
+ */
+function migrationPath(number = "050") {
+  return path.join(ROOT, `supabase/migrations/${number}_content_translations.sql`);
+}
 const STAGES = ["ambition", "idea", "preparation", "execution", "mvp"];
 const TARGETS = ["de", "uk", "es"];
 
@@ -254,7 +262,7 @@ function configTranslation(tr, f, config) {
   return Object.keys(out).length ? out : null;
 }
 
-function build() {
+function build(number) {
   const lines = [
     "-- 050 · Tłumaczenia treści etapów (de, uk, es)",
     "--",
@@ -338,14 +346,15 @@ function build() {
   }
 
   lines.push("commit;", "");
-  fs.writeFileSync(MIGRATION, lines.join("\n"));
-  console.log(`✓ ${rows} wierszy → supabase/migrations/050_content_translations.sql`);
+  const target = migrationPath(number);
+  fs.writeFileSync(target, lines.join("\n"));
+  console.log(`✓ ${rows} wierszy → ${path.relative(ROOT, target)}`);
 }
 
 const [cmd, arg] = process.argv.slice(2);
 if (cmd === "extract") extract(arg);
 else if (cmd === "check") check();
-else if (cmd === "build") build();
+else if (cmd === "build") build(arg);
 else {
   console.log("użycie: node scripts/content-i18n.mjs extract [etap] | check | build");
   process.exit(1);
