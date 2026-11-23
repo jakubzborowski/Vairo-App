@@ -3,7 +3,9 @@ import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getUserStartups } from "@/lib/startup";
 import { loadStageTree } from "@/lib/stage";
 import { takeToken } from "@/lib/rate-limit";
-import { MENTOR_BASE, MODE_INSTRUCTIONS, type AiMode } from "@/lib/ai/prompts";
+import { MENTOR_BASE, MODE_INSTRUCTIONS, languageInstruction, type AiMode } from "@/lib/ai/prompts";
+import { getLocale, getT } from "@/i18n/server";
+import { LOCALE_ENGLISH_NAMES } from "@/i18n/config";
 import {
   answerToText,
   clip,
@@ -13,7 +15,8 @@ import {
   stageAnswers,
   startupHeader,
 } from "@/lib/ai/context";
-import { SELECTABLE_CATEGORIES } from "@/types/startup";
+import type { Translate } from "@/i18n/translator";
+import type { MessageKey } from "@/i18n/messages";
 
 /**
  * Mentor AI (Claude) w etapach. Cztery tryby — patrz src/lib/ai/prompts.ts.
@@ -60,28 +63,30 @@ function fail(status: number, error: string) {
 }
 
 export async function POST(request: Request) {
+  const t = await getT("ai");
+  const locale = await getLocale();
   const user = await getCurrentUser();
-  if (!user) return fail(401, "Zaloguj się, żeby korzystać z mentora.");
+  if (!user) return fail(401, t("errors.login"));
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return fail(503, "Mentor AI nie jest jeszcze włączony.");
+  if (!apiKey) return fail(503, t("errors.disabled"));
 
   let body: Body;
   try {
     body = (await request.json()) as Body;
   } catch {
-    return fail(400, "Nieprawidłowe zapytanie.");
+    return fail(400, t("errors.badRequest"));
   }
   const mode = body.mode;
-  if (!mode || !(mode in LIMITS)) return fail(400, "Nieznany tryb mentora.");
-  if (!body.startupStageId || !UUID.test(body.startupStageId)) return fail(400, "Brak etapu.");
+  if (!mode || !(mode in LIMITS)) return fail(400, t("errors.unknownMode"));
+  if (!body.startupStageId || !UUID.test(body.startupStageId)) return fail(400, t("errors.noStage"));
 
   const limit = LIMITS[mode];
   if (
     !takeToken(`ai:minute:${user.id}`, 8, 60_000) ||
     !takeToken(`ai:${mode}:day:${user.id}`, limit.perDay, 24 * 60 * 60_000)
   ) {
-    return fail(429, "Na dziś wykorzystano limit tej funkcji mentora. Spróbuj jutro albo za minutę.");
+    return fail(429, t("errors.limit"));
   }
 
   const supabase = await createClient();
@@ -90,24 +95,21 @@ export async function POST(request: Request) {
     .select("id, startup_id")
     .eq("id", body.startupStageId)
     .maybeSingle();
-  if (!stageRow) return fail(404, "Nie znaleziono etapu.");
+  if (!stageRow) return fail(404, t("errors.stageNotFound"));
 
   const startups = await getUserStartups(supabase, user.id);
   const startup = startups.find((s) => s.id === stageRow.startup_id);
-  if (!startup) return fail(404, "Nie znaleziono etapu.");
+  if (!startup) return fail(404, t("errors.stageNotFound"));
 
   const tree = await loadStageTree(supabase, {
     startupStageId: body.startupStageId,
     activeCategories: startup.categories,
     role: startup.role,
   });
-  if (!tree) return fail(404, "Nie znaleziono etapu.");
+  if (!tree) return fail(404, t("errors.stageNotFound"));
 
-  const categoryLabels = startup.categories.map((key) =>
-    key === "general"
-      ? "Ogólna walidacja"
-      : (SELECTABLE_CATEGORIES.find((c) => c.key === key)?.label ?? key)
-  );
+  const tl = await getT("labels");
+  const categoryLabels = startup.categories.map((key) => tl.maybe(`category.${key}`, key));
   const header = startupHeader({ name: startup.name, categories: categoryLabels, tree });
   let task: string;
   let organizeAsList = false;
@@ -115,7 +117,7 @@ export async function POST(request: Request) {
   if (mode === "mentor") {
     if (body.scope === "point") {
       const located = body.pointKey ? locatePoint(tree, body.pointKey) : null;
-      if (!located) return fail(404, "Nie znaleziono punktu.");
+      if (!located) return fail(404, t("errors.pointNotFound"));
       task = [
         `Przegląd punktu: ${located.category.title} → ${located.point.title}`,
         located.point.guideBody ? `Przewodnik programu do tego punktu:\n${clip(located.point.guideBody, 3500)}` : "",
@@ -130,7 +132,7 @@ export async function POST(request: Request) {
     }
   } else {
     const located = body.answerKey ? locateField(tree, body.answerKey.slice(0, 200)) : null;
-    if (!located) return fail(404, "Nie znaleziono pytania.");
+    if (!located) return fail(404, t("errors.questionNotFound"));
     const { category, point, subpoint, field } = located;
     // Szkic z formularza (jeszcze niezapisany) ma pierwszeństwo przed zapisem.
     const current = body.draft !== undefined ? body.draft : tree.answers[field.answerKey];
@@ -149,7 +151,7 @@ export async function POST(request: Request) {
 
     if (mode === "organize") {
       const notes = (body.notes ?? "").trim().slice(0, 8000);
-      if (!notes) return fail(400, "Wpisz albo podyktuj notatki do uporządkowania.");
+      if (!notes) return fail(400, t("errors.noNotes"));
       task = [
         fieldBlock,
         `Format odpowiedzi: ${organizeAsList ? "lista" : "tekst"}`,
@@ -173,6 +175,7 @@ export async function POST(request: Request) {
     // Stała część — wspólna dla wszystkich zapytań, więc z cache promptów.
     { type: "text" as const, text: MENTOR_BASE, cache_control: { type: "ephemeral" as const } },
     { type: "text" as const, text: MODE_INSTRUCTIONS[mode] },
+    { type: "text" as const, text: languageInstruction(LOCALE_ENGLISH_NAMES[locale]) },
   ];
   const messages = [{ role: "user" as const, content: `${header}\n\n${task}` }];
 
@@ -200,7 +203,7 @@ export async function POST(request: Request) {
       const text = typeof parsed.text === "string" ? parsed.text.trim() : "";
       return Response.json({ text, missing }, { headers: { "Cache-Control": "no-store" } });
     } catch (error) {
-      return fail(502, describeAiError(error));
+      return fail(502, describeAiError(error, t));
     }
   }
 
@@ -215,7 +218,7 @@ export async function POST(request: Request) {
           }
         }
       } catch (error) {
-        controller.enqueue(encoder.encode(`\n\n[${describeAiError(error)}]`));
+        controller.enqueue(encoder.encode(`\n\n[${describeAiError(error, t)}]`));
       } finally {
         controller.close();
       }
@@ -233,13 +236,13 @@ export async function POST(request: Request) {
   });
 }
 
-function describeAiError(error: unknown): string {
+function describeAiError(error: unknown, t: Translate<MessageKey<"ai">>): string {
   const status = (error as { status?: number })?.status;
   if (status === 401 || status === 403) {
     console.error("Anthropic auth error", status);
-    return "Mentor AI jest źle skonfigurowany (klucz API). Daj znać administratorowi.";
+    return t("errors.misconfigured");
   }
-  if (status === 429 || status === 529) return "Mentor jest teraz przeciążony. Spróbuj za minutę.";
+  if (status === 429 || status === 529) return t("errors.overloaded");
   console.error("Anthropic error", status, error);
-  return "Mentor nie odpowiedział. Spróbuj jeszcze raz.";
+  return t("errors.noAnswer");
 }

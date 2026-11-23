@@ -1,5 +1,6 @@
 // Wygenerowane przez `node scripts/i18n.mjs index` — nie edytować ręcznie.
 
+import ai from "./ai.json";
 import auth from "./auth.json";
 import common from "./common.json";
 import errors from "./errors.json";
@@ -12,6 +13,7 @@ import stage from "./stage.json";
 import startups from "./startups.json";
 
 const messages = {
+  "ai": ai,
   "auth": auth,
   "common": common,
   "errors": errors,

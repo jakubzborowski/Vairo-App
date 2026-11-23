@@ -8,6 +8,7 @@ import { VoiceButton, appendDictation } from "@/components/ui/voice-button";
 import { cn } from "@/lib/utils";
 import { fieldAnswered, type StageField } from "@/types/stage";
 import { useAiEnabled } from "./ai-context";
+import { useT } from "@/i18n/client";
 
 type Mode = "hint" | "review" | "organize" | "mentor";
 
@@ -19,7 +20,8 @@ const REVIEW_KINDS = new Set([...TEXT_KINDS, ...LIST_KINDS, "sentence_template",
 async function streamAssist(
   body: Record<string, unknown>,
   onChunk: (text: string) => void,
-  signal: AbortSignal
+  signal: AbortSignal,
+  fallbackError: string
 ) {
   const response = await fetch("/api/ai/assist", {
     method: "POST",
@@ -29,7 +31,7 @@ async function streamAssist(
   });
   if (!response.ok || !response.body) {
     const data = (await response.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(data?.error ?? "Mentor nie odpowiedział. Spróbuj jeszcze raz.");
+    throw new Error(data?.error ?? fallbackError);
   }
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
@@ -55,6 +57,8 @@ function AiPanel({
   onClose: () => void;
   children?: React.ReactNode;
 }) {
+  const t = useT("ai");
+  const tc = useT("common");
   return (
     <div className="mt-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-3">
       <div className="flex items-center justify-between gap-2">
@@ -65,7 +69,7 @@ function AiPanel({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Zamknij"
+          aria-label={tc("actions.close")}
           className="grid size-7 place-items-center rounded-md text-[var(--text-subtle)] hover:bg-white/[0.06] hover:text-white"
         >
           <X className="size-3.5" />
@@ -79,7 +83,7 @@ function AiPanel({
           {loading ? (
             <span className="ml-1 inline-flex items-center gap-1 text-[var(--text-subtle)]">
               <Loader2 className="size-3 animate-spin" aria-hidden="true" />
-              {text ? "" : "Mentor myśli…"}
+              {text ? "" : t("thinking")}
             </span>
           ) : null}
         </div>
@@ -87,7 +91,7 @@ function AiPanel({
       {children}
       {!loading && !error && text ? (
         <p className="mt-2 text-[11.5px] text-[var(--text-faint)]">
-          Mentor AI może się mylić. Decyzje i odpowiedzi należą do Was.
+          {t("disclaimer")}
         </p>
       ) : null}
     </div>
@@ -95,6 +99,7 @@ function AiPanel({
 }
 
 function useStream() {
+  const t = useT("ai");
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,10 +113,10 @@ function useStream() {
     setError(null);
     setLoading(true);
     try {
-      await streamAssist(body, (chunk) => setText((prev) => prev + chunk), controller.signal);
+      await streamAssist(body, (chunk) => setText((prev) => prev + chunk), controller.signal, t("errors.noAnswer"));
     } catch (err) {
       if ((err as { name?: string })?.name !== "AbortError") {
-        setError(err instanceof Error ? err.message : "Mentor nie odpowiedział. Spróbuj jeszcze raz.");
+        setError(err instanceof Error ? err.message : t("errors.noAnswer"));
       }
     } finally {
       setLoading(false);
@@ -144,6 +149,8 @@ export function FieldAiAssist({
   onChange: (value: unknown) => void;
   disabled?: boolean;
 }) {
+  const t = useT("ai");
+  const tc = useT("common");
   const enabled = useAiEnabled();
   const [mode, setMode] = useState<Mode | null>(null);
   const stream = useStream();
@@ -180,13 +187,13 @@ export function FieldAiAssist({
       const data = (await response.json().catch(() => null)) as
         | { items?: string[]; text?: string; missing?: string; error?: string }
         | null;
-      if (!response.ok || !data) throw new Error(data?.error ?? "Mentor nie odpowiedział. Spróbuj jeszcze raz.");
+      if (!response.ok || !data) throw new Error(data?.error ?? t("errors.noAnswer"));
       if ((data.items?.length ?? 0) === 0 && !data.text) {
-        throw new Error(data.missing || "W notatkach nie ma informacji, z których da się złożyć odpowiedź.");
+        throw new Error(data.missing || t("organize.nothing"));
       }
       setDraft(data);
     } catch (err) {
-      setOrganizeError(err instanceof Error ? err.message : "Mentor nie odpowiedział.");
+      setOrganizeError(err instanceof Error ? err.message : t("errors.noAnswer"));
     } finally {
       setOrganizing(false);
     }
@@ -225,14 +232,14 @@ export function FieldAiAssist({
   return (
     <div className="mt-1">
       <div className="flex flex-wrap items-center gap-1">
-        {button("hint", "Podpowiedz", Lightbulb)}
-        {canReview ? button("review", "Oceń moją odpowiedź", MessageSquareText) : null}
-        {canOrganize ? button("organize", "Uporządkuj notatki", ListChecks) : null}
+        {button("hint", t("buttons.hint"), Lightbulb)}
+        {canReview ? button("review", t("buttons.review"), MessageSquareText) : null}
+        {canOrganize ? button("organize", t("buttons.organize"), ListChecks) : null}
       </div>
 
       {mode === "hint" || mode === "review" ? (
         <AiPanel
-          title={mode === "hint" ? "Podpowiedź mentora" : "Ocena mentora"}
+          title={mode === "hint" ? t("panel.hint") : t("panel.review")}
           text={stream.text}
           loading={stream.loading}
           error={stream.error}
@@ -246,8 +253,7 @@ export function FieldAiAssist({
       {mode === "organize" ? (
         <div className="mt-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-3">
           <p className="text-[12.5px] leading-relaxed text-[var(--text-muted)]">
-            Wklej albo podyktuj swoje luźne notatki. Mentor ułoży z nich szkic odpowiedzi — tylko z tego, co
-            tu napiszesz, niczego nie dopisze.
+            {t("organize.intro")}
           </p>
           <Textarea
             value={notes}
@@ -255,16 +261,16 @@ export function FieldAiAssist({
             rows={4}
             maxLength={8000}
             className="mt-2"
-            placeholder="np. rozmowa z Anią: liczy faktury ręcznie, 3 godziny w tygodniu…"
+            placeholder={t("organize.placeholder")}
           />
           <VoiceButton onText={(text) => setNotes((prev) => appendDictation(prev, text, 8000))} />
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <Button size="sm" variant="secondary" onClick={organize} disabled={organizing || !notes.trim()}>
               {organizing ? <Loader2 className="size-3.5 animate-spin" /> : <Wand2 className="size-3.5" />}
-              {organizing ? "Porządkuję…" : "Uporządkuj"}
+              {organizing ? t("organize.working") : t("organize.run")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setMode(null)}>
-              Anuluj
+              {tc("actions.cancel")}
             </Button>
           </div>
           {organizeError ? (
@@ -273,7 +279,7 @@ export function FieldAiAssist({
           {draft ? (
             <div className="mt-3 rounded-lg border border-dashed border-white/15 px-3 py-2.5">
               <p className="text-[11.5px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-                Szkic do sprawdzenia
+                {t("organize.draft")}
               </p>
               {draft.items ? (
                 <ul className="mt-1.5 list-disc space-y-1 pl-4 text-[13.5px] text-[var(--text-muted)]">
@@ -285,14 +291,14 @@ export function FieldAiAssist({
                 <p className="mt-1.5 whitespace-pre-wrap text-[13.5px] text-[var(--text-muted)]">{draft.text}</p>
               )}
               {draft.missing ? (
-                <p className="mt-2 text-[12.5px] text-[var(--text-subtle)]">Brakuje: {draft.missing}</p>
+                <p className="mt-2 text-[12.5px] text-[var(--text-subtle)]">{t("organize.missing", { missing: draft.missing })}</p>
               ) : null}
               <div className="mt-2.5 flex gap-2">
                 <Button size="sm" onClick={insert}>
-                  Wstaw do odpowiedzi
+                  {t("organize.insert")}
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => setDraft(null)}>
-                  Odrzuć
+                  {tc("actions.discard")}
                 </Button>
               </div>
             </div>
@@ -321,6 +327,7 @@ export function MentorPanel({
   label: string;
   className?: string;
 }) {
+  const t = useT("ai");
   const enabled = useAiEnabled();
   const [open, setOpen] = useState(false);
   const stream = useStream();
@@ -342,7 +349,7 @@ export function MentorPanel({
       </Button>
       {open ? (
         <AiPanel
-          title={scope === "stage" ? "Mentor przed decyzją" : "Przegląd mentora"}
+          title={scope === "stage" ? t("panel.stage") : t("panel.point")}
           text={stream.text}
           loading={stream.loading}
           error={stream.error}
