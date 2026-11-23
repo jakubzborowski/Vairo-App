@@ -134,7 +134,7 @@ export function GoalWizard({
               <Input
                 id={id}
                 aria-invalid={invalid}
-                aria-label="Wynik"
+                aria-label={t("goalWizard.result")}
                 autoFocus
                 value={title}
                 maxLength={160}
@@ -329,9 +329,9 @@ export function GoalWizard({
               {t("goalWizard.takBedzieWygladalCel")}
             </p>
             <dl className="mt-1.5 divide-y divide-white/[0.06]">
-              <SummaryRow label="Wynik" value={title.trim()} onChange={() => goTo(0)} />
+              <SummaryRow label={t("goalWizard.result")} value={title.trim()} onChange={() => goTo(0)} />
               <SummaryRow
-                label="Rodzaj"
+                label={t("goalWizard.kind")}
                 value={typeLabel}
                 onChange={lockedType ? undefined : () => goTo(1)}
               />

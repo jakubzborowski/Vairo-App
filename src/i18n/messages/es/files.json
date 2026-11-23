@@ -101,5 +101,8 @@
   "filesDrive.zmienNazwePliku": "Cambiar nombre del archivo",
   "filesDrive.zmienicNazweCudzegoPliku": "Cambiar el nombre de un archivo ajeno lo puede hacer Founder o Admin.",
   "filesDrive.zniknieZBibliotekiDla": "Desaparecerá de la biblioteca para todo el equipo. Las pruebas de objetivos que lo usaron se quedan: guardan una copia de la descripción.",
-  "meta.title": "Archivos — Vairo"
+  "meta.title": "Archivos — Vairo",
+  "filesDrive.places": "Ubicaciones",
+  "filesDrive.view": "Vista",
+  "filesDrive.size": "Tamaño"
 }

@@ -191,7 +191,7 @@ export function RozpiskaEditor({
         title: t("rozpiskaEditor.bloczekUsuniety"),
         description: node.label || undefined,
         action: {
-          label: "Cofnij",
+          label: t("rozpiskaEditor.undo"),
           onClick: () =>
             setDraft((current) => ({
               ...current,
@@ -212,7 +212,7 @@ export function RozpiskaEditor({
           id: crypto.randomUUID(),
           x: 48 + ((count * 176) % 704),
           y: 48 + Math.floor(count / 4) * 88,
-          label: "Krok",
+          label: t("rozpiskaEditor.step"),
         },
       ],
     });

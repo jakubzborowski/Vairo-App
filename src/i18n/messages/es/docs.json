@@ -65,5 +65,7 @@
   "template.meeting.body": "## Quién estuvo\n- \n\n## Qué acordamos\n- \n\n## Quién hace qué\n- [ ] \n",
   "template.meeting.description": "Quién estuvo, qué acordasteis, quién hace qué.",
   "template.meeting.label": "Acta de reunión",
-  "template.meeting.title": "Acta de reunión"
+  "template.meeting.title": "Acta de reunión",
+  "docSheet.mode": "Modo",
+  "docSheet.insert": "Insertar"
 }

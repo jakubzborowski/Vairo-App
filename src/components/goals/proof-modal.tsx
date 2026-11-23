@@ -206,7 +206,7 @@ export function ProofModal({
                 <Input
                   id={id}
                   aria-invalid={invalid}
-                  aria-label="Adres"
+                  aria-label={t("proofModal.address")}
                   autoFocus
                   inputMode="url"
                   placeholder="https://"
@@ -236,7 +236,7 @@ export function ProofModal({
         ) : null}
 
         {kind === "scale" ? (
-          <div role="radiogroup" aria-label="Ocena" className="flex gap-2">
+          <div role="radiogroup" aria-label={t("proofModal.rating")} className="flex gap-2">
             {Array.from(
               { length: (requirement.max ?? 5) - (requirement.min ?? 1) + 1 },
               (_, index) => (requirement.min ?? 1) + index

@@ -551,5 +551,13 @@
   "detail.link": "Podepnij",
   "tasksView.keep": "Zostaw",
   "tasksView.title": "Taski",
-  "meta.tasks": "Taski — Vairo"
+  "meta.tasks": "Taski — Vairo",
+  "calendar.view": "Widok",
+  "goalWizard.result": "Wynik",
+  "goalWizard.kind": "Rodzaj",
+  "goalsScreen.everyone": "Wszyscy",
+  "goalsScreen.mine": "Moje",
+  "proofModal.address": "Adres",
+  "proofModal.rating": "Ocena",
+  "tasksView.column": "Kolumna"
 }

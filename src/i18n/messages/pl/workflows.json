@@ -74,5 +74,7 @@
   "meta.new": "Nowa rozpiska — Vairo",
   "rozpiskaEditor.versions": "Wersje",
   "rozpiskaEditor.hide": "Ukryj",
-  "rozpiskaEditor.keep": "Zostaw"
+  "rozpiskaEditor.keep": "Zostaw",
+  "rozpiskaEditor.undo": "Cofnij",
+  "rozpiskaEditor.step": "Krok"
 }

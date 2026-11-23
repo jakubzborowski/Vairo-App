@@ -8,20 +8,7 @@
 export const SUPPORT_KINDS = ["bug", "idea", "question", "other"] as const;
 export type SupportKind = (typeof SUPPORT_KINDS)[number];
 
-export const SUPPORT_KIND_LABELS: Record<SupportKind, string> = {
-  bug: "Coś nie działa",
-  idea: "Mam pomysł",
-  question: "Mam pytanie",
-  other: "Coś innego",
-};
-
-/** Podpowiedź pod polem — każdy rodzaj potrzebuje czego innego. */
-export const SUPPORT_KIND_HINTS: Record<SupportKind, string> = {
-  bug: "Co chcesz zrobić, czego się spodziewasz i co dzieje się zamiast tego? Adres strony dołączymy sami.",
-  idea: "Co by Ci pomogło i w jakiej sytuacji? Wystarczy kilka zdań.",
-  question: "Zapytaj o cokolwiek — o program, etapy, zespół albo konto.",
-  other: "Napisz, o co chodzi. Przeczyta to ktoś z zespołu Vairo.",
-};
+// Nazwy rodzajów i podpowiedzi pod polem: słownik `help`, `kind.<kind>.label|hint`.
 
 export const SUPPORT_MESSAGE_MIN = 10;
 export const SUPPORT_MESSAGE_MAX = 4000;

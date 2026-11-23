@@ -5,13 +5,16 @@ import { scoreAction } from "@/app/app/score/actions";
 import { Button } from "@/components/ui/button";
 import { MenuSelect } from "@/components/ui/menu-select";
 
+import { useT } from "@/i18n/client";
 function ActionForm({
   children,
-  label = "Potwierdź",
+  label: labelProp,
 }: {
   children: React.ReactNode;
   label?: string;
 }) {
+  const t = useT("score");
+  const label = labelProp ?? t("scoreControls.confirm");
   const [state, action, pending] = useActionState(scoreAction, {
     error: null,
     success: null,
@@ -42,15 +45,14 @@ export function ScoreControls({
   reviews: ScoreReviews;
   canOpenWorkspace?: boolean;
 }) {
+  const t = useT("score");
   return (
     <div className="space-y-6">
       {(reviews.goals.length > 0 || reviews.program.length > 0) && (
         <section className="rounded-2xl border border-white/10 bg-[var(--surface)] p-6">
-          <h2 className="text-lg text-white">Sprawdź wyniki innych osób</h2>
+          <h2 className="text-lg text-white">{t("scoreControls.sprawdzWynikiInnychOsob")}</h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            Zaakceptuj konkretny efekt po sprawdzeniu dowodu. Nie akceptujesz
-            własnej nagrody. Uzasadnienie: minimum 80 znaków i 12 słów; samo
-            potwierdzenie statusu nie wystarczy.
+            {t("scoreControls.reviewIntro")}
           </p>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             {reviews.goals.map((goal) => (
@@ -59,17 +61,16 @@ export function ScoreControls({
                 className="rounded-xl border border-white/10 p-4"
               >
                 <p className="text-sm text-white">
-                  {goal.title} · {goal.owner_name ?? "Członek zespołu"}
+                  {goal.title} · {goal.owner_name ?? t("scoreControls.czlonekZespolu")}
                 </p>
                 {goal.rereview && (
                   <p className="mt-2 text-xs text-[var(--vairo)]">
-                    Ponowna recenzja zmienionych zadań. Cel zachowuje status;
-                    wcześniej przyznane punkty nie są naliczane drugi raz.
+                    {t("scoreControls.rereview")}
                   </p>
                 )}
                 {typeof goal.proof_requirement?.label === "string" && (
                   <p className="mt-2 text-xs text-[var(--text-muted)]">
-                    Wymagany rezultat: {goal.proof_requirement.label}
+                    {t("scoreControls.wymaganyRezultatLabel", { label: goal.proof_requirement.label })}
                   </p>
                 )}
                 <Snapshot
@@ -80,7 +81,7 @@ export function ScoreControls({
                   <ul className="my-3 list-disc pl-4 text-xs text-[var(--text-muted)]">
                     {goal.tasks.map((task, index) => (
                       <li key={index}>
-                        {task.title} · {task.owner_name ?? "Bez właściciela"}
+                        {task.title} · {task.owner_name ?? t("scoreControls.bezWlasciciela")}
                       </li>
                     ))}
                   </ul>
@@ -91,7 +92,7 @@ export function ScoreControls({
                     variant="ghost"
                     size="sm"
                   >
-                    Otwórz cel i zadania
+                    {t("scoreControls.otworzCelIZadania")}
                   </Button>
                 )}
                 {goal.eligible ? (
@@ -104,7 +105,7 @@ export function ScoreControls({
                 ) : (
                   <p className="mt-3 text-xs text-[var(--text-muted)]">
                     {goal.eligibility_reason ??
-                      "Cel potrzebuje jawnego powiązania z programem oraz treściwego proof. Zdanie: minimum 40 znaków i 8 słów; długi tekst: 80 znaków i 12 słów. Puste pliki nie punktują."}
+                      t("scoreControls.celPotrzebujeJawnegoPowiazania")}
                   </p>
                 )}
               </div>
@@ -116,9 +117,7 @@ export function ScoreControls({
               >
                 <p className="text-sm text-white">{claim.label}</p>
                 <p className="mt-2 text-sm text-[var(--text-muted)]">
-                  Część puli dla {claim.owner_name ?? "członka zespołu"}:{" "}
-                  {claim.points} pkt. Sprawdź odpowiedzi i dowody w programie
-                  przed akceptacją.
+                  {t("scoreControls.poolShare", { name: claim.owner_name ?? t("scoreControls.czlonkaZespolu"), points: claim.points })}
                 </p>
                 {claim.context && <ReviewContext context={claim.context} />}
                 {canOpenWorkspace && (
@@ -127,7 +126,7 @@ export function ScoreControls({
                     variant="ghost"
                     size="sm"
                   >
-                    Sprawdź etap
+                    {t("scoreControls.sprawdzEtap")}
                   </Button>
                 )}
                 <ReviewForm
@@ -143,12 +142,9 @@ export function ScoreControls({
       )}
       {work.length > 0 && (
         <section className="rounded-2xl border border-white/10 bg-[var(--surface)] p-6">
-          <h2 className="text-lg text-white">Ustal skalę pracy w zespole</h2>
+          <h2 className="text-lg text-white">{t("scoreControls.ustalSkalePracyW")}</h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            Inny Founder/Admin lub przypisany mentor ustala skalę przed
-            rozpoczęciem pracy. Zadanie: 5 lub 15 pkt. Cel: 40 lub 80 pkt.
-            Własną pracę przedstawiasz do oceny drugiemu Founderowi/Adminowi lub
-            mentorowi — nie możesz podnieść sobie punktacji.
+            {t("scoreControls.innyFounderAdminLub")}
           </p>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             {work.map((item) => (
@@ -157,7 +153,7 @@ export function ScoreControls({
                 className="rounded-xl border border-white/10 p-4"
               >
                 <p className="mb-3 text-sm text-white">
-                  {item.kind === "goal" ? "Cel" : "Zadanie"}: {item.title}
+                  {item.kind === "goal" ? t("scoreControls.cel") : t("scoreControls.zadanie")}: {item.title}
                 </p>
                 <ActionForm>
                   <input type="hidden" name="action" value="assess" />
@@ -170,7 +166,7 @@ export function ScoreControls({
                       value="standard"
                       defaultChecked={item.weight === "standard"}
                     />{" "}
-                    Standardowa
+                    {t("scoreControls.standard")}
                   </label>
                   <label className="flex gap-2 text-sm text-[var(--text-muted)]">
                     <input
@@ -178,8 +174,7 @@ export function ScoreControls({
                       name="weight"
                       value="large"
                       defaultChecked={item.weight === "large"}
-                    />{" "}
-                    Wymagająca
+                    />{t("scoreControls.wymagajaca")}
                   </label>
                 </ActionForm>
               </div>
@@ -188,12 +183,9 @@ export function ScoreControls({
         </section>
       )}
       <section className="rounded-2xl border border-white/10 bg-[var(--surface)] p-6">
-        <h2 className="text-lg text-white">Doceń otrzymaną pomoc</h2>
+        <h2 className="text-lg text-white">{t("scoreControls.docenOtrzymanaPomoc")}</h2>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
-          Punkty otrzymuje autor wiadomości, której wartość potwierdzasz.
-          Poniżej do 30 nieocenionych wiadomości: minimum 80 znaków, 12 słów i
-          różnorodne słownictwo. Długość nie zastępuje Twojej oceny wartości
-          pomocy.
+          {t("scoreControls.punktyOtrzymujeAutorWiadomosci")}
         </p>
         {messages.length ? (
           <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -215,12 +207,10 @@ export function ScoreControls({
                       name="kind"
                       value="feedback"
                       defaultChecked
-                    />{" "}
-                    Przydatny feedback · +5 dla autora
+                    />{t("scoreControls.przydatnyFeedback5Dla")}
                   </label>
                   <label className="flex gap-2 text-sm text-[var(--text-muted)]">
-                    <input type="radio" name="kind" value="help" /> Pomoc z
-                    rezultatem · +10 dla autora
+                    <input type="radio" name="kind" value="help" />{" "}{t("scoreControls.pomocZRezultatem10")}
                   </label>
                 </ActionForm>
               </div>
@@ -228,8 +218,7 @@ export function ScoreControls({
           </div>
         ) : (
           <p className="mt-4 text-sm text-[var(--text-subtle)]">
-            Brak otrzymanych wiadomości do potwierdzenia. Poproś o feedback w
-            rozmowie Social.
+            {t("scoreControls.brakOtrzymanychWiadomosciDo")}
           </p>
         )}
       </section>
@@ -280,10 +269,11 @@ export function ScoreWorkspaceSelect({
   workspaces: ScoreWorkspace[];
   current: string;
 }) {
+  const t = useT("score");
   const router = useRouter();
   return (
     <MenuSelect
-      ariaLabel="Zespół do recenzji SCORE"
+      ariaLabel={t("scoreControls.zespolDoRecenzjiScore")}
       value={current}
       onChange={(id) =>
         router.push(`/app/score?reviewTeam=${encodeURIComponent(id)}`)
@@ -295,30 +285,31 @@ export function ScoreWorkspaceSelect({
     />
   );
 }
-function answerText(value: unknown): string {
-  if (value === null || value === undefined) return "Brak odpowiedzi";
-  if (typeof value === "boolean") return value ? "Tak" : "Nie";
+function answerText(value: unknown, t: (key: "scoreControls.brakOdpowiedzi" | "scoreControls.tak" | "scoreControls.nie") => string): string {
+  if (value === null || value === undefined) return t("scoreControls.brakOdpowiedzi");
+  if (typeof value === "boolean") return value ? t("scoreControls.tak") : t("scoreControls.nie");
   if (typeof value === "string" || typeof value === "number")
     return String(value);
-  if (Array.isArray(value)) return value.map(answerText).join("\n");
+  if (Array.isArray(value)) return value.map((item) => answerText(item, t)).join("\n");
   if (typeof value === "object")
     return Object.entries(value)
-      .map(([key, item]) => `${key}: ${answerText(item)}`)
+      .map(([key, item]) => `${key}: ${answerText(item, t)}`)
       .join("\n");
   return "";
 }
 function ReviewContext({ context }: { context: ProgramReviewContext }) {
+  const t = useT("score");
   return (
     <details className="my-3 text-sm text-[var(--text-muted)]">
       <summary className="cursor-pointer text-[var(--vairo)]">
-        Sprawdź odpowiedzi i dowody
+        {t("scoreControls.sprawdzOdpowiedziIDowody")}
       </summary>
       <dl className="mt-3 space-y-3">
         {context.answers.map((answer, index) => (
           <div key={index}>
             <dt className="text-white">{answer.question}</dt>
             <dd className="mt-1 whitespace-pre-wrap break-words">
-              {answerText(answer.value)}
+              {answerText(answer.value, t)}
             </dd>
           </div>
         ))}
@@ -345,14 +336,15 @@ function ReviewForm({
   source: string;
   expected: string;
 }) {
+  const t = useT("score");
   return (
     <div className="mt-3">
-      <ActionForm label="Akceptuję sprawdzony wynik">
+      <ActionForm label={t("scoreControls.akceptujeSprawdzonyWynik")}>
         <input type="hidden" name="action" value={action} />
         <input type="hidden" name="source" value={source} />
         <input type="hidden" name="expected" value={expected} />
         <label className="block text-xs text-[var(--text-muted)]">
-          Co sprawdziłeś i jaki rezultat potwierdzasz?
+          {t("scoreControls.coSprawdzilesIJaki")}
           <textarea
             name="note"
             required
@@ -374,10 +366,11 @@ function Snapshot({
   proof: Record<string, unknown>;
   proofUrl?: string | null;
 }) {
+  const t = useT("score");
   if (!proof || typeof proof.kind !== "string")
     return (
       <p className="my-3 text-sm text-[var(--text-subtle)]">
-        Dowód nie został jeszcze dostarczony.
+        {t("scoreControls.dowodNieZostalJeszcze")}
       </p>
     );
   const text =
@@ -392,7 +385,7 @@ function Snapshot({
       : null;
   return (
     <div className="my-3 rounded-lg bg-white/5 p-3 text-sm text-[var(--text-muted)]">
-      <p className="text-xs text-[var(--text-subtle)]">Zapisany dowód</p>
+      <p className="text-xs text-[var(--text-subtle)]">{t("scoreControls.zapisanyDowod")}</p>
       {text && <p className="mt-2 whitespace-pre-wrap break-words">{text}</p>}
       {typeof proof.url === "string" && /^https?:\/\//i.test(proof.url) && (
         <a
@@ -406,7 +399,7 @@ function Snapshot({
       )}
       {file && (
         <p className="mt-2">
-          Plik: {file.name ?? "Dokument"}.{" "}
+          Plik: {file.name ?? t("scoreControls.dokument")}.{" "}
           {proofUrl ? (
             <a
               href={proofUrl}
@@ -414,29 +407,27 @@ function Snapshot({
               rel="noopener noreferrer"
               className="text-[var(--vairo)] underline"
             >
-              Otwórz dowód
+              {t("scoreControls.otworzDowod")}
             </a>
           ) : (
-            "Sprawdź go w plikach zespołu przed akceptacją."
+            t("scoreControls.sprawdzGoWPlikach")
           )}
         </p>
       )}
       {proof.kind === "module_result" && (
         <p className="mt-2">
-          Zapisany wynik modułu, wersja {String(proof.version ?? "—")}.
-          Szczegóły w karcie celu.
+          {t("scoreControls.moduleVersion", { version: String(proof.version ?? "—") })}
         </p>
       )}
       {proof.kind === "select" && (
         <p className="mt-2">Wybrano: {String(proof.option ?? "—")}</p>
       )}
       {proof.kind === "scale" && (
-        <p className="mt-2">Wynik skali: {String(proof.scale ?? "—")}</p>
+        <p className="mt-2">{t("scoreControls.wynikSkali")}{" "}{String(proof.scale ?? "—")}</p>
       )}
       {proof.kind === "goal_set" && (
         <p className="mt-2">
-          Zestaw {Array.isArray(proof.goal_ids) ? proof.goal_ids.length : 0}{" "}
-          celów. Każdy musi mieć zaakceptowany dowód.
+          {t("scoreControls.goalSet", { count: Array.isArray(proof.goal_ids) ? proof.goal_ids.length : 0 })}
         </p>
       )}
     </div>

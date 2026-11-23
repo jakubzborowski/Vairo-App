@@ -101,5 +101,8 @@
   "filesDrive.zmienNazwePliku": "Перейменувати файл",
   "filesDrive.zmienicNazweCudzegoPliku": "Перейменувати чужий файл може Founder або Admin.",
   "filesDrive.zniknieZBibliotekiDla": "Зникне з бібліотеки для всієї команди. Докази цілей, які його використали, залишаються — вони зберігають копію опису.",
-  "meta.title": "Файли — Vairo"
+  "meta.title": "Файли — Vairo",
+  "filesDrive.places": "Розділи",
+  "filesDrive.view": "Вигляд",
+  "filesDrive.size": "Розмір"
 }

@@ -632,8 +632,8 @@ function AllView({
           value={owner}
           onChange={setOwner}
           options={[
-            { value: "all", label: "Wszyscy" },
-            { value: "me", label: "Moje" },
+            { value: "all", label: t("goalsScreen.everyone") },
+            { value: "me", label: t("goalsScreen.mine") },
             ...members
               .filter((member) => member.id !== userId)
               .map((member) => ({ value: member.id, label: member.name })),

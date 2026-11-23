@@ -288,7 +288,7 @@ export function DocSheet({
           {stateLabel}
         </span>
         {canEdit ? (
-          <div role="tablist" aria-label="Tryb" className="inline-flex rounded-lg bg-[var(--surface)] p-0.5">
+          <div role="tablist" aria-label={t("docSheet.mode")} className="inline-flex rounded-lg bg-[var(--surface)] p-0.5">
             {(
               [
                 ["write", "Pisanie"],
@@ -374,7 +374,7 @@ export function DocSheet({
           {selection || slash ? (
             <div className="sticky top-16 z-20 mt-3 flex w-fit flex-wrap items-center gap-1 rounded-xl border border-white/10 bg-[var(--surface-2)] p-1 lift-3 lg:top-3">
               {slash ? (
-                <ul role="listbox" aria-label="Wstaw" className="flex flex-col py-0.5">
+                <ul role="listbox" aria-label={t("docSheet.insert")} className="flex flex-col py-0.5">
                   {SLASH_ITEMS.map((item, index) => (
                     <li key={item.id}>
                       <button
@@ -405,7 +405,7 @@ export function DocSheet({
                   <ToolButton label={t("docSheet.podtytul")} onClick={() => prefixLines("## ")}>
                     <Heading2 className="size-4" />
                   </ToolButton>
-                  <ToolButton label="Lista" onClick={() => prefixLines("- ")}>
+                  <ToolButton label={t("slash.ul")} onClick={() => prefixLines("- ")}>
                     <List className="size-4" />
                   </ToolButton>
                   <ToolButton label={t("docSheet.listaDoOdhaczenia")} onClick={() => prefixLines("- [ ] ")}>

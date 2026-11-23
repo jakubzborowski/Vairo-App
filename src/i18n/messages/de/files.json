@@ -101,5 +101,8 @@
   "filesDrive.zmienNazwePliku": "Datei umbenennen",
   "filesDrive.zmienicNazweCudzegoPliku": "Eine fremde Datei umbenennen kann Founder oder Admin.",
   "filesDrive.zniknieZBibliotekiDla": "Sie verschwindet für das ganze Team aus der Bibliothek. Nachweise von Zielen, die sie verwendet haben, bleiben — sie enthalten eine Kopie der Beschreibung.",
-  "meta.title": "Dateien — Vairo"
+  "meta.title": "Dateien — Vairo",
+  "filesDrive.places": "Orte",
+  "filesDrive.view": "Ansicht",
+  "filesDrive.size": "Größe"
 }

@@ -101,5 +101,8 @@
   "filesDrive.download": "Pobierz",
   "filesDrive.keep": "Zostaw",
   "filesDrive.dropInto": "Upuść, żeby dodać do „{place}”",
-  "filesDrive.folderFallback": "folderu"
+  "filesDrive.folderFallback": "folderu",
+  "filesDrive.places": "Miejsca",
+  "filesDrive.view": "Widok",
+  "filesDrive.size": "Rozmiar"
 }

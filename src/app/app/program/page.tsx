@@ -8,7 +8,11 @@ import { currentProgramEntry, loadStageProgram } from "@/lib/stage";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export const metadata = { title: "Jak działa Vairo — Vairo" };
+import { getT } from "@/i18n/server";
+export async function generateMetadata() {
+  const t = await getT("program");
+  return { title: t("page.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 /**
@@ -22,6 +26,7 @@ export const dynamic = "force-dynamic";
  * pojawia się tu sam, razem z właściwym opisem.
  */
 export default async function ProgramPage() {
+  const t = await getT("program");
   const supabase = await createClient();
   const user = await getCurrentUser();
 
@@ -46,12 +51,12 @@ export default async function ProgramPage() {
         className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white"
       >
         <ArrowLeft className="size-4" />
-        Wróć na dashboard
+        {t("page.wrocNaDashboard")}
       </Link>
 
       <header>
         <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
-          Jak działa Vairo
+          {t("page.jakDzialaVairo")}
         </h1>
         {/* Jedno zdanie zamiast dwóch akapitów. Reszta tego, co tu było —
             że nie trzeba się znać, że nie ma złych odpowiedzi, że wszystko
@@ -59,15 +64,14 @@ export default async function ProgramPage() {
             na wprowadzeniu do etapu, tuż przed pierwszym pytaniem. Tutaj
             byłaby obietnicą do zapamiętania na później. */}
         <p className="mt-2 max-w-xl text-[14.5px] leading-relaxed text-[var(--text-muted)]">
-          Pięć etapów od pomysłu do produktu. Odpowiadasz własnymi słowami,
-          a Vairo pilnuje kolejności i tego, czego brakuje.
+          {t("page.piecEtapowOdPomyslu")}
         </p>
       </header>
 
       <ol className="mt-8 flex flex-col">
         {program.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-white/10 px-5 py-6 text-center text-[13px] text-[var(--text-subtle)]">
-            Treść etapów nie jest jeszcze wgrana do bazy.
+            {t("page.trescEtapowNieJest")}
           </p>
         ) : null}
 
@@ -120,11 +124,11 @@ export default async function ProgramPage() {
                   </h2>
                   {isCurrent ? (
                     <span className="rounded-md bg-[var(--vairo)]/15 px-2 py-0.5 text-[11.5px] font-medium text-[var(--vairo)]">
-                      tu jesteś
+                      {t("page.tuJestes")}
                     </span>
                   ) : isDone ? (
                     <span className="rounded-md bg-[var(--success)]/15 px-2 py-0.5 text-[11.5px] font-medium text-[var(--success)]">
-                      domknięty
+                      {t("page.domkniety")}
                     </span>
                   ) : isOpen ? (
                     <span className="rounded-md bg-white/8 px-2 py-0.5 text-[11.5px] font-medium text-white">
@@ -132,12 +136,12 @@ export default async function ProgramPage() {
                     </span>
                   ) : isSkipped ? (
                     <span className="rounded-md bg-white/8 px-2 py-0.5 text-[11.5px] font-medium text-[var(--text-subtle)]">
-                      pominięty
+                      {t("page.pominiety")}
                     </span>
                   ) : null}
                   {!item.hasContent ? (
                     <span className="rounded-md bg-white/8 px-2 py-0.5 text-[11.5px] text-[var(--text-subtle)]">
-                      w przygotowaniu
+                      {t("page.wPrzygotowaniu")}
                     </span>
                   ) : null}
                 </div>
@@ -156,7 +160,7 @@ export default async function ProgramPage() {
                   <details className="group mt-2">
                     <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-[12.5px] text-[var(--text-subtle)] transition-colors hover:text-white">
                       <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
-                      Co w tym etapie
+                      {t("page.coWTymEtapie")}
                     </summary>
                     <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-[var(--text-muted)]">
                       {item.intro}
@@ -166,7 +170,7 @@ export default async function ProgramPage() {
 
                 {isCurrent && item.hasContent ? (
                   <Button href="/app/stage" size="sm" className="mt-3">
-                    Przejdź do tego etapu
+                    {t("page.przejdzDoTegoEtapu")}
                   </Button>
                 ) : null}
               </div>
@@ -177,18 +181,17 @@ export default async function ProgramPage() {
 
       <section className="mt-8 rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-5 py-4">
         <h2 className="text-[15px] font-semibold text-white">
-          Nie musisz robić tego w pojedynkę
+          {t("page.nieMusiszRobicTego")}
         </h2>
         <p className="mt-1.5 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-          Równolegle do etapów działa Social — znajdujesz tam ludzi do zespołu
-          albo projekt, do którego chcesz dołączyć.
+          {t("page.rownolegleDoEtapowDziala")}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button href="/app/social/discover" variant="secondary" size="sm">
-            Odkrywaj
+            {t("page.discover")}
           </Button>
           <Button href="/app/social/me" variant="ghost" size="sm">
-            Mój profil publiczny
+            {t("page.mojProfilPubliczny")}
           </Button>
         </div>
       </section>

@@ -189,7 +189,7 @@ export function plainPreview(source: string, lines = 3) {
 }
 
 /** Tytuł z pierwszej linijki, gdy ktoś wyszedł bez nadania nazwy. */
-export function titleFromBody(source: string) {
+export function titleFromBody(source: string, fallback = "Bez tytułu") {
   const first = plainPreview(source, 1)[0]?.replace(/^• /, "") ?? "";
-  return first.slice(0, 120) || "Bez tytułu";
+  return first.slice(0, 120) || fallback;
 }

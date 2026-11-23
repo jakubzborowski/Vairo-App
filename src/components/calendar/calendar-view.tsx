@@ -148,7 +148,7 @@ export function CalendarView({ items, userId }: { items: DeadlineItem[]; userId:
   if (items.length === 0) {
     return (
       <div className="page-wide">
-        <ModuleHeader title="Terminy" subtitle={t("calendar.datyZCelowI")} />
+        <ModuleHeader title={t("calendar.title")} subtitle={t("calendar.datyZCelowI")} />
         <EmptyState
           className="mt-6"
           icon={CalendarDays}
@@ -164,7 +164,7 @@ export function CalendarView({ items, userId }: { items: DeadlineItem[]; userId:
 
   return (
     <div className="page-wide">
-      <ModuleHeader title="Terminy" subtitle={subtitle}>
+      <ModuleHeader title={t("calendar.title")} subtitle={subtitle}>
         <Segmented
           label={t("calendar.czyjeTerminy")}
           value={mine ? "mine" : "all"}
@@ -175,7 +175,7 @@ export function CalendarView({ items, userId }: { items: DeadlineItem[]; userId:
           ]}
         />
         <Segmented
-          label="Widok"
+          label={t("calendar.view")}
           value={mode}
           onChange={(value) => setMode(value as "two" | "month")}
           options={[

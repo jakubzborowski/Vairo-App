@@ -551,5 +551,13 @@
   "tasksView.zniknieZTablicyI": "Sie verschwindet vom Board und aus dem Ziel. Das lässt sich nicht rückgängig machen.",
   "tasksView.zrobioneZadaniaNieKoncza": "Erledigte Aufgaben schließen das Ziel nicht ab — das tut der Nachweis.",
   "tasksView.title": "Aufgaben",
-  "meta.tasks": "Aufgaben — Vairo"
+  "meta.tasks": "Aufgaben — Vairo",
+  "calendar.view": "Ansicht",
+  "goalWizard.result": "Ergebnis",
+  "goalWizard.kind": "Art",
+  "goalsScreen.everyone": "Alle",
+  "goalsScreen.mine": "Meine",
+  "proofModal.address": "Adresse",
+  "proofModal.rating": "Bewertung",
+  "tasksView.column": "Spalte"
 }

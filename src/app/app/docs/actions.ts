@@ -26,9 +26,10 @@ async function context() {
 }
 
 /** Pusty tytuł nie blokuje zapisu — dokument dostaje nazwę z pierwszej linijki. */
-function cleanTitle(title: string, body: string) {
+async function cleanTitle(title: string, body: string) {
   const trimmed = title.trim();
-  return (trimmed || titleFromBody(body)).slice(0, 140);
+  const untitled = (await getT("docs"))("docSheet.bezTytulu");
+  return (trimmed || titleFromBody(body, untitled)).slice(0, 140);
 }
 
 /**
@@ -46,7 +47,7 @@ export async function createDocument(input: {
     .from("startup_documents")
     .insert({
       startup_id: ctx.active.id,
-      title: cleanTitle(input.title, input.body),
+      title: await cleanTitle(input.title, input.body),
       body: input.body ?? "",
       created_by: ctx.user.id,
     })
@@ -85,7 +86,7 @@ export async function saveDocument(input: {
 
   const { data, error } = await ctx.supabase
     .from("startup_documents")
-    .update({ title: cleanTitle(input.title, body), body, updated_at: new Date().toISOString() })
+    .update({ title: await cleanTitle(input.title, body), body, updated_at: new Date().toISOString() })
     .eq("id", input.id)
     .eq("startup_id", ctx.active.id)
     .select("id");

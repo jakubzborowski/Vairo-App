@@ -237,5 +237,12 @@
   "summary.nextCategories": "Siguiente paso: le diremos a Vairo qué construyes y a quién se lo vendes.",
   "summary.canChange": "Puedes cambiar estas respuestas en cualquier momento.",
   "tree.fallbackTitle": "Etapa",
-  "tree.waitingOn": "Espera un resultado anterior"
+  "tree.waitingOn": "Espera un resultado anterior",
+  "answer.answerNow": "Responder ahora",
+  "answer.summaryConfirmed": "Resumen confirmado",
+  "listRow.done": "Hecho",
+  "listRow.partial": "En curso",
+  "listRow.todo": "Pendiente",
+  "summary.done": "Hecho",
+  "summary.fix": "Corregir"
 }

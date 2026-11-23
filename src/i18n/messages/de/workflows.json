@@ -74,5 +74,7 @@
   "rozpiskaList.strzalkaNiczegoNieZmienia": "Ein Pfeil ändert nichts an Zielen und Aufgaben — das ist ein Plan zum Anschauen und Besprechen, keine Automatik.",
   "rozpiskaList.wersjaVersionZapisanaUpdatedat": "Version {version} · gespeichert {updatedAt}",
   "rozpiskaList.zapisanaWersjaMozeByc": "Eine gespeicherte Version kann ein Nachweis sein, wenn ein Ziel genau sie erwartet.",
-  "workflowThumb.pustePlotno": "Leere Arbeitsfläche"
+  "workflowThumb.pustePlotno": "Leere Arbeitsfläche",
+  "rozpiskaEditor.undo": "Rückgängig",
+  "rozpiskaEditor.step": "Schritt"
 }

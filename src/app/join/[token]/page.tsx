@@ -4,15 +4,15 @@ import { BrandLogo } from "@/components/brand-logo";
 import { TeamLogo } from "@/components/social/team-logo";
 import { Button } from "@/components/ui/button";
 import { INVITE_TOKEN_RE } from "@/lib/invites";
-import { plural } from "@/lib/utils";
 import { JoinActions } from "./join-actions";
 import { dismissInvite } from "./actions";
 
+import { getT } from "@/i18n/server";
 // Link niesie sekret — strona nie może trafić do indeksu (patrz też robots.ts).
-export const metadata: Metadata = {
-  title: "Zaproszenie do zespołu — Vairo",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT("join");
+  return { title: t("page.metaTitle"), robots: { index: false, follow: false } };
+}
 export const dynamic = "force-dynamic";
 
 type Info = {
@@ -23,28 +23,7 @@ type Info = {
   status: "ok" | "expired" | "revoked" | "used_up" | "inactive" | "not_found";
 };
 
-const PROBLEMS: Record<Exclude<Info["status"], "ok">, { title: string; body: string }> = {
-  expired: {
-    title: "Ten link wygasł",
-    body: "Linki zaproszeń działają 7 dni. Poproś osobę, która go wysłała, o nowy.",
-  },
-  revoked: {
-    title: "Ten link został wyłączony",
-    body: "Osoba z zespołu utworzyła nowy link albo wyłączyła ten. Poproś o aktualny.",
-  },
-  used_up: {
-    title: "Ten link został już wykorzystany",
-    body: "Przez jeden link może dołączyć do 10 osób. Poproś o nowy.",
-  },
-  inactive: {
-    title: "Ten zespół jest teraz nieaktywny",
-    body: "Startup został wstrzymany albo zarchiwizowany, więc nie przyjmuje nowych osób.",
-  },
-  not_found: {
-    title: "Nie ma takiego zaproszenia",
-    body: "Sprawdź, czy link skopiował się w całości — ma na końcu 64 znaki.",
-  },
-};
+// Tytuł i opis problemu z linkiem: słownik `join`, `problem.<status>.title|body`.
 
 /**
  * Strona zaproszenia. Działa też bez logowania: gość widzi, do jakiego teamu
@@ -52,6 +31,7 @@ const PROBLEMS: Record<Exclude<Info["status"], "ok">, { title: string; body: str
  * wyglądałoby jak spam.
  */
 export default async function JoinPage({ params }: { params: Promise<{ token: string }> }) {
+  const t = await getT("join");
   const { token } = await params;
   const supabase = await createClient();
   const user = await getCurrentUser();
@@ -89,22 +69,21 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
               <div className="flex items-center gap-3.5">
                 <TeamLogo src={info.logo_url} name={info.startup_name} size="lg" />
                 <div className="min-w-0">
-                  <p className="text-[12.5px] text-[var(--text-subtle)]">Zaproszenie do zespołu</p>
+                  <p className="text-[12.5px] text-[var(--text-subtle)]">{t("page.zaproszenieDoZespolu")}</p>
                   <h1 className="truncate font-heading text-[1.45rem] font-semibold text-white">
                     {info.startup_name}
                   </h1>
                   <p className="text-[13px] text-[var(--text-muted)]">
-                    {info.member_count ?? 0}{" "}
-                    {plural(info.member_count ?? 0, "osoba", "osoby", "osób")} w zespole
+                    {t("page.memberCount", { count: info.member_count ?? 0 })}
                   </p>
                 </div>
               </div>
               <p className="mt-5 text-[14px] leading-relaxed text-[var(--text-muted)]">
                 {alreadyMember
-                  ? "Już należysz do tego zespołu. Link niczego nie zmieni w Twojej roli."
+                  ? t("page.juzNalezyszDoTego")
                   : user
-                  ? "Dołączysz jako Członek: zobaczysz etapy, cele i pliki zespołu i od razu dołączysz do wspólnej pracy."
-                  : "Załóż konto albo zaloguj się — zaraz potem wrócisz tutaj i dołączysz do zespołu."}
+                  ? t("page.dolaczyszJakoCzlonekZobaczysz")
+                  : t("page.zalozKontoAlboZaloguj")}
               </p>
               <JoinActions
                 token={token}
@@ -114,21 +93,21 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
           ) : (
             <>
               <h1 className="font-heading text-[1.35rem] font-semibold text-white">
-                {PROBLEMS[status === "ok" ? "not_found" : status].title}
+                {t(`problem.${status === "ok" ? "not_found" : status}.title`)}
               </h1>
               <p className="mt-2 text-[14px] leading-relaxed text-[var(--text-muted)]">
-                {PROBLEMS[status === "ok" ? "not_found" : status].body}
+                {t(`problem.${status === "ok" ? "not_found" : status}.body`)}
               </p>
               <div className="mt-6">
                 {user ? (
                   <form action={dismissInvite}>
                     <Button type="submit" variant="secondary">
-                      Przejdź do aplikacji
+                      {t("page.przejdzDoAplikacji")}
                     </Button>
                   </form>
                 ) : (
                   <Button href="/" variant="secondary">
-                    Strona główna
+                    {t("page.stronaGlowna")}
                   </Button>
                 )}
               </div>

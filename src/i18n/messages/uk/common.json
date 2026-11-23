@@ -62,5 +62,6 @@
   "opportunities.description": "Програми, конкурси й пропозиції партнерів Vairo для стартапів. Додамо їх у наступній версії.",
   "actions.cancel": "Скасувати",
   "fallbackName": "Користувач",
-  "backToDashboard": "Повернутися на дашборд"
+  "backToDashboard": "Повернутися на дашборд",
+  "actions.choose": "Обрати"
 }

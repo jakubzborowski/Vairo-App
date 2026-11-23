@@ -65,5 +65,7 @@
   "docsShelf.count": "{count, plural, one {# dokument} few {# dokumenty} other {# dokumentów}} zespołu.",
   "docSheet.keep": "Zostaw",
   "docSheet.readOnly": "Tylko do odczytu — ten dokument zmienia {name}, Founder albo Admin.",
-  "docSheet.author": "autor"
+  "docSheet.author": "autor",
+  "docSheet.mode": "Tryb",
+  "docSheet.insert": "Wstaw"
 }

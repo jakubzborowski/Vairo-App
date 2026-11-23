@@ -74,5 +74,7 @@
   "rozpiskaList.strzalkaNiczegoNieZmienia": "Стрілка нічого не змінює в цілях і завданнях — це план, щоб дивитися й обговорювати, а не автоматика.",
   "rozpiskaList.wersjaVersionZapisanaUpdatedat": "Версія {version} · збережено {updatedAt}",
   "rozpiskaList.zapisanaWersjaMozeByc": "Збережена версія може бути доказом, якщо ціль очікує саме її.",
-  "workflowThumb.pustePlotno": "Порожнє полотно"
+  "workflowThumb.pustePlotno": "Порожнє полотно",
+  "rozpiskaEditor.undo": "Скасувати",
+  "rozpiskaEditor.step": "Крок"
 }

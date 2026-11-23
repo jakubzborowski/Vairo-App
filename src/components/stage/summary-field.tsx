@@ -80,7 +80,7 @@ export function SummaryField({
                   className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] text-[var(--text-subtle)] transition-colors hover:text-white"
                 >
                   <Pencil className="size-3" />
-                  {isEditing ? "Gotowe" : "Popraw"}
+                  {isEditing ? t("summary.done") : t("summary.fix")}
                 </button>
               </div>
 

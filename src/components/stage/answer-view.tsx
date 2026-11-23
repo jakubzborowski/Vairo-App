@@ -50,7 +50,7 @@ export function AnswerView({
                 href={answerHref}
                 className="text-[var(--text-muted)] underline underline-offset-2 hover:text-white"
               >
-                Odpowiedz teraz
+                {t("answer.answerNow")}
               </Link>
             ) : null}
           </p>
@@ -191,7 +191,7 @@ function AnswerBody({ field, value }: { field: StageField; value: unknown }) {
       return (
         <p className="inline-flex items-center gap-2 text-[14px] text-[var(--success)]">
           <Check className="size-4" strokeWidth={2.5} />
-          Podsumowanie potwierdzone
+          {t("answer.summaryConfirmed")}
         </p>
       );
 

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { translateDbError } from "@/lib/db-errors";
-import { sessionExpired } from "@/lib/server-errors";
+import { missingMigration, sessionExpired } from "@/lib/server-errors";
 
 /**
  * Oznaczenie wszystkiego jako przeczytane.
@@ -25,7 +25,7 @@ export async function markAllNotificationsRead(): Promise<{
 
   if (error) {
     if (error.message.includes("mark_notifications_read")) {
-      return { error: "Brakuje migracji 013 — odpal ją w Supabase → SQL Editor." };
+      return { error: await missingMigration("013") };
     }
     return { error: await translateDbError(error.message) };
   }

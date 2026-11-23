@@ -601,7 +601,7 @@ export function FilesDrive({
 
       <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[200px_minmax(0,1fr)]">
         {/* Miejsca */}
-        <nav aria-label="Miejsca" className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] lg:flex-col lg:overflow-visible lg:pb-0">
+        <nav aria-label={t("filesDrive.places")} className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] lg:flex-col lg:overflow-visible lg:pb-0">
           {places.map((item) => {
             const on = isPlace(item.place);
             return (
@@ -691,7 +691,7 @@ export function FilesDrive({
                 </li>
               ))}
             </ol>
-            <div role="tablist" aria-label="Widok" className="inline-flex rounded-lg border border-white/[0.07] bg-[var(--surface)] p-0.5">
+            <div role="tablist" aria-label={t("filesDrive.view")} className="inline-flex rounded-lg border border-white/[0.07] bg-[var(--surface)] p-0.5">
               {(
                 [
                   ["grid", LayoutGrid, "Kafelki"],
@@ -871,7 +871,7 @@ export function FilesDrive({
                   <span>{t("filesDrive.skad")}</span>
                   <span>{t("filesDrive.ktoDodal")}</span>
                   <SortHeader label={t("filesDrive.data")} active={sort.key === "date"} desc={sort.desc} onClick={() => setSort({ key: "date", desc: sort.key === "date" ? !sort.desc : true })} />
-                  <SortHeader label="Rozmiar" active={sort.key === "size"} desc={sort.desc} onClick={() => setSort({ key: "size", desc: sort.key === "size" ? !sort.desc : true })} />
+                  <SortHeader label={t("filesDrive.size")} active={sort.key === "size"} desc={sort.desc} onClick={() => setSort({ key: "size", desc: sort.key === "size" ? !sort.desc : true })} />
                 </div>
                 <ul className="divide-y divide-white/[0.05]">
                   {visible.map((file) => {

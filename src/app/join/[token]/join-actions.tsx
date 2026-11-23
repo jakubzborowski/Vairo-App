@@ -5,6 +5,7 @@ import { LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { acceptInvite, dismissInvite, rememberInviteAndGo } from "./actions";
 
+import { useT } from "@/i18n/client";
 export function JoinActions({
   token,
   mode,
@@ -13,6 +14,7 @@ export function JoinActions({
   /** `already` — ta osoba już jest w teamie; link tylko przełącza na niego. */
   mode: "guest" | "member" | "already";
 }) {
+  const t = useT("join");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +28,7 @@ export function JoinActions({
             onClick={() => startTransition(() => rememberInviteAndGo(token, "register"))}
           >
             <UserPlus className="size-4" />
-            Załóż konto i dołącz
+            {t("joinActions.zalozKontoIDolacz")}
           </Button>
           <Button
             variant="secondary"
@@ -35,7 +37,7 @@ export function JoinActions({
             onClick={() => startTransition(() => rememberInviteAndGo(token, "login"))}
           >
             <LogIn className="size-4" />
-            Mam konto — zaloguj się
+            {t("joinActions.mamKontoZalogujSie")}
           </Button>
         </>
       ) : (
@@ -53,18 +55,18 @@ export function JoinActions({
             {mode === "already" ? null : <UserPlus className="size-4" />}
             {mode === "already"
               ? pending
-                ? "Przechodzę…"
-                : "Przejdź do zespołu"
+                ? t("joinActions.przechodze")
+                : t("joinActions.przejdzDoZespolu")
               : pending
-                ? "Dołączam…"
-                : "Dołącz do zespołu"}
+                ? t("joinActions.dolaczam")
+                : t("joinActions.dolaczDoZespolu")}
           </Button>
           <Button
             variant="ghost"
             disabled={pending}
             onClick={() => startTransition(() => dismissInvite())}
           >
-            Nie teraz
+            {t("joinActions.nieTeraz")}
           </Button>
         </>
       )}

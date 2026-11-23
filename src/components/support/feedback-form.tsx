@@ -17,13 +17,12 @@ import { Field, Textarea } from "@/components/ui/input";
 import { VoiceButton, appendDictation } from "@/components/ui/voice-button";
 import {
   SUPPORT_KINDS,
-  SUPPORT_KIND_HINTS,
-  SUPPORT_KIND_LABELS,
   SUPPORT_MESSAGE_MAX,
   SUPPORT_MESSAGE_MIN,
   type SupportKind,
 } from "@/types/support";
 
+import { useT } from "@/i18n/client";
 const KIND_ICONS: Record<SupportKind, LucideIcon> = {
   bug: Bug,
   idea: Lightbulb,
@@ -53,6 +52,7 @@ type Props = {
  * czekał na odpowiedź w złym miejscu.
  */
 export function FeedbackForm({ from, initialKind, errorCode, onSent }: Props) {
+  const t = useT("help");
   const [kind, setKind] = useState<SupportKind | null>(initialKind ?? null);
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<{ kind?: string; message?: string; form?: string }>({});
@@ -61,11 +61,11 @@ export function FeedbackForm({ from, initialKind, errorCode, onSent }: Props) {
 
   const submit = () => {
     const next: typeof errors = {};
-    if (!kind) next.kind = "Wybierz, czego dotyczy zgłoszenie.";
+    if (!kind) next.kind = t("feedbackForm.wybierzCzegoDotyczyZgloszenie");
     if (message.trim().length < SUPPORT_MESSAGE_MIN) {
-      next.message = `Napisz trochę więcej — co najmniej ${SUPPORT_MESSAGE_MIN} znaków.`;
+      next.message = t("feedbackForm.napiszTrocheWiecejCo", { SUPPORT_MESSAGE_MIN });
     } else if (message.length > SUPPORT_MESSAGE_MAX) {
-      next.message = `Najwyżej ${SUPPORT_MESSAGE_MAX} znaków.`;
+      next.message = t("feedbackForm.najwyzejSupportMessageMax", { SUPPORT_MESSAGE_MAX });
     }
     setErrors(next);
     if (next.kind || next.message || !kind) return;
@@ -73,7 +73,7 @@ export function FeedbackForm({ from, initialKind, errorCode, onSent }: Props) {
     startTransition(async () => {
       const result = await sendFeedback({ kind, message, from, errorCode });
       if (result.error || !result.reference) {
-        setErrors({ form: result.error ?? "Nie udało się wysłać zgłoszenia. Spróbuj jeszcze raz." });
+        setErrors({ form: result.error ?? t("feedbackForm.nieUdaloSieWyslac") });
         return;
       }
       setSent({ reference: result.reference, email: result.email ?? null });
@@ -87,9 +87,9 @@ export function FeedbackForm({ from, initialKind, errorCode, onSent }: Props) {
       <div className="flex flex-col items-start gap-3 rounded-2xl border border-[var(--success)]/25 bg-[var(--success)]/[0.06] px-5 py-5">
         <CheckCircle2 className="size-6 text-[var(--success)]" aria-hidden="true" />
         <div>
-          <p className="text-[15px] font-medium text-white">Dziękujemy — zgłoszenie dotarło</p>
+          <p className="text-[15px] font-medium text-white">{t("feedbackForm.dziekujemyZgloszenieDotarlo")}</p>
           <p className="mt-1 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-            Przeczyta je ktoś z zespołu Vairo i odpisze mailem
+            {t("feedbackForm.przeczytaJeKtosZ")}
             {sent.email ? (
               <>
                 {" "}na <strong className="font-medium text-white">{sent.email}</strong>
@@ -98,9 +98,8 @@ export function FeedbackForm({ from, initialKind, errorCode, onSent }: Props) {
             .
           </p>
           <p className="mt-2 text-[12.5px] text-[var(--text-subtle)]">
-            Numer zgłoszenia:{" "}
-            <span className="tabular font-medium text-[var(--text-muted)]">{sent.reference}</span>{" "}
-            — przyda się, jeśli zechcesz coś dopisać.
+            {t("feedbackForm.numerZgloszenia")}
+            <span className="tabular font-medium text-[var(--text-muted)]">{sent.reference}</span>{t("feedbackForm.przydaSieJesliZechcesz")}
           </p>
         </div>
         <Button
@@ -111,7 +110,7 @@ export function FeedbackForm({ from, initialKind, errorCode, onSent }: Props) {
             setKind(null);
           }}
         >
-          Wyślij kolejne
+          {t("feedbackForm.wyslijKolejne")}
         </Button>
       </div>
     );
@@ -120,13 +119,13 @@ export function FeedbackForm({ from, initialKind, errorCode, onSent }: Props) {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <p className="mb-2 text-[13px] font-medium text-[var(--text-muted)]">Czego to dotyczy?</p>
-        <div role="radiogroup" aria-label="Czego dotyczy zgłoszenie" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <p className="mb-2 text-[13px] font-medium text-[var(--text-muted)]">{t("feedbackForm.czegoToDotyczy")}</p>
+        <div role="radiogroup" aria-label={t("feedbackForm.czegoDotyczyZgloszenie")} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {SUPPORT_KINDS.map((item) => (
             <ChoiceCard
               key={item}
               icon={KIND_ICONS[item]}
-              label={SUPPORT_KIND_LABELS[item]}
+              label={t(`kind.${item}.label`)}
               selected={kind === item}
               onSelect={() => {
                 setKind(item);
@@ -141,8 +140,8 @@ export function FeedbackForm({ from, initialKind, errorCode, onSent }: Props) {
       </div>
 
       <Field
-        label="Opisz to swoimi słowami"
-        hint={kind ? SUPPORT_KIND_HINTS[kind] : "Kilka zdań wystarczy. Nie trzeba znać nazw ani funkcji."}
+        label={t("feedbackForm.opiszToSwoimiSlowami")}
+        hint={kind ? t(`kind.${kind}.hint`) : t("feedbackForm.kilkaZdanWystarczyNie")}
         error={errors.message}
         counter={{ value: message.length, max: SUPPORT_MESSAGE_MAX }}
       >
@@ -157,10 +156,10 @@ export function FeedbackForm({ from, initialKind, errorCode, onSent }: Props) {
               onChange={(event) => setMessage(event.target.value)}
               placeholder={
                 kind === "bug"
-                  ? "Np. Po kliknięciu „Zapisz” w etapie Idea nic się nie dzieje."
+                  ? t("feedbackForm.npPoKliknieciuZapisz")
                   : kind === "idea"
-                    ? "Np. Przydałoby się przypomnienie, gdy cel ma termin jutro."
-                    : "Napisz, o co chodzi…"
+                    ? t("feedbackForm.npPrzydalobySiePrzypomnienie")
+                    : t("feedbackForm.napiszOCoChodzi")
               }
             />
             <VoiceButton
@@ -172,7 +171,7 @@ export function FeedbackForm({ from, initialKind, errorCode, onSent }: Props) {
       </Field>
 
       <p className="text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-        Odpowiemy mailem na adres, którym logujesz się do Vairo.
+        {t("feedbackForm.odpowiemyMailemNaAdres")}
       </p>
 
       {errors.form ? (
@@ -184,11 +183,11 @@ export function FeedbackForm({ from, initialKind, errorCode, onSent }: Props) {
       <div className="flex flex-wrap items-center gap-3">
         <Button size="lg" loading={pending} onClick={submit}>
           <Send className="size-4" />
-          Wyślij
+          {t("feedbackForm.wyslij")}
         </Button>
         {from ? (
           <span className="min-w-0 truncate text-[12.5px] text-[var(--text-subtle)]">
-            Dołączymy adres strony: {from}
+            {t("feedbackForm.dolaczymyAdresStronyFrom", { from })}
           </span>
         ) : null}
       </div>

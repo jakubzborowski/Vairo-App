@@ -65,5 +65,7 @@
   "template.meeting.body": "## Хто був\n- \n\n## Що ми домовилися\n- \n\n## Хто що робить\n- [ ] \n",
   "template.meeting.description": "Хто був, про що домовилися, хто що робить.",
   "template.meeting.label": "Нотатка із зустрічі",
-  "template.meeting.title": "Нотатка із зустрічі"
+  "template.meeting.title": "Нотатка із зустрічі",
+  "docSheet.mode": "Режим",
+  "docSheet.insert": "Вставити"
 }

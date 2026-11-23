@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { translateDbError } from "@/lib/db-errors";
 
+import { getT } from "@/i18n/server";
 /**
  * Funkcje SCORE (044–046) rzucają gotowe zdania po polsku, które mówią, co
  * poprawić („minimum 80 znaków i 12 słów”…). `translateDbError` zamieniłby je
@@ -10,27 +11,29 @@ import { translateDbError } from "@/lib/db-errors";
  * („zespół”, nie „team”). Techniczne błędy bazy idą przez tłumacza.
  */
 async function scoreError(error: { message: string; code?: string }) {
+  const t = await getT("score");
   const { message } = error;
   // P0001 = `raise exception` z funkcji SCORE. Zdanie (wielka litera, spacje)
   // to komunikat dla człowieka; kody w stylu `not_authenticated` idą do tłumacza.
   if (error.code === "P0001" && /^[A-ZĄĆĘŁŃÓŚŹŻ][^_]*\s/.test(message)) {
     return message
-      .replace(/\bteamu\b/g, "zespołu")
+      .replace(/\bteamu\b/g, t("actions.zespolu"))
       .replace(/\bteamie\b/g, "zespole")
-      .replace(/\bteam\b/g, "zespół");
+      .replace(/\bteam\b/g, t("actions.zespol"));
   }
-  return await translateDbError(message) ?? "Coś poszło nie tak. Spróbuj jeszcze raz.";
+  return await translateDbError(message) ?? t("actions.cosPoszloNieTak");
 }
 
 export async function scoreAction(
   _state: { error: string | null; success: string | null },
   form: FormData,
 ): Promise<{ error: string | null; success: string | null }> {
+  const t = await getT("score");
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Zaloguj się ponownie.", success: null };
+  if (!user) return { error: t("actions.zalogujSiePonownie"), success: null };
   const action = form.get("action");
   const result =
     action === "assess"
@@ -56,16 +59,16 @@ export async function scoreAction(
                 p_note: String(form.get("note")),
                 p_expected: String(form.get("expected")),
               })
-            : { error: { message: "Nieznana akcja." } };
+            : { error: { message: t("actions.nieznanaAkcja") } };
   if (result.error) return { error: await scoreError(result.error), success: null };
   revalidatePath("/app/score");
   return {
     error: null,
     success:
       action === "assess"
-        ? "Skala zapisana. SCORE wymaga jeszcze niezależnej akceptacji ukończonej pracy."
+        ? t("actions.skalaZapisanaScoreWymaga")
         : action === "thank"
           ? "Potwierdzenie zapisane. Nagroda autora jest naliczona lub czeka w kolejce dziennego limitu."
-          : "Wynik zaakceptowany. Nagrody są naliczone lub widoczne w kolejce dziennego limitu.",
+          : t("actions.wynikZaakceptowanyNagrodySa"),
   };
 }

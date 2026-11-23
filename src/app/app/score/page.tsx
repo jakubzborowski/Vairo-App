@@ -12,7 +12,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScoreRefresh } from "@/components/score/score-refresh";
 
-export const metadata = { title: "Twój SCORE · Vairo" };
+import { getT } from "@/i18n/server";
+export async function generateMetadata() {
+  const t = await getT("score");
+  return { title: t("page.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 const panel = "rounded-2xl border border-white/10 bg-[var(--surface)] p-6";
 type ScoreRow = {
@@ -28,6 +32,7 @@ export default async function ScorePage({
 }: {
   searchParams: Promise<{ reviewTeam?: string }>;
 }) {
+  const t = await getT("score");
   const params = await searchParams;
   const supabase = await createClient();
   const {
@@ -40,7 +45,7 @@ export default async function ScorePage({
       <div className="mx-auto max-w-xl">
         <h1 className="text-2xl text-white">SCORE</h1>
         <p className="mt-3 text-sm text-[var(--text-muted)]">
-          SCORE jest chwilowo niedostępny. Spróbuj ponownie za chwilę.
+          {t("page.scoreJestChwilowoNiedostepny")}
         </p>
       </div>
     );
@@ -133,40 +138,38 @@ export default async function ScorePage({
       <ScoreRefresh />
       <header>
         <p className="text-xs uppercase tracking-widest text-[var(--vairo)]">
-          SCORE · zweryfikowane wyniki
+          {t("page.scoreZweryfikowaneWyniki")}
         </p>
         <h1 className="mt-3 font-heading text-3xl font-semibold text-white">
-          Twoja praca. Twój postęp.
+          {t("page.twojaPracaTwojPostep")}
         </h1>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
-          Punkty otrzymujesz za sprawdzone wyniki: ukończony cel powiązany z
-          programem i zaakceptowany przez drugiego Foundera/Admina lub
-          przypisanego mentora programu. Sam status „Ukończony” nie daje SCORE.
+          {t("page.punktyOtrzymujeszZaSprawdzone")}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button href="/app/goals">Pracuj nad celem</Button>
+          <Button href="/app/goals">{t("page.pracujNadCelem")}</Button>
           <Button href="/app/stage" variant="secondary">
-            Kontynuuj etap
+            {t("page.kontynuujEtap")}
           </Button>
         </div>
       </header>
       <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
         <section className={panel}>
-          <p className="text-sm text-[var(--text-subtle)]">SCORE pracy</p>
+          <p className="text-sm text-[var(--text-subtle)]">{t("page.scorePracy")}</p>
           <p className="mt-3 text-5xl font-semibold text-white">
             {overview.work}
           </p>
           <h2 className="mt-4 text-xl text-[var(--vairo)]">
-            {progress.current.name}
+            {t(`rank.${progress.current.id}`)}
           </h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
             {progress.next
-              ? `${progress.next.threshold - overview.work} pkt do rangi ${progress.next.name}`
-              : "Najwyższa ranga — dalej budujesz wynik."}
+              ? t("page.toNextRank", { points: progress.next.threshold - overview.work, rank: t(`rank.${progress.next.id}`) })
+              : t("page.najwyzszaRangaDalejBudujesz")}
           </p>
           <div
             role="progressbar"
-            aria-label="Awans do następnej rangi"
+            aria-label={t("page.awansDoNastepnejRangi")}
             aria-valuenow={Math.round(progress.percent)}
             aria-valuemin={0}
             aria-valuemax={100}
@@ -180,42 +183,38 @@ export default async function ScorePage({
         </section>
         <section className={panel}>
           <h2 className="text-sm text-[var(--text-muted)]">
-            Reputacja społecznościowa
+            {t("page.reputacjaSpolecznosciowa")}
           </h2>
           <p className="mt-3 text-4xl text-white">{overview.reputation}</p>
           <p className="mt-4 text-sm text-[var(--text-subtle)]">
-            Za pomoc i feedback potwierdzone przez odbiorcę. Każdy głos ma równą
-            wagę. Reputacja nie podbija rangi pracy.
+            {t("page.zaPomocIFeedback")}
           </p>
         </section>
       </div>
       {overview.legacy > 0 && (
         <section className={panel}>
-          <h2 className="text-lg text-white">Historia poprzednich zasad</h2>
+          <h2 className="text-lg text-white">{t("page.historiaPoprzednichZasad")}</h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            Zachowaliśmy {overview.legacy} pkt naliczonych przed niezależną
-            weryfikacją. Są historią konta; nie podnoszą zweryfikowanej rangi
-            ani reputacji.
+            {t("page.legacy", { legacy: overview.legacy })}
           </p>
         </section>
       )}
       {(overview.pending > 0 || overview.queue.length > 0) && (
         <section className={panel}>
           <h2 className="text-lg text-white">
-            Kolejka nagród · {overview.pending} pkt czeka
+            {t("page.kolejkaNagrodPendingPkt", { pending: overview.pending })}
           </h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            Po przekroczeniu dziennego limitu nagroda zostaje zapisana.
+            {t("page.poPrzekroczeniuDziennegoLimitu")}
             {overview.queue_scheduled
-              ? "Harmonogram jest włączony i sprawdza kolejkę co 5 minut; wejście do SCORE może rozliczyć ją wcześniej."
-              : "Automatyczny harmonogram nie jest jeszcze włączony. Kolejkę rozliczamy przy wejściu do SCORE; poproś operatora Vairo o włączenie harmonogramu."}{" "}
-            Nie otwieraj ponownie celu — to unieważnia oczekującą akceptację.
+              ? t("page.harmonogramJestWlaczonyI")
+              : t("page.automatycznyHarmonogramNieJest")}{t("page.nieOtwierajPonownieCelu")}
           </p>
           <ul className="mt-3 divide-y divide-white/5">
             {overview.queue.map((entry) => (
               <li key={entry.id} className="py-3 text-sm">
                 <p className="text-white">
-                  {entry.label} · {entry.points} pkt
+                  {t("page.labelPointsPkt", { label: entry.label, points: entry.points })}
                 </p>
                 <p className="mt-1 text-xs text-[var(--text-subtle)]">
                   {entry.state === "cancelled"
@@ -230,11 +229,9 @@ export default async function ScorePage({
       )}
       {overview.awaiting_review.length > 0 && (
         <section className={panel}>
-          <h2 className="text-lg text-white">Twoje wyniki do akceptacji</h2>
+          <h2 className="text-lg text-white">{t("page.twojeWynikiDoAkceptacji")}</h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            Poproś drugiego Foundera/Admina lub przypisanego mentora programu o
-            sprawdzenie wyniku w SCORE. Founder bez Admina może otrzymać
-            akceptację mentora; nie zatwierdza sobie punktów.
+            {t("page.awaitingHint")}
           </p>
           <ul className="mt-3 divide-y divide-white/5">
             {overview.awaiting_review.map((entry, index) => (
@@ -253,10 +250,10 @@ export default async function ScorePage({
         <ol className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {SCORE_RANKS.map((rank) => (
             <li
-              key={rank.name}
+              key={rank.id}
               className={`rounded-xl border p-3 ${overview.work >= rank.threshold ? "border-[var(--vairo)]/40" : "border-white/10"}`}
             >
-              <p className="text-sm text-white">{rank.name}</p>
+              <p className="text-sm text-white">{t(`rank.${rank.id}`)}</p>
               <p className="mt-1 text-xs text-[var(--text-subtle)]">
                 {rank.threshold} SCORE
               </p>
@@ -266,15 +263,14 @@ export default async function ScorePage({
       </section>
       {reviewTeam && (
         <section className={panel}>
-          <h2 className="mb-3 text-lg text-white">Zespół do recenzji</h2>
+          <h2 className="mb-3 text-lg text-white">{t("page.zespolDoRecenzji")}</h2>
           <ScoreWorkspaceSelect
             workspaces={workspaces}
             current={reviewTeam.id}
           />
           {reviewTeam.is_mentor && (
             <p className="mt-3 text-xs text-[var(--text-muted)]">
-              Dostęp mentora: oceniasz przypisany team i jego dowody. Nie
-              zmieniasz członkostwa ani pracy zespołu.
+              {t("page.dostepMentoraOceniaszPrzypisany")}
             </p>
           )}
         </section>
@@ -286,7 +282,7 @@ export default async function ScorePage({
         canOpenWorkspace={active?.id === reviewTeam?.id}
       />
       <section className={panel}>
-        <h2 className="text-lg text-white">Ostatnie 50 nagród</h2>
+        <h2 className="text-lg text-white">{t("page.ostatnie50Nagrod")}</h2>
         {overview.events.length ? (
           <ol className="mt-3 divide-y divide-white/5">
             {overview.events.map((event) => (
@@ -311,9 +307,7 @@ export default async function ScorePage({
           </ol>
         ) : (
           <p className="mt-3 text-sm text-[var(--text-muted)]">
-            Jeszcze bez zweryfikowanych punktów. Ukończ cel z treściwym dowodem,
-            powiąż go z programem i poproś drugiego Foundera/Admina lub
-            przypisanego mentora o akceptację.
+            {t("page.jeszczeBezZweryfikowanychPunktow")}
           </p>
         )}
       </section>
@@ -323,15 +317,15 @@ export default async function ScorePage({
           {SCORE_RULES.map((rule) => (
             <li key={rule.id} className="flex justify-between gap-4 py-3">
               <div>
-                <p className="text-sm text-white">{rule.label}</p>
+                <p className="text-sm text-white">{t(`rule.${rule.id}.label`)}</p>
                 <p className="mt-1 text-xs text-[var(--text-subtle)]">
-                  {rule.detail}
+                  {t(`rule.${rule.id}.detail`)}
                 </p>
               </div>
               <span className="shrink-0 text-right text-[var(--vairo)]">
                 {rule.points}
                 {(rule.id === "point" || rule.id === "stage") && (
-                  <span className="block text-xs">pula zespołu</span>
+                  <span className="block text-xs">{t("page.pulaZespolu")}</span>
                 )}
               </span>
             </li>
@@ -339,27 +333,9 @@ export default async function ScorePage({
         </ul>
       </section>
       <section className={panel}>
-        <h2 className="text-lg text-white">Uczciwe zasady</h2>
+        <h2 className="text-lg text-white">{t("page.uczciweZasady")}</h2>
         <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">
-          Skip, upload, pusty plik, logowanie i swipe dają 0 pkt. Cele i zadania
-          nagradzają właściciela po niezależnej akceptacji. Liczba punktowanych
-          celów jest ograniczona przez min_count warunku programu. Limit jest
-          wspólny dla teamu i obejmuje też oczekujące nagrody. Dodatkowe cele
-          nie dają punktów za siebie, zadania ani dokumenty. Ponowna recenzja
-          nowych zadań nie wymaga otwierania celu i nie nalicza ponownie jego
-          nagrody. Budżet zadań pozostaje do 30 pkt na cel dla całego teamu.
-          Pula punktu (25) i etapu (150) jest dzielona równo między członków
-          teamu w chwili ukończenia; resztę pojedynczych punktów przydzielamy w
-          stałej kolejności identyfikatorów. Zamykający nie otrzymuje
-          dodatkowego bonusu. Każda osoba otrzyma bonus danego punktu i etapu
-          tylko raz, łącznie ze wszystkich teamów. Sam skip nie daje nagrody.
-          Bonus etapu sprawdza faktyczny postęp, także sprzed wdrożenia SCORE.
-          Dziennie: zadania 60, cele 200, dokumenty 30, punkty programu 50,
-          etapy 150; razem do 260 SCORE pracy. Nadwyżka trafia do kolejki.
-          Reputacja: feedback 15, pomoc 20 dziennie, do 10 od jednej osoby w 7
-          dni, bez wzajemnej wymiany ocen. Reputacja świadomie nie wpływa na
-          rangę pracy. Dzień rozliczamy w Europe/Warsaw. Zmiana kropki, odstępów
-          lub wielkości liter nie tworzy nowego tekstowego dowodu.
+          {t("page.fairRules")}
         </p>
       </section>
     </div>

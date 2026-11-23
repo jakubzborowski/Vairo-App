@@ -875,6 +875,7 @@ function ListRow({
   markAlways?: boolean;
   onClick: () => void;
 }) {
+  const t = useT("stage");
   const partial = !complete && (done ?? 0) > 0;
   const showMark = active || (markAlways && Boolean(accent));
   return (
@@ -914,7 +915,7 @@ function ListRow({
                 ? "border-[var(--info)]"
                 : "border-white/25 group-hover:border-white/45"
           )}
-          aria-label={complete ? "Gotowe" : partial ? "W toku" : "Do zrobienia"}
+          aria-label={complete ? t("listRow.done") : partial ? t("listRow.partial") : t("listRow.todo")}
         >
           {complete ? <Check className="size-3" strokeWidth={3} /> : null}
           {partial ? (

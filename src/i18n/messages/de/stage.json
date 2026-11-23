@@ -237,5 +237,12 @@
   "summary.nextCategories": "Nächster Schritt: Wir sagen Vairo, was du baust und an wen du verkaufst.",
   "summary.canChange": "Diese Antworten kannst du jederzeit ändern.",
   "tree.fallbackTitle": "Phase",
-  "tree.waitingOn": "Wartet auf ein früheres Ergebnis"
+  "tree.waitingOn": "Wartet auf ein früheres Ergebnis",
+  "answer.answerNow": "Jetzt antworten",
+  "answer.summaryConfirmed": "Zusammenfassung bestätigt",
+  "listRow.done": "Fertig",
+  "listRow.partial": "In Arbeit",
+  "listRow.todo": "Zu erledigen",
+  "summary.done": "Fertig",
+  "summary.fix": "Korrigieren"
 }

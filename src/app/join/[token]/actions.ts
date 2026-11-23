@@ -8,14 +8,16 @@ import { setActiveStartupId } from "@/lib/active-team";
 import { translateDbError } from "@/lib/db-errors";
 import { INVITE_COOKIE, INVITE_TOKEN_RE } from "@/lib/invites";
 
+import { getT } from "@/i18n/server";
 export async function acceptInvite(token: string): Promise<{ error: string | null }> {
+  const t = await getT("join");
   if (!INVITE_TOKEN_RE.test(token)) {
-    return { error: "Ten link zaproszenia jest nieaktualny. Poproś osobę, która go wysłała, o nowy." };
+    return { error: t("actions.tenLinkZaproszeniaJest") };
   }
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("accept_invite_link", { p_token: token });
   if (error) {
-    return { error: await translateDbError(error.message) ?? "Nie udało się dołączyć do zespołu." };
+    return { error: await translateDbError(error.message) ?? t("actions.nieUdaloSieDolaczyc") };
   }
 
   const jar = await cookies();

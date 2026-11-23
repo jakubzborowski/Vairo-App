@@ -65,5 +65,7 @@
   "template.meeting.body": "## Wer dabei war\n- \n\n## Was wir vereinbart haben\n- \n\n## Wer was macht\n- [ ] \n",
   "template.meeting.description": "Wer dabei war, was ihr vereinbart habt, wer was macht.",
   "template.meeting.label": "Besprechungsnotiz",
-  "template.meeting.title": "Besprechungsnotiz"
+  "template.meeting.title": "Besprechungsnotiz",
+  "docSheet.mode": "Modus",
+  "docSheet.insert": "Einfügen"
 }

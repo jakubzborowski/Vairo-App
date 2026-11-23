@@ -237,5 +237,12 @@
   "summary.nextCategories": "Następny krok: powiemy Vairo, co budujesz i komu to sprzedajesz.",
   "summary.canChange": "Te odpowiedzi możesz zmieniać w każdej chwili.",
   "tree.fallbackTitle": "Etap",
-  "tree.waitingOn": "Czeka na wcześniejszy wynik"
+  "tree.waitingOn": "Czeka na wcześniejszy wynik",
+  "answer.answerNow": "Odpowiedz teraz",
+  "answer.summaryConfirmed": "Podsumowanie potwierdzone",
+  "summary.done": "Gotowe",
+  "summary.fix": "Popraw",
+  "listRow.done": "Gotowe",
+  "listRow.partial": "W toku",
+  "listRow.todo": "Do zrobienia"
 }

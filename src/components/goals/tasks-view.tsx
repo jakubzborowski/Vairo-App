@@ -350,7 +350,7 @@ export function TasksView({
       {/* Telefon: jedna kolumna naraz. Przełącznik zamiast przewijania w bok. */}
       <div
         role="tablist"
-        aria-label="Kolumna"
+        aria-label={t("tasksView.column")}
         className="mt-4 grid grid-cols-4 gap-1 rounded-xl border border-white/[0.08] bg-[var(--surface)] p-1 lg:hidden"
       >
         {TASK_STATUSES.map((status) => (

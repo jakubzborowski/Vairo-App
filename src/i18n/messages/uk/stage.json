@@ -237,5 +237,12 @@
   "summary.nextCategories": "Наступний крок: розкажемо Vairo, що ти будуєш і кому продаєш.",
   "summary.canChange": "Ці відповіді можна змінювати будь-коли.",
   "tree.fallbackTitle": "Етап",
-  "tree.waitingOn": "Чекає на попередній результат"
+  "tree.waitingOn": "Чекає на попередній результат",
+  "answer.answerNow": "Відповісти зараз",
+  "answer.summaryConfirmed": "Підсумок підтверджено",
+  "listRow.done": "Готово",
+  "listRow.partial": "У процесі",
+  "listRow.todo": "До виконання",
+  "summary.done": "Готово",
+  "summary.fix": "Виправити"
 }

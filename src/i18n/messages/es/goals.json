@@ -551,5 +551,13 @@
   "tasksView.zniknieZTablicyI": "Desaparecerá del tablero y del objetivo. No se puede deshacer.",
   "tasksView.zrobioneZadaniaNieKoncza": "Las tareas hechas no cierran el objetivo: lo cierra la prueba.",
   "tasksView.title": "Tareas",
-  "meta.tasks": "Tareas — Vairo"
+  "meta.tasks": "Tareas — Vairo",
+  "calendar.view": "Vista",
+  "goalWizard.result": "Resultado",
+  "goalWizard.kind": "Tipo",
+  "goalsScreen.everyone": "Todos",
+  "goalsScreen.mine": "Míos",
+  "proofModal.address": "Dirección",
+  "proofModal.rating": "Valoración",
+  "tasksView.column": "Columna"
 }

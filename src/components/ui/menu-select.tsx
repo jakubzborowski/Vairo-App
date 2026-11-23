@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 export type MenuOption = {
   value: string;
@@ -21,7 +22,7 @@ export function MenuSelect({
   ariaLabel,
   disabled,
   className,
-  placeholder = "Wybierz",
+  placeholder: placeholderProp,
   size = "md",
 }: {
   value: string;
@@ -33,6 +34,8 @@ export function MenuSelect({
   placeholder?: string;
   size?: "sm" | "md";
 }) {
+  const tc = useT("common");
+  const placeholder = placeholderProp ?? tc("actions.choose");
   const [open, setOpen] = useState(false);
   const [box, setBox] = useState<{ top: number; left: number; width: number; up: boolean } | null>(null);
   const ref = useRef<HTMLDivElement>(null);

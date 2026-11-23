@@ -7,7 +7,6 @@ import { getSiteUrl } from "@/lib/supabase/config";
 import { translateDbError } from "@/lib/db-errors";
 import { sendMail } from "@/lib/mailer";
 import {
-  SUPPORT_KIND_LABELS,
   SUPPORT_MESSAGE_MAX,
   SUPPORT_MESSAGE_MIN,
   isSupportKind,
@@ -17,6 +16,7 @@ import {
 } from "@/types/support";
 import { sessionExpired } from "@/lib/server-errors";
 
+import { getT } from "@/i18n/server";
 type SubmitRow = {
   id: string;
   reference: string;
@@ -37,26 +37,38 @@ type SubmitRow = {
  * zwykłe „Odpowiedz” w poczcie. Adres autora bierze baza z konta, nie
  * formularz (patrz migracja 043).
  */
+/**
+ * Rodzaj zgłoszenia w mailu do skrzynki zespołu Vairo. Mail czyta zespół,
+ * więc zostaje po polsku, niezależnie od języka autora zgłoszenia.
+ */
+const TEAM_KIND_LABELS: Record<SupportKind, string> = {
+  bug: "Coś nie działa",
+  idea: "Mam pomysł",
+  question: "Mam pytanie",
+  other: "Coś innego",
+};
+
 export async function sendFeedback(input: {
   kind: string;
   message: string;
   from?: string | null;
   errorCode?: string | null;
 }): Promise<{ error: string | null; reference?: string; email?: string }> {
+  const t = await getT("help");
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: await sessionExpired() };
 
-  if (!isSupportKind(input.kind)) return { error: "Wybierz, czego dotyczy zgłoszenie." };
+  if (!isSupportKind(input.kind)) return { error: t("actions.wybierzCzegoDotyczyZgloszenie") };
   const kind: SupportKind = input.kind;
   const message = (input.message ?? "").trim();
   if (message.length < SUPPORT_MESSAGE_MIN) {
-    return { error: `Napisz trochę więcej — co najmniej ${SUPPORT_MESSAGE_MIN} znaków.` };
+    return { error: t("actions.napiszTrocheWiecejCo", { SUPPORT_MESSAGE_MIN }) };
   }
   if (message.length > SUPPORT_MESSAGE_MAX) {
-    return { error: `Zgłoszenie może mieć najwyżej ${SUPPORT_MESSAGE_MAX} znaków.` };
+    return { error: t("actions.zgloszenieMozeMiecNajwyzej", { SUPPORT_MESSAGE_MAX }) };
   }
 
   const pagePath = safeFromPath(input.from);
@@ -76,7 +88,7 @@ export async function sendFeedback(input: {
   if (error) return { error: await translateDbError(error.message) };
   const row = (Array.isArray(data) ? data[0] : data) as SubmitRow | undefined;
   if (!row) {
-    return { error: "Nie udało się wysłać zgłoszenia. Odśwież stronę i spróbuj jeszcze raz." };
+    return { error: t("actions.nieUdaloSieWyslac") };
   }
 
   const inbox = (process.env.SUPPORT_INBOX_EMAIL ?? "")
@@ -109,7 +121,7 @@ function supportSubject(kind: SupportKind, row: SubmitRow, message: string) {
   // Temat to jedna linia — imię z profilu też może mieć w sobie entery.
   const who = (row.contact_name ?? row.contact_email).replace(/\s+/g, " ");
   const preview = message.replace(/\s+/g, " ").slice(0, 60);
-  return `[Vairo · ${SUPPORT_KIND_LABELS[kind]}] ${row.reference} — ${who}: ${preview}${message.length > 60 ? "…" : ""}`;
+  return `[Vairo · ${TEAM_KIND_LABELS[kind]}] ${row.reference} — ${who}: ${preview}${message.length > 60 ? "…" : ""}`;
 }
 
 function supportBody(input: {
@@ -130,7 +142,7 @@ function supportBody(input: {
     "",
     "—",
     `Numer: ${row.reference}`,
-    `Rodzaj: ${SUPPORT_KIND_LABELS[input.kind]}`,
+    `Rodzaj: ${TEAM_KIND_LABELS[input.kind]}`,
     `Strona: ${input.pagePath ? `${getSiteUrl()}${input.pagePath}` : "—"}`,
     ...(input.errorCode ? [`Kod błędu: ${input.errorCode} (szukaj w logach Vercel)`] : []),
     `Zespół: ${row.startup_name ?? "—"}`,

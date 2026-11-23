@@ -8,10 +8,14 @@ import docs from "./docs.json";
 import errors from "./errors.json";
 import files from "./files.json";
 import goals from "./goals.json";
+import help from "./help.json";
+import join from "./join.json";
 import labels from "./labels.json";
 import nav from "./nav.json";
 import notifications from "./notifications.json";
 import onboarding from "./onboarding.json";
+import program from "./program.json";
+import score from "./score.json";
 import settings from "./settings.json";
 import social from "./social.json";
 import stage from "./stage.json";
@@ -28,10 +32,14 @@ const messages = {
   "errors": errors,
   "files": files,
   "goals": goals,
+  "help": help,
+  "join": join,
   "labels": labels,
   "nav": nav,
   "notifications": notifications,
   "onboarding": onboarding,
+  "program": program,
+  "score": score,
   "settings": settings,
   "social": social,
   "stage": stage,

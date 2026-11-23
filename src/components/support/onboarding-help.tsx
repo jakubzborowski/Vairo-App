@@ -6,12 +6,14 @@ import { LifeBuoy } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { FeedbackForm } from "./feedback-form";
 
+import { useT } from "@/i18n/client";
 /**
  * Pomoc w onboardingu. Aplikacja (i strona Pomocy) otwiera się dopiero po
  * onboardingu, a utknąć da się właśnie tutaj — więc formularz przychodzi
  * w oknie, bez wychodzenia z kroku.
  */
 export function OnboardingHelp() {
+  const t = useT("help");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   return (
@@ -22,12 +24,12 @@ export function OnboardingHelp() {
         className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-[13px] font-medium text-[var(--text-subtle)] transition-colors hover:text-white"
       >
         <LifeBuoy className="size-4" strokeWidth={1.75} aria-hidden="true" />
-        Pomoc
+        {t("onboardingHelp.pomoc")}
       </button>
       {open ? (
         <Modal
-          title="Pomoc i opinie"
-          description="Coś nie działa albo czegoś nie rozumiesz? Napisz — przeczyta to zespół Vairo."
+          title={t("onboardingHelp.pomocIOpinie")}
+          description={t("onboardingHelp.cosNieDzialaAlbo")}
           onClose={() => setOpen(false)}
         >
           <FeedbackForm from={pathname} />

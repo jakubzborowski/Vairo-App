@@ -74,5 +74,7 @@
   "rozpiskaList.strzalkaNiczegoNieZmienia": "Una flecha no cambia nada en objetivos ni tareas: es un plan para mirar y comentar, no un automatismo.",
   "rozpiskaList.wersjaVersionZapisanaUpdatedat": "Versión {version} · guardada {updatedAt}",
   "rozpiskaList.zapisanaWersjaMozeByc": "Una versión guardada puede ser una prueba si un objetivo espera justo esa.",
-  "workflowThumb.pustePlotno": "Lienzo vacío"
+  "workflowThumb.pustePlotno": "Lienzo vacío",
+  "rozpiskaEditor.undo": "Deshacer",
+  "rozpiskaEditor.step": "Paso"
 }

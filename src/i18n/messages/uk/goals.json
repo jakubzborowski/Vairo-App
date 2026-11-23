@@ -551,5 +551,13 @@
   "tasksView.zniknieZTablicyI": "Зникне з дошки й із цілі. Цього не можна скасувати.",
   "tasksView.zrobioneZadaniaNieKoncza": "Виконані завдання не завершують ціль — її завершує доказ.",
   "tasksView.title": "Завдання",
-  "meta.tasks": "Завдання — Vairo"
+  "meta.tasks": "Завдання — Vairo",
+  "calendar.view": "Вигляд",
+  "goalWizard.result": "Результат",
+  "goalWizard.kind": "Вид",
+  "goalsScreen.everyone": "Усі",
+  "goalsScreen.mine": "Мої",
+  "proofModal.address": "Адреса",
+  "proofModal.rating": "Оцінка",
+  "tasksView.column": "Колонка"
 }
