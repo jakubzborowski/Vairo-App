@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Loader2, Mic, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLocale, useT } from "@/i18n/client";
+import { LOCALE_TAGS } from "@/i18n/config";
 
 /**
  * „Nagraj głosem” przy polu tekstowym. Rozpoznany tekst jest DOPISYWANY
@@ -72,8 +74,6 @@ function extensionFor(type: string): string {
   return "webm";
 }
 
-const MIC_DENIED =
-  "Przeglądarka nie ma dostępu do mikrofonu. Zezwól na niego w ustawieniach strony (ikona kłódki obok adresu).";
 
 const subscribeNoop = () => () => {};
 
@@ -86,6 +86,8 @@ export function VoiceButton({
   disabled?: boolean;
   className?: string;
 }) {
+  const t = useT("common");
+  const locale = useLocale();
   const detected = useSyncExternalStore(subscribeNoop, detectMode, () => "none" as Mode);
   const [forceRecorder, setForceRecorder] = useState(false);
   const mode: Mode = forceRecorder && detected !== "none" ? "recorder" : detected;
@@ -125,7 +127,7 @@ export function VoiceButton({
     const Ctor = recognitionCtor();
     if (!Ctor) return;
     const rec = new Ctor();
-    rec.lang = "pl-PL";
+    rec.lang = LOCALE_TAGS[locale];
     rec.continuous = true;
     rec.interimResults = false;
     rec.onresult = (event) => {
@@ -146,10 +148,10 @@ export function VoiceButton({
       }
       setError(
         event.error === "not-allowed" || event.error === "service-not-allowed"
-          ? MIC_DENIED
+          ? t("voice.micDenied")
           : event.error === "audio-capture"
-            ? "Nie znaleziono mikrofonu. Podłącz go i spróbuj jeszcze raz."
-            : "Dyktowanie się przerwało. Spróbuj jeszcze raz."
+            ? t("voice.noMic")
+            : t("voice.interrupted")
       );
     };
     rec.onend = () => setStatus((s) => (s === "listening" ? "idle" : s));
@@ -158,7 +160,7 @@ export function VoiceButton({
       rec.start();
       setStatus("listening");
     } catch {
-      setError("Nie udało się włączyć mikrofonu. Spróbuj jeszcze raz.");
+      setError(t("voice.micFailed"));
     }
   };
 
@@ -166,19 +168,19 @@ export function VoiceButton({
   const upload = async (blob: Blob, type: string) => {
     setStatus("processing");
     const form = new FormData();
-    form.append("file", blob, `nagranie.${extensionFor(type)}`);
+    form.append("file", blob, `recording.${extensionFor(type)}`);
     try {
       const response = await fetch("/api/transcribe", { method: "POST", body: form });
       const data = (await response.json().catch(() => null)) as { text?: string; error?: string } | null;
       if (!response.ok) {
-        setError(data?.error ?? "Nie udało się rozpoznać nagrania. Spróbuj jeszcze raz.");
+        setError(data?.error ?? t("voice.notRecognized"));
       } else if (data?.text) {
         onTextRef.current(data.text);
       } else {
-        setError("W nagraniu nie słychać mowy. Mów bliżej mikrofonu i spróbuj jeszcze raz.");
+        setError(t("voice.noSpeech"));
       }
     } catch {
-      setError("Brak połączenia — nagranie nie zostało przetworzone. Spróbuj jeszcze raz.");
+      setError(t("voice.offline"));
     } finally {
       setStatus("idle");
     }
@@ -192,10 +194,10 @@ export function VoiceButton({
       const name = (err as { name?: string })?.name;
       setError(
         name === "NotAllowedError" || name === "SecurityError"
-          ? MIC_DENIED
+          ? t("voice.micDenied")
           : name === "NotFoundError"
-            ? "Nie znaleziono mikrofonu. Podłącz go i spróbuj jeszcze raz."
-            : "Ta przeglądarka nie pozwala nagrywać dźwięku."
+            ? t("voice.noMic")
+            : t("voice.unsupported")
       );
       setStatus("idle");
       return;
@@ -207,7 +209,7 @@ export function VoiceButton({
       rec = new MediaRecorder(media, mimeType ? { mimeType, audioBitsPerSecond: 32_000 } : undefined);
     } catch {
       releaseMic();
-      setError("Ta przeglądarka nie pozwala nagrywać dźwięku.");
+      setError(t("voice.unsupported"));
       return;
     }
     const chunks: Blob[] = [];
@@ -225,7 +227,7 @@ export function VoiceButton({
       }
       if (blob.size > MAX_UPLOAD_BYTES) {
         setStatus("idle");
-        setError("Nagranie jest za długie. Nagraj krótszy fragment.");
+        setError(t("voice.tooLong"));
         return;
       }
       void upload(blob, type);
@@ -259,7 +261,7 @@ export function VoiceButton({
         </p>
       ) : status === "recording" ? (
         <p className="text-[12px] text-[var(--text-subtle)]">
-          Nagrywam — do {MAX_RECORDING_SECONDS / 60} min. Tekst pojawi się po zakończeniu.
+          {t("voice.recording", { minutes: MAX_RECORDING_SECONDS / 60 })}
         </p>
       ) : null}
       <button
@@ -277,18 +279,18 @@ export function VoiceButton({
         {status === "processing" ? (
           <>
             <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-            Przetwarzam…
+            {t("voice.processing")}
           </>
         ) : busy ? (
           <>
             <span className="size-2 animate-pulse rounded-full bg-[var(--danger)]" aria-hidden="true" />
             <Square className="size-3" aria-hidden="true" />
-            Zakończ
+            {t("voice.stop")}
           </>
         ) : (
           <>
             <Mic className="size-3.5" aria-hidden="true" />
-            Nagraj głosem
+            {t("voice.start")}
           </>
         )}
       </button>

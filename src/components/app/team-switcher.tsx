@@ -6,6 +6,7 @@ import { Check, ChevronsUpDown, Loader2, Plus, Rocket } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { switchTeam } from "@/app/app/actions";
 import { Avatar } from "@/components/ui/avatar";
+import { useT } from "@/i18n/client";
 
 export const MAX_TEAMS = 3;
 
@@ -35,6 +36,7 @@ type Props = {
  * tutaj pokazujemy go zawczasu, żeby user nie klikał w ścianę.
  */
 export function TeamSwitcher({ teams, activeTeamId }: Props) {
+  const t = useT("nav");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [switching, startSwitching] = useTransition();
@@ -87,10 +89,10 @@ export function TeamSwitcher({ teams, activeTeamId }: Props) {
         </span>
         <span className="min-w-0">
           <span className="block truncate text-[13px] font-medium text-white">
-            Brak zespołu
+            {t("switcher.noTeam")}
           </span>
           <span className="block truncate text-[11px] text-[var(--text-subtle)]">
-            Stwórz startup
+            {t("switcher.createStartup")}
           </span>
         </span>
       </Link>
@@ -154,11 +156,11 @@ export function TeamSwitcher({ teams, activeTeamId }: Props) {
           {atLimit ? (
             <span
               aria-disabled="true"
-              title={`Limit ${MAX_TEAMS} zespołów na konto`}
+              title={t("switcher.limitTitle", { count: MAX_TEAMS })}
               className="flex cursor-not-allowed items-center gap-2.5 px-3 py-2 text-[13px] text-[var(--text-faint)]"
             >
               <Plus className="size-3.5 shrink-0" />
-              Limit {MAX_TEAMS} zespołów
+              {t("switcher.limit", { count: MAX_TEAMS })}
             </span>
           ) : (
             <Link
@@ -168,7 +170,7 @@ export function TeamSwitcher({ teams, activeTeamId }: Props) {
               className="flex items-center gap-2.5 px-3 py-2 text-[13px] text-[var(--text-muted)] transition-colors hover:bg-white/[0.06] hover:text-white"
             >
               <Plus className="size-3.5 shrink-0" />
-              Nowy startup
+              {t("switcher.newStartup")}
             </Link>
           )}
         </div>

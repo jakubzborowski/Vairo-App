@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { translateDbError } from "@/lib/db-errors";
 import { NOT_A_MEMBER, getStartupRole } from "@/lib/permissions";
+import { sessionExpired } from "@/lib/server-errors";
 
 type Result = { error: string | null; id?: string };
 
@@ -15,7 +16,7 @@ async function context(startupId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false as const, error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { ok: false as const, error: await sessionExpired() };
   const active = await getActiveStartupId();
   if (active && active !== startupId) return { ok: false as const, error: "Przełącz zespół i spróbuj ponownie." };
   const role = await getStartupRole(supabase, startupId, user.id);
@@ -23,11 +24,11 @@ async function context(startupId: string) {
   return { ok: true as const, supabase, user, role };
 }
 
-function explain(message: string | undefined) {
+async function explain(message: string | undefined) {
   if (message && (message.includes("startup_file_folders") || message.includes("folder_id"))) {
     return NEEDS_030;
   }
-  return translateDbError(message);
+  return await translateDbError(message);
 }
 
 function cleanName(name: string) {
@@ -54,7 +55,7 @@ export async function createFolder(input: {
     })
     .select("id")
     .single();
-  if (error || !data) return { error: explain(error?.message) };
+  if (error || !data) return { error: await explain(error?.message) };
   revalidatePath("/app/files");
   return { error: null, id: data.id as string };
 }
@@ -70,7 +71,7 @@ export async function renameFolder(startupId: string, folderId: string, name: st
     .eq("id", folderId)
     .eq("startup_id", startupId)
     .select("id");
-  if (error) return { error: explain(error.message) };
+  if (error) return { error: await explain(error.message) };
   if (!data || data.length === 0) return { error: "Ten folder zmienia osoba, która go założyła, albo Founder lub Admin." };
   revalidatePath("/app/files");
   return { error: null };
@@ -86,7 +87,7 @@ export async function deleteFolder(startupId: string, folderId: string): Promise
     .eq("id", folderId)
     .eq("startup_id", startupId)
     .select("id");
-  if (error) return { error: explain(error.message) };
+  if (error) return { error: await explain(error.message) };
   if (!data || data.length === 0) return { error: "Ten folder zmienia osoba, która go założyła, albo Founder lub Admin." };
   revalidatePath("/app/files");
   return { error: null };
@@ -103,7 +104,7 @@ export async function renameFile(startupId: string, fileId: string, name: string
     .eq("id", fileId)
     .eq("startup_id", startupId)
     .select("id");
-  if (error) return { error: explain(error.message) };
+  if (error) return { error: await explain(error.message) };
   // RLS bez prawa do zmiany nie zwraca błędu, tylko zero wierszy.
   if (!data || data.length === 0) {
     return { error: "Zmienić nazwę cudzego pliku może Founder albo Admin." };
@@ -121,7 +122,7 @@ export async function moveFile(startupId: string, fileId: string, folderId: stri
     .eq("id", fileId)
     .eq("startup_id", startupId)
     .select("id");
-  if (error) return { error: explain(error.message) };
+  if (error) return { error: await explain(error.message) };
   if (!data || data.length === 0) {
     return { error: "Przenieść cudzy plik może Founder albo Admin." };
   }

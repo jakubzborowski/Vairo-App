@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Compass, FolderOpen, LifeBuoy, Rocket, Route, Us
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 /**
  * Samouczek przy pierwszym wejściu — uwaga z redesignu: „musimy koniecznie
@@ -20,42 +21,16 @@ import { cn } from "@/lib/utils";
 export const OPEN_TOUR_EVENT = "vairo:open-tour";
 const SEEN_KEY = "vairo:welcome-tour:v1";
 
-type Step = { icon: LucideIcon; title: string; body: string; teamOnly?: boolean };
+type Step = { icon: LucideIcon; key: "welcome" | "stage" | "team" | "work" | "social" | "help"; teamOnly?: boolean };
 
+// Treść kart: słownik `nav`, klucze `tour.<key>.title` i `tour.<key>.body`.
 const STEPS: Step[] = [
-  {
-    icon: Rocket,
-    title: "Witaj w Vairo",
-    body: "Vairo prowadzi Cię od pomysłu do pierwszych klientów — etap po etapie. W minutę pokażemy, co gdzie jest.",
-  },
-  {
-    icon: Route,
-    title: "Etap startupu",
-    body: "Tu pracujesz nad pomysłem. Widzisz jedno zadanie naraz: odpowiadasz, zapisujesz, a kolejne otwiera się samo. Pytanie, na które nie znasz odpowiedzi, możesz pominąć i wrócić do niego później.",
-    teamOnly: true,
-  },
-  {
-    icon: Users,
-    title: "Zespół",
-    body: "Startupy buduje się w kilka osób. Zaproś znajomych linkiem — nie muszą mieć jeszcze konta w Vairo.",
-    teamOnly: true,
-  },
-  {
-    icon: FolderOpen,
-    title: "Praca zespołu",
-    body: "Dokumenty i pliki zespołu w jednym miejscu. Gdy przejdziecie dalej w programie, dojdą tu cele i zadania.",
-    teamOnly: true,
-  },
-  {
-    icon: Compass,
-    title: "Social",
-    body: "„Szukam projektu” i „Szukam ludzi” to karty, które przeglądasz jedna po drugiej. Na swojej karcie możesz używać pseudonimu — imię z konta widzi tylko Twój zespół.",
-  },
-  {
-    icon: LifeBuoy,
-    title: "Pomoc i opinie",
-    body: "Coś nie działa, czegoś nie rozumiesz albo masz pomysł? „Pomoc i opinie” jest zawsze na dole menu. Piszesz swoimi słowami, a zespół Vairo odpisuje mailem.",
-  },
+  { icon: Rocket, key: "welcome" },
+  { icon: Route, key: "stage", teamOnly: true },
+  { icon: Users, key: "team", teamOnly: true },
+  { icon: FolderOpen, key: "work", teamOnly: true },
+  { icon: Compass, key: "social" },
+  { icon: LifeBuoy, key: "help" },
 ];
 
 const subscribeNoop = () => () => {};
@@ -69,6 +44,8 @@ function readSeen() {
 }
 
 export function WelcomeTour({ hasTeam }: { hasTeam: boolean }) {
+  const t = useT("nav");
+  const tc = useT("common");
   const router = useRouter();
   const seen = useSyncExternalStore(subscribeNoop, readSeen, () => true);
   const [dismissed, setDismissed] = useState(false);
@@ -109,28 +86,28 @@ export function WelcomeTour({ hasTeam }: { hasTeam: boolean }) {
 
   return (
     <Modal
-      title={step.title}
+      title={t(`tour.${step.key}.title`)}
       onClose={close}
       footer={
         <div className="flex w-full flex-wrap items-center gap-2">
           <Button variant="ghost" size="sm" onClick={close}>
-            Pomiń
+            {t("tour.skip")}
           </Button>
           <div className="ml-auto flex items-center gap-2">
             {index > 0 ? (
               <Button variant="secondary" size="sm" onClick={() => setIndex((i) => i - 1)}>
                 <ArrowLeft className="size-3.5" />
-                Wstecz
+                {tc("actions.back")}
               </Button>
             ) : null}
             {last ? (
               <Button size="sm" onClick={finish}>
-                Zaczynam
+                {t("tour.start")}
                 <ArrowRight className="size-3.5" />
               </Button>
             ) : (
               <Button size="sm" onClick={() => setIndex((i) => i + 1)}>
-                Dalej
+                {tc("actions.next")}
                 <ArrowRight className="size-3.5" />
               </Button>
             )}
@@ -142,12 +119,12 @@ export function WelcomeTour({ hasTeam }: { hasTeam: boolean }) {
         <span className="grid size-12 place-items-center rounded-2xl bg-white/[0.06] text-white">
           <Icon className="size-6" aria-hidden="true" />
         </span>
-        <p className="text-[15px] leading-relaxed text-[var(--text-muted)]">{step.body}</p>
+        <p className="text-[15px] leading-relaxed text-[var(--text-muted)]">{t(`tour.${step.key}.body`)}</p>
         {/* Kropki zamiast „2 z 5” — jak w uwagach: nie liczymy, ile zostało. */}
         <div className="flex gap-1.5" aria-hidden="true">
           {steps.map((s, i) => (
             <span
-              key={s.title}
+              key={s.key}
               className={cn(
                 "h-1.5 rounded-full transition-all",
                 i === index ? "w-5 bg-white" : "w-1.5 bg-white/20"

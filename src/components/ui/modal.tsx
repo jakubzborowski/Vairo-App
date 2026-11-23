@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Portal } from "./portal";
+import { useT } from "@/i18n/client";
 
 type Props = {
   title: string;
@@ -29,6 +30,7 @@ export function Modal({
   footer,
   className,
 }: Props) {
+  const t = useT("common");
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export function Modal({
     <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto sm:items-start sm:p-8">
       <button
         type="button"
-        aria-label="Zamknij"
+        aria-label={t("actions.close")}
         onClick={onClose}
         className="fixed inset-0 bg-black/75 backdrop-blur-sm"
       />
@@ -81,7 +83,7 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Zamknij"
+            aria-label={t("actions.close")}
             className="shrink-0 rounded-lg p-1.5 text-[var(--text-faint)] transition-colors hover:bg-white/6 hover:text-white"
           >
             <X className="size-4" />

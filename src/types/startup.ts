@@ -16,46 +16,21 @@ export const VALIDATION_CATEGORIES = [
 
 export type ValidationCategory = (typeof VALIDATION_CATEGORIES)[number];
 
-/** `general` jest zawsze aktywne i nie da się go odznaczyć. */
+/**
+ * `general` jest zawsze aktywne i nie da się go odznaczyć.
+ *
+ * Nazwy i opisy kategorii są w słowniku `labels` (`category.<key>`,
+ * `categoryDescription.<key>`), nie tutaj — rysują się w języku użytkownika.
+ */
 export const SELECTABLE_CATEGORIES: {
   key: Exclude<ValidationCategory, "general">;
-  label: string;
-  description: string;
   group: "product" | "customer";
 }[] = [
-  {
-    key: "saas",
-    label: "SaaS",
-    description: "Oprogramowanie w abonamencie",
-    group: "product",
-  },
-  {
-    key: "hardware",
-    label: "Hardware",
-    description: "Produkt fizyczny",
-    group: "product",
-  },
-  {
-    key: "b2b",
-    label: "B2B",
-    description: "Sprzedajesz firmom",
-    group: "customer",
-  },
-  {
-    key: "b2c",
-    label: "B2C",
-    description: "Sprzedajesz osobom prywatnym",
-    group: "customer",
-  },
+  { key: "saas", group: "product" },
+  { key: "hardware", group: "product" },
+  { key: "b2b", group: "customer" },
+  { key: "b2c", group: "customer" },
 ];
-
-export const CATEGORY_LABELS: Record<ValidationCategory, string> = {
-  general: "Ogólna walidacja",
-  saas: "SaaS",
-  hardware: "Hardware",
-  b2b: "B2B",
-  b2c: "B2C",
-};
 
 export type StartupRole = "founder" | "admin" | "member";
 export type StartupStatus = "active" | "paused" | "archived";
@@ -68,20 +43,7 @@ export type StartupStatus = "active" | "paused" | "archived";
  * RLS w bazie (migracja 008) plus sprawdzenie w server action; ukrycie
  * przycisku nie jest zabezpieczeniem.
  */
-export const ROLE_LABELS: Record<StartupRole, string> = {
-  founder: "Founder",
-  admin: "Admin",
-  member: "Członek",
-};
-
-export const ROLE_DESCRIPTIONS: Record<StartupRole, string> = {
-  founder:
-    "Pełna kontrola: etapy, ustawienia zespołu, role, usuwanie startupu.",
-  admin:
-    "Wypełnia etapy, zarządza członkami i zaproszeniami. Nie usuwa startupu.",
-  member:
-    "Czyta etapy. Tworzy własne cele i zadania oraz kończy te, za które odpowiada.",
-};
+// Nazwy i opisy ról: słownik `labels` (`role.<role>`, `roleDescription.<role>`).
 
 /** Kto może wypełniać i zmieniać dane etapów (Ambition, Idea, kolejne). */
 export function canEditStageData(role: StartupRole) {

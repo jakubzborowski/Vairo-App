@@ -1,7 +1,11 @@
 import { ArrowLeft, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Nie ma tu tej strony — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("common");
+  return { title: t("notFound.metaTitle") };
+}
 
 /**
  * Brak strony w /app — cel, rozmowa, profil czy dokument, którego nie ma
@@ -9,22 +13,22 @@ export const metadata = { title: "Nie ma tu tej strony — Vairo" };
  * samo celowo: „nie masz dostępu” zdradzałoby, że pod adresem coś jest.
  * Wcześniej kończyło się to angielską stroną Next.js bez menu.
  */
-export default function AppNotFound() {
+export default async function AppNotFound() {
+  const t = await getT("common");
   return (
     <div className="page">
       <div className="flex flex-col items-center rounded-2xl border border-dashed border-white/10 px-6 py-12 text-center">
         <SearchX className="size-8 text-[var(--text-subtle)]" aria-hidden="true" />
         <h1 className="mt-3 font-heading text-[1.35rem] font-semibold text-white">
-          Nie ma tu tej strony
+          {t("notFound.title")}
         </h1>
         <p className="mt-2 max-w-md text-[14px] leading-relaxed text-[var(--text-muted)]">
-          Mogła zostać usunięta albo należy do zespołu, w którym akurat nie
-          jesteś. Sprawdź, czy w menu jest wybrany właściwy zespół.
+          {t("notFound.appBody")}
         </p>
         <div className="mt-6">
           <Button href="/app">
             <ArrowLeft className="size-4" />
-            Wróć na Start
+            {t("notFound.backToStart")}
           </Button>
         </div>
       </div>

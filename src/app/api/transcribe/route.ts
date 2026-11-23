@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { takeToken } from "@/lib/rate-limit";
+import { getLocale, getT } from "@/i18n/server";
 
 /**
  * Transkrypcja nagrania dla przeglądarek bez Web Speech API (Firefox, Brave).
@@ -37,49 +38,51 @@ function fail(status: number, error: string, headers?: Record<string, string>) {
 }
 
 export async function POST(request: Request) {
+  const t = await getT("common");
+  const locale = await getLocale();
   const user = await getCurrentUser();
-  if (!user) return fail(401, "Zaloguj się, żeby korzystać z dyktowania.");
+  if (!user) return fail(401, t("voice.loginRequired"));
 
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return fail(503, "Dyktowanie w tej przeglądarce nie jest jeszcze włączone. Spróbuj w Chrome albo Edge.");
+    return fail(503, t("voice.notEnabled"));
   }
 
   if (
     !takeToken(`transcribe:minute:${user.id}`, 10, 60_000) ||
     !takeToken(`transcribe:day:${user.id}`, 100, 24 * 60 * 60_000)
   ) {
-    return fail(429, "Za dużo nagrań w krótkim czasie. Spróbuj za minutę.", { "Retry-After": "60" });
+    return fail(429, t("voice.tooMany"), { "Retry-After": "60" });
   }
 
   const declared = Number(request.headers.get("content-length") ?? "0");
   if (declared > MAX_BYTES + 64 * 1024) {
-    return fail(413, "Nagranie jest za długie. Nagraj krótszy fragment.");
+    return fail(413, t("voice.tooLong"));
   }
 
   let form: FormData;
   try {
     form = await request.formData();
   } catch {
-    return fail(400, "Nie udało się odczytać nagrania. Spróbuj jeszcze raz.");
+    return fail(400, t("voice.unreadable"));
   }
 
   const file = form.get("file");
   if (!(file instanceof File) || file.size === 0) {
-    return fail(400, "Nagranie jest puste. Spróbuj jeszcze raz.");
+    return fail(400, t("voice.empty"));
   }
   if (file.size > MAX_BYTES) {
-    return fail(413, "Nagranie jest za długie. Nagraj krótszy fragment.");
+    return fail(413, t("voice.tooLong"));
   }
   const type = file.type.split(";")[0]!.trim().toLowerCase();
   if (!ALLOWED_TYPES.has(type)) {
-    return fail(415, "Ten format nagrania nie jest obsługiwany.");
+    return fail(415, t("voice.badFormat"));
   }
 
   const upstream = new FormData();
-  upstream.append("file", file, file.name || "nagranie.webm");
+  upstream.append("file", file, file.name || "recording.webm");
   upstream.append("model", "whisper-large-v3-turbo");
-  upstream.append("language", "pl");
+  upstream.append("language", locale);
   upstream.append("response_format", "json");
 
   let response: Response;
@@ -91,16 +94,16 @@ export async function POST(request: Request) {
       signal: AbortSignal.timeout(25_000),
     });
   } catch {
-    return fail(502, "Usługa rozpoznawania mowy nie odpowiada. Spróbuj za chwilę.");
+    return fail(502, t("voice.serviceDown"));
   }
 
   if (response.status === 429) {
-    return fail(429, "Wyczerpał się chwilowy limit dyktowania. Spróbuj za minutę.", { "Retry-After": "60" });
+    return fail(429, t("voice.quota"), { "Retry-After": "60" });
   }
   if (!response.ok) {
     // Szczegóły tylko w logach Vercela — użytkownik dostaje zrozumiały komunikat.
     console.error("Groq transcription failed", response.status, await response.text().catch(() => ""));
-    return fail(502, "Nie udało się rozpoznać nagrania. Spróbuj jeszcze raz.");
+    return fail(502, t("voice.notRecognized"));
   }
 
   const data = (await response.json().catch(() => null)) as { text?: string } | null;

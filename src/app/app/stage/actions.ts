@@ -23,6 +23,7 @@ import {
   canTransferOwnership,
   type ValidationCategory,
 } from "@/types/startup";
+import { sessionExpired } from "@/lib/server-errors";
 
 type Result = { error: string | null };
 
@@ -63,7 +64,7 @@ export async function saveSubpointAnswers(input: {
   answers: Record<string, unknown>;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   // Uprawnienia i definicje pól nie zależą od siebie — jedna fala zamiast dwóch.
   const [{ role, startupId }, { data: fieldRows }] = await Promise.all([
@@ -123,7 +124,7 @@ export async function saveSubpointAnswers(input: {
       })),
       { onConflict: "startup_stage_id,answer_key" }
     );
-    if (error) return { error: translateDbError(error.message) };
+    if (error) return { error: await translateDbError(error.message) };
   }
 
   if (toDelete.length > 0) {
@@ -132,7 +133,7 @@ export async function saveSubpointAnswers(input: {
       .delete()
       .eq("startup_stage_id", input.startupStageId)
       .in("answer_key", toDelete);
-    if (error) return { error: translateDbError(error.message) };
+    if (error) return { error: await translateDbError(error.message) };
   }
 
   const filePaths = (value: unknown) =>
@@ -273,7 +274,7 @@ async function runCloseStage(
   options: { requireReady: boolean }
 ): Promise<Result & { next?: string }> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { role } = await getStageRole(supabase, input.startupStageId, user.id);
   const denied = stageWriteError(role);
@@ -316,7 +317,7 @@ async function runCloseStage(
       input.decision === "pivot" ? (input.reopenSubpointIds ?? []) : null,
   });
 
-  if (error) return { error: translateStageError(error.message) };
+  if (error) return { error: await translateStageError(error.message) };
 
   // Cały layout: menu boczne pokazuje Cele, Taski i Rozpiskę dopiero po
   // domknięciu Preparation, a przełącznik teamu rysuje kreski etapów.
@@ -368,7 +369,7 @@ export async function finishStage(startupStageId: string) {
   return closeStage({ startupStageId, decision: "continue" });
 }
 
-function translateStageError(message: string) {
+async function translateStageError(message: string) {
   if (message.includes("not_allowed")) {
     return "Tylko Founder i Admin mogą zamknąć etap.";
   }
@@ -376,13 +377,13 @@ function translateStageError(message: string) {
   if (message.includes("close_stage") && message.includes("does not exist")) {
     return "Brakuje migracji 010 — odpal ją w Supabase → SQL Editor.";
   }
-  return translateDbError(message) ?? "Nie udało się zapisać decyzji. Spróbuj jeszcze raz.";
+  return await translateDbError(message) ?? "Nie udało się zapisać decyzji. Spróbuj jeszcze raz.";
 }
 
 /** Ponowne otwarcie domkniętego etapu — user może wrócić i poprawić. */
 export async function reopenStage(startupStageId: string): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const denied = await guardStageWrite(supabase, startupStageId, user.id);
   if (denied) return { error: denied };
@@ -393,7 +394,7 @@ export async function reopenStage(startupStageId: string): Promise<Result> {
     .eq("id", startupStageId)
     .select("id");
 
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
   // RLS przy braku uprawnień nie zwraca błędu, tylko zero wierszy.
   if (!data || data.length === 0) {
     return { error: "Nie udało się otworzyć etapu. Odśwież stronę i spróbuj ponownie." };
@@ -414,7 +415,7 @@ export async function chooseCategoriesAfterAmbition(
   formData: FormData
 ): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const startupId = String(formData.get("startup_id") ?? "");
   if (!startupId) return { error: "Brak kontekstu zespołu." };
@@ -444,7 +445,7 @@ export async function chooseCategoriesAfterAmbition(
         categories.map((category) => ({ startup_id: startupId, category })),
         { onConflict: "startup_id,category", ignoreDuplicates: true }
       );
-    if (error) return { error: translateDbError(error.message) };
+    if (error) return { error: await translateDbError(error.message) };
   }
   {
     let removal = supabase
@@ -456,7 +457,7 @@ export async function chooseCategoriesAfterAmbition(
       removal = removal.not("category", "in", `(${categories.join(",")})`);
     }
     const { error } = await removal;
-    if (error) return { error: translateDbError(error.message) };
+    if (error) return { error: await translateDbError(error.message) };
   }
 
   if (tagIds.length > 0) {
@@ -466,7 +467,7 @@ export async function chooseCategoriesAfterAmbition(
         tagIds.map((tag_id) => ({ startup_id: startupId, tag_id })),
         { onConflict: "startup_id,tag_id", ignoreDuplicates: true }
       );
-    if (error) return { error: translateDbError(error.message) };
+    if (error) return { error: await translateDbError(error.message) };
   }
   {
     let removal = supabase.from("startup_tags").delete().eq("startup_id", startupId);
@@ -474,7 +475,7 @@ export async function chooseCategoriesAfterAmbition(
       removal = removal.not("tag_id", "in", `(${tagIds.join(",")})`);
     }
     const { error } = await removal;
-    if (error) return { error: translateDbError(error.message) };
+    if (error) return { error: await translateDbError(error.message) };
   }
 
   const stageId = await ensureStartupStage(supabase, startupId, "idea");

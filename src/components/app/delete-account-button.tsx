@@ -8,6 +8,7 @@ import { deleteOwnAccount } from "@/app/app/settings/account/actions";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { useT } from "@/i18n/client";
 
 type Props = {
   email: string;
@@ -25,6 +26,8 @@ type Props = {
  * „Usuwając konto tracisz dane" bez tej listy nikomu nic nie mówi.
  */
 export function DeleteAccountButton({ email, soleFounderOf, teamCount }: Props) {
+  const t = useT("settings");
+  const tc = useT("common");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
@@ -54,23 +57,23 @@ export function DeleteAccountButton({ email, soleFounderOf, teamCount }: Props) 
         onClick={() => setOpen(true)}
         className="text-[var(--danger-text)] hover:text-[var(--danger-text)]"
       >
-        Usuń konto…
+        {t("delete.open")}
       </Button>
 
       {open ? (
         <Modal
-          title="Usunąć konto na zawsze?"
-          description="Tego nie da się cofnąć. Nie ma kosza ani okresu na rozmyślenie się."
+          title={t("delete.title")}
+          description={t("delete.description")}
           onClose={() => setOpen(false)}
           footer={
             <>
               {!matches ? (
                 <p className="mr-auto text-[12.5px] text-[var(--text-subtle)]">
-                  {typed.length === 0 ? "Najpierw wpisz swój adres." : "Adres jeszcze się nie zgadza."}
+                  {typed.length === 0 ? t("delete.typeFirst") : t("delete.notYet")}
                 </p>
               ) : null}
               <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>
-                Anuluj
+                {tc("actions.cancel")}
               </Button>
               <Button
                 variant="danger"
@@ -79,31 +82,25 @@ export function DeleteAccountButton({ email, soleFounderOf, teamCount }: Props) 
                 onClick={confirm}
               >
                 <Trash2 className="size-4" />
-                {soleFounderOf.length === 1 ? `Usuń konto i ${soleFounderOf[0]}` : "Usuń konto"}
+                {soleFounderOf.length === 1 ? t("delete.confirmWith", { name: soleFounderOf[0] }) : t("delete.confirm")}
               </Button>
             </>
           }
         >
           <div className="rounded-xl border border-white/10 bg-[var(--surface-2)] px-4 py-3.5">
-            <p className="text-[13px] font-medium text-white">Co zniknie</p>
+            <p className="text-[13px] font-medium text-white">{t("delete.whatGoes")}</p>
             <ul className="mt-2 flex flex-col gap-1.5 text-[12.5px] leading-relaxed text-[var(--text-muted)]">
-              <li>Twój profil publiczny, zdjęcie i umiejętności.</li>
-              <li>Wszystkie rozmowy, zaczepki i zaproszenia.</li>
+              <li>{t("delete.goesProfile")}</li>
+              <li>{t("delete.goesConversations")}</li>
               {teamCount > 0 ? (
-                <li>
-                  Członkostwo w{" "}
-                  {teamCount === 1 ? "jednym zespole" : `${teamCount} zespołach`}.
-                </li>
+                <li>{t("delete.goesMemberships", { count: teamCount })}</li>
               ) : null}
               {soleFounderOf.length > 0 ? (
                 <li className="text-[var(--danger)]">
                   <strong>
-                    {soleFounderOf.length === 1
-                      ? "Startup, w którym jesteś jedynym Founderem"
-                      : "Startupy, w których jesteś jedynym Founderem"}
-                    :
+                    {t("delete.soleFounder", { count: soleFounderOf.length })}:
                   </strong>{" "}
-                  {soleFounderOf.join(", ")} — razem z całą pracą zespołu.
+                  {t("delete.soleFounderList", { names: soleFounderOf.join(", ") })}
                 </li>
               ) : null}
             </ul>
@@ -111,19 +108,17 @@ export function DeleteAccountButton({ email, soleFounderOf, teamCount }: Props) 
 
           {soleFounderOf.length > 0 ? (
             <p className="rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/8 px-4 py-3 text-[12.5px] leading-relaxed text-[var(--warning)]">
-              Jeśli ten projekt ma żyć dalej, najpierw przekaż komuś rolę
-              Foundera w składzie zespołu. Wtedy startup zostanie, a Ty tylko
-              z niego wyjdziesz.{" "}
+              {t("delete.handOver")}{" "}
               <Link href="/app/team" className="font-medium text-white underline underline-offset-4">
-                Przekaż rolę Foundera w zakładce Zespół
+                {t("delete.handOverLink")}
               </Link>
             </p>
           ) : null}
 
           <Field
-            label="Przepisz swój adres e-mail, żeby potwierdzić"
+            label={t("delete.typeEmail")}
             hint={email}
-            error={typed.length > 0 && !matches ? "Adres się nie zgadza." : null}
+            error={typed.length > 0 && !matches ? t("delete.mismatch") : null}
           >
             {({ id }) => (
               <Input

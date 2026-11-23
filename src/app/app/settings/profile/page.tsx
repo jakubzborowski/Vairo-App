@@ -3,10 +3,12 @@ import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { ProfileEditor } from "@/components/app/profile-editor";
 import { SettingsTabs } from "@/components/app/settings-tabs";
 import type { Skill } from "@/types/profile";
+import { getT } from "@/i18n/server";
 
-export const metadata = {
-  title: "Twój profil — Vairo",
-};
+export async function generateMetadata() {
+  const t = await getT("settings");
+  return { title: t("profile.metaTitle") };
+}
 
 export const dynamic = "force-dynamic";
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { getT } from "@/i18n/server";
 
 /**
  * Dwa ekrany ustawien, jedna pozycja w nawigacji.
@@ -9,13 +10,14 @@ import { cn } from "@/lib/utils";
  * gorszym rozwiazaniem: to jeden temat, nie dwa.
  */
 const TABS = [
-  { href: "/app/settings/profile", label: "Profil" },
-  { href: "/app/settings/account", label: "Konto" },
-];
+  { href: "/app/settings/profile", label: "tabs.profile" },
+  { href: "/app/settings/account", label: "tabs.account" },
+] as const;
 
-export function SettingsTabs({ active }: { active: "profile" | "account" }) {
+export async function SettingsTabs({ active }: { active: "profile" | "account" }) {
+  const t = await getT("settings");
   return (
-    <nav className="mb-6 inline-flex rounded-xl border border-white/10 bg-[var(--surface)] p-1" aria-label="Ustawienia">
+    <nav className="mb-6 inline-flex rounded-xl border border-white/10 bg-[var(--surface)] p-1" aria-label={t("tabs.aria")}>
       {TABS.map((tab) => {
         const isActive = tab.href.endsWith(active);
         return (
@@ -32,7 +34,7 @@ export function SettingsTabs({ active }: { active: "profile" | "account" }) {
                 : "text-[var(--text-muted)] hover:text-white"
             )}
           >
-            {tab.label}
+            {t(tab.label)}
           </Link>
         );
       })}

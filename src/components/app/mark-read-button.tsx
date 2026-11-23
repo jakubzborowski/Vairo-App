@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { CheckCheck } from "lucide-react";
 import { markAllNotificationsRead } from "@/app/app/notifications/actions";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n/client";
 
 /** „Przeczytane" dla całej skrzynki — jedno kliknięcie zamiast dwudziestu. */
 export function MarkReadButton({ unreadCount }: { unreadCount: number }) {
+  const t = useT("notifications");
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [busy, startBusy] = useTransition();
@@ -32,7 +34,7 @@ export function MarkReadButton({ unreadCount }: { unreadCount: number }) {
         }
       >
         <CheckCheck className="size-4" />
-        Oznacz wszystkie jako przeczytane
+        {t("page.markAllRead")}
       </Button>
       {error ? (
         <p className="mt-2 text-[12.5px] text-[var(--danger)]">{error}</p>

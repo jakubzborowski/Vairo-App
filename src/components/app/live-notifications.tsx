@@ -4,7 +4,10 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
-import type { NotificationKind } from "@/lib/notifications";
+import { NOTIFICATION_KINDS, type NotificationKind } from "@/lib/notifications";
+import { useT } from "@/i18n/client";
+import type { Translate } from "@/i18n/translator";
+import type { MessageKey } from "@/i18n/messages";
 
 /**
  * Powiadomienia na żywo.
@@ -41,11 +44,12 @@ export function LiveNotifications({ profileId }: { profileId: string }) {
   // każdym renderze. Trzymamy je w refie i **aktualizujemy w efekcie**, nie
   // w trakcie renderu — zapis do refa podczas renderowania jest w Reakcie
   // błędem, bo render musi być czysty.
-  const handlers = useRef({ toast, router });
+  const t = useT("notifications");
+  const handlers = useRef({ toast, router, t });
 
   useEffect(() => {
-    handlers.current = { toast, router };
-  }, [toast, router]);
+    handlers.current = { toast, router, t };
+  }, [toast, router, t]);
 
   useEffect(() => {
     if (!profileId) return;
@@ -69,7 +73,7 @@ export function LiveNotifications({ profileId }: { profileId: string }) {
 
           handlers.current.toast({
             tone: "info",
-            title: liveTitle(row.kind),
+            title: liveTitle(handlers.current.t, row.kind),
             description: row.preview ?? undefined,
           });
           handlers.current.router.refresh();
@@ -92,25 +96,8 @@ export function LiveNotifications({ profileId }: { profileId: string }) {
  * („Kuba chce się z Tobą skontaktować") czeka na liście powiadomień, a toast
  * ma powiedzieć, że coś przyszło i czego dotyczy.
  */
-function liveTitle(kind: NotificationKind) {
-  switch (kind) {
-    case "contact_received":
-      return "Ktoś chce się z Tobą skontaktować";
-    case "contact_accepted":
-      return "Kontakt przyjęty — możecie rozmawiać";
-    case "message_received":
-      return "Nowa wiadomość";
-    case "join_application":
-      return "Nowe zgłoszenie do zespołu";
-    case "join_invite":
-      return "Zaproszenie do zespołu";
-    case "join_accepted":
-      return "Zgłoszenie przyjęte";
-    case "join_declined":
-      return "Zgłoszenie odrzucone";
-    case "invite_link_joined":
-      return "Nowa osoba w zespole — z Twojego linku";
-    default:
-      return "Nowe zdarzenie";
-  }
+function liveTitle(t: Translate<MessageKey<"notifications">>, kind: NotificationKind) {
+  return (NOTIFICATION_KINDS as readonly string[]).includes(kind)
+    ? t(`live.${kind}`)
+    : t("live.default");
 }

@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { KeyRound, Mail } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { translateDbError } from "@/lib/db-errors";
+import { useDbError } from "@/lib/use-db-error";
+import { useT } from "@/i18n/client";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
@@ -19,11 +20,12 @@ const MIN_PASSWORD = 8;
  * ktoś pomyśli, że zmiana nie zadziałała.
  */
 export function CredentialsRows({ email }: { email: string }) {
+  const t = useT("settings");
   const [open, setOpen] = useState<"email" | "password" | null>(null);
   return (
     <>
-      <Row icon={Mail} label="E-mail" value={email || "—"} onChange={() => setOpen("email")} />
-      <Row icon={KeyRound} label="Hasło" value="••••••••••" border onChange={() => setOpen("password")} />
+      <Row icon={Mail} label={t("credentials.email")} value={email || "—"} onChange={() => setOpen("email")} />
+      <Row icon={KeyRound} label={t("credentials.password")} value="••••••••••" border onChange={() => setOpen("password")} />
       {open === "email" ? <EmailModal current={email} onClose={() => setOpen(null)} /> : null}
       {open === "password" ? <PasswordModal onClose={() => setOpen(null)} /> : null}
     </>
@@ -43,6 +45,7 @@ function Row({
   border?: boolean;
   onChange: () => void;
 }) {
+  const t = useT("settings");
   return (
     <div className={"flex items-center gap-3.5 px-5 py-4 " + (border ? "border-t border-white/[0.05]" : "")}>
       <span className="hidden size-10 shrink-0 items-center justify-center rounded-[13px] bg-[var(--surface-2)] text-[var(--text-muted)] sm:inline-flex">
@@ -53,13 +56,16 @@ function Row({
         <p className="mt-0.5 truncate text-[15px] text-white">{value}</p>
       </div>
       <Button size="sm" variant="secondary" onClick={onChange}>
-        Zmień
+        {t("credentials.change")}
       </Button>
     </div>
   );
 }
 
 function EmailModal({ current, onClose }: { current: string; onClose: () => void }) {
+  const t = useT("settings");
+  const tc = useT("common");
+  const dbError = useDbError();
   const { toast } = useToast();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -68,23 +74,23 @@ function EmailModal({ current, onClose }: { current: string; onClose: () => void
   const submit = () => {
     const next = value.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next)) {
-      setError("To nie wygląda na adres e-mail.");
+      setError(t("credentials.invalidEmail"));
       return;
     }
     if (next === current.trim().toLowerCase()) {
-      setError("To jest Twój obecny adres.");
+      setError(t("credentials.sameEmail"));
       return;
     }
     setError(null);
     start(async () => {
       const { error: authError } = await createClient().auth.updateUser({ email: next });
       if (authError) {
-        setError(translateDbError(authError.message));
+        setError(dbError(authError.message));
         return;
       }
       toast({
-        title: "Sprawdź skrzynkę",
-        description: `Wysłaliśmy link na ${next}. Adres zmieni się po jego kliknięciu.`,
+        title: t("credentials.emailSentTitle"),
+        description: t("credentials.emailSentBody", { email: next }),
       });
       onClose();
     });
@@ -92,21 +98,21 @@ function EmailModal({ current, onClose }: { current: string; onClose: () => void
 
   return (
     <Modal
-      title="Zmień adres e-mail"
-      description="Na nowy adres przyjdzie link. Do czasu jego kliknięcia logujesz się starym."
+      title={t("credentials.emailTitle")}
+      description={t("credentials.emailDescription")}
       onClose={onClose}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Anuluj
+            {tc("actions.cancel")}
           </Button>
           <Button loading={pending} onClick={submit}>
-            Wyślij link
+            {t("credentials.sendLink")}
           </Button>
         </>
       }
     >
-      <Field label="Nowy adres" error={error}>
+      <Field label={t("credentials.newEmail")} error={error}>
         {({ id, invalid }) => (
           <Input
             id={id}
@@ -127,6 +133,9 @@ function EmailModal({ current, onClose }: { current: string; onClose: () => void
 }
 
 function PasswordModal({ onClose }: { onClose: () => void }) {
+  const t = useT("settings");
+  const tc = useT("common");
+  const dbError = useDbError();
   const { toast } = useToast();
   const [password, setPassword] = useState("");
   const [repeat, setRepeat] = useState("");
@@ -135,8 +144,8 @@ function PasswordModal({ onClose }: { onClose: () => void }) {
 
   const submit = () => {
     const next: typeof errors = {};
-    if (password.length < MIN_PASSWORD) next.password = `Hasło musi mieć co najmniej ${MIN_PASSWORD} znaków.`;
-    if (repeat !== password) next.repeat = "Hasła się różnią.";
+    if (password.length < MIN_PASSWORD) next.password = t("credentials.passwordTooShort", { count: MIN_PASSWORD });
+    if (repeat !== password) next.repeat = t("credentials.passwordMismatch");
     setErrors(next);
     if (Object.keys(next).length > 0) return;
     start(async () => {
@@ -144,32 +153,32 @@ function PasswordModal({ onClose }: { onClose: () => void }) {
       if (authError) {
         setErrors({
           form: authError.message.toLowerCase().includes("reauthent")
-            ? "Ze względów bezpieczeństwa zaloguj się ponownie i spróbuj jeszcze raz."
-            : (translateDbError(authError.message) ?? "Nie udało się zmienić hasła."),
+            ? t("credentials.reauthenticate")
+            : (dbError(authError.message) ?? t("credentials.passwordFailed")),
         });
         return;
       }
-      toast({ title: "Hasło zmienione", description: "Przy następnym logowaniu użyj nowego." });
+      toast({ title: t("credentials.passwordChanged"), description: t("credentials.passwordChangedBody") });
       onClose();
     });
   };
 
   return (
     <Modal
-      title="Zmień hasło"
+      title={t("credentials.passwordTitle")}
       onClose={onClose}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Anuluj
+            {tc("actions.cancel")}
           </Button>
           <Button loading={pending} onClick={submit}>
-            Zapisz hasło
+            {t("credentials.savePassword")}
           </Button>
         </>
       }
     >
-      <Field label="Nowe hasło" hint={`Co najmniej ${MIN_PASSWORD} znaków.`} error={errors.password}>
+      <Field label={t("credentials.newPassword")} hint={t("credentials.passwordHint", { count: MIN_PASSWORD })} error={errors.password}>
         {({ id, invalid }) => (
           <Input
             id={id}
@@ -182,7 +191,7 @@ function PasswordModal({ onClose }: { onClose: () => void }) {
           />
         )}
       </Field>
-      <Field label="Powtórz hasło" error={errors.repeat}>
+      <Field label={t("credentials.repeatPassword")} error={errors.repeat}>
         {({ id, invalid }) => (
           <Input
             id={id}

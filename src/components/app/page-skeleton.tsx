@@ -1,5 +1,6 @@
 import { Skeleton, SkeletonCard } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { getT } from "@/i18n/server";
 
 /**
  * Szkielety ekranów pokazywane przez `loading.tsx`, zanim serwer odda dane.
@@ -9,16 +10,17 @@ import { cn } from "@/lib/utils";
  * Kształt odpowiada docelowemu ekranowi (ta sama szerokość kolumny), żeby
  * podmiana na treść nie przesuwała layoutu.
  */
-function LoadingRegion({
+async function LoadingRegion({
   className,
   children,
 }: {
   className?: string;
   children: React.ReactNode;
 }) {
+  const t = await getT("common");
   return (
     <div role="status" aria-busy="true" className={className}>
-      <span className="sr-only">Ładowanie…</span>
+      <span className="sr-only">{t("status.loading")}</span>
       {children}
     </div>
   );

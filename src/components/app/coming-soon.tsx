@@ -1,6 +1,7 @@
 import { Construction } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getT } from "@/i18n/server";
 
 type ComingSoonProps = {
   title: string;
@@ -20,7 +21,8 @@ type ComingSoonProps = {
  * Istnieje po to, żeby żadna pozycja nawigacji nie prowadziła donikąd i żeby
  * nikt nie wypełniał luki zmyślonymi danymi „na razie".
  */
-export function ComingSoon({ title, description, unlocksAt }: ComingSoonProps) {
+export async function ComingSoon({ title, description, unlocksAt }: ComingSoonProps) {
+  const t = await getT("common");
   return (
     <div className="mx-auto w-full max-w-3xl">
       <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
@@ -29,13 +31,13 @@ export function ComingSoon({ title, description, unlocksAt }: ComingSoonProps) {
       <div className="mt-6">
         <EmptyState
           icon={Construction}
-          title="Ten moduł jeszcze nie powstał"
+          title={t("comingSoon.title")}
           description={
-            unlocksAt ? `${description} Odblokuje się ${unlocksAt}.` : description
+            unlocksAt ? t("comingSoon.unlocks", { description, unlocksAt }) : description
           }
           action={
             <Button href="/app" variant="secondary">
-              Wróć na start
+              {t("notFound.backToStart")}
             </Button>
           }
         />

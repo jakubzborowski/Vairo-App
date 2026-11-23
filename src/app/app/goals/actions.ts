@@ -16,6 +16,7 @@ import type {
   TaskEvent,
   TaskStatus,
 } from "@/types/goals";
+import { sessionExpired } from "@/lib/server-errors";
 
 type Result = { error: string | null; id?: string };
 
@@ -37,7 +38,7 @@ async function context(startupId: string): Promise<Gate> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { ok: false, error: await sessionExpired() };
 
   const active = await getActiveStartupId();
   if (active && active !== startupId) {
@@ -182,7 +183,7 @@ export async function createGoal(input: {
     .select("id")
     .single();
 
-  if (error || !created) return { error: translateDbError(error?.message) };
+  if (error || !created) return { error: await translateDbError(error?.message) };
 
   if (condition) {
     const { error: linkError } = await supabase.from("goal_condition_links").insert({
@@ -190,7 +191,7 @@ export async function createGoal(input: {
       goal_id: created.id,
       created_by: user.id,
     });
-    if (linkError) return { error: translateDbError(linkError.message), id: created.id };
+    if (linkError) return { error: await translateDbError(linkError.message), id: created.id };
   }
 
   refresh();
@@ -261,7 +262,7 @@ export async function updateGoal(input: {
   }
 
   const { error } = await supabase.from("goals").update(patch).eq("id", goal.id);
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
 
   refresh();
   return { error: null, id: goal.id };
@@ -304,7 +305,7 @@ export async function completeGoal(input: {
     })
     .eq("id", goal.id);
 
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
   refresh();
   return { error: null, id: goal.id };
 }
@@ -467,7 +468,7 @@ export async function reopenGoal(startupId: string, goalId: string): Promise<Res
     .update({ status: "in_progress" })
     .eq("id", goalId);
 
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
   refresh();
   return { error: null, id: goalId };
 }
@@ -488,7 +489,7 @@ export async function archiveGoal(startupId: string, goalId: string): Promise<Re
     .update({ archived_at: new Date().toISOString() })
     .eq("id", goalId);
 
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
   refresh();
   return { error: null };
 }
@@ -506,7 +507,7 @@ export async function unarchiveGoal(startupId: string, goalId: string): Promise<
   }
 
   const { error } = await supabase.from("goals").update({ archived_at: null }).eq("id", goalId);
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
   refresh();
   return { error: null, id: goalId };
 }
@@ -536,7 +537,7 @@ export async function linkGoal(
     if (error.message.includes("duplicate")) {
       return { error: null, id: goalId };
     }
-    return { error: translateDbError(error.message) };
+    return { error: await translateDbError(error.message) };
   }
 
   refresh();
@@ -564,7 +565,7 @@ export async function unlinkGoal(
     .eq("condition_id", conditionId)
     .eq("goal_id", goalId);
 
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
   refresh();
   return { error: null };
 }
@@ -608,7 +609,7 @@ export async function createTask(input: {
     .select("id")
     .single();
 
-  if (error || !data) return { error: translateDbError(error?.message) };
+  if (error || !data) return { error: await translateDbError(error?.message) };
   refresh();
   return { error: null, id: data.id };
 }
@@ -664,7 +665,7 @@ export async function updateTask(input: {
     if (error.message.includes("note") && error.message.includes("column")) {
       return { error: "Notatka i powód blokady zadania potrzebują migracji 029. Odpal ją w Supabase → SQL Editor." };
     }
-    return { error: translateDbError(error.message) };
+    return { error: await translateDbError(error.message) };
   }
   refresh();
   return { error: null };
@@ -734,7 +735,7 @@ export async function deleteTask(startupId: string, taskId: string): Promise<Res
   }
 
   const { error } = await supabase.from("tasks").delete().eq("id", task.id);
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
   refresh();
   return { error: null };
 }
@@ -764,7 +765,7 @@ export async function addGoalMaterial(input: {
       body,
       created_by: user.id,
     });
-    if (error) return { error: translateDbError(error.message) };
+    if (error) return { error: await translateDbError(error.message) };
   } else if (input.kind === "link") {
     const url = input.url?.trim() ?? "";
     if (!/^https?:\/\/\S+$/i.test(url)) return { error: "Link musi zaczynać się od https." };
@@ -775,7 +776,7 @@ export async function addGoalMaterial(input: {
       url,
       created_by: user.id,
     });
-    if (error) return { error: translateDbError(error.message) };
+    if (error) return { error: await translateDbError(error.message) };
   } else {
     const file = await resolveFile(supabase, input.startupId, {
       kind: "file",
@@ -791,7 +792,7 @@ export async function addGoalMaterial(input: {
       file_name: file.file.name,
       created_by: user.id,
     });
-    if (error) return { error: translateDbError(error.message) };
+    if (error) return { error: await translateDbError(error.message) };
   }
 
   refresh();
@@ -808,7 +809,7 @@ export async function removeGoalMaterial(startupId: string, materialId: string):
     .eq("id", materialId)
     .eq("startup_id", startupId);
 
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
   refresh();
   return { error: null };
 }

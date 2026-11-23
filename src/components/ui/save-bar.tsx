@@ -3,6 +3,7 @@
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 type SaveBarProps = {
   /** Widoczny tylko przy niezapisanych zmianach — inaczej nie zajmuje miejsca. */
@@ -30,6 +31,7 @@ export function SaveBar({
   onSave,
   onDiscard,
 }: SaveBarProps) {
+  const t = useT("common");
   const showSaved = !dirty && !error && Boolean(savedAt);
 
   if (!dirty && !error && !showSaved) return null;
@@ -51,25 +53,25 @@ export function SaveBar({
           <AlertCircle className="size-4 shrink-0 text-[var(--danger)]" />
           <p className="text-[13px] text-[var(--danger)]">{error}</p>
           <Button size="sm" variant="secondary" onClick={onSave}>
-            Spróbuj ponownie
+            {t("actions.retry")}
           </Button>
         </>
       ) : showSaved ? (
         <>
           <CheckCircle2 className="size-4 shrink-0 text-[var(--success)]" />
-          <p className="text-[13px] text-[var(--text-muted)]">Zapisano</p>
+          <p className="text-[13px] text-[var(--text-muted)]">{t("status.saved")}</p>
         </>
       ) : (
         <>
           <p className="text-[13px] text-[var(--text-muted)]">
-            Masz niezapisane zmiany
+            {t("status.unsaved")}
           </p>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="ghost" onClick={onDiscard} disabled={saving}>
-              Odrzuć
+              {t("actions.discard")}
             </Button>
             <Button size="sm" onClick={onSave} loading={saving}>
-              Zapisz
+              {t("actions.save")}
             </Button>
           </div>
         </>

@@ -11,6 +11,7 @@ import {
   translateJoinError,
   type LookingFor,
 } from "@/types/social";
+import { sessionExpired } from "@/lib/server-errors";
 
 type Result = { error: string | null };
 
@@ -54,7 +55,7 @@ export async function applyToStartup(input: {
   message?: string;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const message = input.message?.trim();
   if (message && message.length > 600) {
@@ -88,7 +89,7 @@ export async function inviteToStartup(input: {
   message?: string;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const role = await getStartupRole(supabase, input.startupId, user.id);
   if (!role || !canManageTeam(role)) {
@@ -134,7 +135,7 @@ export async function respondToJoinRequest(
   direction?: "application" | "invite"
 ): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { error } = await supabase.rpc("respond_join_request", {
     p_request_id: requestId,
@@ -173,7 +174,7 @@ export async function saveSocialPreferences(input: {
   isDiscoverable: boolean;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const lookingFor =
     input.lookingFor &&
@@ -201,7 +202,7 @@ export async function saveSocialPreferences(input: {
     })
     .eq("id", user.id);
 
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
 
   revalidatePath("/app/social/me");
   revalidatePath("/app/settings/profile");
@@ -227,7 +228,7 @@ export async function saveSocialProfile(input: {
   isDiscoverable: boolean;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   // Nazwa publiczna, nie imię i nazwisko z konta. Wcześniej kreator
   // nadpisywał tu `full_name` — kto w Social wpisał pseudonim, tracił
@@ -283,7 +284,7 @@ export async function saveSocialProfile(input: {
     })
     .eq("id", user.id);
 
-  if (profileError) return { error: translateDbError(profileError.message) };
+  if (profileError) return { error: await translateDbError(profileError.message) };
 
   // Umiejętności: podmiana całego zestawu. Przy kilkunastu pozycjach to
   // tańsze i prostsze niż wyliczanie różnicy.
@@ -294,13 +295,13 @@ export async function saveSocialProfile(input: {
     .delete()
     .eq("profile_id", user.id);
 
-  if (deleteError) return { error: translateDbError(deleteError.message) };
+  if (deleteError) return { error: await translateDbError(deleteError.message) };
 
   if (unique.length > 0) {
     const { error: insertError } = await supabase
       .from("profile_skills")
       .insert(unique.map((skill_id) => ({ profile_id: user.id, skill_id })));
-    if (insertError) return { error: translateDbError(insertError.message) };
+    if (insertError) return { error: await translateDbError(insertError.message) };
   }
 
   revalidatePath("/app/social/me");
@@ -329,7 +330,7 @@ export async function startContact(input: {
   contextStartupId?: string | null;
 }): Promise<Result & { conversationId?: string | null }> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   if (input.recipientId === user.id) {
     return { error: "Nie da się napisać do siebie." };
@@ -377,7 +378,7 @@ export async function respondToContact(
   action: "accept" | "decline" | "withdraw"
 ): Promise<Result & { conversationId?: string | null }> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { data, error } = await supabase.rpc("respond_contact_signal", {
     p_signal_id: signalId,
@@ -398,7 +399,7 @@ export async function sendMessage(input: {
   body: string;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const body = input.body.trim();
   if (body.length < 1) return { error: "Wiadomość nie może być pusta." };
@@ -424,7 +425,7 @@ export async function markConversationRead(
   conversationId: string
 ): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { error } = await supabase
     .from("conversation_participants")
@@ -432,7 +433,7 @@ export async function markConversationRead(
     .eq("conversation_id", conversationId)
     .eq("profile_id", user.id);
 
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
 
   revalidateContacts();
   return { error: null };
@@ -454,7 +455,7 @@ export async function passCandidate(input: {
   startupId?: string;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const hasPerson = Boolean(input.profileId);
   const hasTeam = Boolean(input.startupId);
@@ -500,7 +501,7 @@ export async function passCandidate(input: {
           error: "Brakuje migracji 011 — odpal ją w Supabase → SQL Editor.",
         };
       }
-      return { error: translateDbError(error.message) };
+      return { error: await translateDbError(error.message) };
     }
   }
 
@@ -512,7 +513,7 @@ export async function passCandidate(input: {
 /** Cofnięcie ostatniej decyzji — najczęstsza potrzeba po pomyłce w kliknięciu. */
 export async function undoLastPass(kind: "person" | "team"): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const column = kind === "person" ? "target_profile_id" : "target_startup_id";
 
@@ -533,7 +534,7 @@ export async function undoLastPass(kind: "person" | "team"): Promise<Result> {
     .eq("id", last.id)
     .eq("actor_id", user.id);
 
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
 
   revalidatePath("/app/social/people");
   revalidatePath("/app/social/teams");
@@ -543,7 +544,7 @@ export async function undoLastPass(kind: "person" | "team"): Promise<Result> {
 /** Wyczyszczenie całej listy pominiętych — „pokaż mi wszystko od nowa". */
 export async function clearPasses(kind: "person" | "team"): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const column = kind === "person" ? "target_profile_id" : "target_startup_id";
 
@@ -553,7 +554,7 @@ export async function clearPasses(kind: "person" | "team"): Promise<Result> {
     .eq("actor_id", user.id)
     .not(column, "is", null);
 
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
 
   revalidatePath("/app/social/people");
   revalidatePath("/app/social/teams");

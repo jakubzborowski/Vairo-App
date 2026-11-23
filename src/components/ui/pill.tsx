@@ -2,6 +2,7 @@
 
 import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 type PillProps = {
   children: React.ReactNode;
@@ -28,6 +29,7 @@ export function Pill({
   disabled,
   className,
 }: PillProps) {
+  const t = useT("common");
   const interactive = Boolean(onToggle);
 
   const base = cn(
@@ -56,7 +58,7 @@ export function Pill({
           type="button"
           onClick={onRemove}
           disabled={disabled}
-          aria-label={`Usuń ${typeof children === "string" ? children : "element"}`}
+          aria-label={t("actions.removeItem", { item: typeof children === "string" ? children : t("labels.item") })}
           className="-mr-1 rounded-full p-0.5 text-[var(--text-faint)] transition-colors hover:text-white"
         >
           <X className="size-3" />

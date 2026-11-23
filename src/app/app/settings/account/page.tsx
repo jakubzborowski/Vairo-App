@@ -11,9 +11,15 @@ import { CredentialsRows } from "@/components/app/credentials-change";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { SectionLabel } from "@/components/ui/module-header";
-import { MAX_STARTUPS, ROLE_LABELS } from "@/types/startup";
+import { MAX_STARTUPS } from "@/types/startup";
+import { LanguageSwitcher } from "@/components/app/language-switcher";
+import { getLocale, getT } from "@/i18n/server";
+import { formatDate } from "@/i18n/format";
 
-export const metadata = { title: "Ustawienia konta — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("settings");
+  return { title: t("account.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 /**
@@ -26,6 +32,9 @@ export const dynamic = "force-dynamic";
 export default async function AccountSettingsPage() {
   const supabase = await createClient();
   const user = await getCurrentUser();
+  const t = await getT("settings");
+  const tl = await getT("labels");
+  const locale = await getLocale();
 
   if (!user) redirect("/register?next=/app/settings/account");
 
@@ -59,9 +68,9 @@ export default async function AccountSettingsPage() {
     .select("full_name, avatar_url, created_at")
     .eq("id", user.id)
     .maybeSingle();
-  const name = profile?.full_name?.trim() || user.email?.split("@")[0] || "Ty";
+  const name = profile?.full_name?.trim() || user.email?.split("@")[0] || t("account.you");
   const since = profile?.created_at
-    ? new Date(profile.created_at as string).toLocaleDateString("pl-PL", { month: "long", year: "numeric" })
+    ? formatDate(locale, profile.created_at as string, { month: "long", year: "numeric" })
     : null;
   const firstTeam = startups[0];
   const seatsLeft = MAX_STARTUPS - startups.length;
@@ -76,18 +85,21 @@ export default async function AccountSettingsPage() {
         <Avatar src={profile?.avatar_url ?? null} name={name} size="lg" />
         <div className="min-w-0">
           <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
-            Ustawienia
+            {t("account.title")}
           </h1>
           <p className="mt-0.5 text-[14.5px] text-[var(--text-muted)]">
             {name}
-            {since ? ` · w Vairo od ${since}` : ""}
-            {firstTeam ? `, ${ROLE_LABELS[firstTeam.role]} w ${firstTeam.name}` : ""}.
+            {since ? t("account.since", { since }) : ""}
+            {firstTeam
+              ? t("account.roleIn", { role: tl(`role.${firstTeam.role}`), team: firstTeam.name })
+              : ""}
+            .
           </p>
         </div>
       </header>
 
       <section className="mt-7">
-        <SectionLabel>Logowanie</SectionLabel>
+        <SectionLabel>{t("account.login")}</SectionLabel>
         <div className="mt-2 overflow-hidden rounded-[22px] bg-[var(--surface)] lift-1">
           <CredentialsRows email={user.email ?? ""} />
         </div>
@@ -97,7 +109,7 @@ export default async function AccountSettingsPage() {
         <SectionLabel
           action={
             <span className="inline-flex items-center gap-2 text-[12.5px] text-[var(--text-muted)]">
-              {startups.length} z {MAX_STARTUPS} miejsc
+              {t("account.seats", { used: startups.length, max: MAX_STARTUPS })}
               <span className="inline-flex gap-[3px]" aria-hidden="true">
                 {Array.from({ length: MAX_STARTUPS }, (_, index) => (
                   <span
@@ -112,7 +124,7 @@ export default async function AccountSettingsPage() {
             </span>
           }
         >
-          Zespoły
+          {t("account.teams")}
         </SectionLabel>
         <div className="mt-2 overflow-hidden rounded-[22px] bg-[var(--surface)] lift-1 divide-y divide-white/[0.05]">
           {startups.map((startup) => (
@@ -122,8 +134,8 @@ export default async function AccountSettingsPage() {
               name={startup.name}
               logoUrl={startup.logoUrl}
               detail={[
-                ROLE_LABELS[startup.role],
-                startup.stage ? `etap ${startup.stage.title}` : null,
+                tl(`role.${startup.role}`),
+                startup.stage ? t("account.stage", { stage: startup.stage.title }) : null,
               ]
                 .filter(Boolean)
                 .join(" · ")}
@@ -138,14 +150,22 @@ export default async function AccountSettingsPage() {
                 <Plus className="size-4" />
               </span>
               {startups.length === 0
-                ? "Załóż startup albo dołącz do zespołu przez Odkrywaj"
-                : "Dołącz do kolejnego zespołu przez Odkrywaj"}
+                ? t("account.createOrJoin")
+                : t("account.joinAnother")}
             </Link>
           ) : (
             <p className="px-5 py-4 text-[13px] text-[var(--text-subtle)]">
-              To maksimum na konto. Żeby dołączyć gdzie indziej, najpierw wyjdź z jednego zespołu.
+              {t("account.atLimit")}
             </p>
           )}
+        </div>
+      </section>
+
+      <section className="mt-6">
+        <SectionLabel>{t("language.title")}</SectionLabel>
+        <p className="mt-1 px-1 text-[13px] text-[var(--text-muted)]">{t("language.description")}</p>
+        <div className="mt-2 overflow-hidden rounded-[22px] bg-[var(--surface)] lift-1">
+          <LanguageSwitcher />
         </div>
       </section>
 
@@ -153,10 +173,9 @@ export default async function AccountSettingsPage() {
           okna potwierdzenia, które wylicza skutki dla Twoich teamów. */}
       <section className="mt-6 flex flex-wrap items-center gap-4 rounded-[22px] border-[1.5px] border-dashed border-white/10 px-5 py-4">
         <div className="min-w-0 flex-1">
-          <p className="text-[14.5px] font-medium text-white">Usuń konto</p>
+          <p className="text-[14.5px] font-medium text-white">{t("account.delete.title")}</p>
           <p className="mt-0.5 text-[13px] leading-relaxed text-[var(--text-muted)]">
-            Kasuje profil, rozmowy i członkostwa. Przed usunięciem pokażemy, co stanie się
-            z Twoimi zespołami.
+            {t("account.delete.body")}
           </p>
         </div>
         <DeleteAccountButton
@@ -170,7 +189,7 @@ export default async function AccountSettingsPage() {
       <form action={signOut} className="mt-6 lg:hidden">
         <Button type="submit" variant="secondary" block size="lg">
           <LogOut className="size-4" />
-          Wyloguj się
+          {t("account.signOut")}
         </Button>
       </form>
     </div>

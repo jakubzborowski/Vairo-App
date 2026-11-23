@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Check, Lock, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StageProgramEntry } from "@/lib/stage";
+import { getT } from "@/i18n/server";
 
 /**
  * Pasek pięciu etapów jako **ciąg klocków ze strzałkowym wcięciem**.
@@ -41,7 +42,7 @@ const SHAPE = {
   last: `polygon(0 0, 100% 0, 100% 100%, 0 100%, ${ARROW}px 50%)`,
 };
 
-export function StageProgress({
+export async function StageProgress({
   program,
   currentKey,
   className,
@@ -50,11 +51,12 @@ export function StageProgress({
   currentKey: string | null;
   className?: string;
 }) {
+  const t = await getT("stage");
   const currentIndex = program.findIndex((item) => item.key === currentKey);
 
   return (
     <nav
-      aria-label="Postęp programu"
+      aria-label={t("progress.aria")}
       className={cn(
         // `steps` daje klockom wejście od lewej, jeden po drugim — w tę samą
         // stronę, w którą pokazuje grot. Animacja dosłownie rysuje drogę.
@@ -166,10 +168,10 @@ export function StageProgress({
               style={style}
               title={
                 isSkipped
-                  ? `${label} — etap pominięty, możesz go uzupełnić, ale nie musisz`
+                  ? t("progress.skipped", { label })
                   : isOpen
-                    ? `${label} — etap otwarty, możesz do niego wrócić`
-                    : `${label} — etap domknięty, możesz przejrzeć odpowiedzi`
+                    ? t("progress.open", { label })
+                    : t("progress.done", { label })
               }
               className={cn(shared, "hover:bg-white/[0.11] hover:text-white")}
             >
@@ -185,10 +187,10 @@ export function StageProgress({
             aria-current={isCurrent ? "step" : undefined}
             title={
               isCurrent
-                ? `${label} — tu jesteś teraz`
+                ? t("progress.current", { label })
                 : item.hasContent
                   ? undefined
-                  : `${label} — etap jest w programie, treść jeszcze w przygotowaniu`
+                  : t("progress.noContent", { label })
             }
             className={shared}
           >

@@ -8,7 +8,8 @@ import { signOut } from "@/app/app/actions";
 import { Avatar } from "@/components/ui/avatar";
 import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { cn } from "@/lib/utils";
-import { ROLE_LABELS, type StartupRole } from "@/types/startup";
+import type { StartupRole } from "@/types/startup";
+import { useT } from "@/i18n/client";
 import { isActivePath, navGroups, type NavItem } from "./nav-config";
 import { AppBackdrop } from "./app-backdrop";
 import { NavRow } from "./nav-item";
@@ -66,6 +67,8 @@ export function AppShell({
 }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const t = useT("nav");
+  const tl = useT("labels");
   const [signingOut, startSigningOut] = useTransition();
   const hasTeam = teams.length > 0;
   // Pomoc dostaje adres strony, z której ktoś przyszedł — zgłoszenie
@@ -126,7 +129,7 @@ export function AppShell({
       <Link
         href="/app"
         className="inline-flex items-center gap-2 px-2"
-        aria-label="Vairo — dashboard"
+        aria-label={t("aria.home")}
       >
         <BrandLogo height={28} />
       </Link>
@@ -162,7 +165,7 @@ export function AppShell({
                   aria-expanded={socialOpen}
                   className="mb-1 inline-flex w-full items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)] transition-colors hover:text-white"
                 >
-                  {group.label}
+                  {t(group.labelKey)}
                   <ChevronDown
                     className={cn(
                       "size-3 transition-transform",
@@ -175,7 +178,7 @@ export function AppShell({
                 <p className="mb-1 truncate px-2.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
                   {group.id === "team" && activeTeamName
                     ? activeTeamName
-                    : group.label}
+                    : t(group.labelKey)}
                 </p>
               )}
 
@@ -197,7 +200,7 @@ export function AppShell({
           launchem to jedyna droga kontaktu z zespołem Vairo. */}
       <div className="-mb-2">
         <NavRow
-          item={{ label: "Pomoc i opinie", href: helpHref, icon: LifeBuoy }}
+          item={{ labelKey: "help", href: helpHref, icon: LifeBuoy }}
           active={helpActive}
         />
       </div>
@@ -218,7 +221,7 @@ export function AppShell({
                 {user.name}
               </span>
               <span className="block truncate text-[11.5px] text-[var(--text-subtle)]">
-                {activeRole ? ROLE_LABELS[activeRole] : "Bez zespołu"}
+                {activeRole ? tl(`role.${activeRole}`) : t("noTeam")}
               </span>
             </span>
           </Link>
@@ -227,8 +230,8 @@ export function AppShell({
             href="/app/notifications"
             aria-label={
               badges?.notifications
-                ? `Powiadomienia, nowe: ${badges.notifications}`
-                : "Powiadomienia"
+                ? t("aria.notificationsNew", { count: badges.notifications })
+                : t("notifications")
             }
             aria-current={isActivePath(pathname, "/app/notifications") ? "page" : undefined}
             className={cn(
@@ -246,7 +249,7 @@ export function AppShell({
             ) : null}
           </Link>
 
-          <Menu label="Konto i pomoc">
+          <Menu label={t("aria.accountMenu")}>
             {(close) => (
               <>
                 {/* SCORE (codex/score-test) stał w stopce menu, której po redesignie
@@ -270,7 +273,7 @@ export function AppShell({
                     router.push("/app/program");
                   }}
                 >
-                  Jak to działa
+                  {t("program")}
                 </MenuItem>
                 <MenuItem
                   icon={LifeBuoy}
@@ -280,7 +283,7 @@ export function AppShell({
                     router.push(helpHref);
                   }}
                 >
-                  Pomoc i opinie
+                  {t("help")}
                 </MenuItem>
                 <MenuItem
                   icon={GraduationCap}
@@ -290,7 +293,7 @@ export function AppShell({
                     window.dispatchEvent(new Event(OPEN_TOUR_EVENT));
                   }}
                 >
-                  Samouczek
+                  {t("tour")}
                 </MenuItem>
                 <MenuItem
                   icon={Settings}
@@ -300,7 +303,7 @@ export function AppShell({
                     router.push("/app/settings/profile");
                   }}
                 >
-                  Ustawienia
+                  {t("settings")}
                 </MenuItem>
                 <MenuSeparator />
                 <MenuItem
@@ -313,7 +316,7 @@ export function AppShell({
                     })
                   }
                 >
-                  {signingOut ? "Wylogowuję…" : "Wyloguj się"}
+                  {signingOut ? t("signingOut") : t("signOut")}
                 </MenuItem>
               </>
             )}
@@ -340,7 +343,7 @@ export function AppShell({
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
-            aria-label="Zamknij menu"
+            aria-label={t("aria.closeMenu")}
             onClick={() => setMobileOpen(false)}
             className="absolute inset-0 bg-black/70"
           />
@@ -358,24 +361,24 @@ export function AppShell({
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            aria-label="Otwórz menu"
+            aria-label={t("aria.openMenu")}
             className="inline-flex size-9 items-center justify-center rounded-lg border border-white/10 text-[var(--text-muted)]"
           >
             <MenuIcon className="size-4" />
           </button>
-          <Link href="/app" className="inline-flex items-center" aria-label="Vairo — dashboard">
+          <Link href="/app" className="inline-flex items-center" aria-label={t("aria.home")}>
             <BrandLogo height={24} />
           </Link>
           <Link
             href={helpHref}
-            aria-label="Pomoc i opinie"
+            aria-label={t("help")}
             className="ml-auto inline-flex size-9 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-white/[0.06] hover:text-white"
           >
             <LifeBuoy className="size-4" strokeWidth={1.75} />
           </Link>
           <Link
             href="/app/settings/profile"
-            aria-label="Twój profil"
+            aria-label={t("aria.yourProfile")}
             className="inline-flex size-9 items-center justify-center rounded-lg"
           >
             <Avatar src={user.avatarUrl} name={user.name} size="sm" />

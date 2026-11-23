@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 export type WizardStep = {
   key: string;
@@ -76,12 +77,14 @@ export function StepWizard({
   finishing,
   error,
   onExit,
-  exitLabel = "Wróć",
+  exitLabel,
   stepOffset = 0,
   overallTotal,
   crumb,
   footerBack = false,
 }: Props) {
+  const t = useT("common");
+  const exit = exitLabel ?? t("actions.return");
   const [index, setIndexState] = useState(0);
   const [stepError, setStepError] = useState<string | null>(null);
   const setIndex = (next: number) => {
@@ -121,7 +124,7 @@ export function StepWizard({
             type="button"
             onClick={goBack}
             className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[var(--text-subtle)] transition-colors hover:border-white/22 hover:text-white"
-            aria-label={index > 0 ? "Poprzedni krok" : exitLabel}
+            aria-label={index > 0 ? t("wizard.previousStep") : exit}
           >
             <ArrowLeft className="size-4" />
           </button>
@@ -190,7 +193,7 @@ export function StepWizard({
         {footerBack && (index > 0 || onExit) ? (
           <Button size="lg" variant="secondary" onClick={goBack} className="sm:min-w-[120px]">
             <ArrowLeft className="size-4" />
-            {index > 0 ? "Wstecz" : exitLabel}
+            {index > 0 ? t("actions.back") : exit}
           </Button>
         ) : null}
         <Button
@@ -207,7 +210,7 @@ export function StepWizard({
             </>
           ) : (
             <>
-              Dalej
+              {t("actions.next")}
               <ArrowRight className="size-4" />
             </>
           )}
@@ -221,7 +224,7 @@ export function StepWizard({
               a tam nie ma czego zaznaczać. Sformułowanie neutralne działa
               na wszystkich. */}
           {/* Na ostatnim kroku przycisk nie nazywa się „Dalej”. */}
-          Ten krok jest opcjonalny — „{isLast ? finishLabel : "Dalej"}” działa też pusty.
+          {t("wizard.optionalHint", { label: isLast ? finishLabel : t("actions.next") })}
         </p>
       ) : null}
     </div>

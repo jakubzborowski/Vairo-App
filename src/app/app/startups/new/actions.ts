@@ -12,6 +12,7 @@ import {
   type ValidationCategory,
 } from "@/types/startup";
 import { translateDbError } from "@/lib/db-errors";
+import { sessionExpired } from "@/lib/server-errors";
 
 /**
  * Tworzy startup poza onboardingiem — dla Joinera, który zmienił zdanie,
@@ -23,7 +24,7 @@ export async function createStartup(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const name = String(formData.get("startup_name") ?? "").trim();
   const idea = String(formData.get("idea_description") ?? "").trim();
@@ -63,7 +64,7 @@ export async function createStartup(formData: FormData) {
         error: `Masz już ${MAX_STARTUPS} zespoły — to maksimum na jedno konto. Opuść któryś, żeby założyć nowy.`,
       };
     }
-    return { error: translateDbError(error.message) };
+    return { error: await translateDbError(error.message) };
   }
 
   if (categories.length > 0) {

@@ -15,6 +15,8 @@ import { Pill } from "@/components/ui/pill";
 import { SaveBar } from "@/components/ui/save-bar";
 import { cn } from "@/lib/utils";
 import { AVATAR_MAX_MB, type Skill } from "@/types/profile";
+import { useT } from "@/i18n/client";
+import { skillLabel as localizedSkill } from "@/lib/localized";
 
 const HEADLINE_MAX = 120;
 const FOCUS_MAX = 2000;
@@ -42,6 +44,9 @@ type Props = {
  * edycja, a zapis ma jedną drogę: pasek na dole, widoczny gdy są zmiany.
  */
 export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds }: Props) {
+  const t = useT("settings");
+  const tl = useT("labels");
+  const skillLabel = (skill: Skill) => localizedSkill(tl, skill);
   const [skills, setSkills] = useState(initialSkills);
   const [draft, setDraft] = useState<ProfileDraft>({
     fullName: profile.fullName,
@@ -79,10 +84,10 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
   const visibleSkills = useMemo(() => {
     const q = query.trim().toLowerCase();
     const pool = q
-      ? skills.filter((s) => s.label.toLowerCase().includes(q))
+      ? skills.filter((s) => localizedSkill(tl, s).toLowerCase().includes(q) || s.label.toLowerCase().includes(q))
       : skills.filter((s) => s.is_suggested || selected.has(s.id));
     return pool.slice(0, 30);
-  }, [query, skills, selected]);
+  }, [query, skills, selected, tl]);
 
   const exactMatch = skills.some(
     (s) => s.label.toLowerCase() === query.trim().toLowerCase()
@@ -108,7 +113,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
     startTransition(async () => {
       const result = await createCustomSkill(label);
       if (result.error || !result.skill) {
-        setError(result.error ?? "Nie udało się dodać umiejętności.");
+        setError(result.error ?? t("profile.skillAddFailed"));
         return;
       }
       const skill = result.skill as Skill;
@@ -173,10 +178,10 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
     <div className="mx-auto w-full max-w-3xl pb-4">
       <header className="mb-6">
         <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
-          Twój profil
+          {t("profile.title")}
         </h1>
         <p className="mt-1 text-[14px] text-[var(--text-subtle)]">
-          To widzą ludzie, którzy trafią na Ciebie w warstwie Social.
+          {t("profile.subtitle")}
         </p>
       </header>
 
@@ -184,13 +189,13 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
         <div className="mb-5 rounded-xl border border-white/[0.07] bg-[var(--surface)] px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[13px] text-[var(--text-muted)]">
-              Profil uzupełniony w{" "}
+              {t("profile.completenessBefore")}{" "}
               <span className="tabular font-semibold text-white">
                 {completeness}%
               </span>
             </p>
             <p className="text-[12px] text-[var(--text-subtle)]">
-              Niepełny profil rzadziej trafia do wyników
+              {t("profile.completenessHint")}
             </p>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/8">
@@ -213,7 +218,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
               {/* Bez opisu sekcji. Zdanie „pierwsza rzecz, którą zobaczą inni"
                   i zdanie obok kadru („to zdjęcie decyduje o kliknięciu")
                   mówiły to samo dwa razy na przestrzeni dwudziestu pikseli. */}
-              <CardTitle>Zdjęcie profilowe</CardTitle>
+              <CardTitle>{t("profile.photo")}</CardTitle>
             </div>
           </CardHeader>
           <CardBody>
@@ -230,7 +235,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 disabled={pending}
-                aria-label={avatarUrl ? "Zmień zdjęcie profilowe" : "Dodaj zdjęcie profilowe"}
+                aria-label={avatarUrl ? t("profile.photoChangeAria") : t("profile.photoAddAria")}
                 className={cn(
                   "group relative aspect-[4/3] w-full overflow-hidden rounded-2xl transition-colors",
                   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--vairo)]",
@@ -251,7 +256,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                     />
                     <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-black/65 py-2.5 text-[13px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
                       <Camera className="size-4" />
-                      Zmień zdjęcie
+                      {t("profile.photoChange")}
                     </span>
                   </>
                 ) : (
@@ -259,7 +264,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                     <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-[var(--surface-3)] text-[var(--text-muted)] transition-colors group-hover:bg-[var(--vairo)] group-hover:text-white">
                       <Camera className="size-5" strokeWidth={1.75} />
                     </span>
-                    <span className="text-[13.5px] font-medium">Dodaj zdjęcie</span>
+                    <span className="text-[13.5px] font-medium">{t("profile.photoAdd")}</span>
                   </span>
                 )}
               </button>
@@ -272,11 +277,10 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                   Zostaje kadr jako przycisk i dwie linijki: po co i w czym. */}
               <div className="flex flex-col justify-center gap-2">
                 <p className="text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-                  W Odkrywaj to zdjęcie decyduje o kliknięciu bardziej niż
-                  cokolwiek innego w profilu.
+                  {t("profile.photoWhy")}
                 </p>
                 <p className="text-[12px] text-[var(--text-subtle)]">
-                  JPG, PNG albo WebP, do {AVATAR_MAX_MB} MB.
+                  {t("profile.photoFormats", { mb: AVATAR_MAX_MB })}
                 </p>
               </div>
             </div>
@@ -290,20 +294,20 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
               {/* „Imię i jedna linijka o Tobie" to spis etykiet pól, które
                   są dwa centymetry niżej. Opis, który streszcza zawartość
                   widoczną gołym okiem, uczy pomijać wszystkie opisy. */}
-              <CardTitle>Podstawy</CardTitle>
+              <CardTitle>{t("profile.basics")}</CardTitle>
             </div>
           </CardHeader>
           <CardBody className="flex flex-col gap-4">
             <Field
-              label="Imię i nazwisko"
-              hint="Tak podpisujesz się w zespole: w składzie, celach i zadaniach."
+              label={t("profile.fullName")}
+              hint={t("profile.fullNameHint")}
             >
               {({ id }) => (
                 <Input
                   id={id}
                   value={draft.fullName}
                   onChange={(e) => patch({ fullName: e.target.value })}
-                  placeholder="np. Anna Kowalska"
+                  placeholder={t("profile.fullNamePlaceholder")}
                   autoComplete="name"
                 />
               )}
@@ -313,23 +317,23 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                 Kreatora nie widać z żadnego menu — kto chciał zmienić nazwę
                 na karcie, trafiał tutaj i nie miał gdzie jej wpisać. */}
             <Field
-              label="Nazwa w Odkrywaj"
-              hint="Opcjonalne. Tak widzą Cię osoby spoza zespołu: na karcie, w zaczepkach i rozmowach. Puste pole = imię i nazwisko."
+              label={t("profile.publicName")}
+              hint={t("profile.publicNameHint")}
             >
               {({ id }) => (
                 <Input
                   id={id}
                   value={draft.publicName}
                   onChange={(e) => patch({ publicName: e.target.value })}
-                  placeholder={draft.fullName.trim() || "np. annak"}
+                  placeholder={draft.fullName.trim() || t("profile.publicNamePlaceholder")}
                   maxLength={80}
                 />
               )}
             </Field>
 
             <Field
-              label="Czym się zajmujesz"
-              hint="Jedna linijka — pojawia się pod Twoim imieniem."
+              label={t("profile.headline")}
+              hint={t("profile.headlineHint")}
               counter={{ value: draft.headline.length, max: HEADLINE_MAX }}
             >
               {({ id }) => (
@@ -337,7 +341,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                   id={id}
                   value={draft.headline}
                   onChange={(e) => patch({ headline: e.target.value })}
-                  placeholder="np. Full-stack Developer"
+                  placeholder={t("profile.headlinePlaceholder")}
                   maxLength={HEADLINE_MAX}
                 />
               )}
@@ -349,11 +353,11 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
         <Card>
           <CardHeader>
             <div>
-              <CardTitle>Co potrafisz</CardTitle>
-              <CardDescription>Po tym znajdują Cię zespoły.</CardDescription>
+              <CardTitle>{t("profile.skills")}</CardTitle>
+              <CardDescription>{t("profile.skillsHint")}</CardDescription>
             </div>
             <span className="tabular shrink-0 text-[12px] text-[var(--text-subtle)]">
-              {draft.skillIds.length} wybranych
+              {t("profile.skillsSelected", { count: draft.skillIds.length })}
             </span>
           </CardHeader>
           <CardBody>
@@ -371,9 +375,9 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                     onCreateSkill();
                   }
                 }}
-                placeholder="Szukaj albo dodaj własną…"
+                placeholder={t("profile.skillsSearch")}
                 className="pl-10"
-                aria-label="Szukaj umiejętności"
+                aria-label={t("profile.skillsSearchAria")}
               />
             </div>
 
@@ -385,14 +389,14 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                 className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[13px] text-[var(--vairo)] transition-colors hover:bg-[var(--vairo)]/10"
               >
                 <Plus className="size-3.5" />
-                Dodaj &bdquo;{query.trim()}&rdquo;
+                {t("profile.skillsAdd", { label: query.trim() })}
               </button>
             ) : null}
 
             <div className="mt-4 flex flex-wrap gap-2">
               {visibleSkills.length === 0 ? (
                 <p className="text-[13px] text-[var(--text-subtle)]">
-                  Brak wyników. Naciśnij Enter, żeby dodać własną umiejętność.
+                  {t("profile.skillsEmpty")}
                 </p>
               ) : (
                 visibleSkills.map((skill) => (
@@ -401,7 +405,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                     selected={selected.has(skill.id)}
                     onToggle={() => toggleSkill(skill.id)}
                   >
-                    {skill.label}
+                    {skillLabel(skill)}
                   </Pill>
                 ))
               )}
@@ -413,9 +417,9 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
         <Card>
           <CardHeader>
             <div>
-              <CardTitle>Nad czym teraz pracujesz</CardTitle>
+              <CardTitle>{t("profile.focus")}</CardTitle>
               <CardDescription>
-                Po tym ludzie decydują, czy się odezwać.
+                {t("profile.focusHint")}
               </CardDescription>
             </div>
           </CardHeader>
@@ -428,7 +432,7 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
                   value={draft.weeklyFocus}
                   onChange={(e) => patch({ weeklyFocus: e.target.value })}
                   maxLength={FOCUS_MAX}
-                  placeholder="Buduję coś w stylu… Szukam kogoś do…"
+                  placeholder={t("profile.focusPlaceholder")}
                 />
               )}
             </Field>
@@ -460,12 +464,12 @@ export function ProfileEditor({ profile, skills: initialSkills, selectedSkillIds
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[14px] font-medium text-white">
-                  Widoczność w Social
+                  {t("profile.visibility")}
                 </span>
                 <span className="block text-[13px] text-[var(--text-subtle)]">
                   {draft.isDiscoverable
-                    ? "Inni mogą znaleźć Cię w wyszukiwarce i odkrywaniu."
-                    : "Twój profil jest ukryty — nikt Cię nie znajdzie."}
+                    ? t("profile.visibilityOn")
+                    : t("profile.visibilityOff")}
                 </span>
               </span>
               <span

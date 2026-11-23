@@ -15,6 +15,7 @@ import {
   safeFromPath,
   type SupportKind,
 } from "@/types/support";
+import { sessionExpired } from "@/lib/server-errors";
 
 type SubmitRow = {
   id: string;
@@ -46,7 +47,7 @@ export async function sendFeedback(input: {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Sesja wygasła. Zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   if (!isSupportKind(input.kind)) return { error: "Wybierz, czego dotyczy zgłoszenie." };
   const kind: SupportKind = input.kind;
@@ -72,7 +73,7 @@ export async function sendFeedback(input: {
     p_startup_id: await getActiveStartupId(),
   });
 
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
   const row = (Array.isArray(data) ? data[0] : data) as SubmitRow | undefined;
   if (!row) {
     return { error: "Nie udało się wysłać zgłoszenia. Odśwież stronę i spróbuj jeszcze raz." };

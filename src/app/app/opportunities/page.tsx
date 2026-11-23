@@ -1,12 +1,17 @@
 import { ComingSoon } from "@/components/app/coming-soon";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Możliwości partnerskie — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("common");
+  return { title: t("opportunities.metaTitle") };
+}
 
-export default function Page() {
+export default async function Page() {
+  const t = await getT("common");
   return (
     <ComingSoon
-      title="Możliwości partnerskie"
-      description="Programy, konkursy i oferty partnerów Vairo dla startupów. Dodamy je w kolejnej wersji."
+      title={t("opportunities.title")}
+      description={t("opportunities.description")}
     />
   );
 }

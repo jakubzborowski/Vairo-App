@@ -4,7 +4,8 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { AppleIcon, GoogleIcon } from "@/components/auth/provider-icons";
 import { createClient } from "@/lib/supabase/client";
-import { authErrorMessage, safeNextPath } from "@/lib/supabase/config";
+import { authErrorKey, safeNextPath } from "@/lib/supabase/config";
+import { useLocale, useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
 type AuthMode = "login" | "register";
@@ -25,28 +26,28 @@ function getAuthRedirectTo() {
 }
 
 export function AuthForm({ mode, initialErrorCode = null }: AuthFormProps) {
+  const t = useT("auth");
+  const locale = useLocale();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     initialErrorCode ? "error" : "idle"
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(
-    initialErrorCode ? authErrorMessage(initialErrorCode) : null
+    initialErrorCode ? t(authErrorKey(initialErrorCode)) : null
   );
   const [providerPending, setProviderPending] = useState<
     "google" | "apple" | null
   >(null);
 
   const isLogin = mode === "login";
-  const title = isLogin ? "Zaloguj się do Vairo" : "Dołącz do Vairo";
-  const subtitle = isLogin
-    ? "Wejdź magic linkiem albo kontynuuj przez Google / Apple."
-    : "Załóż konto magic linkiem albo przez Google / Apple.";
+  const title = isLogin ? t("login.title") : t("register.title");
+  const subtitle = isLogin ? t("login.subtitle") : t("register.subtitle");
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const trimmed = email.trim();
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setErrorMessage("Podaj poprawny adres e-mail.");
+      setErrorMessage(t("errors.invalidEmail"));
       setStatus("error");
       return;
     }
@@ -60,13 +61,16 @@ export function AuthForm({ mode, initialErrorCode = null }: AuthFormProps) {
       options: {
         emailRedirectTo: getAuthRedirectTo(),
         shouldCreateUser: !isLogin,
+        // Język trafia do user_metadata — szablon maila w Supabase wybiera
+        // po nim wersję językową (docs/i18n.md, „Maile logowania”).
+        data: { locale },
       },
     });
 
     if (error) {
       setErrorMessage(
         error.message === "Signups not allowed for otp"
-          ? "Nie znaleziono konta z tym adresem. Zarejestruj się."
+          ? t("errors.noAccount")
           : error.message
       );
       setStatus("error");
@@ -100,9 +104,7 @@ export function AuthForm({ mode, initialErrorCode = null }: AuthFormProps) {
         msg.includes("validation_failed");
       setErrorMessage(
         notConfigured
-          ? provider === "google"
-            ? "Google nie jest jeszcze włączone w Supabase (Authentication → Providers)."
-            : "Apple nie jest jeszcze włączone w Supabase (Authentication → Providers)."
+          ? t("errors.providerDisabled", { provider: provider === "google" ? "Google" : "Apple" })
           : error.message
       );
       setProviderPending(null);
@@ -113,19 +115,19 @@ export function AuthForm({ mode, initialErrorCode = null }: AuthFormProps) {
     return (
       <div className="text-center">
         <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white sm:text-[1.85rem]">
-          Sprawdź skrzynkę
+          {t("sent.title")}
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-white/55">
-          Wysłaliśmy magic link na{" "}
-          <span className="text-white/90">{email.trim()}</span>. Kliknij go, żeby{" "}
-          {isLogin ? "się zalogować" : "dokończyć rejestrację"}.
+          {t("sent.bodyBefore")}{" "}
+          <span className="text-white/90">{email.trim()}</span>.{" "}
+          {isLogin ? t("sent.bodyLogin") : t("sent.bodyRegister")}
         </p>
         <button
           type="button"
           onClick={() => setStatus("idle")}
           className="mt-8 text-[14px] font-medium text-white/70 transition hover:text-white"
         >
-          Użyj innego adresu
+          {t("sent.otherAddress")}
         </button>
       </div>
     );
@@ -146,13 +148,13 @@ export function AuthForm({ mode, initialErrorCode = null }: AuthFormProps) {
 
       <form onSubmit={onSubmit} className="mt-8 space-y-3" noValidate>
         <label className="block">
-          <span className="sr-only">Adres e-mail</span>
+          <span className="sr-only">{t("form.email")}</span>
           <input
             type="email"
             name="email"
             autoComplete="email"
             inputMode="email"
-            placeholder="Adres e-mail"
+            placeholder={t("form.email")}
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
@@ -173,14 +175,14 @@ export function AuthForm({ mode, initialErrorCode = null }: AuthFormProps) {
           disabled={status === "sending"}
           className="btn-vairo inline-flex h-11 w-full items-center justify-center rounded-lg text-[14px] font-semibold text-white transition disabled:opacity-60"
         >
-          {status === "sending" ? "Wysyłanie…" : "Wyślij magic link"}
+          {status === "sending" ? t("form.sending") : t("form.send")}
         </button>
       </form>
 
       <div className="my-6 flex items-center gap-3">
         <div className="h-px flex-1 bg-white/10" />
         <span className="text-[12px] uppercase tracking-wider text-white/35">
-          lub
+          {t("form.or")}
         </span>
         <div className="h-px flex-1 bg-white/10" />
       </div>
@@ -194,8 +196,8 @@ export function AuthForm({ mode, initialErrorCode = null }: AuthFormProps) {
         >
           <GoogleIcon className="size-[18px]" />
           {providerPending === "google"
-            ? "Łączenie…"
-            : "Kontynuuj z Google"}
+            ? t("form.connecting")
+            : t("form.continueWith", { provider: "Google" })}
         </button>
         <button
           type="button"
@@ -205,30 +207,30 @@ export function AuthForm({ mode, initialErrorCode = null }: AuthFormProps) {
         >
           <AppleIcon className="size-[18px]" />
           {providerPending === "apple"
-            ? "Łączenie…"
-            : "Kontynuuj z Apple"}
+            ? t("form.connecting")
+            : t("form.continueWith", { provider: "Apple" })}
         </button>
       </div>
 
       <p className="mt-8 text-center text-[13px] text-white/45">
         {isLogin ? (
           <>
-            Nie masz konta?{" "}
+            {t("login.noAccount")}{" "}
             <Link
               href="/register"
               className="font-medium text-vairo-soft transition hover:text-vairo"
             >
-              Zarejestruj się
+              {t("login.registerLink")}
             </Link>
           </>
         ) : (
           <>
-            Masz już konto?{" "}
+            {t("register.haveAccount")}{" "}
             <Link
               href="/login"
               className="font-medium text-vairo-soft transition hover:text-vairo"
             >
-              Zaloguj się
+              {t("register.loginLink")}
             </Link>
           </>
         )}

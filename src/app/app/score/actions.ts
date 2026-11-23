@@ -19,7 +19,7 @@ function scoreError(error: { message: string; code?: string }) {
       .replace(/\bteamie\b/g, "zespole")
       .replace(/\bteam\b/g, "zespół");
   }
-  return translateDbError(message) ?? "Coś poszło nie tak. Spróbuj jeszcze raz.";
+  return await translateDbError(message) ?? "Coś poszło nie tak. Spróbuj jeszcze raz.";
 }
 
 export async function scoreAction(

@@ -7,6 +7,7 @@ import { getActiveStartupId } from "@/lib/active-team";
 import { translateDbError } from "@/lib/db-errors";
 import { NOT_A_MEMBER, getStartupRole } from "@/lib/permissions";
 import type { StartupRole } from "@/types/startup";
+import { sessionExpired } from "@/lib/server-errors";
 
 export type RozpiskaNode = { id: string; x: number; y: number; label: string };
 export type RozpiskaEdge = { id: string; from: string; to: string };
@@ -22,7 +23,7 @@ async function context(startupId: string): Promise<Gate> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { ok: false, error: await sessionExpired() };
   const active = await getActiveStartupId();
   if (active && active !== startupId) {
     return { ok: false, error: "Przełącz zespół i spróbuj ponownie." };
@@ -70,7 +71,7 @@ export async function saveWorkflow(input: {
       })
       .eq("id", input.id)
       .eq("startup_id", input.startupId);
-    if (error) return { error: translateDbError(error.message) };
+    if (error) return { error: await translateDbError(error.message) };
     revalidatePath("/app/workflows", "layout");
     revalidatePath("/app/goals", "layout");
     return { error: null, id: input.id };
@@ -89,7 +90,7 @@ export async function saveWorkflow(input: {
     .select("id")
     .single();
 
-  if (error || !data) return { error: translateDbError(error?.message) };
+  if (error || !data) return { error: await translateDbError(error?.message) };
   revalidatePath("/app/workflows", "layout");
   return { error: null, id: data.id };
 }
@@ -118,7 +119,7 @@ export async function deleteWorkflow(startupId: string, id: string): Promise<Res
   }
 
   const { error } = await ctx.supabase.from("workflows").delete().eq("id", id);
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
   revalidatePath("/app/workflows", "layout");
   revalidatePath("/app/goals", "layout");
   return { error: null };

@@ -4,6 +4,7 @@ import Link, { useLinkStatus } from "next/link";
 import { CountBadge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "./nav-config";
+import { useT } from "@/i18n/client";
 
 type Props = {
   item: NavItem;
@@ -19,6 +20,7 @@ type Props = {
  * Decyduje o tym `nav-config.ts`; tutaj nie ma żadnej logiki dostępu.
  */
 export function NavRow({ item, active, count }: Props) {
+  const t = useT("nav");
   const Icon = item.icon;
 
   return (
@@ -56,7 +58,7 @@ export function NavRow({ item, active, count }: Props) {
         />
       ) : null}
       <Icon className="size-4 shrink-0" strokeWidth={1.75} />
-      <span className="truncate">{item.label}</span>
+      <span className="truncate">{t(item.labelKey)}</span>
       {count ? <CountBadge count={count} /> : null}
     </Link>
   );

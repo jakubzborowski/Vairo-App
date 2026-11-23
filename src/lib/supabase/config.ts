@@ -107,21 +107,19 @@ export type AuthErrorCode =
   | "auth_network"
   | "auth_otp_expired";
 
-export function authErrorMessage(code: string | null): string {
+/** Klucz komunikatu w słowniku `auth` dla kodu z `?error=`. */
+export function authErrorKey(code: string | null) {
   switch (code) {
     case "auth_denied":
-      return "Anulowano logowanie. Spróbuj ponownie.";
+      return "errors.denied" as const;
     case "auth_otp_expired":
-      return "Link wygasł lub został już użyty. Wyślij nowy magic link.";
+      return "errors.otpExpired" as const;
     case "auth_missing_code":
-      return "Brak kodu autoryzacji. Poproś o nowy link.";
+      return "errors.missingCode" as const;
     case "auth_network":
-      return "Problem z połączeniem do serwera auth. Spróbuj ponownie.";
-    case "auth_exchange":
-    case "auth_callback":
-      return "Logowanie nie powiodło się. Spróbuj ponownie.";
+      return "errors.network" as const;
     default:
-      return "Logowanie nie powiodło się. Spróbuj ponownie.";
+      return "errors.failed" as const;
   }
 }
 

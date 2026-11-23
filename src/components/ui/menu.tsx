@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { createPortal } from "react-dom";
 import { MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 /**
  * `useLayoutEffect` na serwerze wypisuje ostrzeżenie, a komponent mimo
@@ -58,7 +59,7 @@ type Coords = { top: number; left: number };
  * zostaje otwarte po wybraniu akcji i wygląda, jakby nic się nie stało.
  */
 export function Menu({
-  label = "Więcej",
+  label,
   children,
   align = "right",
   trigger,
@@ -76,6 +77,7 @@ export function Menu({
   triggerClassName?: string;
   disabled?: boolean;
 }) {
+  const t = useT("common");
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState<Coords | null>(null);
 
@@ -151,7 +153,7 @@ export function Menu({
         onClick={() => setOpen((value) => !value)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={label}
+        aria-label={label ?? t("actions.more")}
         disabled={disabled}
         className={cn(
           trigger

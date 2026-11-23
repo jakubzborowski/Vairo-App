@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthForm } from "@/components/auth/auth-form";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Dołącz do Vairo",
-  description: "Załóż konto Vairo magic linkiem, Google lub Apple.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT("auth");
+  return { title: t("register.metaTitle"), description: t("register.metaDescription") };
+}
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

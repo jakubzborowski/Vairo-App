@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "content:build": "node scripts/build-content.mjs"
+    "content:build": "node scripts/build-content.mjs",
+    "i18n:index": "node scripts/i18n.mjs index",
+    "i18n:check": "node scripts/i18n.mjs check"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.135.0",

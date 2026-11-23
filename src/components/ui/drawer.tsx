@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Portal } from "./portal";
+import { useT } from "@/i18n/client";
 
 /**
  * Panel z prawej — szczegół rzeczy z listy, bez zasłaniania listy.
@@ -27,6 +28,7 @@ export function Drawer({
   footer?: React.ReactNode;
   className?: string;
 }) {
+  const t = useT("common");
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export function Drawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       <button
         type="button"
-        aria-label="Zamknij"
+        aria-label={t("actions.close")}
         onClick={onClose}
         className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
       />
@@ -72,7 +74,7 @@ export function Drawer({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Zamknij"
+            aria-label={t("actions.close")}
             className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-[var(--text-subtle)] transition-colors hover:bg-white/[0.06] hover:text-white"
           >
             <X className="size-4" />

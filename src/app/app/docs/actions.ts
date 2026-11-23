@@ -50,7 +50,7 @@ export async function createDocument(input: {
     })
     .select("id")
     .single();
-  if (error || !data) return { error: translateDbError(error?.message) };
+  if (error || !data) return { error: await translateDbError(error?.message) };
 
   revalidatePath("/app/docs", "layout");
   return { error: null, id: data.id as string };
@@ -82,7 +82,7 @@ export async function saveDocument(input: {
     .eq("id", input.id)
     .eq("startup_id", ctx.active.id)
     .select("id");
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
   // RLS nie zwraca błędu przy cudzym dokumencie — tylko zero wierszy. Bez tej
   // kontroli autozapis pokazywał „Zapisano", a tekst przepadał.
   if (!data || data.length === 0) return { error: "Ten dokument zmienia jego autor albo Founder lub Admin. Odśwież stronę, jeśli został usunięty." };
@@ -102,7 +102,7 @@ export async function deleteDocument(id: string): Promise<{ error: string | null
     .eq("id", id)
     .eq("startup_id", ctx.active.id)
     .select("id");
-  if (error) return { error: translateDbError(error.message) };
+  if (error) return { error: await translateDbError(error.message) };
   if (!data || data.length === 0) return { error: "Ten dokument zmienia jego autor albo Founder lub Admin. Odśwież stronę, jeśli został usunięty." };
   revalidatePath("/app/docs", "layout");
   return { error: null };

@@ -13,6 +13,8 @@ import { ToastProvider } from "@/components/ui/toast";
 import { LiveNotifications } from "@/components/app/live-notifications";
 import type { TeamSummary } from "@/components/app/team-switcher";
 import { PosthogIdentify } from "@/components/analytics/posthog-identify";
+import { LocaleSync } from "@/components/app/locale-sync";
+import { getT } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,7 @@ export default async function AppLayout({
 }) {
   const supabase = await createClient();
   const user = await getCurrentUser();
+  const t = await getT("common");
 
   if (!user) {
     redirect("/register?next=/app");
@@ -49,7 +52,7 @@ export default async function AppLayout({
     countUnreadNotifications(supabase, user.id),
   ]);
 
-  const [{ data: profile }, startups, activeTeamId] = await Promise.all([
+  const [{ data: profile }, startups, activeTeamId, localeRow] = await Promise.all([
     supabase
       .from("profiles")
       .select("full_name, email, avatar_url")
@@ -57,7 +60,13 @@ export default async function AppLayout({
       .maybeSingle(),
     getUserStartups(supabase, user.id),
     getActiveStartupId(),
+    // Osobno od reszty profilu: bez migracji 049 kolumny nie ma, a błąd tego
+    // zapytania nie może zabrać imienia i avatara z menu.
+    supabase.from("profiles").select("locale").eq("id", user.id).maybeSingle(),
   ]);
+  const profileLocale = localeRow.error
+    ? undefined
+    : ((localeRow.data?.locale as string | null | undefined) ?? null);
 
   const active = resolveActiveStartup(startups, activeTeamId);
 
@@ -74,7 +83,7 @@ export default async function AppLayout({
   }));
 
   const name =
-    profile?.full_name?.trim() || user.email?.split("@")[0] || "Użytkownik";
+    profile?.full_name?.trim() || user.email?.split("@")[0] || t("fallbackName");
 
   // Jeden licznik skrzynki: wszystko, co czeka na decyzje tego uzytkownika —
   // zgloszenia do teamow, ktorymi zarzadza, zaproszenia skierowane do niego
@@ -127,6 +136,7 @@ export default async function AppLayout({
     >
       <ToastProvider>
         <PosthogIdentify userId={user.id} />
+        <LocaleSync profileLocale={profileLocale} />
         <LiveNotifications profileId={user.id} />
         {children}
       </ToastProvider>

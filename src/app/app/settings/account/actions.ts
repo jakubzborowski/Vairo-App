@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { purgeOwnAccountFiles } from "@/lib/storage-cleanup";
 import { ACTIVE_TEAM_COOKIE } from "@/lib/active-team";
 import { translateDbError } from "@/lib/db-errors";
+import { missingMigration, sessionExpired } from "@/lib/server-errors";
+import { getT } from "@/i18n/server";
 
 type Result = { error: string | null };
 
@@ -20,19 +22,20 @@ type Result = { error: string | null };
  * jednego kliknięcia w odruchu.
  */
 export async function deleteOwnAccount(confirmEmail: string): Promise<Result> {
+  const t = await getT("settings");
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const expected = (user.email ?? "").trim().toLowerCase();
   if (!expected) {
-    return { error: "Konto nie ma adresu e-mail — usuń je w panelu Supabase." };
+    return { error: t("delete.noEmail") };
   }
   if (confirmEmail.trim().toLowerCase() !== expected) {
-    return { error: "Wpisany adres nie zgadza się z adresem tego konta." };
+    return { error: t("delete.mismatchServer") };
   }
 
   // Pliki PRZED wywołaniem RPC — po nim nie ma już ani konta, ani sesji, ani
@@ -61,17 +64,12 @@ export async function deleteOwnAccount(confirmEmail: string): Promise<Result> {
 
   if (error) {
     if (error.message.includes("delete_own_account")) {
-      return {
-        error: "Brakuje migracji 015 — odpal ją w Supabase → SQL Editor.",
-      };
+      return { error: await missingMigration("015") };
     }
     if (/permission denied/i.test(error.message)) {
-      return {
-        error:
-          "Baza nie pozwala usunąć konta z aplikacji. Konto trzeba skasować w panelu: Supabase → Authentication → Users.",
-      };
+      return { error: t("delete.permissionDenied") };
     }
-    return { error: translateDbError(error.message) };
+    return { error: await translateDbError(error.message) };
   }
 
   // Token jeszcze chwilę żyje, więc czyścimy sesję od razu. Bez tego user

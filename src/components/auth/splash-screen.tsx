@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 import { BrandLogo } from "@/components/brand-logo";
 
 type SplashScreenProps = {
@@ -14,6 +15,7 @@ export function SplashScreen({
   onComplete,
   durationMs = 2400,
 }: SplashScreenProps) {
+  const t = useT("auth");
   const [progress, setProgress] = useState(0);
   const [leaving, setLeaving] = useState(false);
 
@@ -47,7 +49,7 @@ export function SplashScreen({
       )}
       role="status"
       aria-live="polite"
-      aria-label="Ładowanie Vairo"
+      aria-label={t("splash.loading")}
     >
       <div className="pointer-events-none absolute -left-[18%] -top-[22%] h-[70vmin] w-[70vmin] opacity-90 splash-mesh">
         <Image

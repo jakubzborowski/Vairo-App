@@ -11,6 +11,7 @@ import {
 } from "react";
 import { AlertTriangle, Check, Info, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 /**
  * Potwierdzenia akcji w prawym dolnym rogu.
@@ -115,6 +116,7 @@ function ToastCard({
   toast: Toast;
   onDismiss: () => void;
 }) {
+  const t = useT("common");
   useEffect(() => {
     const base = LIFETIME[toast.tone];
     if (base === null) return;
@@ -167,7 +169,7 @@ function ToastCard({
       <button
         type="button"
         onClick={onDismiss}
-        aria-label="Zamknij"
+        aria-label={t("actions.close")}
         className="-mr-1 -mt-1 rounded-md p-1 text-[var(--text-faint)] transition-colors hover:bg-white/[0.06] hover:text-white"
       >
         <X className="size-3.5" />

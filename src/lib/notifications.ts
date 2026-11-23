@@ -1,4 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Locale } from "@/i18n/config";
+import { formatDate } from "@/i18n/format";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
 
 /**
  * Powiadomienia — minimum z guidelines 10.7.
@@ -71,7 +75,8 @@ const SOCIAL_KINDS = new Set<NotificationKind>([
 
 export async function loadNotifications(
   supabase: SupabaseClient,
-  userId: string
+  userId: string,
+  t: Translate<MessageKey<"notifications">>
 ): Promise<{ notifications: AppNotification[]; error: string | null }> {
   const { data, error } = await supabase
     .from("notifications")
@@ -90,15 +95,13 @@ export async function loadNotifications(
     if (error.message.includes("public_name")) {
       return {
         notifications: [],
-        error:
-          "Brakuje migracji 033 — odpal ją w Supabase → SQL Editor, a powiadomienia wrócą.",
+        error: t("errors.migration033"),
       };
     }
     if (error.message.includes("notifications")) {
       return {
         notifications: [],
-        error:
-          "Brakuje migracji 013 — odpal ją w Supabase → SQL Editor, a powiadomienia zaczną działać.",
+        error: t("errors.migration013"),
       };
     }
     return { notifications: [], error: error.message };
@@ -121,7 +124,7 @@ export async function loadNotifications(
       actorName,
       actorAvatarUrl: row.profiles?.avatar_url ?? null,
       startupName,
-      title: describe(row.kind, actorName, startupName),
+      title: describe(t, row.kind, actorName, startupName),
     } satisfies AppNotification;
   });
 
@@ -144,57 +147,37 @@ export async function countUnreadNotifications(
 /**
  * Jedno zdanie, z którego widać, co się stało i kto to zrobił.
  * Bez „Nowe zdarzenie w systemie" — takie powiadomienie nic nie znaczy.
+ *
+ * Brzmienie siedzi w słowniku `notifications` (`describe.<kind>`), więc
+ * każdy czyta powiadomienie w swoim języku — baza trzyma tylko `kind`.
  */
 function describe(
+  t: Translate<MessageKey<"notifications">>,
   kind: NotificationKind,
   actor: string | null,
   startup: string | null
 ) {
-  const who = actor ?? "Ktoś";
-  const team = startup ?? "zespołu";
-
-  switch (kind) {
-    case "contact_received":
-      return `${who} chce się z Tobą skontaktować`;
-    case "contact_accepted":
-      return `Kontakt z ${who} nawiązany — możecie rozmawiać`;
-    case "message_received":
-      return `Nowa wiadomość od ${who}`;
-    case "join_application":
-      return `${who} chce dołączyć do ${team}`;
-    case "join_invite":
-      return `${who} zaprasza Cię do ${team}`;
-    case "invite_link_joined":
-      return `Nowa osoba w ${team}: ${who}, z Twojego linku zaproszenia`;
-    case "join_accepted":
-      return `Jesteś w ${team}`;
-    case "join_declined":
-      return `Zgłoszenie do ${team} zostało odrzucone`;
-    case "goal_assigned":
-      return `Nowy cel dla Ciebie w ${team} — od ${who}`;
-    case "task_assigned":
-      return `Nowe zadanie dla Ciebie w ${team} — od ${who}`;
-    case "goal_blocked":
-      return `Przeszkoda przy celu w ${team}`;
-    case "goal_due":
-      return `Zbliża się termin celu w ${team}`;
-    default:
-      return "Nowe zdarzenie";
-  }
+  const values = {
+    who: actor ?? t("describe.someone"),
+    team: startup ?? t("describe.theTeam"),
+  };
+  return (NOTIFICATION_KINDS as readonly string[]).includes(kind)
+    ? t(`describe.${kind}`, values)
+    : t("describe.default");
 }
 
-/** „5 min", „2 godz.", „wczoraj", potem data. */
-export function formatAge(iso: string) {
+/** „5 min", „2 godz.", „wczoraj", potem data — w języku interfejsu. */
+export function formatAge(t: Translate<MessageKey<"common">>, locale: Locale, iso: string) {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
 
   const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
-  if (minutes < 1) return "teraz";
-  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 1) return t("age.now");
+  if (minutes < 60) return t("age.minutes", { count: minutes });
 
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} godz.`;
-  if (hours < 48) return "wczoraj";
+  if (hours < 24) return t("age.hours", { count: hours });
+  if (hours < 48) return t("age.yesterday");
 
-  return date.toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
+  return formatDate(locale, date, { day: "numeric", month: "short" });
 }

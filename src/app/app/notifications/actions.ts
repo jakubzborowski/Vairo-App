@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { translateDbError } from "@/lib/db-errors";
+import { sessionExpired } from "@/lib/server-errors";
 
 /**
  * Oznaczenie wszystkiego jako przeczytane.
@@ -18,7 +19,7 @@ export async function markAllNotificationsRead(): Promise<{
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { error } = await supabase.rpc("mark_notifications_read");
 
@@ -26,7 +27,7 @@ export async function markAllNotificationsRead(): Promise<{
     if (error.message.includes("mark_notifications_read")) {
       return { error: "Brakuje migracji 013 — odpal ją w Supabase → SQL Editor." };
     }
-    return { error: translateDbError(error.message) };
+    return { error: await translateDbError(error.message) };
   }
 
   // Licznik dzwonka siedzi w menu bocznym, czyli w layoucie.

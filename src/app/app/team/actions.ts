@@ -12,6 +12,7 @@ import {
   type StartupRole,
   type StartupStatus,
 } from "@/types/startup";
+import { sessionExpired } from "@/lib/server-errors";
 
 type Result = { error: string | null };
 
@@ -41,7 +42,7 @@ async function guardManage(
   return { role, error: teamManageError(role) };
 }
 
-function translate(message: string) {
+async function translate(message: string) {
   if (isLastFounderError(message)) {
     return "To jedyny Founder tego zespołu. Najpierw przekaż tę rolę komuś innemu.";
   }
@@ -49,7 +50,7 @@ function translate(message: string) {
     return "Ta osoba jest już w 3 zespołach — to maksimum na konto.";
   }
   // Reszta idzie przez wspólny tłumacz, żeby nie wyciekł surowy błąd bazy.
-  return translateDbError(message) ?? message;
+  return await translateDbError(message) ?? message;
 }
 
 // ---------------------------------------------------------------------------
@@ -68,7 +69,7 @@ export async function updateMemberRole(input: {
   role: StartupRole;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { role: myRole, error: denied } = await guardManage(
     supabase,
@@ -94,7 +95,7 @@ export async function updateMemberRole(input: {
     .eq("startup_id", input.startupId)
     .eq("profile_id", input.profileId);
 
-  if (error) return { error: translate(error.message) };
+  if (error) return { error: await translate(error.message) };
 
   revalidateTeam();
   return { error: null };
@@ -107,7 +108,7 @@ export async function updateJobTitle(input: {
   jobTitle: string;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const myRole = await getStartupRole(supabase, input.startupId, user.id);
   if (!myRole) return { error: "Nie należysz do tego zespołu." };
@@ -128,7 +129,7 @@ export async function updateJobTitle(input: {
     .eq("startup_id", input.startupId)
     .eq("profile_id", input.profileId);
 
-  if (error) return { error: translate(error.message) };
+  if (error) return { error: await translate(error.message) };
 
   revalidateTeam();
   return { error: null };
@@ -139,7 +140,7 @@ export async function removeMember(input: {
   profileId: string;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { error: denied } = await guardManage(supabase, input.startupId, user.id);
   if (denied) return { error: denied };
@@ -154,7 +155,7 @@ export async function removeMember(input: {
     .eq("startup_id", input.startupId)
     .eq("profile_id", input.profileId);
 
-  if (error) return { error: translate(error.message) };
+  if (error) return { error: await translate(error.message) };
 
   revalidateTeam();
   return { error: null };
@@ -166,7 +167,7 @@ export async function removeMember(input: {
  */
 export async function leaveTeam(startupId: string): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { error } = await supabase
     .from("startup_members")
@@ -174,7 +175,7 @@ export async function leaveTeam(startupId: string): Promise<Result> {
     .eq("startup_id", startupId)
     .eq("profile_id", user.id);
 
-  if (error) return { error: translate(error.message) };
+  if (error) return { error: await translate(error.message) };
 
   // Ciasteczko aktywnego teamu wskazywało na team, którego user już nie ma.
   // `resolveActiveStartup()` cofa się wtedy do pierwszego z listy, więc nic
@@ -203,7 +204,7 @@ export async function transferFounder(input: {
   toProfileId: string;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   if (input.toProfileId === user.id) {
     return { error: "Już masz tę rolę." };
@@ -223,7 +224,7 @@ export async function transferFounder(input: {
     .eq("startup_id", input.startupId)
     .eq("profile_id", input.toProfileId);
 
-  if (promoteError) return { error: translate(promoteError.message) };
+  if (promoteError) return { error: await translate(promoteError.message) };
 
   const { error: demoteError } = await supabase
     .from("startup_members")
@@ -307,12 +308,12 @@ async function replaceRoleSkills(
     .from("startup_open_role_skills")
     .insert(skillIds.map((skillId) => ({ role_id: roleId, skill_id: skillId })));
 
-  return error ? translate(error.message) : null;
+  return error ? await translate(error.message) : null;
 }
 
 export async function createOpenRole(input: RoleInput): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { error: denied } = await guardManage(supabase, input.startupId, user.id);
   if (denied) return { error: denied };
@@ -332,7 +333,7 @@ export async function createOpenRole(input: RoleInput): Promise<Result> {
     .select("id")
     .single();
 
-  if (error) return { error: translate(error.message) };
+  if (error) return { error: await translate(error.message) };
 
   const skillError = await replaceRoleSkills(supabase, data.id as string, skillIds);
   if (skillError) return { error: skillError };
@@ -352,7 +353,7 @@ export async function updateOpenRole(
   input: RoleInput & { roleId: string }
 ): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { error: denied } = await guardManage(supabase, input.startupId, user.id);
   if (denied) return { error: denied };
@@ -367,7 +368,7 @@ export async function updateOpenRole(
     .eq("id", input.roleId)
     .eq("startup_id", input.startupId);
 
-  if (error) return { error: translate(error.message) };
+  if (error) return { error: await translate(error.message) };
 
   const skillError = await replaceRoleSkills(supabase, input.roleId, skillIds);
   if (skillError) return { error: skillError };
@@ -386,7 +387,7 @@ export async function setOpenRoleState(input: {
   isOpen: boolean;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { error: denied } = await guardManage(supabase, input.startupId, user.id);
   if (denied) return { error: denied };
@@ -397,7 +398,7 @@ export async function setOpenRoleState(input: {
     .eq("id", input.roleId)
     .eq("startup_id", input.startupId);
 
-  if (error) return { error: translate(error.message) };
+  if (error) return { error: await translate(error.message) };
 
   revalidateTeam();
   return { error: null };
@@ -408,7 +409,7 @@ export async function deleteOpenRole(input: {
   roleId: string;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { error: denied } = await guardManage(supabase, input.startupId, user.id);
   if (denied) return { error: denied };
@@ -419,7 +420,7 @@ export async function deleteOpenRole(input: {
     .eq("id", input.roleId)
     .eq("startup_id", input.startupId);
 
-  if (error) return { error: translate(error.message) };
+  if (error) return { error: await translate(error.message) };
 
   revalidateTeam();
   return { error: null };
@@ -444,7 +445,7 @@ export async function saveTeamProfile(input: {
   showStagePublicly: boolean;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { error: denied } = await guardManage(supabase, input.startupId, user.id);
   if (denied) return { error: denied };
@@ -492,7 +493,7 @@ export async function saveTeamProfile(input: {
       .eq("id", input.startupId));
   }
 
-  if (error) return { error: translate(error.message) };
+  if (error) return { error: await translate(error.message) };
 
   revalidateTeam();
   revalidatePath("/app/team/profile");
@@ -514,7 +515,7 @@ export async function setTeamVisibility(input: {
   showStagePublicly: boolean;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { error: denied } = await guardManage(supabase, input.startupId, user.id);
   if (denied) return { error: denied };
@@ -536,7 +537,7 @@ export async function setTeamVisibility(input: {
       .eq("id", input.startupId));
   }
 
-  if (error) return { error: translate(error.message) };
+  if (error) return { error: await translate(error.message) };
 
   revalidateTeam();
   revalidatePath("/app/team/profile");
@@ -547,7 +548,7 @@ const LOGO_MAX_BYTES = 15 * 1024 * 1024;
 
 export async function uploadTeamLogo(formData: FormData) {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie.", logoUrl: null };
+  if (!user) return { error: await sessionExpired(), logoUrl: null };
 
   const startupId = String(formData.get("startup_id") ?? "");
   if (!startupId) return { error: "Brak kontekstu zespołu.", logoUrl: null };
@@ -577,7 +578,7 @@ export async function uploadTeamLogo(formData: FormData) {
     .from("startup-logos")
     .upload(path, file, { upsert: true, contentType: file.type });
 
-  if (uploadError) return { error: translateDbError(uploadError.message), logoUrl: null };
+  if (uploadError) return { error: await translateDbError(uploadError.message), logoUrl: null };
 
   const { data } = supabase.storage.from("startup-logos").getPublicUrl(path);
   // Ścieżka jest stała, więc bez cache-bustera przeglądarka pokaże stare logo.
@@ -588,7 +589,7 @@ export async function uploadTeamLogo(formData: FormData) {
     .update({ logo_url: logoUrl })
     .eq("id", startupId);
 
-  if (error) return { error: translateDbError(error.message), logoUrl: null };
+  if (error) return { error: await translateDbError(error.message), logoUrl: null };
 
   revalidateTeam();
   revalidatePath("/app/team/profile");
@@ -604,7 +605,7 @@ export async function setStartupStatus(input: {
   status: StartupStatus;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { role, error: denied } = await guardManage(
     supabase,
@@ -622,7 +623,7 @@ export async function setStartupStatus(input: {
     .update({ status: input.status })
     .eq("id", input.startupId);
 
-  if (error) return { error: translate(error.message) };
+  if (error) return { error: await translate(error.message) };
 
   revalidateTeam();
   return { error: null };
@@ -644,7 +645,7 @@ export async function deleteStartup(input: {
   confirmName: string;
 }): Promise<Result> {
   const { supabase, user } = await requireUser();
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const role = await getStartupRole(supabase, input.startupId, user.id);
   if (role !== "founder") {
@@ -674,7 +675,7 @@ export async function deleteStartup(input: {
     .delete()
     .eq("id", input.startupId);
 
-  if (error) return { error: translate(error.message) };
+  if (error) return { error: await translate(error.message) };
 
   await clearActiveStartupIfMatches(input.startupId);
 

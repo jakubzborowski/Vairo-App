@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { setActiveStartupId } from "@/lib/active-team";
+import { notAMember, sessionExpired } from "@/lib/server-errors";
 
 export async function signOut() {
   const supabase = await createClient();
@@ -24,7 +25,7 @@ export async function switchTeam(startupId: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Sesja wygasła — zaloguj się ponownie." };
+  if (!user) return { error: await sessionExpired() };
 
   const { data: membership } = await supabase
     .from("startup_members")
@@ -33,7 +34,7 @@ export async function switchTeam(startupId: string) {
     .eq("profile_id", user.id)
     .maybeSingle();
 
-  if (!membership) return { error: "Nie należysz do tego zespołu." };
+  if (!membership) return { error: await notAMember() };
 
   await setActiveStartupId(startupId);
 

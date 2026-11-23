@@ -1,118 +1,14 @@
+import { getT } from "@/i18n/server";
+import { dbErrorText } from "@/lib/db-error-keys";
+
+export { dbErrorKey, dbErrorText } from "@/lib/db-error-keys";
+
 /**
- * Jeden tłumacz błędów bazy na polski.
- *
- * Postgres i PostgREST mówią po angielsku, kodami i nazwami ograniczeń.
- * Człowiek, który pierwszy raz widzi tę aplikację, ma z tego zrozumieć, co
- * zrobić dalej — więc każdy komunikat mówi **co się stało i co z tym zrobić**,
- * a nie jak nazywa się naruszony constraint.
- *
- * Dwie rzeczy, które ten plik miał źle i warto zapisać dlaczego:
- *
- * **Polskie znaki.** Komunikaty były pisane bez ogonków („uprawnien", „Jesli
- * to blad", „Odswiez"), bo powstały w pliku SQL, gdzie tak jest bezpieczniej.
- * Ale to jest tekst pokazywany użytkownikowi w aplikacji, w której cała reszta
- * ma poprawną polszczyznę — i akurat pojawia się w najgorszym momencie, czyli
- * gdy coś poszło nie tak. Wygląda wtedy jak druga, gorsza aplikacja pod spodem.
- *
- * **Surowy komunikat na końcu.** Funkcja kończyła się `return message`, czyli
- * przy nieznanym błędzie wypluwała do interfejsu tekst Postgresa. CLAUDE.md
- * mówi wprost: „żaden komunikat błędu nie wychodzi surowy". Teraz nieznany
- * błąd dostaje zdanie po polsku, a oryginał ląduje w logu serwera — tam, gdzie
- * jest komuś potrzebny.
+ * Tłumacz błędów bazy po stronie serwera — akcje i route handlery.
+ * Dopasowania i opis całości: `db-error-keys.ts`. Komponenty klienckie
+ * używają `useDbError()` z `use-db-error.ts` (ten plik czyta ciasteczka).
  */
-export function translateDbError(message: string | null | undefined) {
+export async function translateDbError(message: string | null | undefined) {
   if (!message) return null;
-
-  if (message.includes("row-level security")) {
-    return "Nie masz uprawnień do tej zmiany. Jeśli to pomyłka, poproś Foundera o wyższą rolę.";
-  }
-  if (message.includes("support_rate_limited")) {
-    return "Wysłano już sporo zgłoszeń w ciągu ostatniej godziny. Spróbuj za chwilę — poprzednie na pewno dotarły.";
-  }
-  if (message.includes("support_no_email")) {
-    return "Konto nie ma adresu e-mail, na który dałoby się odpisać. Napisz do nas bezpośrednio z poczty.";
-  }
-  if (message.includes("support_message_length")) {
-    return "Zgłoszenie musi mieć od 10 do 4000 znaków.";
-  }
-  if (
-    message.includes("submit_support_request") &&
-    (message.includes("does not exist") || message.includes("Could not find"))
-  ) {
-    return "Wysyłka zgłoszeń jeszcze nie działa w tej bazie (brakuje migracji 043). Daj znać zespołowi Vairo inną drogą.";
-  }
-  if (message.includes("invite_not_allowed")) {
-    return "Linki zaproszeń tworzą i wyłączają Founder oraz Admin.";
-  }
-  if (message.includes("invite_invalid")) {
-    return "Ten link zaproszenia jest nieaktualny. Poproś osobę, która go wysłała, o nowy.";
-  }
-  if (
-    message.includes("startup_invite_links") ||
-    message.includes("create_invite_link") ||
-    message.includes("accept_invite_link") ||
-    message.includes("revoke_invite_links")
-  ) {
-    return "Brakuje migracji 035 — odpal ją w Supabase → SQL Editor, a zaproszenia linkiem zaczną działać.";
-  }
-  if (message.includes("startup_limit_reached")) {
-    return "Limit 3 zespołów na konto został osiągnięty.";
-  }
-  if (message.includes("cannot_remove_last_founder")) {
-    return "To jedyny Founder tego zespołu. Najpierw przekaż tę rolę komuś innemu.";
-  }
-  if (message.includes("general_category_required")) {
-    return "Kategorii „Ogólna walidacja” nie da się usunąć — jest obowiązkowa.";
-  }
-  if (message.includes("duplicate key")) {
-    return "To już istnieje. Odśwież stronę i sprawdź, czy nie zostało dodane wcześniej.";
-  }
-  if (message.includes("violates check constraint")) {
-    return "Wpisana wartość nie mieści się w dozwolonym zakresie. Sprawdź długość tekstu albo liczbę.";
-  }
-  if (message.includes("violates foreign key")) {
-    return "Element, do którego to się odwołuje, już nie istnieje. Odśwież stronę.";
-  }
-  if (message.includes("does not exist") || message.includes("schema cache")) {
-    return "Brakuje migracji bazy danych. Odpal brakujące pliki w Supabase → SQL Editor.";
-  }
-  if (message.includes("JWT") || message.includes("not_authenticated")) {
-    return "Sesja wygasła. Zaloguj się ponownie.";
-  }
-  if (message.includes("goal_proof_required")) {
-    return "Cel nie może być ukończony bez dowodu w wymaganym formacie.";
-  }
-  if (message.includes("goal_locked_reopen_first")) {
-    return "Najpierw otwórz cel ponownie. Dopiero wtedy zmienisz wynik, typ albo dowód.";
-  }
-  if (message.includes("goal_type_mismatch")) {
-    return "Ten cel ma inny typ niż warunek programu, więc nie da się go podpiąć.";
-  }
-  if (message.includes("goal_startup_mismatch")) {
-    return "Cel i warunek muszą należeć do tego samego startupu.";
-  }
-  if (message.includes("goal_owner_not_in_team")) {
-    return "Właścicielem może być tylko osoba z tego zespołu.";
-  }
-  if (message.includes("goal_blocker_needs_note")) {
-    return "Napisz, co blokuje pracę — samo oznaczenie nic nie mówi.";
-  }
-  if (message.includes("goal_proof_file_foreign")) {
-    return "Ten plik nie należy do tego startupu.";
-  }
-  if (message.includes("goal_proof_workflow_missing")) {
-    return "Nie ma takiej zapisanej wersji Rozpiski.";
-  }
-  if (message.includes("goal_archived")) {
-    return "Zarchiwizowanego celu nie da się ukończyć.";
-  }
-
-  if (/score_[a-z_]+/.test(message) && /does not exist|could not find/i.test(message)) {
-    return "Brakuje migracji SCORE (044–048) — odpal je w Supabase → SQL Editor.";
-  }
-
-  // Nieznany błąd: user dostaje zdanie, z którym da się coś zrobić, a pełna
-  // treść trafia do logu serwera — nie na ekran.
-  console.error("[db]", message);
-  return "Coś poszło nie tak po stronie bazy. Odśwież stronę i spróbuj jeszcze raz.";
+  return dbErrorText(await getT("errors"), message);
 }

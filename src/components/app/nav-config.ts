@@ -20,6 +20,7 @@ import {
   Waypoints,
   type LucideIcon,
 } from "lucide-react";
+import type { MessageKey } from "@/i18n/messages";
 
 /**
  * Jedno źródło prawdy dla nawigacji.
@@ -33,8 +34,11 @@ import {
  * Moduły Execution (Cele, Taski, Rozpiska) są w menu, gdy startup domknął
  * Preparation — `requiresExecution`. Wcześniej nie ma wyszarzonych pozycji.
  */
+/** Klucz w słowniku `nav` — etykieta rysuje się w języku użytkownika. */
+export type NavLabelKey = MessageKey<"nav">;
+
 export type NavItem = {
-  label: string;
+  labelKey: NavLabelKey;
   /** Pozycja widoczna wyłącznie dla Foundera i Admina aktywnego teamu. */
   requiresManage?: boolean;
   href: string;
@@ -46,7 +50,7 @@ export type NavItem = {
 
 export type NavGroup = {
   id: "team" | "work" | "social";
-  label: string;
+  labelKey: NavLabelKey;
   collapsible: boolean;
   items: NavItem[];
 };
@@ -57,12 +61,12 @@ export const navGroups: NavGroup[] = [
     // wyłącznie warstwę Social i nie ma czego wyszarzać. Nagłówek nosi nazwę
     // startupu (app-shell), nie słowo „team".
     id: "team",
-    label: "Twój zespół",
+    labelKey: "group.team",
     collapsible: false,
     items: [
-      { label: "Start", href: "/app", icon: LayoutDashboard },
-      { label: "Etap startupu", href: "/app/stage", icon: Route },
-      { label: "Zespół", href: "/app/team", icon: Users },
+      { labelKey: "start", href: "/app", icon: LayoutDashboard },
+      { labelKey: "stage", href: "/app/stage", icon: Route },
+      { labelKey: "team", href: "/app/team", icon: Users },
       // Profil publiczny teamu był dostępny wyłącznie przez przycisk
       // w nagłówku strony Team — czyli trzy kliknięcia do rzeczy, którą
       // widzą obcy i którą najczęściej się poprawia. Teraz stoi w menu,
@@ -70,7 +74,7 @@ export const navGroups: NavGroup[] = [
       // przekierowuje, a pozycja prowadząca pod zamknięte drzwi jest gorsza
       // niż jej brak.
       {
-        label: "Profil publiczny",
+        labelKey: "teamProfile",
         href: "/app/team/profile",
         icon: Globe,
         requiresManage: true,
@@ -83,20 +87,20 @@ export const navGroups: NavGroup[] = [
     // wraca kilka razy dziennie, więc pozycje nie mogą ginąć w jednej
     // długiej liście dziesięciu wierszy.
     id: "work",
-    label: "Praca zespołu",
+    labelKey: "group.work",
     collapsible: false,
     items: [
-      { label: "Cele", href: "/app/goals", icon: Flag, requiresExecution: true },
-      { label: "Taski", href: "/app/tasks", icon: ListTodo, requiresExecution: true },
-      { label: "Rozpiska", href: "/app/workflows", icon: Waypoints, requiresExecution: true },
-      { label: "Terminy", href: "/app/calendar", icon: CalendarDays, requiresExecution: true },
-      { label: "Dokumenty", href: "/app/docs", icon: FileText },
-      { label: "Pliki", href: "/app/files", icon: FolderOpen },
+      { labelKey: "goals", href: "/app/goals", icon: Flag, requiresExecution: true },
+      { labelKey: "tasks", href: "/app/tasks", icon: ListTodo, requiresExecution: true },
+      { labelKey: "workflows", href: "/app/workflows", icon: Waypoints, requiresExecution: true },
+      { labelKey: "calendar", href: "/app/calendar", icon: CalendarDays, requiresExecution: true },
+      { labelKey: "docs", href: "/app/docs", icon: FileText },
+      { labelKey: "files", href: "/app/files", icon: FolderOpen },
     ],
   },
   {
     id: "social",
-    label: "Social",
+    labelKey: "group.social",
     collapsible: true,
     items: [
       // DWA wejścia, nie jedno — i dwa PRAWDZIWE adresy, nie jeden z zakładką.
@@ -111,17 +115,17 @@ export const navGroups: NavGroup[] = [
       // którą talię pokazać, więc ten sam link otwierał u dwóch osób dwie
       // różne rzeczy. Zakładka opisuje stan, a to są miejsca.
       {
-        label: "Szukam projektu",
+        labelKey: "findProject",
         href: "/app/social/teams",
         icon: Compass,
       },
       {
-        label: "Szukam ludzi",
+        labelKey: "findPeople",
         href: "/app/social/people",
         icon: Users,
       },
       {
-        label: "Wiadomości",
+        labelKey: "messages",
         href: "/app/social/messages",
         icon: MessageSquare,
         badgeKey: "messages",
@@ -130,13 +134,13 @@ export const navGroups: NavGroup[] = [
         // Jedna skrzynka na wszystko, co czeka na decyzję: zaczepki od ludzi
         // i sprawy członkostwa w teamie. Dwa osobne wejścia z osobnymi
         // licznikami brzmiały dla nowej osoby tak samo.
-        label: "Zaproszenia",
+        labelKey: "invites",
         href: "/app/social/invites",
         icon: Mail,
         badgeKey: "inbox",
       },
       {
-        label: "Mój profil publiczny",
+        labelKey: "myPublicProfile",
         href: "/app/social/me",
         icon: UserRound,
       },
@@ -150,16 +154,16 @@ export const navGroups: NavGroup[] = [
  * wszystkie miejsca w aplikacji.
  */
 export const footerNav: NavItem[] = [
-  { label: "SCORE", href: "/app/score", icon: Trophy },
+  { labelKey: "score", href: "/app/score", icon: Trophy },
   {
-    label: "Powiadomienia",
+    labelKey: "notifications",
     href: "/app/notifications",
     icon: Bell,
     badgeKey: "notifications",
   },
-  { label: "Jak to działa", href: "/app/program", icon: HelpCircle },
-  { label: "Pomoc i opinie", href: "/app/help", icon: LifeBuoy },
-  { label: "Ustawienia", href: "/app/settings/profile", icon: Settings },
+  { labelKey: "program", href: "/app/program", icon: HelpCircle },
+  { labelKey: "help", href: "/app/help", icon: LifeBuoy },
+  { labelKey: "settings", href: "/app/settings/profile", icon: Settings },
 ];
 
 /**

@@ -20,10 +20,14 @@ import { loadContactSignals } from "@/lib/messages";
 import { getUserStartups } from "@/lib/startup";
 import { MarkReadButton } from "@/components/app/mark-read-button";
 import { InboxRow } from "@/components/social/inbox-row";
-import { cn, plural } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { getLocale, getT } from "@/i18n/server";
 import { canManageTeam } from "@/types/startup";
 
-export const metadata = { title: "Powiadomienia — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("notifications");
+  return { title: t("page.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 const KIND_ICON: Record<NotificationKind, LucideIcon> = {
@@ -41,21 +45,21 @@ const KIND_ICON: Record<NotificationKind, LucideIcon> = {
   invite_link_joined: UserPlus,
 };
 
-const EMPTY_KINDS: [LucideIcon, string][] = [
-  [UserPlus, "Ktoś doda Cię do kontaktów"],
-  [MessageSquare, "Nowa wiadomość"],
-  [Users, "Zgłoszenie do Waszego zespołu"],
-  [MailCheck, "Odpowiedź na Twoją prośbę"],
-];
+const EMPTY_KINDS = [
+  [UserPlus, "page.emptyKind.contact"],
+  [MessageSquare, "page.emptyKind.message"],
+  [Users, "page.emptyKind.application"],
+  [MailCheck, "page.emptyKind.reply"],
+] as const satisfies readonly (readonly [LucideIcon, string])[];
 
-function dayGroup(iso: string) {
+function dayGroup(iso: string): "page.today" | "page.yesterday" | "page.earlier" {
   const date = new Date(iso);
   const today = new Date();
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
   const time = date.getTime();
-  if (time >= startOfToday) return "Dziś";
-  if (time >= startOfToday - 86_400_000) return "Wczoraj";
-  return "Wcześniej";
+  if (time >= startOfToday) return "page.today";
+  if (time >= startOfToday - 86_400_000) return "page.yesterday";
+  return "page.earlier";
 }
 
 /**
@@ -76,6 +80,9 @@ export default async function NotificationsPage({
   const onlyUnread = tylko === "nowe";
   const supabase = await createClient();
   const user = await getCurrentUser();
+  const t = await getT("notifications");
+  const tc = await getT("common");
+  const locale = await getLocale();
 
   if (!user) redirect("/register?next=/app/notifications");
 
@@ -83,7 +90,7 @@ export default async function NotificationsPage({
   const manageableIds = startups.filter((startup) => canManageTeam(startup.role)).map((startup) => startup.id);
 
   const [{ notifications, error }, { requests }, { signals }] = await Promise.all([
-    loadNotifications(supabase, user.id),
+    loadNotifications(supabase, user.id, t),
     loadJoinRequests(supabase, user.id, manageableIds, "pending"),
     loadContactSignals(supabase, user.id),
   ]);
@@ -95,7 +102,7 @@ export default async function NotificationsPage({
   const unread = notifications.filter((item) => !item.isRead).length;
   const shown = onlyUnread ? notifications.filter((item) => !item.isRead) : notifications;
 
-  const groups = new Map<string, typeof shown>();
+  const groups = new Map<ReturnType<typeof dayGroup>, typeof shown>();
   for (const item of shown) {
     const key = dayGroup(item.createdAt);
     groups.set(key, [...(groups.get(key) ?? []), item]);
@@ -103,12 +110,10 @@ export default async function NotificationsPage({
 
   const subtitle =
     unread === 0 && decisions.length === 0
-      ? "Wszystko przeczytane."
+      ? t("page.allRead")
       : [
-          unread > 0 ? `${unread} ${plural(unread, "nowe", "nowe", "nowych")}` : null,
-          decisions.length > 0
-            ? `${decisions.length === 1 ? "Jedno czeka" : `${decisions.length} ${plural(decisions.length, "czeka", "czekają", "czeka")}`} na Twoją decyzję`
-            : null,
+          unread > 0 ? t("page.unreadCount", { count: unread }) : null,
+          decisions.length > 0 ? t("page.decisionsCount", { count: decisions.length }) : null,
         ]
           .filter(Boolean)
           .join(". ") + ".";
@@ -118,7 +123,7 @@ export default async function NotificationsPage({
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
-            Powiadomienia
+            {t("page.title")}
           </h1>
           <p className="mt-1 text-[14px] text-[var(--text-muted)]">{subtitle}</p>
         </div>
@@ -134,7 +139,7 @@ export default async function NotificationsPage({
       {decisions.length > 0 ? (
         <section className="edge-accent mt-6 overflow-hidden rounded-[22px] border border-[var(--vairo)]/25 bg-[var(--vairo)]/[0.05] lift-2">
           <p className="px-5 pt-4 text-[12px] font-semibold uppercase tracking-[0.05em] text-[var(--text-subtle)]">
-            Czeka na Twoją decyzję
+            {t("page.awaitingDecision")}
           </p>
           <ul className="mt-1 divide-y divide-white/[0.06]">
             {decisions.slice(0, 3).map((item, index) =>
@@ -150,17 +155,17 @@ export default async function NotificationsPage({
               href="/app/social/invites"
               className="block border-t border-white/[0.06] px-5 py-3 text-[13px] text-[var(--text-muted)] hover:text-white"
             >
-              Pozostałe ({decisions.length - 3}) w Zaproszeniach →
+              {t("page.moreInInvites", { count: decisions.length - 3 })}
             </Link>
           ) : null}
         </section>
       ) : null}
 
       {notifications.length > 0 ? (
-        <nav aria-label="Filtr" className="mt-6 inline-flex rounded-xl border border-white/10 bg-[var(--surface)] p-[3px]">
+        <nav aria-label={t("page.filter")} className="mt-6 inline-flex rounded-xl border border-white/10 bg-[var(--surface)] p-[3px]">
           {[
-            [false, "Wszystkie", "/app/notifications"],
-            [true, "Nieprzeczytane", "/app/notifications?tylko=nowe"],
+            [false, t("page.all"), "/app/notifications"],
+            [true, t("page.unread"), "/app/notifications?tylko=nowe"],
           ].map(([value, label, href]) => (
             <Link
               key={String(label)}
@@ -183,9 +188,9 @@ export default async function NotificationsPage({
           <span className="inline-flex size-14 items-center justify-center rounded-[18px] bg-[var(--surface-2)] text-[var(--text-muted)]">
             <Bell className="size-6" strokeWidth={1.75} />
           </span>
-          <p className="mt-4 font-heading text-[20px] font-semibold text-white">Nic się jeszcze nie stało</p>
+          <p className="mt-4 font-heading text-[20px] font-semibold text-white">{t("page.emptyTitle")}</p>
           <p className="mt-1.5 text-[14.5px] text-[var(--text-muted)]">
-            Tu pojawią się rzeczy, które dotyczą Ciebie. Każda prowadzi do właściwego miejsca.
+            {t("page.emptyBody")}
           </p>
           <ul className="mt-6 grid grid-cols-1 w-full max-w-[520px] gap-2.5 text-left sm:grid-cols-2">
             {EMPTY_KINDS.map(([Icon, text]) => (
@@ -193,7 +198,7 @@ export default async function NotificationsPage({
                 <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-[var(--surface-2)] text-[var(--text-muted)]">
                   <Icon className="size-4" />
                 </span>
-                <span className="text-[13.5px] text-[var(--text-muted)]">{text}</span>
+                <span className="text-[13.5px] text-[var(--text-muted)]">{t(text)}</span>
               </li>
             ))}
           </ul>
@@ -202,7 +207,7 @@ export default async function NotificationsPage({
 
       {notifications.length > 0 && shown.length === 0 ? (
         <p className="mt-5 rounded-xl border border-dashed border-white/10 px-4 py-4 text-[13.5px] text-[var(--text-subtle)]">
-          Wszystko przeczytane.
+          {t("page.allRead")}
         </p>
       ) : null}
 
@@ -210,7 +215,7 @@ export default async function NotificationsPage({
         {[...groups.entries()].map(([name, items]) => (
           <section key={name}>
             <h2 className="px-1 text-[12px] font-semibold uppercase tracking-[0.05em] text-[var(--text-subtle)]">
-              {name}
+              {t(name)}
             </h2>
             <ul className="mt-2 overflow-hidden rounded-[22px] bg-[var(--surface)] py-1 lift-1">
               {items.map((item) => {
@@ -225,7 +230,7 @@ export default async function NotificationsPage({
                       className="flex min-h-16 items-center gap-3 py-2.5 pl-3 pr-4 transition-colors hover:bg-white/[0.03] sm:pr-[18px]"
                     >
                       <span
-                        aria-label={item.isRead ? undefined : "Nieprzeczytane"}
+                        aria-label={item.isRead ? undefined : t("page.unread")}
                         className={cn("size-[7px] shrink-0 rounded-full", item.isRead ? "bg-transparent" : "bg-white")}
                       />
                       <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-[13px] bg-[var(--surface-2)]">
@@ -246,11 +251,11 @@ export default async function NotificationsPage({
                           </span>
                         ) : null}
                         <span className="mt-0.5 block text-[12.5px] text-[var(--text-subtle)] sm:hidden">
-                          {formatAge(item.createdAt)}
+                          {formatAge(tc, locale, item.createdAt)}
                         </span>
                       </span>
                       <span className="tabular hidden shrink-0 text-[12.5px] text-[var(--text-muted)] sm:block">
-                        {formatAge(item.createdAt)}
+                        {formatAge(tc, locale, item.createdAt)}
                       </span>
                     </Link>
                   </li>

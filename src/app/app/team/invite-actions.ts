@@ -12,7 +12,7 @@ export async function createInviteLink(startupId: string): Promise<LinkResult> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("create_invite_link", { p_startup: startupId });
   if (error) {
-    return { link: null, error: translateDbError(error.message) ?? "Nie udało się utworzyć linku." };
+    return { link: null, error: await translateDbError(error.message) ?? "Nie udało się utworzyć linku." };
   }
   const row = (Array.isArray(data) ? data[0] : data) as InviteRow | undefined;
   revalidatePath("/app/team");
@@ -24,7 +24,7 @@ export async function revokeInviteLinks(startupId: string): Promise<{ error: str
   const supabase = await createClient();
   const { error } = await supabase.rpc("revoke_invite_links", { p_startup: startupId });
   if (error) {
-    return { error: translateDbError(error.message) ?? "Nie udało się wyłączyć linku." };
+    return { error: await translateDbError(error.message) ?? "Nie udało się wyłączyć linku." };
   }
   revalidatePath("/app/team");
   return { error: null };
