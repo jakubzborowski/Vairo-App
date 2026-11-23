@@ -28,6 +28,8 @@ export type MissingPiece = {
   label: string;
   /** Dlaczego to ma znaczenie — bez tego user czyta listę jako czepianie się. */
   why: string;
+  /** Krótka nazwa braku do wyliczenia w zdaniu („Brakuje: logo, opisu…”). */
+  short?: string;
   weight: number;
 };
 
@@ -108,6 +110,7 @@ export function scoreTeamProfile(
       key,
       label: t(`teamCompleteness.${text}.label`),
       why: t(`teamCompleteness.${text}.why`),
+      short: t(`teamCompleteness.${text}.short`),
       weight,
     });
 

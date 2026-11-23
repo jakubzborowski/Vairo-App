@@ -372,5 +372,14 @@
   "wizard.timeDescription": "To najczęstsze źródło rozczarowań w zespołach. Lepiej powiedzieć wprost teraz niż tłumaczyć się za miesiąc.",
   "wizard.timeTitle": "Ile realnie masz czasu?",
   "wizard.visible": "Chcę być widoczny w Odkrywaj",
-  "wizard.visibleBody": "Inni mogą Cię znaleźć, napisać i zaprosić do zespołu. Twój e-mail zobaczą dopiero osoby z tego samego zespołu."
+  "wizard.visibleBody": "Inni mogą Cię znaleźć, napisać i zaprosić do zespołu. Twój e-mail zobaczą dopiero osoby z tego samego zespołu.",
+  "teamCompleteness.logo.short": "logo",
+  "teamCompleteness.tagline.short": "zdanie o projekcie",
+  "teamCompleteness.description.short": "opis projektu",
+  "teamCompleteness.roles.short": "otwarta rola",
+  "teamCompleteness.location.short": "lokalizacja",
+  "card.whyYouSee": "Dlaczego to widzisz:",
+  "chips.noMatch": "Nic nie pasuje do „{query}”.",
+  "inbox.writesOnBehalf": "Pisze w imieniu {team}",
+  "inbox.writtenOnBehalf": "Napisane w imieniu {team}"
 }

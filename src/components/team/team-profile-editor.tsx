@@ -19,6 +19,7 @@ import { useToast } from "@/components/ui/toast";
 import { scoreTeamProfile } from "@/lib/profile-completeness";
 import { cn } from "@/lib/utils";
 import type { StartupStatus } from "@/types/startup";
+import { useT } from "@/i18n/client";
 
 type PreviewRole = {
   id: string;
@@ -54,22 +55,7 @@ type Props = {
   openRoles: PreviewRole[];
 };
 
-const STATUS_COPY: Record<StartupStatus, { label: string; description: string }> = {
-  active: {
-    label: "Aktywny",
-    description: "Normalna praca. Zespół może być widoczny w Odkrywaj.",
-  },
-  paused: {
-    label: "Na pauzie",
-    description:
-      "Odłożony na później. Nie pojawia się w Odkrywaj, ale wszystko zostaje na miejscu.",
-  },
-  archived: {
-    label: "W archiwum",
-    description:
-      "Pomysł zamknięty. Dane zostają, zespół znika z wyszukiwarki.",
-  },
-};
+// Nazwy i opisy statusów: słownik `team`, `status.<status>.label|description`.
 
 /**
  * Profil publiczny teamu — to, co widzą obcy.
@@ -104,6 +90,8 @@ export function TeamProfileEditor({
   stageLabel,
   openRoles,
 }: Props) {
+  const t = useT("team");
+  const ts = useT("social");
   const router = useRouter();
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -211,10 +199,10 @@ export function TeamProfileEditor({
       toast({
         title:
           next === "paused"
-            ? "Startup wstrzymany"
+            ? t("editor.paused")
             : next === "archived"
-              ? "Startup przeniesiony do archiwum"
-              : "Prace wznowione",
+              ? t("editor.archived")
+              : t("editor.resumed"),
       });
       router.refresh();
     });
@@ -226,7 +214,7 @@ export function TeamProfileEditor({
     public_description: description,
     location,
     openRoleCount: openRoles.length,
-  });
+  }, ts);
   const readyCount = 5 - readiness.missing.length;
 
   const discard = () => {
@@ -253,7 +241,7 @@ export function TeamProfileEditor({
   const preview = (
     <div className="flex flex-col gap-3">
       <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-        Podgląd karty w Odkrywaj
+        {t("editor.previewTitle")}
       </p>
       <TeamPreviewCard
         name={name}
@@ -268,7 +256,7 @@ export function TeamProfileEditor({
         <p className="flex items-start gap-2 rounded-xl border border-[var(--warning)]/25 bg-[var(--warning)]/8 px-4 py-3 text-[12.5px] leading-relaxed text-[var(--warning)]">
           <EyeOff className="mt-0.5 size-4 shrink-0" />
           <span>
-            Ta karta nie pojawia się teraz w Odkrywaj — zespół ma wyłączoną widoczność.
+            {t("editor.hiddenNote")}
           </span>
         </p>
       ) : null}
@@ -281,13 +269,13 @@ export function TeamProfileEditor({
           się obok siebie, a przełącznik jest zawsze pod kciukiem. */}
       <div
         role="tablist"
-        aria-label="Widok"
+        aria-label={t("editor.viewAria")}
         className="inline-flex w-fit rounded-xl border border-white/[0.08] bg-[var(--surface)] p-1 lg:hidden"
       >
         {(
           [
-            ["edit", "Edycja"],
-            ["preview", "Podgląd"],
+            ["edit", t("editor.tabEdit")],
+            ["preview", t("editor.tabPreview")],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -312,7 +300,7 @@ export function TeamProfileEditor({
           <section className="rounded-[18px] border border-white/[0.07] bg-[var(--surface)] px-5 py-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <p className="text-[15px] font-medium text-white">
-                Profil gotowy w {readiness.score}%
+                {t("editor.ready", { score: readiness.score })}
               </p>
               <span className="tabular text-[12.5px] text-[var(--text-subtle)]">{readyCount} z 5</span>
             </div>
@@ -329,7 +317,7 @@ export function TeamProfileEditor({
             </span>
             {readiness.missing.length > 0 ? (
               <p className="mt-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
-                Brakuje:{" "}
+                {t("editor.missing")}{" "}
                 {readiness.missing.map((piece, index) => (
                   <span key={piece.key}>
                     {index > 0 ? ", " : ""}
@@ -338,14 +326,14 @@ export function TeamProfileEditor({
                       onClick={() => focusField(piece.key)}
                       className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white"
                     >
-                      {piece.label.replace(/^(Dodaj|Napisz|Opisz) /, "").replace(/^co najmniej /, "")}
+                      {piece.short ?? piece.label}
                     </button>
                   </span>
                 ))}
                 .
               </p>
             ) : (
-              <p className="mt-3 text-[13px] text-[var(--success)]">Komplet — karta mówi wszystko, co powinna.</p>
+              <p className="mt-3 text-[13px] text-[var(--success)]">{t("editor.complete")}</p>
             )}
           </section>
 
@@ -365,10 +353,10 @@ export function TeamProfileEditor({
                 />
                 <Button variant="secondary" size="sm" loading={busy} onClick={() => fileRef.current?.click()}>
                   <ImagePlus className="size-4" />
-                  {logo ? "Zmień logo" : "Dodaj logo"}
+                  {logo ? t("editor.changeLogo") : t("editor.addLogo")}
                 </Button>
                 <p className="text-[12.5px] text-[var(--text-subtle)]">
-                  Kwadrat, JPG, PNG albo WebP do 15 MB. Bez logo karta pokazuje pierwszą literę nazwy.
+                  {t("editor.logoHint")}
                 </p>
                 {logoError ? (
                   <p className="w-full rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-3 py-2 text-[13px] text-[var(--danger)]">
@@ -378,8 +366,8 @@ export function TeamProfileEditor({
               </div>
 
               <Field
-                label="Jedno zdanie o Was"
-                hint="To widać na karcie w Odkrywaj. Co robicie i dla kogo."
+                label={t("editor.tagline")}
+                hint={t("editor.taglineHint")}
                 counter={{ value: tagline.length, max: 160 }}
               >
                 {({ invalid }) => (
@@ -389,14 +377,14 @@ export function TeamProfileEditor({
                     value={tagline}
                     onChange={(event) => setTagline(event.target.value)}
                     maxLength={160}
-                    placeholder="np. Rezerwacje dla małych gabinetów kosmetycznych"
+                    placeholder={t("editor.taglinePlaceholder")}
                   />
                 )}
               </Field>
 
               <Field
-                label="O projekcie"
-                hint="Dłuższy opis na stronie zespołu — nie na karcie. Tyle, ile chcecie pokazać obcym."
+                label={t("editor.about")}
+                hint={t("editor.aboutHint")}
                 counter={{ value: description.length, max: 1200 }}
               >
                 {() => (
@@ -406,25 +394,25 @@ export function TeamProfileEditor({
                     onChange={(event) => setDescription(event.target.value)}
                     rows={6}
                     maxLength={1200}
-                    placeholder="Nad czym pracujecie, na jakim jesteście etapie, kogo szukacie i czego oczekujecie."
+                    placeholder={t("editor.aboutPlaceholder")}
                   />
                 )}
               </Field>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label="Lokalizacja" hint="Miasto albo „zdalnie”.">
+                <Field label={t("editor.location")} hint={t("editor.locationHint")}>
                   {() => (
                     <Input
                       id="pole-lokalizacja"
                       value={location}
                       onChange={(event) => setLocation(event.target.value)}
                       maxLength={80}
-                      placeholder="np. Wrocław / zdalnie"
+                      placeholder={t("editor.locationPlaceholder")}
                     />
                   )}
                 </Field>
 
-                <Field label="Strona · opcjonalnie" hint="Wystarczy sam adres.">
+                <Field label={t("editor.website")} hint={t("editor.websiteHint")}>
                   {({ id }) => (
                     <Input
                       id={id}
@@ -442,16 +430,16 @@ export function TeamProfileEditor({
           {/* Zgody — przełączniki z jednym zdaniem skutku. Zapisują się od razu. */}
           <section className="flex flex-col gap-2.5">
             <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-              Kto Was widzi
+              {t("editor.whoSees")}
             </p>
             <Toggle
               on={discoverable}
               disabled={busy}
-              title="Zespół widoczny w Odkrywaj"
+              title={t("editor.visibleTitle")}
               effect={
                 discoverable
-                  ? "Ludzie mogą Was znaleźć i wysłać zgłoszenie. Opis pomysłu z Idea Stage zostaje prywatny."
-                  : "Nie pojawiacie się w wyszukiwarce. Nadal możecie zapraszać ludzi sami."
+                  ? t("editor.visibleOn")
+                  : t("editor.visibleOff")
               }
               onChange={() => toggleVisibility({ isDiscoverable: !discoverable, showStagePublicly: stagePublic })}
             />
@@ -459,11 +447,11 @@ export function TeamProfileEditor({
               <Toggle
                 on={stagePublic}
                 disabled={busy}
-                title="Pokazujcie, na którym etapie jesteście"
+                title={t("editor.stageTitle")}
                 effect={
                   stagePublic
-                    ? "Na karcie widać nazwę etapu. Same odpowiedzi zostają w zespole."
-                    : "Nikt z zewnątrz nie widzi, jak daleko jesteście."
+                    ? t("editor.stageOn")
+                    : t("editor.stageOff")
                 }
                 onChange={() => toggleVisibility({ isDiscoverable: discoverable, showStagePublicly: !stagePublic })}
               />
@@ -480,46 +468,45 @@ export function TeamProfileEditor({
           <details className="group mt-6 rounded-[18px] border border-white/[0.07] bg-[var(--surface)]">
             <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-5 text-[13.5px] font-medium text-[var(--text-muted)] hover:text-white">
               <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
-              Zaawansowane: status, archiwizacja i usunięcie zespołu
+              {t("editor.advanced")}
             </summary>
             <div className="flex flex-col gap-5 border-t border-white/[0.06] px-5 py-5">
               <div>
-                <p className="text-[13.5px] text-white">{STATUS_COPY[status].label}</p>
+                <p className="text-[13.5px] text-white">{t(`status.${status}.label`)}</p>
                 <p className="mt-0.5 text-[13px] leading-relaxed text-[var(--text-subtle)]">
-                  {STATUS_COPY[status].description}
+                  {t(`status.${status}.description`)}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {status !== "active" ? (
                     <Button variant="secondary" size="sm" loading={busy} onClick={() => changeStatus("active")}>
                       <Play className="size-4" />
-                      Wznów prace
+                      {t("editor.resume")}
                     </Button>
                   ) : (
                     <Button variant="secondary" size="sm" loading={busy} onClick={() => changeStatus("paused")}>
                       <Pause className="size-4" />
-                      Wstrzymaj
+                      {t("editor.pause")}
                     </Button>
                   )}
                   {status !== "archived" && canArchive ? (
                     <Button variant="ghost" size="sm" disabled={busy} onClick={() => changeStatus("archived")}>
-                      Przenieś do archiwum
+                      {t("editor.archive")}
                     </Button>
                   ) : null}
                 </div>
               </div>
               {canDelete ? (
                 <div className="rounded-xl border border-[var(--danger)]/25 p-4">
-                  <p className="text-[13.5px] font-medium text-[var(--danger-text)]">Nieodwracalne</p>
+                  <p className="text-[13.5px] font-medium text-[var(--danger-text)]">{t("editor.irreversible")}</p>
                   <p className="mt-1 max-w-xl text-[13px] leading-relaxed text-[var(--text-muted)]">
-                    Usunięcie startupu kasuje wszystko: odpowiedzi z etapów, otwarte role,
-                    zgłoszenia i skład zespołu. Nie ma kosza ani cofnięcia.
+                    {t("editor.deleteBody")}
                   </p>
                   <div className="mt-3">
                     <DeleteStartupButton
                       startupId={startupId}
                       name={name}
                       blockedReason={
-                        dirty ? "Najpierw zapisz albo odrzuć zmiany w profilu." : null
+                        dirty ? t("editor.saveFirst") : null
                       }
                     />
                   </div>

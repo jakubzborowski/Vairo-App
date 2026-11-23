@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { UserPlus, Users, X } from "lucide-react";
-import { plural } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 export type TeamNudgeData = {
   /** Founder albo Admin — tylko oni tworzą link zaproszenia. */
@@ -35,6 +35,7 @@ function readDismissed() {
  * Celowo bez pomarańczu: akcją główną ekranu jest odpowiedź w etapie.
  */
 export function InviteNudge({ data, variant }: { data: TeamNudgeData; variant: "start" | "help" }) {
+  const t = useT("team");
   const dismissedStored = useSyncExternalStore(subscribeNoop, readDismissed, () => true);
   const [dismissed, setDismissed] = useState(false);
 
@@ -44,12 +45,12 @@ export function InviteNudge({ data, variant }: { data: TeamNudgeData; variant: "
 
   const text =
     variant === "help" && !alone
-      ? `W zespole ${plural(data.members, "jest", "są", "jest")} ${data.members} ${plural(data.members, "osoba", "osoby", "osób")}. Brakuje kogoś z konkretną umiejętnością? Dodaj otwartą rolę — zespół pojawi się w Odkrywaj — albo poszukaj w „Szukam ludzi”.`
+      ? t("nudge.helpTeam", { count: data.members })
       : data.hasLink
-        ? "Link zaproszenia jest gotowy, ale nikt jeszcze z niego nie dołączył. Wyślij go komuś, z kim chcesz to budować — np. na Messengerze."
+        ? t("nudge.linkUnused")
         : variant === "help"
-          ? "Pomoc często jest bliżej, niż się wydaje. Zaproś znajomego linkiem — nie musi mieć jeszcze konta w Vairo."
-          : "Walidację łatwiej przejść w kilka osób: ktoś zada pytanie, którego nie widać od środka. Zaproś znajomego linkiem — nie musi mieć jeszcze konta w Vairo.";
+          ? t("nudge.helpAlone")
+          : t("nudge.startAlone");
 
   const dismiss = () => {
     setDismissed(true);
@@ -71,15 +72,15 @@ export function InviteNudge({ data, variant }: { data: TeamNudgeData; variant: "
           {variant === "help" && !alone ? (
             <>
               <Link href="/app/team#otwarte-role" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
-                Dodaj otwartą rolę
+                {t("nudge.addRole")}
               </Link>
               <Link href="/app/social/people" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
-                Szukam ludzi
+                {t("nudge.findPeople")}
               </Link>
             </>
           ) : (
             <Link href="/app/team#zaproszenie" className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
-              {data.hasLink ? "Skopiuj link zaproszenia" : "Zaproś znajomego"}
+              {data.hasLink ? t("nudge.copyLink") : t("nudge.invite")}
             </Link>
           )}
         </div>
@@ -88,7 +89,7 @@ export function InviteNudge({ data, variant }: { data: TeamNudgeData; variant: "
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Ukryj zachętę"
+          aria-label={t("nudge.dismiss")}
           className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-subtle)] transition-colors hover:bg-white/[0.06] hover:text-white"
         >
           <X className="size-4" />

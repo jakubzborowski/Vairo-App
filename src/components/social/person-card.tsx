@@ -77,7 +77,7 @@ export async function PersonCard({
         <p className="mt-3 flex items-start gap-2 rounded-xl border border-[var(--vairo)]/18 bg-[var(--vairo)]/[0.06] px-3.5 py-2 text-[12.5px] leading-relaxed text-[var(--text-muted)]">
           <Sparkles className="mt-[3px] size-3.5 shrink-0 text-[var(--vairo)]" aria-hidden="true" />
           <span>
-            <span className="sr-only">Dlaczego to widzisz: </span>
+            <span className="sr-only">{t("card.whyYouSee")} </span>
             {highlight.text}
           </span>
         </p>

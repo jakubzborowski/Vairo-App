@@ -10,11 +10,16 @@ import { TeamProfileEditor } from "@/components/team/team-profile-editor";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { canManageTeam, canTransferOwnership, type StartupStatus } from "@/types/startup";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Profil publiczny zespołu — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("team");
+  return { title: t("profile.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function TeamProfilePage() {
+  const t = await getT("team");
   const supabase = await createClient();
   const user = await getCurrentUser();
 
@@ -33,15 +38,15 @@ export default async function TeamProfilePage() {
       <div className="page">
         <EmptyState
           icon={Eye}
-          title="Profil publiczny edytują Founder i Admin"
-          description="Możesz go obejrzeć tak, jak widzą go osoby z zewnątrz."
+          title={t("profile.managersOnly")}
+          description={t("profile.managersOnlyBody")}
           action={
             <>
               <Button href={`/app/social/teams/${active.id}`} variant="secondary">
-                Zobacz profil publiczny
+                {t("profile.viewPublic")}
               </Button>
               <Button href="/app/team" variant="ghost">
-                Wróć do zespołu
+                {t("profile.back")}
               </Button>
             </>
           }
@@ -124,21 +129,21 @@ export default async function TeamProfilePage() {
         className="mb-5 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white"
       >
         <ArrowLeft className="size-4" />
-        Wróć do zespołu
+        {t("profile.back")}
       </Link>
 
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
-            Profil publiczny
+            {t("profile.title")}
           </h1>
           <p className="mt-1 max-w-xl text-[14px] leading-relaxed text-[var(--text-subtle)]">
-            Tak widzą Was ludzie, którzy szukają projektu.
+            {t("profile.subtitle")}
           </p>
         </div>
         <Button href={`/app/social/teams/${active.id}`} variant="secondary" size="sm">
           <Eye className="size-4" />
-          Otwórz w Odkrywaj
+          {t("profile.openDiscover")}
         </Button>
       </header>
 

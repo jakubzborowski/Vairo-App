@@ -137,7 +137,7 @@ export function ChipFilter({
           );
         })}
         {visible.length === 0 ? (
-          <p className="py-1.5 text-[12.5px] text-[var(--text-subtle)]">Nic nie pasuje do „{query}”.</p>
+          <p className="py-1.5 text-[12.5px] text-[var(--text-subtle)]">{t("chips.noMatch", { query })}</p>
         ) : null}
       </div>
 

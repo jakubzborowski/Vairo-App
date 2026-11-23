@@ -27,7 +27,8 @@ import { Modal } from "@/components/ui/modal";
 import { Pill } from "@/components/ui/pill";
 import { cn } from "@/lib/utils";
 import { JOB_TITLE_SUGGESTIONS } from "@/types/social";
-import { ROLE_DESCRIPTIONS, ROLE_LABELS, type StartupRole } from "@/types/startup";
+import type { StartupRole } from "@/types/startup";
+import { useT } from "@/i18n/client";
 import type { TeamMember } from "@/lib/social";
 
 const ROLE_ICONS: Record<StartupRole, typeof Crown> = {
@@ -63,6 +64,9 @@ export function MemberRow({
   founderCount,
   work = null,
 }: Props) {
+  const t = useT("team");
+  const tl = useT("labels");
+  const tc = useT("common");
   const router = useRouter();
   const [editingTitle, setEditingTitle] = useState(false);
   const [title, setTitle] = useState(member.jobTitle ?? "");
@@ -108,9 +112,9 @@ export function MemberRow({
               }
               className="text-[14.5px] font-semibold text-white underline-offset-2 hover:underline"
             >
-              {member.fullName ?? "Bez imienia"}
+              {member.fullName ?? t("member.noName")}
             </Link>
-            {isSelf ? <Badge>to Ty</Badge> : null}
+            {isSelf ? <Badge>{t("member.you")}</Badge> : null}
           </p>
 
           {/* Stanowisko: edycja w miejscu, bez osobnego ekranu. */}
@@ -120,7 +124,7 @@ export function MemberRow({
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 maxLength={48}
-                placeholder="np. CTO"
+                placeholder={t("member.jobPlaceholder")}
                 autoFocus
               />
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -153,7 +157,7 @@ export function MemberRow({
                   }
                 >
                   <Check className="size-4" />
-                  Zapisz
+                  {tc("actions.save")}
                 </Button>
                 <Button
                   size="sm"
@@ -164,7 +168,7 @@ export function MemberRow({
                     setEditingTitle(false);
                   }}
                 >
-                  Anuluj
+                  {tc("actions.cancel")}
                 </Button>
               </div>
             </div>
@@ -172,7 +176,7 @@ export function MemberRow({
             <p className="mt-0.5 text-[13px] text-[var(--text-subtle)]">
               {member.jobTitle ?? (
                 <span className="italic text-[var(--text-subtle)]">
-                  Bez stanowiska
+                  {t("member.noJobTitle")}
                 </span>
               )}
             </p>
@@ -191,8 +195,8 @@ export function MemberRow({
           {work ? (
             <p className="mt-1.5 text-[12.5px] text-[var(--text-muted)]">
               {work.goals === 0 && work.tasks === 0
-                ? "Nie prowadzi teraz otwartych celów ani zadań."
-                : `Prowadzi: ${work.goals} ${work.goals === 1 ? "cel" : work.goals % 10 >= 2 && work.goals % 10 <= 4 && (work.goals % 100 < 12 || work.goals % 100 > 14) ? "cele" : "celów"} · ${work.tasks} ${work.tasks === 1 ? "zadanie" : work.tasks % 10 >= 2 && work.tasks % 10 <= 4 && (work.tasks % 100 < 12 || work.tasks % 100 > 14) ? "zadania" : "zadań"}`}
+                ? t("member.noWork")
+                : t("member.work", { goals: work.goals, tasks: work.tasks })}
             </p>
           ) : null}
 
@@ -214,17 +218,17 @@ export function MemberRow({
           <span
             title={
               isLastFounder
-                ? "Jedyny Founder — najpierw przekaż tę rolę komuś innemu"
-                : ROLE_DESCRIPTIONS[member.role]
+                ? t("member.lastFounder")
+                : tl(`roleDescription.${member.role}`)
             }
             className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-white/[0.06] px-2.5 text-[12.5px] text-[var(--text-muted)]"
           >
             <Icon className="size-3.5" />
-            {ROLE_LABELS[member.role]}
+            {tl(`role.${member.role}`)}
           </span>
 
           {canEditTitle || canChangeRole || canRemove ? (
-            <Menu label={`Zarządzaj: ${member.fullName ?? "osoba"}`}>
+            <Menu label={t("member.manage", { name: member.fullName ?? t("member.person") })}>
               {(close) => (
                 <>
                   {canEditTitle ? (
@@ -235,7 +239,7 @@ export function MemberRow({
                         close();
                       }}
                     >
-                      Zmień stanowisko
+                      {t("member.changeTitle")}
                     </MenuItem>
                   ) : null}
 
@@ -247,7 +251,7 @@ export function MemberRow({
                         close();
                       }}
                     >
-                      Zmień rolę
+                      {t("member.changeRole")}
                     </MenuItem>
                   ) : null}
 
@@ -262,7 +266,7 @@ export function MemberRow({
                           close();
                         }}
                       >
-                        Usuń z zespołu
+                        {t("member.remove")}
                       </MenuItem>
                     </>
                   ) : null}
@@ -281,12 +285,12 @@ export function MemberRow({
 
       {roleOpen ? (
         <Modal
-          title={`Uprawnienia: ${member.fullName ?? "członek zespołu"}`}
-          description="To jest jedyne miejsce, które decyduje, kto może zmieniać dane etapów i skład zespołu. Stanowisko (CEO, CTO) nie daje uprawnień."
+          title={t("member.rolesTitle", { name: member.fullName ?? t("member.aMember") })}
+          description={t("member.rolesBody")}
           onClose={() => setRoleOpen(false)}
           footer={
             <Button variant="ghost" onClick={() => setRoleOpen(false)} disabled={busy}>
-              Zamknij
+              {tc("actions.close")}
             </Button>
           }
         >
@@ -330,14 +334,14 @@ export function MemberRow({
                   />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2 text-[14px] font-medium text-white">
-                      {ROLE_LABELS[role]}
+                      {tl(`role.${role}`)}
                       {selected ? (
-                        <Badge tone="brand">obecna</Badge>
+                        <Badge tone="brand">{t("member.current")}</Badge>
                       ) : null}
                     </span>
                     <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-                      {ROLE_DESCRIPTIONS[role]}
-                      {blocked ? " Nadaje ją wyłącznie Founder." : ""}
+                      {tl(`roleDescription.${role}`)}
+                      {blocked ? ` ${t("member.founderOnly")}` : ""}
                     </span>
                   </span>
                 </button>
@@ -350,12 +354,10 @@ export function MemberRow({
           {viewerRole === "founder" && !isSelf && member.role !== "founder" ? (
             <div className="border-t border-white/[0.07] pt-4">
               <p className="text-[13px] font-medium text-white">
-                Oddajesz prowadzenie?
+                {t("member.handOver")}
               </p>
               <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-                {member.fullName ?? "Ta osoba"} zostanie Founderem, a Ty
-                Adminem. Stracisz możliwość usunięcia startupu i nadawania roli
-                Foundera.
+                {t("member.handOverBody", { name: member.fullName ?? t("member.thisPerson") })}
               </p>
               <Button
                 variant="secondary"
@@ -368,7 +370,7 @@ export function MemberRow({
                 }}
               >
                 <Crown className="size-4" />
-                Przekaż rolę Foundera
+                {t("member.transfer")}
               </Button>
             </div>
           ) : null}
@@ -383,8 +385,8 @@ export function MemberRow({
 
       {confirmTransfer ? (
         <Modal
-          title="Przekazać rolę Foundera?"
-          description={`${member.fullName ?? "Ta osoba"} przejmie prowadzenie zespołu. Ty zostaniesz Adminem — nadal zarządzasz składem i etapami, ale nie usuniesz startupu ani nie nadasz nikomu roli Foundera.`}
+          title={t("member.transferTitle")}
+          description={t("member.transferBody", { name: member.fullName ?? t("member.thisPerson") })}
           onClose={() => setConfirmTransfer(false)}
           footer={
             <>
@@ -393,7 +395,7 @@ export function MemberRow({
                 onClick={() => setConfirmTransfer(false)}
                 disabled={busy}
               >
-                Anuluj
+                {tc("actions.cancel")}
               </Button>
               <Button
                 loading={busy}
@@ -409,14 +411,13 @@ export function MemberRow({
                 }
               >
                 <Crown className="size-4" />
-                Przekazuję
+                {t("member.transferConfirm")}
               </Button>
             </>
           }
         >
           <p className="rounded-xl border border-white/10 bg-[var(--surface-2)] px-4 py-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
-            Tę zmianę da się odwrócić tylko wtedy, gdy nowy Founder odda Ci
-            rolę z powrotem. Rób to tylko po wcześniejszym uzgodnieniu z tą osobą.
+            {t("member.transferNote")}
           </p>
 
           {error ? (
@@ -429,8 +430,8 @@ export function MemberRow({
 
       {confirmRemove ? (
         <Modal
-          title="Usunąć z zespołu?"
-          description={`${member.fullName ?? "Ta osoba"} straci dostęp do wszystkiego, co należy do tego zespołu. To, co już wypełniła, zostaje.`}
+          title={t("member.removeTitle")}
+          description={t("member.removeBody", { name: member.fullName ?? t("member.thisPerson") })}
           onClose={() => setConfirmRemove(false)}
           footer={
             <>
@@ -439,7 +440,7 @@ export function MemberRow({
                 onClick={() => setConfirmRemove(false)}
                 disabled={busy}
               >
-                Anuluj
+                {tc("actions.cancel")}
               </Button>
               <Button
                 variant="danger"
@@ -452,7 +453,7 @@ export function MemberRow({
                 }
               >
                 <X className="size-4" />
-                Usuń z zespołu
+                {t("member.remove")}
               </Button>
             </>
           }

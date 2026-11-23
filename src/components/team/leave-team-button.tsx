@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { Modal } from "@/components/ui/modal";
 import { MAX_STARTUPS } from "@/types/startup";
+import { useT } from "@/i18n/client";
 
 /**
  * Wyjście z teamu. Zawsze dostępne — bycie w czyimś startupie nie może być
@@ -29,6 +30,7 @@ export function LeaveTeamButton({
   asMenu?: boolean;
   canManage?: boolean;
 }) {
+  const t = useT("team");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export function LeaveTeamButton({
   return (
     <>
       {asMenu ? (
-        <Menu label="Więcej akcji zespołu">
+        <Menu label={t("leave.menu")}>
           {(close) => (
             <>
               {canManage ? (
@@ -62,7 +64,7 @@ export function LeaveTeamButton({
                     router.push("/app/team/profile");
                   }}
                 >
-                  Profil publiczny
+                  {t("leave.publicProfile")}
                 </MenuItem>
               ) : null}
               {canManage ? <MenuSeparator /> : null}
@@ -74,7 +76,7 @@ export function LeaveTeamButton({
                   setOpen(true);
                 }}
               >
-                Opuść zespół
+                {t("leave.button")}
               </MenuItem>
             </>
           )}
@@ -82,23 +84,23 @@ export function LeaveTeamButton({
       ) : (
         <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
           <LogOut className="size-4" />
-          Opuść zespół
+          {t("leave.button")}
         </Button>
       )}
 
       {open ? (
         <Modal
-          title={`Opuścić ${teamName}?`}
-          description="Stracisz dostęp do etapów, dokumentów i wszystkiego, co należy do tego zespołu. To, co już zostało wypełnione, zostaje z zespołem."
+          title={t("leave.title", { name: teamName })}
+          description={t("leave.body")}
           onClose={() => setOpen(false)}
           footer={
             <>
               <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>
-                Zostaję
+                {t("leave.stay")}
               </Button>
               <Button variant="danger" loading={busy} onClick={confirm}>
                 <LogOut className="size-4" />
-                Opuszczam zespół
+                {t("leave.confirm")}
               </Button>
             </>
           }
@@ -109,7 +111,7 @@ export function LeaveTeamButton({
             </p>
           ) : (
             <p className="text-[13px] text-[var(--text-subtle)]">
-              Zwolni się jedno z {MAX_STARTUPS} miejsc na Twoim koncie.
+              {t("leave.freesSeat", { max: MAX_STARTUPS })}
             </p>
           )}
         </Modal>

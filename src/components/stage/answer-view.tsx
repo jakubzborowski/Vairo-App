@@ -68,6 +68,8 @@ export function AnswerView({
 }
 
 function AnswerBody({ field, value }: { field: StageField; value: unknown }) {
+  const t = useT("stage");
+  const locale = useLocale();
   switch (field.kind) {
     case "list_short":
     case "list_long":

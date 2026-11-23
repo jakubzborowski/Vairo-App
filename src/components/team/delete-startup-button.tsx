@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
+import { useT } from "@/i18n/client";
 
 /**
  * Jedyna operacja w aplikacji, po której nic nie da się odzyskać.
@@ -31,6 +32,8 @@ export function DeleteStartupButton({
    */
   blockedReason?: string | null;
 }) {
+  const t = useT("team");
+  const tc = useT("common");
   const router = useRouter();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -49,7 +52,7 @@ export function DeleteStartupButton({
         return;
       }
       // Toast żyje w layoucie, więc przetrwa przejście na Start.
-      toast({ title: "Startup usunięty", description: name });
+      toast({ title: t("delete.done"), description: name });
       router.push("/app");
       router.refresh();
     });
@@ -69,7 +72,7 @@ export function DeleteStartupButton({
           onClick={() => setOpen(true)}
         >
           <Trash2 className="size-4" />
-          Usuń startup…
+          {t("delete.button")}
         </Button>
         {blockedReason ? (
           <p className="text-[12.5px] text-[var(--text-subtle)]">{blockedReason}</p>
@@ -78,13 +81,13 @@ export function DeleteStartupButton({
 
       {open ? (
         <Modal
-          title={`Usunąć ${name}?`}
-          description="Tego nie da się cofnąć. Znikną wszystkie odpowiedzi z etapów, otwarte role, zgłoszenia i cały skład zespołu."
+          title={t("delete.title", { name })}
+          description={t("delete.body")}
           onClose={() => setOpen(false)}
           footer={
             <>
               <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>
-                Anuluj
+                {tc("actions.cancel")}
               </Button>
               <Button
                 variant="danger"
@@ -93,21 +96,19 @@ export function DeleteStartupButton({
                 onClick={confirm}
               >
                 <Trash2 className="size-4" />
-                Usuwam na zawsze
+                {t("delete.confirm")}
               </Button>
             </>
           }
         >
           <p className="rounded-xl border border-white/10 bg-[var(--surface-2)] px-4 py-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
-            Jeśli chcesz tylko zrobić przerwę, wybierz <strong>Wstrzymaj</strong>{" "}
-            zamiast usuwania. Startup zniknie wtedy z Odkrywaj, ale wszystko
-            zostanie na miejscu.
+            {t("delete.pauseBefore")}<strong>{t("delete.pause")}</strong>{t("delete.pauseAfter")}
           </p>
 
           <Field
-            label={`Przepisz nazwę startupu, żeby potwierdzić`}
-            hint={`Dokładnie: ${name}`}
-            error={typed.length > 0 && !matches ? "Nazwa się nie zgadza." : null}
+            label={t("delete.typeName")}
+            hint={t("delete.exactly", { name })}
+            error={typed.length > 0 && !matches ? t("delete.mismatch") : null}
           >
             {({ id }) => (
               <Input

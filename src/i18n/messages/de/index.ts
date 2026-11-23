@@ -13,6 +13,7 @@ import settings from "./settings.json";
 import social from "./social.json";
 import stage from "./stage.json";
 import startups from "./startups.json";
+import team from "./team.json";
 
 const messages = {
   "ai": ai,
@@ -28,6 +29,7 @@ const messages = {
   "social": social,
   "stage": stage,
   "startups": startups,
+  "team": team,
 };
 
 export default messages;

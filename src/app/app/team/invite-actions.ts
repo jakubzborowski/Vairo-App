@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { translateDbError } from "@/lib/db-errors";
 import { toInviteLink, type InviteLink, type InviteRow } from "@/lib/invites";
+import { getT } from "@/i18n/server";
 
 type LinkResult = { link: InviteLink | null; error: string | null };
 
@@ -12,7 +13,7 @@ export async function createInviteLink(startupId: string): Promise<LinkResult> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("create_invite_link", { p_startup: startupId });
   if (error) {
-    return { link: null, error: await translateDbError(error.message) ?? "Nie udało się utworzyć linku." };
+    return { link: null, error: await translateDbError(error.message) ?? (await getT("team"))("errors.linkCreate") };
   }
   const row = (Array.isArray(data) ? data[0] : data) as InviteRow | undefined;
   revalidatePath("/app/team");
@@ -24,7 +25,7 @@ export async function revokeInviteLinks(startupId: string): Promise<{ error: str
   const supabase = await createClient();
   const { error } = await supabase.rpc("revoke_invite_links", { p_startup: startupId });
   if (error) {
-    return { error: await translateDbError(error.message) ?? "Nie udało się wyłączyć linku." };
+    return { error: await translateDbError(error.message) ?? (await getT("team"))("errors.linkRevoke") };
   }
   revalidatePath("/app/team");
   return { error: null };

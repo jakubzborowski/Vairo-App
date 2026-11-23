@@ -196,7 +196,7 @@ export function DeckFrame({
               <p className="flex items-start gap-2.5 text-[14px] leading-relaxed text-[var(--text-muted)]">
                 <Sparkles className="mt-[3px] size-4 shrink-0 text-[var(--vairo-soft)]" aria-hidden="true" />
                 <span>
-                  <span className="sr-only">Dlaczego to widzisz: </span>
+                  <span className="sr-only">{t("card.whyYouSee")} </span>
                   {reasons.map((reason) => reason.text).join(" · ")}
                 </span>
               </p>

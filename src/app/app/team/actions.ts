@@ -13,6 +13,7 @@ import {
   type StartupStatus,
 } from "@/types/startup";
 import { sessionExpired } from "@/lib/server-errors";
+import { getT } from "@/i18n/server";
 
 type Result = { error: string | null };
 
@@ -44,10 +45,10 @@ async function guardManage(
 
 async function translate(message: string) {
   if (isLastFounderError(message)) {
-    return "To jedyny Founder tego zespołu. Najpierw przekaż tę rolę komuś innemu.";
+    return (await getT("team"))("errors.lastFounder");
   }
   if (message.includes("startup_limit_reached")) {
-    return "Ta osoba jest już w 3 zespołach — to maksimum na konto.";
+    return (await getT("team"))("errors.theirLimit");
   }
   // Reszta idzie przez wspólny tłumacz, żeby nie wyciekł surowy błąd bazy.
   return await translateDbError(message) ?? message;
@@ -79,13 +80,13 @@ export async function updateMemberRole(input: {
   if (denied) return { error: denied };
 
   if (input.role === "founder" && !canTransferOwnership(myRole!)) {
-    return { error: "Rolę Foundera może nadać tylko Founder." };
+    return { error: (await getT("team"))("errors.founderGrantOnly") };
   }
 
   if (input.profileId === user.id && myRole === "founder" && input.role !== "founder") {
     return {
       error:
-        "Nie odbierzesz sobie roli Foundera z tego miejsca. Użyj „Przekaż rolę Foundera” przy osobie, której chcesz ją oddać.",
+        (await getT("team"))("errors.selfDemote"),
     };
   }
 
@@ -111,16 +112,16 @@ export async function updateJobTitle(input: {
   if (!user) return { error: await sessionExpired() };
 
   const myRole = await getStartupRole(supabase, input.startupId, user.id);
-  if (!myRole) return { error: "Nie należysz do tego zespołu." };
+  if (!myRole) return { error: (await getT("team"))("errors.notMember") };
 
   const isSelf = input.profileId === user.id;
   if (!isSelf && await teamManageError(myRole)) {
-    return { error: "Cudze stanowisko zmieniają Founder i Admin." };
+    return { error: (await getT("team"))("errors.jobTitleOthers") };
   }
 
   const jobTitle = input.jobTitle.trim();
   if (jobTitle && (jobTitle.length < 2 || jobTitle.length > 48)) {
-    return { error: "Stanowisko: 2–48 znaków." };
+    return { error: (await getT("team"))("errors.jobTitle") };
   }
 
   const { error } = await supabase
@@ -146,7 +147,7 @@ export async function removeMember(input: {
   if (denied) return { error: denied };
 
   if (input.profileId === user.id) {
-    return { error: "Żeby wyjść z zespołu, użyj przycisku „Opuść zespół”." };
+    return { error: (await getT("team"))("errors.useLeave") };
   }
 
   const { error } = await supabase
@@ -207,16 +208,16 @@ export async function transferFounder(input: {
   if (!user) return { error: await sessionExpired() };
 
   if (input.toProfileId === user.id) {
-    return { error: "Już masz tę rolę." };
+    return { error: (await getT("team"))("errors.sameRole") };
   }
 
   const myRole = await getStartupRole(supabase, input.startupId, user.id);
   if (myRole !== "founder") {
-    return { error: "Rolę Foundera przekazuje wyłącznie Founder." };
+    return { error: (await getT("team"))("errors.transferFounderOnly") };
   }
 
   const target = await getStartupRole(supabase, input.startupId, input.toProfileId);
-  if (!target) return { error: "Ta osoba nie należy do zespołu." };
+  if (!target) return { error: (await getT("team"))("errors.targetNotMember") };
 
   const { error: promoteError } = await supabase
     .from("startup_members")
@@ -237,8 +238,7 @@ export async function transferFounder(input: {
   if (demoteError) {
     return {
       error:
-        "Rola Foundera została nadana, ale nie udało się zmienić Twojej. " +
-        "Teraz zespół ma dwóch Founderów — zmień swoją rolę ręcznie na liście.",
+        (await getT("team"))("errors.demoteFailed"),
     };
   }
 
@@ -264,20 +264,20 @@ type RoleInput = {
 };
 
 /** Walidacja wspólna dla dodawania i edycji — jedna reguła, jedno miejsce. */
-function checkRole(input: RoleInput) {
+async function checkRole(input: RoleInput) {
   const title = input.title.trim();
   if (title.length < 2 || title.length > 80) {
-    return { error: "Nazwa roli: 2–80 znaków.", value: null };
+    return { error: (await getT("team"))("errors.roleTitle"), value: null };
   }
 
   const description = input.description?.trim();
   if (description && description.length > 600) {
-    return { error: "Opis roli: maksymalnie 600 znaków.", value: null };
+    return { error: (await getT("team"))("errors.roleDescription"), value: null };
   }
 
   const hours = input.weeklyHours ?? null;
   if (hours !== null && (!Number.isInteger(hours) || hours < 1 || hours > 80)) {
-    return { error: "Godziny tygodniowo: liczba od 1 do 80.", value: null };
+    return { error: (await getT("team"))("errors.hours"), value: null };
   }
 
   const skillIds = [...new Set(input.skillIds ?? [])].slice(0, 12);
@@ -318,7 +318,7 @@ export async function createOpenRole(input: RoleInput): Promise<Result> {
   const { error: denied } = await guardManage(supabase, input.startupId, user.id);
   if (denied) return { error: denied };
 
-  const checked = checkRole(input);
+  const checked = await checkRole(input);
   if (checked.error || !checked.value) return { error: checked.error };
   const { title, description, hours, skillIds } = checked.value;
 
@@ -358,7 +358,7 @@ export async function updateOpenRole(
   const { error: denied } = await guardManage(supabase, input.startupId, user.id);
   if (denied) return { error: denied };
 
-  const checked = checkRole(input);
+  const checked = await checkRole(input);
   if (checked.error || !checked.value) return { error: checked.error };
   const { title, description, hours, skillIds } = checked.value;
 
@@ -452,23 +452,23 @@ export async function saveTeamProfile(input: {
 
   const tagline = input.tagline.trim();
   if (tagline.length > 160) {
-    return { error: "Jedno zdanie o zespole: maksymalnie 160 znaków." };
+    return { error: (await getT("team"))("errors.tagline") };
   }
 
   const description = input.description.trim();
   if (description.length > 1200) {
-    return { error: "Opis: maksymalnie 1200 znaków." };
+    return { error: (await getT("team"))("errors.description") };
   }
 
   const location = input.location.trim();
-  if (location.length > 80) return { error: "Lokalizacja: maksymalnie 80 znaków." };
+  if (location.length > 80) return { error: (await getT("team"))("errors.location") };
 
   let websiteUrl = input.websiteUrl.trim();
   if (websiteUrl && !/^https?:\/\//i.test(websiteUrl)) {
     websiteUrl = `https://${websiteUrl}`;
   }
   if (websiteUrl && websiteUrl.length > 200) {
-    return { error: "Adres strony: maksymalnie 200 znaków." };
+    return { error: (await getT("team"))("errors.website") };
   }
 
   const patch = {
@@ -551,17 +551,17 @@ export async function uploadTeamLogo(formData: FormData) {
   if (!user) return { error: await sessionExpired(), logoUrl: null };
 
   const startupId = String(formData.get("startup_id") ?? "");
-  if (!startupId) return { error: "Brak kontekstu zespołu.", logoUrl: null };
+  if (!startupId) return { error: (await getT("team"))("errors.noTeam"), logoUrl: null };
 
   const { error: denied } = await guardManage(supabase, startupId, user.id);
   if (denied) return { error: denied, logoUrl: null };
 
   const file = formData.get("logo");
   if (!(file instanceof File) || file.size === 0) {
-    return { error: "Wybierz plik.", logoUrl: null };
+    return { error: (await getT("team"))("errors.pickFile"), logoUrl: null };
   }
   if (file.size > LOGO_MAX_BYTES) {
-    return { error: "Logo może mieć maksymalnie 15 MB.", logoUrl: null };
+    return { error: (await getT("team"))("errors.logoSize"), logoUrl: null };
   }
 
   const allowed: Record<string, string> = {
@@ -570,7 +570,7 @@ export async function uploadTeamLogo(formData: FormData) {
     "image/webp": "webp",
   };
   const ext = allowed[file.type];
-  if (!ext) return { error: "Dozwolone formaty: JPG, PNG, WebP.", logoUrl: null };
+  if (!ext) return { error: (await getT("team"))("errors.logoFormat"), logoUrl: null };
 
   const path = `${startupId}/logo.${ext}`;
 
@@ -615,7 +615,7 @@ export async function setStartupStatus(input: {
   if (denied) return { error: denied };
 
   if (input.status === "archived" && !canTransferOwnership(role!)) {
-    return { error: "Do archiwum może przenieść tylko Founder." };
+    return { error: (await getT("team"))("errors.archiveFounderOnly") };
   }
 
   const { error } = await supabase
@@ -649,7 +649,7 @@ export async function deleteStartup(input: {
 
   const role = await getStartupRole(supabase, input.startupId, user.id);
   if (role !== "founder") {
-    return { error: "Startup może usunąć wyłącznie Founder." };
+    return { error: (await getT("team"))("errors.deleteFounderOnly") };
   }
 
   const { data: startup } = await supabase
@@ -658,10 +658,10 @@ export async function deleteStartup(input: {
     .eq("id", input.startupId)
     .maybeSingle();
 
-  if (!startup) return { error: "Nie znaleziono startupu." };
+  if (!startup) return { error: (await getT("team"))("errors.startupNotFound") };
 
   if (input.confirmName.trim() !== startup.name.trim()) {
-    return { error: "Wpisana nazwa nie zgadza się z nazwą startupu." };
+    return { error: (await getT("team"))("errors.nameMismatch") };
   }
 
   // Pliki PRZED wierszem. Póki startup istnieje, Founder jest jego członkiem

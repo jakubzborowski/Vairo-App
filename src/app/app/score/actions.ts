@@ -9,7 +9,7 @@ import { translateDbError } from "@/lib/db-errors";
  * na ogólne „coś poszło nie tak”, więc przepuszczamy je — w słowniku UI
  * („zespół”, nie „team”). Techniczne błędy bazy idą przez tłumacza.
  */
-function scoreError(error: { message: string; code?: string }) {
+async function scoreError(error: { message: string; code?: string }) {
   const { message } = error;
   // P0001 = `raise exception` z funkcji SCORE. Zdanie (wielka litera, spacje)
   // to komunikat dla człowieka; kody w stylu `not_authenticated` idą do tłumacza.
@@ -57,7 +57,7 @@ export async function scoreAction(
                 p_expected: String(form.get("expected")),
               })
             : { error: { message: "Nieznana akcja." } };
-  if (result.error) return { error: scoreError(result.error), success: null };
+  if (result.error) return { error: await scoreError(result.error), success: null };
   revalidatePath("/app/score");
   return {
     error: null,

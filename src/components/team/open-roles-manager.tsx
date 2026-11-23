@@ -17,6 +17,8 @@ import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { Modal } from "@/components/ui/modal";
 import { Pill } from "@/components/ui/pill";
 import type { OpenRole } from "@/lib/social";
+import { useT } from "@/i18n/client";
+import { skillLabel } from "@/lib/localized";
 
 type Props = {
   startupId: string;
@@ -67,6 +69,9 @@ export function OpenRolesManager({
   canManage,
   skillCatalogue,
 }: Props) {
+  const t = useT("team");
+  const tl = useT("labels");
+  const tc = useT("common");
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [catalogue, setCatalogue] = useState(skillCatalogue);
@@ -119,7 +124,7 @@ export function OpenRolesManager({
             listą, którą i tak się czyta. */}
         <h2 className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
           <UserPlus className="size-4" />
-          Otwarte role
+          {t("roles.title")}
           {roles.length > 0 ? (
             <span className="tabular font-normal normal-case tracking-normal text-[var(--text-subtle)]">
               {roles.length}
@@ -129,7 +134,7 @@ export function OpenRolesManager({
         {canManage ? (
           <Button variant="secondary" size="sm" onClick={() => setDraft(EMPTY)}>
             <Plus className="size-4" />
-            Dodaj rolę
+            {t("roles.add")}
           </Button>
         ) : null}
       </div>
@@ -144,8 +149,8 @@ export function OpenRolesManager({
       {roles.length === 0 ? (
         <p className="rounded-xl border border-dashed border-white/10 px-5 py-6 text-center text-[13px] leading-relaxed text-[var(--text-subtle)]">
           {canManage
-            ? "Nie szukacie teraz nikogo. Dodaj rolę, a zespół pojawi się w Odkrywaj wśród tych, które rekrutują."
-            : "Ten zespół nie ma teraz otwartych ról."}
+            ? t("roles.emptyManager")
+            : t("roles.empty")}
         </p>
       ) : (
         <ul className="flex flex-col gap-2.5">
@@ -163,13 +168,13 @@ export function OpenRolesManager({
                   {role.title}
                   {role.weeklyHours ? (
                     <span className="text-[12.5px] font-normal text-[var(--text-subtle)]">
-                      {role.weeklyHours} h tygodniowo
+                      {t("roles.hoursValue", { hours: role.weeklyHours })}
                     </span>
                   ) : null}
                   {!role.isOpen ? (
                     <Badge>
                       <EyeOff className="size-3" />
-                      Zamknięta
+                      {t("roles.closed")}
                     </Badge>
                   ) : null}
                 </p>
@@ -182,21 +187,20 @@ export function OpenRolesManager({
                 {role.skills.length > 0 ? (
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {role.skills.map((skill) => (
-                      <Pill key={skill.id}>{skill.label}</Pill>
+                      <Pill key={skill.id}>{skillLabel(tl, skill)}</Pill>
                     ))}
                   </div>
                 ) : canManage ? (
                   // Brak umiejętności nie jest błędem, ale ma konkretny skutek,
                   // więc mówimy o nim tam, gdzie da się go naprawić.
                   <p className="mt-2 text-[12.5px] text-[var(--text-subtle)]">
-                    Bez umiejętności ta rola nie dopasuje się do niczyjego
-                    profilu w Odkrywaj.
+                    {t("roles.noSkills")}
                   </p>
                 ) : null}
               </div>
 
               {canManage ? (
-                <Menu label={`Zarządzaj rolą: ${role.title}`}>
+                <Menu label={t("roles.manage", { title: role.title })}>
                   {(close) => (
                     <>
                       <MenuItem
@@ -212,7 +216,7 @@ export function OpenRolesManager({
                           close();
                         }}
                       >
-                        Edytuj
+                        {t("roles.edit")}
                       </MenuItem>
 
                       <MenuItem
@@ -229,7 +233,7 @@ export function OpenRolesManager({
                           close();
                         }}
                       >
-                        {role.isOpen ? "Zamknij nabór" : "Otwórz nabór"}
+                        {role.isOpen ? t("roles.closeHiring") : t("roles.openHiring")}
                       </MenuItem>
 
                       <MenuSeparator />
@@ -237,13 +241,13 @@ export function OpenRolesManager({
                         icon={Trash2}
                         tone="danger"
                         disabled={busy}
-                        title="Zgłoszenia na tę rolę stracą do czego się odwołać"
+                        title={t("roles.deleteWarning")}
                         onClick={() => {
                           run(() => deleteOpenRole({ startupId, roleId: role.id }));
                           close();
                         }}
                       >
-                        Usuń rolę
+                        {t("roles.delete")}
                       </MenuItem>
                     </>
                   )}
@@ -258,12 +262,12 @@ export function OpenRolesManager({
 
       {draft ? (
         <Modal
-          title={editing ? "Zmień rolę" : "Kogo szukacie?"}
+          title={editing ? t("roles.editTitle") : t("roles.newTitle")}
           onClose={() => setDraft(null)}
           footer={
             <>
               <Button variant="ghost" onClick={() => setDraft(null)} disabled={busy}>
-                Anuluj
+                {tc("actions.cancel")}
               </Button>
               <Button
                 onClick={submit}
@@ -271,11 +275,11 @@ export function OpenRolesManager({
                 disabled={draft.title.trim().length < 2}
                 title={
                   draft.title.trim().length < 2
-                    ? "Wpisz nazwę roli — co najmniej 2 znaki"
+                    ? t("roles.nameRequired")
                     : undefined
                 }
               >
-                {editing ? "Zapisz zmiany" : "Dodaj rolę"}
+                {editing ? t("roles.saveChanges") : t("roles.add")}
               </Button>
             </>
           }
@@ -284,7 +288,7 @@ export function OpenRolesManager({
               „Nazwa roli" z podpowiedzią „np. Frontend developer" powtarzała
               placeholder innymi słowami — a podpowiedź, która powtarza to, co
               i tak widać, uczy pomijać wszystkie podpowiedzi. */}
-          <Field label="Nazwa roli">
+          <Field label={t("roles.name")}>
             {({ id }) => (
               <Input
                 id={id}
@@ -293,13 +297,13 @@ export function OpenRolesManager({
                   setDraft({ ...draft, title: event.target.value })
                 }
                 maxLength={80}
-                placeholder="np. Frontend developer"
+                placeholder={t("roles.namePlaceholder")}
                 autoFocus
               />
             )}
           </Field>
 
-          <Field label="Ile godzin tygodniowo" hint="Opcjonalne">
+          <Field label={t("roles.hours")} hint={t("roles.optional")}>
             {({ id }) => (
               <Input
                 id={id}
@@ -310,7 +314,7 @@ export function OpenRolesManager({
                 onChange={(event) =>
                   setDraft({ ...draft, hours: event.target.value })
                 }
-                placeholder="np. 10"
+                placeholder={t("roles.hoursPlaceholder")}
               />
             )}
           </Field>
@@ -320,9 +324,9 @@ export function OpenRolesManager({
               że ta rola pyta o to, co on ma w profilu. */}
           <div>
             <p className="mb-2 text-[13px] font-medium text-[var(--text-muted)]">
-              Jakich umiejętności szukacie
+              {t("roles.skills")}
               <span className="ml-2 font-normal text-[var(--text-subtle)]">
-                po tym dopasujemy ludzi
+                {t("roles.skillsNote")}
               </span>
             </p>
             <SkillPicker
@@ -334,8 +338,8 @@ export function OpenRolesManager({
           </div>
 
           <Field
-            label="Czym ta osoba będzie się zajmować"
-            hint="Opcjonalne"
+            label={t("roles.description")}
+            hint={t("roles.optional")}
             counter={{ value: draft.description.length, max: 600 }}
           >
             {({ id }) => (
@@ -347,7 +351,7 @@ export function OpenRolesManager({
                 }
                 rows={4}
                 maxLength={600}
-                placeholder="Np. Zbudowanie panelu rezerwacji w Next.js. Projekt graficzny mamy gotowy."
+                placeholder={t("roles.descriptionPlaceholder")}
               />
             )}
           </Field>

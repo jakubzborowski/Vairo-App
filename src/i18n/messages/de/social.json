@@ -372,5 +372,14 @@
   "wizard.timeDescription": "Die häufigste Quelle von Enttäuschungen in Teams. Besser jetzt offen sagen, als sich in einem Monat zu erklären.",
   "wizard.timeTitle": "Wie viel Zeit hast du realistisch?",
   "wizard.visible": "Ich möchte in „Entdecken“ sichtbar sein",
-  "wizard.visibleBody": "Andere können dich finden, dir schreiben und dich ins Team einladen. Deine E-Mail sehen nur Personen aus demselben Team."
+  "wizard.visibleBody": "Andere können dich finden, dir schreiben und dich ins Team einladen. Deine E-Mail sehen nur Personen aus demselben Team.",
+  "teamCompleteness.logo.short": "Logo",
+  "teamCompleteness.tagline.short": "Satz über das Projekt",
+  "teamCompleteness.description.short": "Projektbeschreibung",
+  "teamCompleteness.roles.short": "offene Rolle",
+  "teamCompleteness.location.short": "Ort",
+  "card.whyYouSee": "Warum du das siehst:",
+  "chips.noMatch": "Nichts passt zu „{query}“.",
+  "inbox.writesOnBehalf": "Schreibt im Namen von {team}",
+  "inbox.writtenOnBehalf": "Im Namen von {team} geschrieben"
 }

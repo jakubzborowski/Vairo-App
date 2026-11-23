@@ -372,5 +372,14 @@
   "wizard.timeDescription": "Найчастіше джерело розчарувань у командах. Краще сказати прямо зараз, ніж виправдовуватися за місяць.",
   "wizard.timeTitle": "Скільки часу в тебе реально є?",
   "wizard.visible": "Хочу бути видимим у «Відкривай»",
-  "wizard.visibleBody": "Інші можуть тебе знайти, написати й запросити до команди. Твій e-mail побачать лише люди з тієї самої команди."
+  "wizard.visibleBody": "Інші можуть тебе знайти, написати й запросити до команди. Твій e-mail побачать лише люди з тієї самої команди.",
+  "teamCompleteness.logo.short": "логотип",
+  "teamCompleteness.tagline.short": "речення про проєкт",
+  "teamCompleteness.description.short": "опис проєкту",
+  "teamCompleteness.roles.short": "відкрита роль",
+  "teamCompleteness.location.short": "місцезнаходження",
+  "card.whyYouSee": "Чому ти це бачиш:",
+  "chips.noMatch": "Нічого не відповідає «{query}».",
+  "inbox.writesOnBehalf": "Пише від імені {team}",
+  "inbox.writtenOnBehalf": "Написано від імені {team}"
 }

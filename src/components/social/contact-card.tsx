@@ -69,8 +69,8 @@ export function ContactCard({
             <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-md bg-[var(--vairo)]/12 px-2 py-0.5 text-[12px] text-[var(--vairo)]">
               <Building2 className="size-3" />
               {signal.canRespond
-                ? `Pisze w imieniu ${signal.contextStartupName}`
-                : `Napisane w imieniu ${signal.contextStartupName}`}
+                ? t("inbox.writesOnBehalf", { team: signal.contextStartupName })
+                : t("inbox.writtenOnBehalf", { team: signal.contextStartupName })}
             </p>
           ) : null}
         </div>

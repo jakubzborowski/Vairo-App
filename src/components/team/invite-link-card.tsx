@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import type { InviteLink } from "@/lib/invites";
-import { ROLE_LABELS } from "@/types/startup";
+import { useLocale, useT } from "@/i18n/client";
+import { LOCALE_TAGS } from "@/i18n/config";
 
 const subscribeNoop = () => () => {};
 const readOrigin = () => window.location.origin;
@@ -24,6 +25,9 @@ export function InviteLinkCard({
   startupId: string;
   initial: InviteLink | null;
 }) {
+  const t = useT("team");
+  const tl = useT("labels");
+  const locale = useLocale();
   const [link, setLink] = useState(initial);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -41,7 +45,7 @@ export function InviteLinkCard({
       }
       setError(null);
       setLink(result.link);
-      toast({ title: "Link zaproszenia gotowy", description: "Skopiuj go i wyślij komuś do zespołu." });
+      toast({ title: t("link.readyTitle"), description: t("link.readyBody") });
     });
 
   const revoke = () =>
@@ -53,15 +57,15 @@ export function InviteLinkCard({
       }
       setError(null);
       setLink(null);
-      toast({ title: "Link wyłączony", description: "Nikt już przez niego nie dołączy." });
+      toast({ title: t("link.revokedTitle"), description: t("link.revokedBody") });
     });
 
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(url);
-      toast({ title: "Link skopiowany", description: "Wklej go na WhatsAppie, Messengerze albo w mailu." });
+      toast({ title: t("link.copiedTitle"), description: t("link.copiedBody") });
     } catch {
-      setError("Nie udało się skopiować. Zaznacz link w polu i skopiuj go ręcznie.");
+      setError(t("link.copyFailed"));
     }
   };
 
@@ -75,10 +79,9 @@ export function InviteLinkCard({
           <UserPlus className="size-4" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-[15px] font-medium text-white">Zaproś znajomych linkiem</h2>
+          <h2 className="text-[15px] font-medium text-white">{t("link.title")}</h2>
           <p className="mt-0.5 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-            Wyślij link komukolwiek — nie musi mieć jeszcze konta w Vairo. Po
-            rejestracji albo zalogowaniu dołączy do zespołu jako {ROLE_LABELS.member}.
+            {t("link.body", { role: tl("role.member") })}
           </p>
         </div>
       </div>
@@ -89,34 +92,36 @@ export function InviteLinkCard({
             <Input
               readOnly
               value={url}
-              aria-label="Link zaproszenia"
+              aria-label={t("link.aria")}
               onFocus={(event) => event.currentTarget.select()}
               className="min-w-0 flex-1 font-mono text-[12.5px]"
             />
             <Button onClick={copy} disabled={!origin}>
               <Copy className="size-4" />
-              Kopiuj
+              {t("link.copy")}
             </Button>
           </div>
           <p className="text-[12.5px] text-[var(--text-subtle)]">
-            Ważny do{" "}
-            {new Date(link.expiresAt).toLocaleDateString("pl-PL", {
-              day: "numeric",
-              month: "long",
-            })}{" "}
-            · dołączyło przez niego {link.useCount} z {link.maxUses} osób
+            {t("link.validUntil", {
+              date: new Date(link.expiresAt).toLocaleDateString(LOCALE_TAGS[locale], {
+                day: "numeric",
+                month: "long",
+              }),
+              used: link.useCount,
+              max: link.maxUses,
+            })}
           </p>
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" size="sm" onClick={create} disabled={pending}>
               <RefreshCw className="size-3.5" />
-              Nowy link
+              {t("link.new")}
             </Button>
             <Button variant="ghost" size="sm" onClick={revoke} disabled={pending}>
               <XCircle className="size-3.5" />
-              Wyłącz link
+              {t("link.revoke")}
             </Button>
             <span className="self-center text-[12px] text-[var(--text-subtle)]">
-              Nowy link wyłącza obecny.
+              {t("link.newRevokes")}
             </span>
           </div>
         </div>
@@ -124,7 +129,7 @@ export function InviteLinkCard({
         <div className="mt-4">
           <Button onClick={create} disabled={pending}>
             <Link2 className="size-4" />
-            {pending ? "Tworzę link…" : "Utwórz link zaproszenia"}
+            {pending ? t("link.creating") : t("link.create")}
           </Button>
         </div>
       )}

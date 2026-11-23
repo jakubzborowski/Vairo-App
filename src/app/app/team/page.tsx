@@ -13,13 +13,18 @@ import { InviteLinkCard } from "@/components/team/invite-link-card";
 import { getActiveInviteLink } from "@/lib/invites";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { MAX_STARTUPS, ROLE_LABELS, canManageTeam } from "@/types/startup";
-import { plural } from "@/lib/utils";
+import { MAX_STARTUPS, canManageTeam } from "@/types/startup";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Zespół — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("team");
+  return { title: t("page.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function TeamPage() {
+  const t = await getT("team");
+  const tl = await getT("labels");
   const supabase = await createClient();
   const user = await getCurrentUser();
 
@@ -36,14 +41,14 @@ export default async function TeamPage() {
       <div className="page">
         <EmptyState
           icon={Users}
-          title="Nie należysz do żadnego zespołu"
-          description="Zespół pojawia się tutaj, kiedy założysz startup albo dołączysz do cudzego. Do tego czasu masz warstwę Social."
+          title={t("page.noTeamTitle")}
+          description={t("page.noTeamBody")}
           action={
             <>
-              <Button href="/app/startups/new">Stwórz startup</Button>
+              <Button href="/app/startups/new">{t("page.createStartup")}</Button>
               <Button href="/app/social/discover" variant="secondary">
                 <Compass className="size-4" />
-                Znajdź zespół
+                {t("page.findTeam")}
               </Button>
             </>
           }
@@ -133,18 +138,20 @@ export default async function TeamPage() {
               {active.name}
             </h1>
             <p className="mt-1 text-[14px] text-[var(--text-muted)]">
-              {members.length} {plural(members.length, "osoba", "osoby", "osób")} w zespole.
+              {t("page.memberCount", { count: members.length })}
               {canManage && teamRequests.length > 0
-                ? ` ${teamRequests.length === 1 ? "Jedna osoba chce" : `${teamRequests.length} ${plural(teamRequests.length, "osoba chce", "osoby chcą", "osób chce")}`} dołączyć.`
+                ? ` ${t("page.wantToJoin", { count: teamRequests.length })}`
                 : ""}
               {openCount > 0
-                ? ` Szukacie: ${openRoles
-                    .filter((role) => role.isOpen)
-                    .slice(0, 2)
-                    .map((role) => role.title)
-                    .join(", ")}${openCount > 2 ? "…" : ""}.`
+                ? ` ${t("page.seeking", {
+                    list: `${openRoles
+                      .filter((role) => role.isOpen)
+                      .slice(0, 2)
+                      .map((role) => role.title)
+                      .join(", ")}${openCount > 2 ? "…" : ""}`,
+                  })}`
                 : ""}{" "}
-              <span className="text-[var(--text-subtle)]">Twoja rola: {ROLE_LABELS[active.role]}.</span>
+              <span className="text-[var(--text-subtle)]">{t("page.yourRole", { role: tl(`role.${active.role}`) })}</span>
             </p>
           </div>
         </div>
@@ -153,7 +160,7 @@ export default async function TeamPage() {
           {canManage ? (
             <Button href="/app/social/people" variant="secondary" size="sm">
               <UserPlus className="size-4" />
-              Znajdź ludzi
+              {t("page.findPeople")}
             </Button>
           ) : null}
           <LeaveTeamButton startupId={active.id} teamName={active.name} asMenu canManage={canManage} />
@@ -164,7 +171,7 @@ export default async function TeamPage() {
       {!canManage ? (
         <p className="mt-4 flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-[var(--surface)] px-4 py-2.5 text-[13px] text-[var(--text-subtle)]">
           <Eye className="size-4 shrink-0 text-[var(--info)]" />
-          Skład i role zmieniają Founder i Admin. Swoje stanowisko każdy zmienia samodzielnie.
+          {t("page.memberNote")}
         </p>
       ) : null}
 
@@ -176,7 +183,7 @@ export default async function TeamPage() {
         <section className="edge-accent mt-5 overflow-hidden rounded-[22px] border border-[var(--vairo)]/25 bg-[var(--vairo)]/[0.05]">
           <h2 className="flex items-center gap-2 border-b border-white/[0.06] px-4 py-3 text-[13px] font-semibold text-white">
             <Inbox className="size-4 text-[var(--text-subtle)]" />
-            Czeka na Twoją decyzję
+            {t("page.awaitingDecision")}
             <span className="tabular ml-auto text-[12px] font-normal text-[var(--text-subtle)]">
               {teamRequests.length}
             </span>
@@ -192,11 +199,10 @@ export default async function TeamPage() {
       {canManage && toReassign > 0 ? (
         <p className="mt-5 flex flex-wrap items-center gap-3 rounded-[18px] border border-[var(--warning)]/25 bg-[var(--warning)]/[0.06] px-5 py-3.5 text-[13.5px] text-[var(--text-muted)]">
           <span className="min-w-0 flex-1">
-            {toReassign} {plural(toReassign, "rzecz czeka", "rzeczy czekają", "rzeczy czeka")} na nowego właściciela — zostały
-            po osobie, która odeszła z zespołu.
+            {t("page.toReassign", { count: toReassign })}
           </span>
           <Button size="sm" variant="secondary" href="/app/goals?view=all">
-            Przypisz ponownie
+            {t("page.reassign")}
           </Button>
         </p>
       ) : null}
@@ -209,13 +215,12 @@ export default async function TeamPage() {
       {canManage && teamRequests.length === 0 && openCount === 0 ? (
         <section className="edge-accent mt-5 flex flex-wrap items-center gap-4 rounded-[22px] border border-[var(--vairo)]/25 bg-[var(--vairo)]/[0.05] px-5 py-4">
           <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-medium text-white">Nie szukacie teraz nikogo</p>
+            <p className="text-[15px] font-medium text-white">{t("page.notHiringTitle")}</p>
             <p className="mt-0.5 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-              Dodaj otwartą rolę — z liczbą godzin i umiejętnościami — a zespół pojawi się
-              w Szukam projektu wśród tych, którzy rekrutują.
+              {t("page.notHiringBody")}
             </p>
           </div>
-          <Button href="#otwarte-role">Dodaj otwartą rolę</Button>
+          <Button href="#otwarte-role">{t("page.addOpenRole")}</Button>
         </section>
       ) : null}
 
@@ -228,7 +233,7 @@ export default async function TeamPage() {
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-3">
             <h2 className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
               <Users className="size-4" />
-              Skład
+              {t("page.roster")}
               <span className="tabular font-normal normal-case tracking-normal text-[var(--text-subtle)]">
                 {members.length}
               </span>
@@ -237,7 +242,7 @@ export default async function TeamPage() {
           </div>
 
           <p className="px-4 pt-3 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-            Rola mówi, kto może zmieniać etapy i skład. Stanowisko (CEO, CTO) nie daje uprawnień.
+            {t("page.roleNote")}
           </p>
           <ul className="flex flex-col gap-2.5 p-4">
             {members.map((member) => (
@@ -268,10 +273,8 @@ export default async function TeamPage() {
       </div>
 
       <p className="mt-6 text-[12.5px] text-[var(--text-subtle)]">
-        Jesteś w {startups.length} z {MAX_STARTUPS} zespołów.
-        {seatsLeft > 0
-          ? ` ${seatsLeft === 1 ? "Zostało 1 miejsce" : `Zostały ${seatsLeft} miejsca`}.`
-          : " To maksimum na konto."}
+        {t("page.seats", { count: startups.length, max: MAX_STARTUPS })}{" "}
+        {seatsLeft > 0 ? t("page.seatsLeft", { count: seatsLeft }) : t("page.seatsMax")}
       </p>
     </div>
   );

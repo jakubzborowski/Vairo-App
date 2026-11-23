@@ -2,7 +2,8 @@ import { MapPin, Target, UserPlus, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Pill } from "@/components/ui/pill";
 import { DeckBlock, DeckCover } from "@/components/social/deck-frame";
-import { plural } from "@/lib/utils";
+import { skillLabel } from "@/lib/localized";
+import { useT } from "@/i18n/client";
 
 type PreviewRole = {
   id: string;
@@ -47,6 +48,9 @@ export function TeamPreviewCard({
   stageLabel: string | null;
   openRoles: PreviewRole[];
 }) {
+  const t = useT("team");
+  const ts = useT("social");
+  const tl = useT("labels");
   const trimmedTagline = tagline.trim();
   const trimmedLocation = location.trim();
 
@@ -70,14 +74,14 @@ export function TeamPreviewCard({
           </p>
         ) : (
           <p className="mt-1 text-[13px] italic leading-snug text-white/55">
-            Tu wejdzie jedno zdanie o Was
+            {t("preview.taglinePlaceholder")}
           </p>
         )}
 
         <div className="mt-2.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[12.5px] text-white/70">
           <span className="inline-flex items-center gap-1">
             <Users className="size-3.5 shrink-0" />
-            {memberCount} {plural(memberCount, "osoba", "osoby", "osób")}
+            {ts("card.members", { count: memberCount })}
           </span>
           {stageLabel ? (
             <span className="inline-flex items-center gap-1">
@@ -97,15 +101,14 @@ export function TeamPreviewCard({
           <div className="mt-3">
             <Badge tone="brand">
               <UserPlus className="size-3" />
-              Szukają{" "}
-              {openRoles.length === 1 ? "1 osoby" : `${openRoles.length} osób`}
+              {ts("card.lookingFor", { count: openRoles.length })}
             </Badge>
           </div>
         ) : null}
       </DeckCover>
 
       <div className="flex min-w-0 flex-col gap-4 px-5 py-5">
-        <DeckBlock label={openRoles.length > 0 ? "Szukają" : "Otwarte role"}>
+        <DeckBlock label={openRoles.length > 0 ? ts("card.seeking") : ts("card.openRoles")}>
           {openRoles.length > 0 ? (
             <ul className="flex flex-col gap-2">
               {openRoles.slice(0, 3).map((role) => (
@@ -114,14 +117,14 @@ export function TeamPreviewCard({
                     {role.title}
                     {role.weeklyHours ? (
                       <span className="ml-2 text-[12.5px] font-normal text-[var(--text-subtle)]">
-                        {role.weeklyHours} h/tydz.
+                        {ts("card.hoursShort", { hours: role.weeklyHours })}
                       </span>
                     ) : null}
                   </p>
                   {role.skills.length > 0 ? (
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       {role.skills.slice(0, 5).map((skill) => (
-                        <Pill key={skill.id}>{skill.label}</Pill>
+                        <Pill key={skill.id}>{skillLabel(tl, skill)}</Pill>
                       ))}
                     </div>
                   ) : null}
@@ -129,14 +132,13 @@ export function TeamPreviewCard({
               ))}
               {openRoles.length > 3 ? (
                 <li className="text-[12.5px] text-[var(--text-subtle)]">
-                  i jeszcze {openRoles.length - 3}
+                  {ts("card.andMore", { count: openRoles.length - 3 })}
                 </li>
               ) : null}
             </ul>
           ) : (
             <p className="text-[13.5px] leading-relaxed text-[var(--text-subtle)]">
-              Bez otwartych ról karta nie mówi, kogo szukacie — a to jedyna
-              rzecz, którą joiner na niej czyta.
+              {t("preview.noRoles")}
             </p>
           )}
         </DeckBlock>
@@ -145,8 +147,7 @@ export function TeamPreviewCard({
             bo inaczej pole „O projekcie" wygląda na coś, co przeczyta każdy
             przewijający talię. */}
         <p className="mt-auto border-t border-white/[0.06] pt-3.5 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-          Opis „O projekcie”, skład zespołu i tagi widać dopiero na profilu
-          zespołu — jedno kliknięcie dalej.
+          {t("preview.detailsNote")}
         </p>
       </div>
     </article>

@@ -29,7 +29,7 @@ import {
   X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { translateDbError } from "@/lib/db-errors";
+import { useDbError } from "@/lib/use-db-error";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
@@ -164,6 +164,7 @@ export function FilesDrive({
   folders?: DriveFolder[];
   foldersAvailable?: boolean;
 }) {
+  const dbError = useDbError();
   const router = useRouter();
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -318,7 +319,7 @@ export function FilesDrive({
       current.map((item) =>
         item.id === id
           ? problem
-            ? { ...item, state: "error", message: translateDbError(problem) ?? undefined }
+            ? { ...item, state: "error", message: dbError(problem) ?? undefined }
             : { ...item, state: "done" }
           : item
       )
@@ -365,7 +366,7 @@ export function FilesDrive({
         title: "Nie udało się usunąć pliku",
         // RLS przy cudzym pliku nie zwraca błędu, tylko zero usuniętych wierszy.
         description: rowError
-          ? (translateDbError(rowError.message) ?? undefined)
+          ? (dbError(rowError.message) ?? undefined)
           : "Plik usuwa osoba, która go dodała, albo Founder lub Admin.",
       });
       return;
