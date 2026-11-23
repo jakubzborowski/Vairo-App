@@ -11,7 +11,8 @@ import {
   translateJoinError,
   type LookingFor,
 } from "@/types/social";
-import { sessionExpired } from "@/lib/server-errors";
+import { missingMigration, sessionExpired } from "@/lib/server-errors";
+import { getT } from "@/i18n/server";
 
 type Result = { error: string | null };
 
@@ -59,7 +60,7 @@ export async function applyToStartup(input: {
 
   const message = input.message?.trim();
   if (message && message.length > 600) {
-    return { error: "Wiadomość może mieć maksymalnie 600 znaków." };
+    return { error: (await getT("social"))("errors.messageMax600") };
   }
 
   const { error } = await supabase.from("startup_join_requests").insert({
@@ -71,7 +72,7 @@ export async function applyToStartup(input: {
     created_by: user.id,
   });
 
-  if (error) return { error: translateJoinError(error.message) };
+  if (error) return { error: translateJoinError((await getT("social")), error.message) };
 
   revalidateSocial();
   return { error: null };
@@ -93,12 +94,12 @@ export async function inviteToStartup(input: {
 
   const role = await getStartupRole(supabase, input.startupId, user.id);
   if (!role || !canManageTeam(role)) {
-    return { error: "Tylko Founder i Admin mogą zapraszać do zespołu." };
+    return { error: (await getT("social"))("errors.inviteManagersOnly") };
   }
 
   const jobTitle = input.jobTitle?.trim();
   if (jobTitle && (jobTitle.length < 2 || jobTitle.length > 48)) {
-    return { error: "Stanowisko: 2–48 znaków." };
+    return { error: (await getT("social"))("errors.jobTitle") };
   }
 
   const { error } = await supabase.from("startup_join_requests").insert({
@@ -111,7 +112,7 @@ export async function inviteToStartup(input: {
     created_by: user.id,
   });
 
-  if (error) return { error: translateJoinError(error.message) };
+  if (error) return { error: translateJoinError((await getT("social")), error.message) };
 
   revalidateSocial();
   return { error: null };
@@ -145,12 +146,11 @@ export async function respondToJoinRequest(
   if (error) {
     if (error.message.includes("respond_join_request")) {
       return {
-        error: "Brakuje migracji 009 — odpal ją w Supabase → SQL Editor.",
+        error: await missingMigration("009"),
       };
     }
     return {
-      error: translateJoinError(
-        error.message,
+      error: translateJoinError((await getT("social")), error.message,
         direction === "application" ? "them" : "me"
       ),
     };
@@ -184,12 +184,12 @@ export async function saveSocialPreferences(input: {
 
   const location = input.location.trim();
   if (location.length > 80) {
-    return { error: "Lokalizacja: maksymalnie 80 znaków." };
+    return { error: (await getT("social"))("errors.location") };
   }
 
   const hours = input.weeklyHours;
   if (hours !== null && (!Number.isInteger(hours) || hours < 1 || hours > 80)) {
-    return { error: "Godziny tygodniowo: liczba od 1 do 80." };
+    return { error: (await getT("social"))("errors.hours") };
   }
 
   const { error } = await supabase
@@ -235,12 +235,12 @@ export async function saveSocialProfile(input: {
   // imię i nazwisko także w składzie teamu (migracja 033).
   const publicName = input.publicName.trim().replace(/\s+/g, " ");
   if (publicName.length < 2 || publicName.length > 80) {
-    return { error: "Nazwa na karcie: 2–80 znaków." };
+    return { error: (await getT("social"))("errors.cardName") };
   }
 
   const headline = input.headline.trim();
   if (headline.length > 120) {
-    return { error: "Czym się zajmujesz: maksymalnie 120 znaków." };
+    return { error: (await getT("social"))("errors.headline") };
   }
 
   // Ta sama nazwa co na koncie zapisuje się jako brak pseudonimu — wtedy
@@ -254,15 +254,15 @@ export async function saveSocialProfile(input: {
 
   const weeklyFocus = input.weeklyFocus.trim();
   if (weeklyFocus.length > 2000) {
-    return { error: "Nad czym pracujesz: maksymalnie 2000 znaków." };
+    return { error: (await getT("social"))("errors.focus") };
   }
 
   const location = input.location.trim();
-  if (location.length > 80) return { error: "Lokalizacja: maksymalnie 80 znaków." };
+  if (location.length > 80) return { error: (await getT("social"))("errors.location") };
 
   const hours = input.weeklyHours;
   if (hours !== null && (!Number.isInteger(hours) || hours < 1 || hours > 80)) {
-    return { error: "Godziny tygodniowo: liczba od 1 do 80." };
+    return { error: (await getT("social"))("errors.hours") };
   }
 
   const lookingFor =
@@ -333,13 +333,13 @@ export async function startContact(input: {
   if (!user) return { error: await sessionExpired() };
 
   if (input.recipientId === user.id) {
-    return { error: "Nie da się napisać do siebie." };
+    return { error: (await getT("social"))("errors.notSelf") };
   }
 
   const message = input.message.trim();
-  if (message.length < 1) return { error: "Napisz choć jedno zdanie." };
+  if (message.length < 1) return { error: (await getT("social"))("errors.messageEmpty") };
   if (message.length > 600) {
-    return { error: "Wiadomość może mieć maksymalnie 600 znaków." };
+    return { error: (await getT("social"))("errors.messageMax600") };
   }
 
   // Rozmowa już trwa? Wtedy to jest zwykła wiadomość, nie nowy kontakt.
@@ -353,7 +353,7 @@ export async function startContact(input: {
       sender_id: user.id,
       body: message,
     });
-    if (error) return { error: translateContactError(error.message) };
+    if (error) return { error: translateContactError((await getT("social")), error.message) };
 
     revalidateContacts();
     return { error: null, conversationId: existingId };
@@ -366,7 +366,7 @@ export async function startContact(input: {
     message,
   });
 
-  if (error) return { error: translateContactError(error.message) };
+  if (error) return { error: translateContactError((await getT("social")), error.message) };
 
   revalidateContacts();
   return { error: null, conversationId: null };
@@ -385,7 +385,7 @@ export async function respondToContact(
     p_action: action,
   });
 
-  if (error) return { error: translateContactError(error.message) };
+  if (error) return { error: translateContactError((await getT("social")), error.message) };
 
   revalidateContacts();
   return {
@@ -402,9 +402,9 @@ export async function sendMessage(input: {
   if (!user) return { error: await sessionExpired() };
 
   const body = input.body.trim();
-  if (body.length < 1) return { error: "Wiadomość nie może być pusta." };
+  if (body.length < 1) return { error: (await getT("social"))("errors.chatEmpty") };
   if (body.length > 4000) {
-    return { error: "Wiadomość może mieć maksymalnie 4000 znaków." };
+    return { error: (await getT("social"))("errors.chatMax") };
   }
 
   const { error } = await supabase.from("messages").insert({
@@ -413,7 +413,7 @@ export async function sendMessage(input: {
     body,
   });
 
-  if (error) return { error: translateContactError(error.message) };
+  if (error) return { error: translateContactError((await getT("social")), error.message) };
 
   revalidatePath(`/app/social/messages/${input.conversationId}`);
   revalidateContacts();
@@ -460,7 +460,7 @@ export async function passCandidate(input: {
   const hasPerson = Boolean(input.profileId);
   const hasTeam = Boolean(input.startupId);
   if (hasPerson === hasTeam) {
-    return { error: "Podaj dokładnie jeden cel do pominięcia." };
+    return { error: (await getT("social"))("errors.passTarget") };
   }
 
   // Zwykły INSERT, nie UPSERT — i to jest wymuszone przez kształt tabeli.
@@ -498,7 +498,7 @@ export async function passCandidate(input: {
     if (!duplicate) {
       if (error.message.includes("discovery_passes")) {
         return {
-          error: "Brakuje migracji 011 — odpal ją w Supabase → SQL Editor.",
+          error: await missingMigration("011"),
         };
       }
       return { error: await translateDbError(error.message) };

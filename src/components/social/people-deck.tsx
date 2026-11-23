@@ -11,7 +11,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Pill } from "@/components/ui/pill";
 import { reasonsForPerson, type MatchContext } from "@/lib/match";
 import { MAX_STARTUPS } from "@/types/startup";
-import { LOOKING_FOR_LABELS, type PublicProfile } from "@/types/social";
+import type { PublicProfile } from "@/types/social";
+import { useLocale, useT } from "@/i18n/client";
+import { skillLabel } from "@/lib/localized";
 import { DeckAction, DeckBlock, DeckEnd, DeckFrame } from "./deck-frame";
 import { MessageButton, type ContactContext } from "./message-button";
 import { PersonCover } from "./person-cover";
@@ -48,6 +50,9 @@ export function PeopleDeck({
   resetHref,
   matchContext,
 }: Props) {
+  const t = useT("social");
+  const tl = useT("labels");
+  const locale = useLocale();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [busy, startBusy] = useTransition();
@@ -102,20 +107,18 @@ export function PeopleDeck({
     const passed = passedCount + deck.passedHere;
     return (
       <DeckEnd
-        title="To już wszyscy na dziś"
+        title={t("deck.peopleEndTitle")}
         description={`${
-          deck.sentHere > 0
-            ? `Wysłane wiadomości: ${deck.sentHere}. Odpowiedzi znajdziesz w Zaproszeniach. `
-            : ""
-        }Nowe profile pojawią się, gdy ktoś dołączy do Vairo.`}
+          deck.sentHere > 0 ? `${t("deck.peopleSent", { count: deck.sentHere })} ` : ""
+        }${t("deck.peopleEndBody")}`}
       >
         {passed > 0 ? (
           <Button variant="secondary" block size="lg" loading={busy} onClick={restoreAll}>
-            Przywróć pominiętych ({passed})
+            {t("deck.restorePeople", { count: passed })}
           </Button>
         ) : null}
         <Button href={resetHref} variant="ghost">
-          Poluzuj filtry
+          {t("deck.loosenFilters")}
         </Button>
       </DeckEnd>
     );
@@ -127,23 +130,23 @@ export function PeopleDeck({
         icon={Users}
         title={
           people.length === 0
-            ? "Nikt nie pasuje do tych filtrów"
-            : "To już wszyscy"
+            ? t("discover.noPeople")
+            : t("deck.peopleAll")
         }
         description={
           passedCount + deck.passedHere > 0
-            ? "Możesz przywrócić pominięte osoby albo poluzować filtry. Nowe profile pojawią się, gdy ktoś dołączy do Vairo."
-            : "Poluzuj filtry albo wróć później — widzisz tylko tych, którzy zgodzili się być widoczni."
+            ? t("deck.peopleEmptyPassed")
+            : t("deck.peopleEmpty")
         }
         action={
           <>
             {passedCount + deck.passedHere > 0 ? (
               <Button variant="secondary" loading={busy} onClick={restoreAll}>
-                Przywróć pominięte ({passedCount + deck.passedHere})
+                {t("deck.restore", { count: passedCount + deck.passedHere })}
               </Button>
             ) : null}
             <Button href={resetHref} variant="ghost">
-              Wyczyść filtry
+              {t("discover.clearFilters")}
             </Button>
           </>
         }
@@ -165,10 +168,10 @@ export function PeopleDeck({
       onPass={pass}
       onUndo={undo}
       onRestoreAll={restoreAll}
-      passLabel="Nie teraz"
-      primaryLabel={conversationByProfile[person.id] ? "Otwórz rozmowę" : "Napisz"}
+      passLabel={t("deck.notNow")}
+      primaryLabel={conversationByProfile[person.id] ? t("deck.openChat") : t("deck.write")}
       cover={<PersonCover person={person} facts={false} />}
-      reasons={reasonsForPerson(person, matchContext)}
+      reasons={reasonsForPerson(person, matchContext, { t, locale })}
       // „Napisz" jest akcją główną dla KAŻDEGO — także dla kogoś bez teamu.
       // Zaproszenie to trzecia, dodatkowa możliwość Foundera i Admina.
       action={
@@ -181,20 +184,20 @@ export function PeopleDeck({
         conversationByProfile[person.id] ? (
           <DeckAction
             variant="primary"
-            label="Otwórz rozmowę"
+            label={t("deck.openChat")}
             icon={<MessageSquare className="size-6" />}
             href={`/app/social/messages/${conversationByProfile[person.id]}`}
           />
         ) : (
           <MessageButton
             recipientId={person.id}
-            recipientName={firstName(person.full_name)}
+            recipientName={firstName(person.full_name) ?? t("deck.thisPersonGen")}
             contexts={contactContexts}
             onDone={() => deck.handle(person.id)}
             trigger={(open) => (
               <DeckAction
                 variant="primary"
-                label="Napisz"
+                label={t("deck.write")}
                 icon={<MessageSquare className="size-6" />}
                 onClick={open}
               />
@@ -206,21 +209,21 @@ export function PeopleDeck({
         invitableTeams.length === 0 ? null : full ? (
           <DeckAction
             variant="extra"
-            label="Komplet zespołów"
+            label={t("deck.fullTeams")}
             icon={<UserPlus className="size-5" />}
             disabled
-            title={`Ta osoba jest w ${MAX_STARTUPS} zespołach`}
+            title={t("deck.personFull", { count: MAX_STARTUPS })}
           />
         ) : (
           <InviteButton
             profileId={person.id}
-            profileName={person.full_name ?? "tę osobę"}
+            profileName={person.full_name ?? t("discover.thisPerson")}
             teams={invitableTeams}
             onDone={() => deck.handle(person.id)}
             trigger={(open) => (
               <DeckAction
                 variant="extra"
-                label="Zaproś"
+                label={t("deck.invite")}
                 icon={<UserPlus className="size-5" />}
                 onClick={open}
               />
@@ -242,14 +245,14 @@ export function PeopleDeck({
             {person.weekly_hours ? (
               <span className="inline-flex items-center gap-1.5">
                 <Clock className="size-3.5 shrink-0" />
-                {person.weekly_hours} h tygodniowo
+                {t("card.hours", { hours: person.weekly_hours })}
               </span>
             ) : null}
             <span className="inline-flex items-center gap-1.5">
               <Users className="size-3.5 shrink-0" />
               {person.team_count === 0
-                ? "Bez zespołu"
-                : `${person.team_count} z ${MAX_STARTUPS} zespołów`}
+                ? t("card.noTeam")
+                : t("card.teamCount", { count: person.team_count, max: MAX_STARTUPS })}
             </span>
           </div>
 
@@ -258,13 +261,13 @@ export function PeopleDeck({
               <Badge
                 tone={person.looking_for === "not_looking" ? "neutral" : "brand"}
               >
-                {LOOKING_FOR_LABELS[person.looking_for]}
+                {t(`lookingFor.${person.looking_for}`)}
               </Badge>
             </div>
           ) : null}
 
           {person.weekly_focus ? (
-            <DeckBlock label="Nad czym teraz pracuje">
+            <DeckBlock label={t("card.focus")}>
               <p className="whitespace-pre-line text-[14px] leading-relaxed text-[var(--text-muted)]">
                 {person.weekly_focus}
               </p>
@@ -272,10 +275,10 @@ export function PeopleDeck({
           ) : null}
 
           {skills.length > 0 ? (
-            <DeckBlock label="Umie">
+            <DeckBlock label={t("card.skills")}>
               <div className="flex flex-wrap gap-1.5">
                 {skills.map((skill) => (
-                  <Pill key={skill.id}>{skill.label}</Pill>
+                  <Pill key={skill.id}>{skillLabel(tl, skill)}</Pill>
                 ))}
               </div>
             </DeckBlock>
@@ -287,7 +290,7 @@ export function PeopleDeck({
           href={`/app/social/people/${person.id}`}
           className="underline-offset-2 transition-colors hover:text-white hover:underline"
         >
-          Zobacz pełny profil
+          {t("card.fullProfile")}
         </Link>
       }
     />
@@ -296,5 +299,5 @@ export function PeopleDeck({
 
 /** W przycisku „Napisz do…" imię czyta się lepiej niż imię z nazwiskiem. */
 function firstName(fullName: string | null) {
-  return fullName?.trim().split(/\s+/)[0] ?? "tej osoby";
+  return fullName?.trim().split(/\s+/)[0] ?? null;
 }

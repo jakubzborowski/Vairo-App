@@ -5,6 +5,8 @@ import { Plus, Search } from "lucide-react";
 import { createCustomSkill } from "@/app/app/settings/profile/actions";
 import { Input } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
+import { useT } from "@/i18n/client";
+import { skillLabel } from "@/lib/localized";
 
 export type SkillOption = { id: string; label: string };
 
@@ -30,6 +32,8 @@ export function SkillPicker({
   onChange,
   onSkillCreated,
 }: Props) {
+  const ts = useT("settings");
+  const tl = useT("labels");
   const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startPending] = useTransition();
@@ -66,7 +70,7 @@ export function SkillPicker({
     startPending(async () => {
       const result = await createCustomSkill(trimmed);
       if (result.error || !result.skill) {
-        setError(result.error ?? "Nie udało się dodać umiejętności.");
+        setError(result.error ?? ts("profile.skillAddFailed"));
         return;
       }
       const skill = { id: result.skill.id as string, label: result.skill.label as string };
@@ -92,9 +96,9 @@ export function SkillPicker({
               create();
             }
           }}
-          placeholder="Szukaj albo wpisz własną…"
+          placeholder={ts("profile.skillsSearch")}
           className="pl-10"
-          aria-label="Szukaj umiejętności"
+          aria-label={ts("profile.skillsSearchAria")}
         />
       </div>
 
@@ -106,7 +110,7 @@ export function SkillPicker({
           className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[13px] text-[var(--vairo)] transition-colors hover:bg-[var(--vairo)]/10"
         >
           <Plus className="size-3.5" />
-          Dodaj &bdquo;{trimmed}&rdquo;
+          {ts("profile.skillsAdd", { label: trimmed })}
         </button>
       ) : null}
 
@@ -117,7 +121,7 @@ export function SkillPicker({
       <div className="mt-4 flex flex-wrap gap-2">
         {visible.length === 0 ? (
           <p className="text-[13px] text-[var(--text-subtle)]">
-            Brak wyników. Naciśnij Enter, żeby dodać własną umiejętność.
+            {ts("profile.skillsEmpty")}
           </p>
         ) : (
           visible.map((skill) => (
@@ -126,7 +130,7 @@ export function SkillPicker({
               selected={selected.has(skill.id)}
               onToggle={() => toggle(skill.id)}
             >
-              {skill.label}
+              {skillLabel(tl, skill)}
             </Pill>
           ))
         )}

@@ -11,8 +11,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { canManageTeam } from "@/types/startup";
 import type { ContactSignal, JoinRequest } from "@/types/social";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Zaproszenia — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("social");
+  return { title: t("invites.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 type Tab = "waiting" | "sent" | "closed";
@@ -37,6 +41,7 @@ export default async function InvitesPage({
 }: {
   searchParams: Promise<{ stan?: string }>;
 }) {
+  const t = await getT("social");
   const params = await searchParams;
 
   const supabase = await createClient();
@@ -89,10 +94,10 @@ export default async function InvitesPage({
     <div className="page">
       <header>
         <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
-          Zaproszenia
+          {t("invites.title")}
         </h1>
         <p className="mt-1 text-[14px] text-[var(--text-subtle)]">
-          Zaczepki od ludzi i sprawy członkostwa w zespołach.
+          {t("invites.subtitle")}
         </p>
       </header>
 
@@ -106,12 +111,12 @@ export default async function InvitesPage({
         <div className="mt-6">
           <EmptyState
             icon={Inbox}
-            title="Tu jeszcze pusto"
-            description="Pojawią się tutaj zaczepki od innych osób i sprawy Twoich zespołów. Pierwszy krok może też wyjść od Ciebie."
+            title={t("invites.emptyTitle")}
+            description={t("invites.emptyBody")}
             action={
               <Button href="/app/social/discover" variant="secondary">
                 <Compass className="size-4" />
-                Odkrywaj
+                {t("invites.discover")}
               </Button>
             }
           />
@@ -125,15 +130,15 @@ export default async function InvitesPage({
                 i rozpychało cały pasek zakładek. Druga część etykiety znika
                 poniżej `sm` — „Czeka" niesie to samo. */}
             <TabLink href="/app/social/invites?stan=waiting" active={tab === "waiting"}>
-              Czeka<span className="hidden sm:inline">&nbsp;na Ciebie</span>
+              {t("inbox.waiting")}<span className="hidden sm:inline">&nbsp;{t("invites.forYou")}</span>
               <Count value={waiting.length} highlight />
             </TabLink>
             <TabLink href="/app/social/invites?stan=sent" active={tab === "sent"}>
-              Wysłane
+              {t("invites.sent")}
               <Count value={sent.length} />
             </TabLink>
             <TabLink href="/app/social/invites?stan=closed" active={tab === "closed"}>
-              Zakończone
+              {t("invites.closed")}
               <Count value={closed.length} />
             </TabLink>
           </nav>
@@ -141,10 +146,10 @@ export default async function InvitesPage({
           {rows.length === 0 ? (
             <p className="px-4 py-8 text-center text-[13px] text-[var(--text-subtle)]">
               {tab === "waiting"
-                ? "Nic nie czeka na Twoją odpowiedź."
+                ? t("invites.noneWaiting")
                 : tab === "sent"
-                  ? "Nie masz otwartych zgłoszeń ani zaproszeń."
-                  : "Nic się jeszcze nie zakończyło."}
+                  ? t("invites.noneSent")
+                  : t("invites.noneClosed")}
             </p>
           ) : (
             <ul className="divide-y divide-white/[0.06]">

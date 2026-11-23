@@ -5,16 +5,23 @@ import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { loadConversation } from "@/lib/messages";
 import { MessageThread } from "@/components/social/message-thread";
 import { Avatar } from "@/components/ui/avatar";
+import { getLocale, getT } from "@/i18n/server";
+import { LOCALE_TAGS } from "@/i18n/config";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Rozmowa — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("social");
+  return { title: t("messages.conversationMetaTitle") };
+}
 
 export default async function ConversationPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getT("social");
+  const locale = await getLocale();
   const { id } = await params;
   const supabase = await createClient();
   const user = await getCurrentUser();
@@ -26,7 +33,7 @@ export default async function ConversationPage({
   const conversation = await loadConversation(supabase, id, user.id);
   if (!conversation) notFound();
 
-  const otherName = conversation.other.name?.trim().split(/\s+/)[0] ?? "tej osoby";
+  const otherName = conversation.other.name?.trim().split(/\s+/)[0] ?? t("person.thisPersonGen");
 
   return (
     <div className="w-full">
@@ -62,17 +69,18 @@ export default async function ConversationPage({
               więc pierwsza wiadomość to dzień, w którym się zaczęła. */}
           {conversation.messages[0] ? (
             <p className="mt-0.5 text-[12.5px] text-[var(--text-subtle)]">
-              Rozmowa od{" "}
-              {new Date(conversation.messages[0].createdAt).toLocaleDateString("pl-PL", {
-                day: "numeric",
-                month: "long",
+              {t("messages.since", {
+                date: new Date(conversation.messages[0].createdAt).toLocaleDateString(LOCALE_TAGS[locale], {
+                  day: "numeric",
+                  month: "long",
+                }),
               })}
             </p>
           ) : null}
           {conversation.contextStartupName ? (
             <p className="mt-1 inline-flex items-center gap-1.5 text-[12.5px] text-[var(--text-muted)]">
               <Building2 className="size-3.5" />
-              Rozmowa w sprawie {conversation.contextStartupName}
+              {t("messages.about", { name: conversation.contextStartupName })}
             </p>
           ) : null}
         </div>
@@ -80,7 +88,7 @@ export default async function ConversationPage({
           href={`/app/social/people/${conversation.other.id}`}
           className="hidden h-9 shrink-0 items-center rounded-xl bg-[var(--surface-2)] px-3 text-[13px] text-[var(--text-muted)] transition-colors hover:text-white sm:inline-flex"
         >
-          Zobacz profil
+          {t("messages.viewProfile")}
         </Link>
       </header>
 

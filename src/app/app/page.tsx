@@ -46,14 +46,24 @@ import { Avatar } from "@/components/ui/avatar";
 import { Card, CardBody } from "@/components/ui/card";
 import { CountUp } from "@/components/ui/count-up";
 import { scoreProfile } from "@/lib/profile-completeness";
-import { cn, plural } from "@/lib/utils";
-import { ROLE_LABELS, canEditStageData, canManageTeam } from "@/types/startup";
+import { cn } from "@/lib/utils";
+import { getLocale, getT } from "@/i18n/server";
+import { canEditStageData, canManageTeam } from "@/types/startup";
 import type { TeamMember } from "@/lib/social";
+import type { Locale } from "@/i18n/config";
+import { formatDate } from "@/i18n/format";
 
-export const metadata = { title: "Dashboard — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("dashboard");
+  return { title: t("metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function AppPage() {
+  const t = await getT("dashboard");
+  const tc = await getT("common");
+  const tl = await getT("labels");
+  const ts = await getT("social");
   const supabase = await createClient();
   const user = await getCurrentUser();
 
@@ -78,7 +88,7 @@ export default async function AppPage() {
 
   const active = resolveActiveStartup(startups, activeTeamId);
 
-  const greeting = firstName ? `Cześć, ${firstName}` : "Cześć";
+  const greeting = firstName ? t("greetingName", { name: firstName }) : t("greeting");
 
   // Bez teamu user ma wyłącznie warstwę Social — i to jest normalny stan,
   // nie błąd. Dlatego zamiast pustych kafelków dostaje dwa konkretne wyjścia.
@@ -89,7 +99,7 @@ export default async function AppPage() {
           {greeting}
         </h1>
         <p className="mt-1 text-[14px] text-[var(--text-subtle)]">
-          Nie należysz jeszcze do żadnego zespołu.
+          {t("noTeam.subtitle")}
         </p>
 
         <Card className="mt-6">
@@ -100,26 +110,23 @@ export default async function AppPage() {
               </span>
               <div className="min-w-0">
                 <h2 className="font-heading text-[19px] font-semibold text-white">
-                  Dołącz do zespołu albo stwórz własny startup
+                  {t("noTeam.title")}
                 </h2>
                 <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-[var(--text-muted)]">
-                  Dashboard i walidacja pomysłu działają w kontekście konkretnego
-                  startupu. Dopóki nie jesteś w żadnym zespole, korzystasz
-                  z warstwy Social — tam poznajesz ludzi i znajdujesz projekty,
-                  do których możesz dołączyć.
+                  {t("noTeam.body")}
                 </p>
                 <div className="mt-5 flex flex-wrap gap-2">
                   <Button href="/app/startups/new">
                     <Rocket className="size-4" />
-                    Stwórz startup
+                    {t("noTeam.create")}
                   </Button>
                   <Button href="/app/social/discover" variant="secondary">
                     <Compass className="size-4" />
-                    Znajdź zespół
+                    {t("noTeam.find")}
                   </Button>
                   <Button href="/app/program" variant="ghost">
                     <HelpCircle className="size-4" />
-                    Jak to działa?
+                    {t("noTeam.how")}
                   </Button>
                 </div>
               </div>
@@ -217,8 +224,8 @@ export default async function AppPage() {
     stageBlocker ??
     (status?.mainBlocker
       ? {
-          title: `Zablokowany cel: ${status.mainBlocker.title}`,
-          why: status.mainBlocker.note ?? "Przy celu nie opisano jeszcze, co blokuje pracę.",
+          title: t("blocker.goal", { title: status.mainBlocker.title }),
+          why: status.mainBlocker.note ?? t("blocker.goalNoNote"),
           href: status.mainBlocker.href,
         }
       : null);
@@ -245,19 +252,17 @@ export default async function AppPage() {
     weekly_focus: profile?.weekly_focus,
     looking_for: profile?.looking_for,
     skillCount: skillCount ?? 0,
-  });
+  }, ts);
 
   const doneStages = program.filter((item) => item.status === "completed").length;
   // Jedno zdanie zamiast samej nazwy startupu: gdzie jesteście w programie.
-  const COUNTS = ["", "jeden etap", "dwa etapy", "trzy etapy", "cztery etapy", "pięć etapów"];
-  const ORDINALS = ["pierwszy", "drugi", "trzeci", "czwarty", "piąty"];
   const whereLine = programDone
-    ? "program domknięty"
+    ? t("where.done")
     : doneStages === 0
-      ? "pierwszy etap w toku"
-      : `${COUNTS[doneStages] ?? `${doneStages} etapów`} za Wami${
-          stepNumber > doneStages ? `, ${ORDINALS[stepNumber - 1] ?? ""} w toku` : ""
-        }`;
+      ? t("where.first")
+      : stepNumber > doneStages
+        ? t("where.behindWithCurrent", { count: doneStages, current: stepNumber })
+        : t("where.behind", { count: doneStages });
 
   return (
     <div className="page-wide">
@@ -276,7 +281,7 @@ export default async function AppPage() {
           ) : (
             <Eye className="size-3.5 text-[var(--info)]" />
           )}
-          Twoja rola: {ROLE_LABELS[active.role]}
+          {t("yourRole", { role: tl(`role.${active.role}`) })}
         </span>
       </header>
 
@@ -290,12 +295,10 @@ export default async function AppPage() {
         <Card className="mt-4">
           <CardBody className="pt-5">
             <h2 className="font-heading text-[18px] font-semibold text-white">
-              Program jest domknięty
+              {t("programDone.title")}
             </h2>
             <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-[var(--text-muted)]">
-              Wyniki, cele i materiały zostają do odczytu. Dalsze prowadzenie po MVP
-              Stage to osobna rozmowa o współpracy. Ukończenie programu nie oznacza,
-              że firma jest już potwierdzonym sukcesem.
+              {t("programDone.body")}
             </p>
           </CardBody>
         </Card>
@@ -307,7 +310,7 @@ export default async function AppPage() {
           className="inline-flex items-center gap-1.5 text-[12.5px] text-[var(--text-subtle)] underline-offset-2 transition-colors hover:text-white hover:underline"
         >
           <HelpCircle className="size-3.5" />
-          Jak działa program?
+          {t("howProgram")}
         </Link>
       </p>
 
@@ -327,10 +330,10 @@ export default async function AppPage() {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-                    {nextUp ? "Następny etap" : stage.status === "completed" ? "Etap domknięty" : "Bieżący etap"}
+                    {nextUp ? t("stage.next") : stage.status === "completed" ? t("stage.closed") : t("stage.current")}
                     {stepNumber > 0 ? (
                       <span className="tabular font-normal normal-case tracking-normal">
-                        · {stepNumber} z {program.length}
+                        · {t("ofTotal", { done: stepNumber, total: program.length })}
                       </span>
                     ) : null}
                   </p>
@@ -348,17 +351,17 @@ export default async function AppPage() {
                   ) : null}
                   {nextSubpoint && canEdit ? (
                     <p className="mt-2 text-[13px] text-[var(--text-subtle)]">
-                      Następny podpunkt:{" "}
+                      {t("stage.nextSubpoint")}{" "}
                       <span className="text-[var(--text-muted)]">{nextSubpoint.subpoint.title}</span>
                     </p>
                   ) : null}
                 </div>
                 <Button href="/app/stage">
                   {nextUp && canEdit
-                    ? "Zacznij"
+                    ? t("stage.start")
                     : stage.status === "completed" || !canEdit
-                      ? "Przejrzyj"
-                      : "Kontynuuj"}
+                      ? t("stage.review")
+                      : t("stage.continue")}
                   <ArrowRight className="size-4" />
                 </Button>
               </div>
@@ -372,16 +375,16 @@ export default async function AppPage() {
                 </div>
                 <span className="tabular shrink-0 text-[12.5px] text-[var(--text-subtle)]">
                   {nextUp
-                    ? `${stage.title} domknięty`
+                    ? t("stage.closedName", { stage: stage.title })
                     : stage.status === "completed"
                     ? canEdit
-                      ? "Możesz tu wrócić i poprawić odpowiedzi"
-                      : "Tylko do odczytu"
+                      ? t("stage.canReturn")
+                      : t("stage.readOnly")
                     : quest
-                      ? `Ten punkt: ${quest.done} z ${quest.total}`
+                      ? t("stage.thisPoint", { done: quest.done, total: quest.total })
                       : stage.total > 0 && stage.done >= stage.total
-                        ? "Wszystko gotowe do domknięcia"
-                        : "Postęp zapisuje się automatycznie"}
+                        ? t("stage.ready")
+                        : t("stage.autosave")}
                 </span>
               </div>
             </CardBody>
@@ -391,29 +394,29 @@ export default async function AppPage() {
         <StatPanel
           href="/app/program"
           icon={Rocket}
-          label="Program"
-          value={`${doneStages} z ${program.length}`}
-          hint={doneStages === 0 ? "etapów za Wami — dopiero start" : "etapów za Wami"}
+          label={t("stat.program")}
+          value={t("ofTotal", { done: doneStages, total: program.length })}
+          hint={doneStages === 0 ? t("stat.programStart") : t("stat.programBehind")}
         />
 
         <StatPanel
           href={buildsAlone ? "/app/team#zaproszenie" : "/app/team"}
           icon={Users}
-          label="Zespół"
+          label={t("stat.team")}
           value={<CountUp value={memberCount ?? 0} />}
           hint={
             buildsAlone
-              ? "Budujesz w pojedynkę? Zaproś kogoś linkiem"
-              : plural(memberCount ?? 0, "osoba w zespole", "osoby w zespole", "osób w zespole")
+              ? t("stat.alone")
+              : t("stat.members", { count: memberCount ?? 0 })
           }
           badge={
             waitingCount && waitingCount > 0
-              ? `${waitingCount} czeka na decyzję`
+              ? t("stat.waiting", { count: waitingCount })
               : undefined
           }
           action={
             canManageTeam(active.role)
-              ? { href: "/app/team/profile", label: "Profil publiczny" }
+              ? { href: "/app/team/profile", label: t("stat.publicProfile") }
               : undefined
           }
         />
@@ -421,9 +424,9 @@ export default async function AppPage() {
         <StatPanel
           href="/app/social/me"
           icon={Target}
-          label="Twój profil publiczny"
+          label={t("stat.yourProfile")}
           value={<CountUp value={completeness.score} suffix="%" delayMs={280} />}
-          hint={completeness.missing.length === 0 ? "komplet — obcy widzą wszystko" : "gotowe"}
+          hint={completeness.missing.length === 0 ? t("stat.profileComplete") : t("stat.profileReady")}
           // Zamiast liczby braków: co konkretnie dodać. Liczba nie mówi,
           // od czego zacząć; nazwa brakującej rzeczy mówi.
           note={
@@ -447,23 +450,23 @@ export default async function AppPage() {
             {
               // Ten sam bieżący punkt co na pasku wyżej — nie „2/13” całego
               // etapu, które przy dłuższym etapie zniechęca.
-              label: quest ? "bieżący punkt" : "wymagania etapu",
+              label: quest ? t("strip.currentPoint") : t("strip.stageRequirements"),
               value: quest
                 ? `${quest.done}/${quest.total}`
                 : stage && stage.total > 0 && stage.done >= stage.total
-                  ? "gotowe"
+                  ? t("strip.ready")
                   : "—",
               href: "/app/stage",
             },
-            { label: "cele z dowodem", value: String(status.goalsDone), href: "/app/goals?view=all" },
+            { label: t("strip.goalsDone"), value: String(status.goalsDone), href: "/app/goals?view=all" },
             {
-              label: "otwarte przeszkody",
+              label: t("strip.blockers"),
               value: String(status.openBlockers),
               href: status.mainBlocker?.href ?? "/app/tasks",
               warn: status.openBlockers > 0,
             },
             {
-              label: "zadania po terminie",
+              label: t("strip.overdue"),
               value: String(status.overdueTasks),
               href: "/app/calendar",
               warn: status.overdueTasks > 0,
@@ -498,8 +501,8 @@ export default async function AppPage() {
           ) : (
             <LockedPanel
               icon={CalendarDays}
-              title="Najbliższe terminy"
-              note="Cele i ich terminy otworzą się po domknięciu Preparation."
+              title={t("panel.deadlines")}
+              note={t("panel.deadlinesLocked")}
             />
           )}
           {recent.length > 0 ? <RecentPanel goals={recent} /> : null}
@@ -515,12 +518,8 @@ export default async function AppPage() {
         ) : (
           <LockedPanel
             icon={History}
-            title="Ostatnia aktywność"
-            note={
-              trackerOpen
-                ? "Jeszcze nic się nie wydarzyło. Pierwszy cel albo zadanie pojawi się tutaj."
-                : "Aktywność zespołu pojawi się razem z celami i zadaniami — po domknięciu Preparation."
-            }
+            title={t("panel.activity")}
+            note={trackerOpen ? t("panel.activityEmpty") : t("panel.activityLocked")}
           />
         )}
         {/* Jedyny świadomy wyjątek od „zero fake UI” („Vairo rozwój
@@ -530,9 +529,9 @@ export default async function AppPage() {
             Panel niczego nie obiecuje terminem i nie jest klikalny. */}
         <LockedPanel
           icon={Sparkles}
-          title="Możliwości partnerskie"
-          badge="Wkrótce"
-          note="Programy, konkursy i oferty partnerów Vairo dla startupów. Dodamy je w kolejnej wersji."
+          title={tc("opportunities.title")}
+          badge={t("panel.soon")}
+          note={tc("opportunities.description")}
         />
       </div>
 
@@ -548,7 +547,7 @@ export default async function AppPage() {
  * rola i stanowisko — i tyle pokazujemy. Dopisanie tu wymyślonych „3 zadania
  * w toku" byłoby liczbą bez pokrycia w bazie.
  */
-function TeamPanel({
+async function TeamPanel({
   members,
   canManage,
   waiting,
@@ -562,6 +561,8 @@ function TeamPanel({
   // się jednym spojrzeniem, a lista wymaga przebiegnięcia w dół. Pod każdą
   // twarzą stoi stanowisko albo rola, bo samo zdjęcie nie mówi, kto za co
   // odpowiada — a to jest pytanie, na które ten panel ma odpowiadać.
+  const t = await getT("dashboard");
+  const tl = await getT("labels");
   const shown = members.slice(0, 6);
   const hidden = members.length - shown.length;
 
@@ -571,13 +572,13 @@ function TeamPanel({
         <div className="flex items-center justify-between gap-3">
           <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
             <Users className="size-3.5" />
-            Zespół
+            {t("stat.team")}
           </p>
           <Link
             href="/app/team"
             className="inline-flex items-center gap-1 text-[12px] text-[var(--text-subtle)] underline-offset-2 transition-colors hover:text-white hover:underline"
           >
-            {canManage ? "Zarządzaj" : "Zobacz"}
+            {canManage ? t("panel.manage") : t("panel.view")}
             <ChevronRight className="size-3.5" />
           </Link>
         </div>
@@ -590,7 +591,7 @@ function TeamPanel({
             >
               <Avatar src={member.avatarUrl} name={member.fullName} size="md" />
               <span className="mt-1.5 line-clamp-2 text-[11px] leading-tight text-[var(--text-subtle)]">
-                {member.jobTitle ?? ROLE_LABELS[member.role]}
+                {member.jobTitle ?? tl(`role.${member.role}`)}
               </span>
             </li>
           ))}
@@ -601,7 +602,7 @@ function TeamPanel({
                 +{hidden}
               </span>
               <span className="mt-1.5 text-[11px] leading-tight text-[var(--text-subtle)]">
-                {plural(hidden, "osoba", "osoby", "osób")}
+                {t("panel.people", { count: hidden })}
               </span>
             </li>
           ) : null}
@@ -613,13 +614,13 @@ function TeamPanel({
             <li className="flex w-[64px] flex-col items-center text-center">
               <Link
                 href="/app/team"
-                aria-label="Dodaj otwartą rolę"
+                aria-label={t("panel.addRole")}
                 className="inline-flex size-10 items-center justify-center rounded-full border border-dashed border-white/20 text-[var(--text-subtle)] transition-colors hover:border-[var(--vairo)]/60 hover:text-white"
               >
                 <Plus className="size-4" />
               </Link>
               <span className="mt-1.5 text-[11px] leading-tight text-[var(--text-subtle)]">
-                Otwarta rola
+                {t("panel.openRole")}
               </span>
             </li>
           ) : null}
@@ -631,8 +632,7 @@ function TeamPanel({
             className="mt-4 flex items-center gap-2 rounded-xl bg-[var(--surface-2)] px-3 py-2.5 text-[13px] text-[var(--text-muted)] transition-colors hover:text-white"
           >
             <span className="size-1.5 shrink-0 rounded-full bg-[var(--warning)]" aria-hidden="true" />
-            {waiting} {plural(waiting, "osoba chce", "osoby chcą", "osób chce")} dołączyć — decyzja
-            należy do Was
+            {t("panel.wantToJoin", { count: waiting })}
             <ChevronRight className="ml-auto size-3.5" />
           </Link>
         ) : null}
@@ -649,7 +649,9 @@ function TeamPanel({
  * Spóźnienie ma kolor ostrzeżenia RAZEM ze słowem — sam kolor nie jest
  * informacją.
  */
-function DeadlinesPanel({ goal, deadlines }: { goal: NearestGoal | null; deadlines: DeadlineRow[] }) {
+async function DeadlinesPanel({ goal, deadlines }: { goal: NearestGoal | null; deadlines: DeadlineRow[] }) {
+  const t = await getT("dashboard");
+  const locale = await getLocale();
   // Wytyczne, sekcja 9: „Po prawej: najbliższy Goal". Najbliższy cel stoi na
   // górze, pod nim kolejne terminy (cele i zadania) — bez powtarzania go.
   const rest = deadlines.filter((item) => !(item.kind === "goal" && item.id === goal?.id)).slice(0, 3);
@@ -659,13 +661,13 @@ function DeadlinesPanel({ goal, deadlines }: { goal: NearestGoal | null; deadlin
         <div className="flex items-center justify-between gap-3">
           <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
             <Target className="size-3.5" />
-            Najbliższy cel
+            {t("panel.nearestGoal")}
           </p>
           <Link
             href="/app/calendar"
             className="inline-flex items-center gap-1 text-[12px] text-[var(--text-subtle)] underline-offset-2 transition-colors hover:text-white hover:underline"
           >
-            Terminy
+            {t("panel.calendar")}
             <ChevronRight className="size-3.5" />
           </Link>
         </div>
@@ -680,29 +682,30 @@ function DeadlinesPanel({ goal, deadlines }: { goal: NearestGoal | null; deadlin
             </p>
             <p className="mt-1 text-[12.5px] text-[var(--text-subtle)]">
               <span className={cn(goal.overdue && "font-medium text-[var(--warning)]")}>
-                {goal.overdue ? "Po terminie · " : "do "}
-                {formatDue(goal.dueDate)}
+                {goal.overdue
+                  ? t("panel.overdueDate", { date: formatDue(locale, goal.dueDate) })
+                  : t("panel.byDate", { date: formatDue(locale, goal.dueDate) })}
               </span>
-              {goal.ownerName ? ` · odpowiada ${goal.ownerName}` : ""}
+              {goal.ownerName ? t("panel.owner", { name: goal.ownerName }) : ""}
             </p>
           </Link>
         ) : null}
         {rest.length > 0 ? (
           <p className="mt-4 text-[11.5px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-            Kolejne terminy
+            {t("panel.nextDeadlines")}
           </p>
         ) : null}
         {!goal && rest.length === 0 ? (
           <div className="mt-3">
             <p className="text-[13px] leading-relaxed text-[var(--text-subtle)]">
-              Zespół nie ma teraz otwartych terminów.
+              {t("panel.noDeadlines")}
             </p>
             <Link
               href="/app/goals/new"
               className="mt-2 inline-flex items-center gap-1 text-[12.5px] text-[var(--text-muted)] underline-offset-2 transition-colors hover:text-white hover:underline"
             >
               <Plus className="size-3.5" />
-              Załóż cel
+              {t("panel.createGoal")}
             </Link>
           </div>
         ) : (
@@ -725,21 +728,21 @@ function DeadlinesPanel({ goal, deadlines }: { goal: NearestGoal | null; deadlin
                         {date.getDate()}
                       </span>
                       <span className="block text-[11px] text-[var(--text-subtle)]">
-                        {date.toLocaleDateString("pl-PL", { month: "short" })}
+                        {formatDate(locale, date, { month: "short" })}
                       </span>
                     </span>
                     {item.kind === "goal" ? (
-                      <Flag className="size-3.5 shrink-0 text-white" aria-label="Cel" />
+                      <Flag className="size-3.5 shrink-0 text-white" aria-label={t("panel.goal")} />
                     ) : (
-                      <SquareCheck className="size-3.5 shrink-0 text-[var(--text-muted)]" aria-label="Zadanie" />
+                      <SquareCheck className="size-3.5 shrink-0 text-[var(--text-muted)]" aria-label={t("panel.task")} />
                     )}
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13.5px] font-medium text-white">{item.title}</span>
                       <span className="block truncate text-[12px] text-[var(--text-subtle)]">
                         {item.overdue ? (
-                          <span className="font-medium text-[var(--warning)]">Po terminie</span>
+                          <span className="font-medium text-[var(--warning)]">{t("panel.overdue")}</span>
                         ) : (
-                          formatDue(item.due)
+                          formatDue(locale, item.due)
                         )}
                         {item.ownerName ? ` · ${item.ownerName}` : ""}
                       </span>
@@ -756,12 +759,14 @@ function DeadlinesPanel({ goal, deadlines }: { goal: NearestGoal | null; deadlin
 }
 
 /** Zielone miejsce na to, co już zrobione — sukces widać, a nie tylko odhacza. */
-function RecentPanel({ goals }: { goals: { id: string; title: string; completedAt: string | null }[] }) {
+async function RecentPanel({ goals }: { goals: { id: string; title: string; completedAt: string | null }[] }) {
+  const t = await getT("dashboard");
+  const locale = await getLocale();
   return (
     <div className="rounded-2xl border border-[var(--success)]/20 bg-[var(--success)]/[0.06] px-5 py-4">
       <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--success)]">
         <CircleCheck className="size-3.5" />
-        Ostatnio ukończone
+        {t("panel.recent")}
       </p>
       <ul className="mt-2 flex flex-col">
         {goals.map((goal) => (
@@ -773,7 +778,7 @@ function RecentPanel({ goals }: { goals: { id: string; title: string; completedA
               <span className="min-w-0 flex-1 truncate">{goal.title}</span>
               {goal.completedAt ? (
                 <span className="shrink-0 text-[12px] text-[var(--text-subtle)]">
-                  {new Date(goal.completedAt).toLocaleDateString("pl-PL", { day: "numeric", month: "short" })}
+                  {formatDate(locale, goal.completedAt, { day: "numeric", month: "short" })}
                 </span>
               ) : null}
             </Link>
@@ -785,10 +790,10 @@ function RecentPanel({ goals }: { goals: { id: string; title: string; completedA
 }
 
 /** „14 października" — termin celu jest datą, nie chwilą, więc bez godziny. */
-function formatDue(isoDate: string) {
+function formatDue(locale: Locale, isoDate: string) {
   const date = new Date(`${isoDate}T00:00:00`);
   const sameYear = date.getFullYear() === new Date().getFullYear();
-  return date.toLocaleDateString("pl-PL", {
+  return formatDate(locale, date, {
     day: "numeric",
     month: "long",
     year: sameYear ? undefined : "numeric",
@@ -935,8 +940,9 @@ function StatPanel({
  * z systemu, a nie jak podpowiedź — a to jest różnica między „wiem, co robię"
  * i „coś ode mnie chcą".
  */
-function NextActions({ actions }: { actions: NextAction[] }) {
+async function NextActions({ actions }: { actions: NextAction[] }) {
   if (actions.length === 0) return null;
+  const t = await getT("dashboard");
 
   return (
     // Najważniejsza karta na ekranie, więc jedyna z włosem akcentu na krawędzi.
@@ -944,7 +950,7 @@ function NextActions({ actions }: { actions: NextAction[] }) {
       <CardBody className="pt-5">
         <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
           <Target className="size-3.5" />
-          Co teraz
+          {t("panel.now")}
         </p>
 
         {/* Kolejność pozycji jest informacją, więc pojawiają się po kolei —
@@ -1019,12 +1025,14 @@ function BlockerNote({ blocker }: { blocker: NonNullable<Blocker> }) {
 }
 
 /** Ostatnia aktywność zespołu — co, kto i kiedy, każdy wiersz prowadzi do miejsca. */
-function ActivityPanel({ items }: { items: ActivityItem[] }) {
+async function ActivityPanel({ items }: { items: ActivityItem[] }) {
+  const t = await getT("dashboard");
+  const locale = await getLocale();
   return (
     <div className="rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-5 py-4 lift-1">
       <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
         <History className="size-3.5" />
-        Ostatnia aktywność
+        {t("panel.activity")}
       </p>
       <ul className="mt-2 flex flex-col">
         {items.map((item) => (
@@ -1036,7 +1044,7 @@ function ActivityPanel({ items }: { items: ActivityItem[] }) {
               <span className="min-w-0 flex-1 truncate text-[var(--text-muted)]">{item.text}</span>
               <span className="shrink-0 text-[12px] text-[var(--text-subtle)]">
                 {item.actorName ? `${item.actorName} · ` : ""}
-                {new Date(item.createdAt).toLocaleDateString("pl-PL", { day: "numeric", month: "short" })}
+                {formatDate(locale, item.createdAt, { day: "numeric", month: "short" })}
               </span>
             </Link>
           </li>
@@ -1050,14 +1058,15 @@ function ActivityPanel({ items }: { items: ActivityItem[] }) {
  * Stan startupu (wytyczne, sekcja 3): cztery liczby z bazy, każda prowadzi do
  * rekordów, z których ją policzono. Bez wyniku „kondycji".
  */
-function StatusStrip({
+async function StatusStrip({
   items,
 }: {
   items: { label: string; value: string; href: string; warn?: boolean }[];
 }) {
+  const t = await getT("dashboard");
   return (
     <nav
-      aria-label="Stan startupu"
+      aria-label={t("strip.aria")}
       className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.06] sm:grid-cols-4"
     >
       {items.map((item) => (

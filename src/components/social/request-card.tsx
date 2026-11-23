@@ -8,8 +8,8 @@ import { respondToJoinRequest } from "@/app/app/social/actions";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/types/startup";
-import { JOIN_STATUS_LABELS, type JoinRequest } from "@/types/social";
+import type { JoinRequest } from "@/types/social";
+import { useT } from "@/i18n/client";
 import { TeamLogo } from "./team-logo";
 
 /**
@@ -20,6 +20,8 @@ import { TeamLogo } from "./team-logo";
  * identyczna, więc nie ma sensu mieć dwóch komponentów.
  */
 export function RequestCard({ request }: { request: JoinRequest }) {
+  const t = useT("social");
+  const tl = useT("labels");
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [busy, startBusy] = useTransition();
@@ -59,7 +61,7 @@ export function RequestCard({ request }: { request: JoinRequest }) {
                 href={`/app/social/people/${request.profileId}`}
                 className="underline-offset-2 hover:underline"
               >
-                {request.profileName ?? "Ktoś"}
+                {request.profileName ?? t("inbox.someone")}
               </Link>
             ) : (
               <Link
@@ -72,11 +74,11 @@ export function RequestCard({ request }: { request: JoinRequest }) {
           </p>
           <p className="mt-0.5 text-[13px] text-[var(--text-subtle)]">
             {isApplication
-              ? `chce dołączyć do ${request.startupName}`
-              : `zaprasza Cię jako ${ROLE_LABELS[request.proposedRole]}`}
-            {request.openRoleTitle ? ` · rola: ${request.openRoleTitle}` : null}
+              ? t("inbox.wantsToJoin", { team: request.startupName })
+              : t("inbox.invitesYouAs", { role: tl(`role.${request.proposedRole}`) })}
+            {request.openRoleTitle ? t("inbox.roleSuffix", { role: request.openRoleTitle }) : null}
             {!isApplication && request.jobTitle
-              ? ` · stanowisko: ${request.jobTitle}`
+              ? t("inbox.jobSuffix", { title: request.jobTitle })
               : null}
           </p>
 
@@ -86,7 +88,7 @@ export function RequestCard({ request }: { request: JoinRequest }) {
               mówimy wprost, co ona daje. */}
           {!isApplication && request.proposedRole !== "member" ? (
             <p className="mt-1.5 rounded-lg bg-white/[0.04] px-3 py-2 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-              Co to znaczy: {ROLE_DESCRIPTIONS[request.proposedRole]}
+              {t("inbox.whatItMeans", { description: tl(`roleDescription.${request.proposedRole}`) })}
             </p>
           ) : null}
 
@@ -101,7 +103,7 @@ export function RequestCard({ request }: { request: JoinRequest }) {
           {pending ? (
             <Badge tone="warning">
               <Clock className="size-3" />
-              Czeka
+              {t("inbox.waiting")}
             </Badge>
           ) : (
             <Badge
@@ -113,7 +115,7 @@ export function RequestCard({ request }: { request: JoinRequest }) {
                     : "neutral"
               }
             >
-              {JOIN_STATUS_LABELS[request.status]}
+              {t(`joinStatus.${request.status}`)}
             </Badge>
           )}
         </div>
@@ -137,7 +139,7 @@ export function RequestCard({ request }: { request: JoinRequest }) {
             <>
               <Button size="sm" loading={busy} onClick={() => act("accept")}>
                 <Check className="size-4" />
-                {isApplication ? "Przyjmij do zespołu" : "Dołącz"}
+                {isApplication ? t("inbox.acceptToTeam") : t("inbox.join")}
               </Button>
               <Button
                 size="sm"
@@ -146,7 +148,7 @@ export function RequestCard({ request }: { request: JoinRequest }) {
                 onClick={() => act("decline")}
               >
                 <X className="size-4" />
-                Odrzuć
+                {t("inbox.decline")}
               </Button>
             </>
           ) : null}
@@ -157,15 +159,15 @@ export function RequestCard({ request }: { request: JoinRequest }) {
               loading={busy}
               onClick={() => act("withdraw")}
             >
-              Wycofaj
+              {t("inbox.withdraw")}
             </Button>
           ) : null}
         </div>
       ) : pending ? (
         <p className="mt-4 text-[12.5px] text-[var(--text-subtle)]">
           {isApplication
-            ? "Czeka na odpowiedź osób zarządzających zespołem."
-            : "Czeka na odpowiedź zaproszonej osoby."}
+            ? t("inbox.waitingManagers")
+            : t("inbox.waitingInvitee")}
         </p>
       ) : null}
     </article>

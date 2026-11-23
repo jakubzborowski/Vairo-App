@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { LOOKING_FOR_OPTIONS, type LookingFor } from "@/types/social";
+import { useT } from "@/i18n/client";
 
 type Props = {
   lookingFor: LookingFor | null;
@@ -29,6 +30,8 @@ export function SocialPreferencesForm({
   weeklyHours: initialHours,
   isDiscoverable: initialDiscoverable,
 }: Props) {
+  const t = useT("social");
+  const tc = useT("common");
   const router = useRouter();
   const [lookingFor, setLookingFor] = useState<LookingFor | null>(initialLookingFor);
   const [location, setLocation] = useState(initialLocation);
@@ -83,19 +86,19 @@ export function SocialPreferencesForm({
         )}
         <span className="min-w-0 flex-1">
           <span className="block text-[14px] font-medium text-white">
-            {discoverable ? "Profil jest widoczny w Odkrywaj" : "Profil jest ukryty"}
+            {discoverable ? t("prefs.visible") : t("prefs.hidden")}
           </span>
           <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
             {discoverable
-              ? "Inni mogą Cię znaleźć i zaprosić do zespołu. Twój e-mail widzą dopiero osoby z tego samego zespołu."
-              : "Nie pojawiasz się w wyszukiwarce ani na publicznych stronach zespołów. Nadal możesz samodzielnie zgłaszać się do projektów."}
+              ? t("prefs.visibleBody")
+              : t("prefs.hiddenBody")}
           </span>
         </span>
       </button>
 
       <div>
         <p className="mb-2 text-[13px] font-medium text-[var(--text-muted)]">
-          Czego teraz szukasz?
+          {t("prefs.lookingFor")}
         </p>
         <div className="flex flex-col gap-1.5">
           {LOOKING_FOR_OPTIONS.map((option) => {
@@ -128,10 +131,10 @@ export function SocialPreferencesForm({
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13.5px] font-medium text-white">
-                    {option.label}
+                    {t(`lookingForOption.${option.value}.label`)}
                   </span>
                   <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
-                    {option.description}
+                    {t(`lookingForOption.${option.value}.description`)}
                   </span>
                 </span>
               </button>
@@ -141,21 +144,21 @@ export function SocialPreferencesForm({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="Skąd jesteś" hint="Miasto albo kraj. Opcjonalne.">
+        <Field label={t("prefs.location")} hint={t("prefs.locationHint")}>
           {({ id }) => (
             <Input
               id={id}
               value={location}
               onChange={(event) => setLocation(event.target.value)}
               maxLength={80}
-              placeholder="np. Kraków"
+              placeholder={t("prefs.locationPlaceholder")}
             />
           )}
         </Field>
 
         <Field
-          label="Ile godzin tygodniowo"
-          hint="Najczęstsze źródło rozczarowań w zespołach. Lepiej powiedzieć wprost."
+          label={t("prefs.hours")}
+          hint={t("prefs.hoursHint")}
         >
           {({ id }) => (
             <Input
@@ -165,7 +168,7 @@ export function SocialPreferencesForm({
               max={80}
               value={hours}
               onChange={(event) => setHours(event.target.value)}
-              placeholder="np. 10"
+              placeholder={t("prefs.hoursPlaceholder")}
             />
           )}
         </Field>
@@ -179,12 +182,12 @@ export function SocialPreferencesForm({
 
       <div className="flex items-center gap-3">
         <Button onClick={submit} loading={saving} disabled={!dirty}>
-          Zapisz
+          {tc("actions.save")}
         </Button>
         {saved && !dirty ? (
           <span className="inline-flex items-center gap-1.5 text-[13px] text-[var(--success)]">
             <Check className="size-4" />
-            Zapisane
+            {tc("status.saved")}
           </span>
         ) : null}
       </div>

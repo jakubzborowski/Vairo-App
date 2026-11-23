@@ -61,16 +61,48 @@ function buildIndex() {
   console.log(`✓ index.ts dla ${LOCALES.join(", ")} (${sourceNs.length} przestrzeni)`);
 }
 
-// Zmienne: `{name}` albo `{name, plural|select, …}`. Słowa w wariantach
-// („{Startup, w którym…}”) to tekst, nie zmienne.
-const vars = (text) =>
-  [
-    ...new Set(
-      [...String(text).matchAll(/\{\s*([a-zA-Z_][\w]*)\s*(?:\}|,\s*(?:plural|select)\s*,)/g)].map(
-        (m) => m[1]
-      )
-    ),
-  ].sort();
+// Zmienne: `{name}` albo `{name, plural|select, …}` — z rekurencją w warianty.
+// Słowa w wariantach („one {osoba}”) to tekst, nie zmienne.
+function collectVars(text, out) {
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] !== "{") {
+      i++;
+      continue;
+    }
+    let depth = 0;
+    let end = i;
+    for (; end < text.length; end++) {
+      if (text[end] === "{") depth++;
+      else if (text[end] === "}" && --depth === 0) break;
+    }
+    const inner = text.slice(i + 1, end);
+    const m = inner.match(/^\s*([a-zA-Z_]\w*)\s*(?:,\s*(plural|select)\s*,([\s\S]*))?$/);
+    if (m) {
+      out.add(m[1]);
+      if (m[3]) {
+        // warianty: klucz {treść}
+        let k = 0;
+        const body = m[3];
+        while (k < body.length) {
+          const open = body.indexOf("{", k);
+          if (open < 0) break;
+          let d = 0;
+          let close = open;
+          for (; close < body.length; close++) {
+            if (body[close] === "{") d++;
+            else if (body[close] === "}" && --d === 0) break;
+          }
+          collectVars(body.slice(open + 1, close), out);
+          k = close + 1;
+        }
+      }
+    }
+    i = end + 1;
+  }
+  return out;
+}
+const vars = (text) => [...collectVars(String(text), new Set())].sort();
 
 function balanced(text) {
   let depth = 0;

@@ -39,6 +39,8 @@ import {
   SELECTABLE_CATEGORIES,
   canManageTeam,
 } from "@/types/startup";
+import { getLocale, getT } from "@/i18n/server";
+import { skillLabel } from "@/lib/localized";
 
 export type DiscoverParams = {
   view?: string;
@@ -93,6 +95,8 @@ export async function DiscoverScreen({
   // jedna duża karta działa lepiej niż siatka trzydziestu miniatur.
   const view = params.view === "list" ? "list" : "deck";
   const basePath = DISCOVER_PATHS[tab];
+  const t = await getT("social");
+  const tl = await getT("labels");
 
   const supabase = await createClient();
   const user = await getCurrentUser();
@@ -174,7 +178,7 @@ export async function DiscoverScreen({
     weekly_focus: myProfile?.weekly_focus,
     looking_for: myProfile?.looking_for,
     skillCount: mySkillCount ?? 0,
-  });
+  }, t);
 
   const resetHref = `${basePath}?view=${view}`;
 
@@ -188,30 +192,30 @@ export async function DiscoverScreen({
       <header className="mx-auto flex max-w-[880px] flex-wrap items-center justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
           <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
-            {tab === "people" ? "Szukam ludzi" : "Szukam projektu"}
+            {tab === "people" ? t("discover.peopleTitle") : t("discover.teamsTitle")}
           </h1>
           <p className="mt-1 text-[14px] text-[var(--text-muted)]">
             {tab === "people"
-              ? "Jedna osoba na ekran. „Napisz” zaczyna rozmowę, „Nie teraz” odkłada kartę."
-              : "Jeden projekt na ekran. „Zgłoś się” wysyła prośbę o dołączenie."}
+              ? t("discover.peopleSubtitle")
+              : t("discover.teamsSubtitle")}
           </p>
         </div>
 
         <nav
-          aria-label="Sposób wyświetlania"
+          aria-label={t("discover.viewAria")}
           className="inline-flex shrink-0 rounded-xl border border-white/10 bg-[var(--surface)] p-1"
         >
           <ViewLink
             href={`${basePath}?view=deck`}
             active={view === "deck"}
-            label="Pojedynczo"
+            label={t("discover.viewDeck")}
           >
             <Square className="size-4" />
           </ViewLink>
           <ViewLink
             href={`${basePath}?view=list`}
             active={view === "list"}
-            label="Lista"
+            label={t("discover.viewList")}
           >
             <LayoutGrid className="size-4" />
           </ViewLink>
@@ -243,10 +247,10 @@ export async function DiscoverScreen({
             defaultValue={params.q ?? ""}
             placeholder={
               tab === "people"
-                ? "Imię, rola, nad czym pracuje…"
-                : "Nazwa projektu albo czym się zajmuje…"
+                ? t("discover.searchPeople")
+                : t("discover.searchTeams")
             }
-            aria-label="Szukaj"
+            aria-label={t("discover.search")}
             className="min-w-0 flex-1 bg-transparent py-1.5 text-[14px] text-white outline-none placeholder:text-[var(--text-faint)]"
           />
           {hasActiveFilter(params) ? (
@@ -254,11 +258,11 @@ export async function DiscoverScreen({
               href={resetHref}
               className="shrink-0 rounded-lg px-2.5 py-1.5 text-[12.5px] text-[var(--text-subtle)] transition-colors hover:text-white"
             >
-              Wyczyść
+              {t("discover.clear")}
             </Link>
           ) : null}
           <Button type="submit" size="sm" variant="secondary" className="shrink-0">
-            Szukaj
+            {t("discover.search")}
           </Button>
         </div>
 
@@ -268,7 +272,7 @@ export async function DiscoverScreen({
               jest krótka. */}
           <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-xl border border-white/14 bg-[var(--surface-2)] px-3.5 text-[13.5px] text-white transition-colors hover:border-white/25">
             <SlidersHorizontal className="size-4" />
-            Filtry
+            {t("discover.filters")}
             {narrowingCount(params, tab) > 0 ? (
               <span className="tabular inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[11.5px] font-semibold text-[var(--bg)]">
                 {narrowingCount(params, tab)}
@@ -287,32 +291,32 @@ export async function DiscoverScreen({
                 <>
                   <ChipFilter
                     name="skill"
-                    label="Umiejętności"
+                    label={t("discover.skills")}
                     selected={listParam(params.skill)}
                     searchable
                     options={(skillRows ?? []).map((row) => ({
                       value: row.slug as string,
-                      label: row.label as string,
+                      label: skillLabel(tl, { slug: row.slug as string, label: row.label as string }),
                     }))}
                   />
                   <ChipFilter
                     name="looking"
-                    label="Czego szuka"
+                    label={t("discover.lookingFor")}
                     selected={listParam(params.looking)}
                     options={LOOKING_FOR_OPTIONS.map((option) => ({
                       value: option.value,
-                      label: option.label,
+                      label: t(`lookingFor.${option.value}`),
                     }))}
                   />
                 </>
               ) : (
                 <ChipFilter
                   name="category"
-                  label="Kategorie"
+                  label={t("discover.categories")}
                   selected={listParam(params.category)}
                   options={SELECTABLE_CATEGORIES.map((category) => ({
                     value: category.key,
-                    label: category.label,
+                    label: tl(`category.${category.key}`),
                   }))}
                 />
               )}
@@ -320,16 +324,16 @@ export async function DiscoverScreen({
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] bg-white/[0.02] px-4 py-3 sm:px-5">
               {tab === "people" ? (
-                <Checkbox name="room" label="Ma miejsce na zespół" checked={params.room === "1"} />
+                <Checkbox name="room" label={t("discover.hasRoom")} checked={params.room === "1"} />
               ) : (
-                <Checkbox name="hiring" label="Tylko szukające ludzi" checked={params.hiring === "1"} />
+                <Checkbox name="hiring" label={t("discover.hiringOnly")} checked={params.hiring === "1"} />
               )}
               <div className="ml-auto flex items-center gap-2">
                 <Button href={resetHref} variant="ghost" size="sm">
-                  Wyczyść wszystko
+                  {t("discover.clearAll")}
                 </Button>
                 <Button type="submit" variant="secondary" size="sm">
-                  Zastosuj
+                  {t("discover.apply")}
                 </Button>
               </div>
             </div>
@@ -414,6 +418,8 @@ async function PeopleResults({
   ]);
 
   if (error) return <ErrorNote message={error} />;
+  const t = await getT("social");
+  const locale = await getLocale();
 
   if (view === "deck") {
     return (
@@ -432,8 +438,8 @@ async function PeopleResults({
   if (people.length === 0) {
     return (
       <EmptyNote
-        title="Nikt nie pasuje do tych filtrów"
-        description="Widoczni są tylko ci, którzy ukończyli rejestrację i zostawili siebie w wyszukiwarce."
+        title={t("discover.noPeople")}
+        description={t("discover.noPeopleHint")}
         resetHref={resetHref}
       />
     );
@@ -445,16 +451,16 @@ async function PeopleResults({
         <PersonCard
           key={person.id}
           person={person}
-          highlight={matchHighlight(reasonsForPerson(person, matchContext))}
+          highlight={matchHighlight(reasonsForPerson(person, matchContext, { t, locale }))}
           action={
             pendingInvitees.has(person.id) ? (
               <span className="text-[12px] text-[var(--text-subtle)]">
-                Zaproszenie wysłane
+                {t("discover.inviteSent")}
               </span>
             ) : (
               <InviteButton
                 profileId={person.id}
-                profileName={person.full_name ?? "tę osobę"}
+                profileName={person.full_name ?? t("discover.thisPerson")}
                 teams={invitableTeams}
                 size="sm"
               />
@@ -503,6 +509,8 @@ async function TeamResults({
   ]);
 
   if (error) return <ErrorNote message={error} />;
+  const t = await getT("social");
+  const locale = await getLocale();
 
   if (view === "deck") {
     return (
@@ -519,8 +527,8 @@ async function TeamResults({
   if (teams.length === 0) {
     return (
       <EmptyNote
-        title="Żaden zespół nie pasuje do tych filtrów"
-        description="Widoczne są tylko aktywne startupy, które włączyły profil publiczny."
+        title={t("discover.noTeams")}
+        description={t("discover.noTeamsHint")}
         resetHref={resetHref}
       />
     );
@@ -532,7 +540,7 @@ async function TeamResults({
         <TeamCard
           key={team.id}
           team={team}
-          highlight={matchHighlight(reasonsForTeam(team, matchContext))}
+          highlight={matchHighlight(reasonsForTeam(team, matchContext, { t, locale }))}
           action={
             <ApplyButton
               startupId={team.id}
@@ -541,9 +549,9 @@ async function TeamResults({
               size="sm"
               blockedReason={
                 myPendingTeams.has(team.id)
-                  ? "Zgłoszenie wysłane"
+                  ? t("discover.applicationSent")
                   : atTeamLimit
-                    ? `Masz już ${MAX_STARTUPS} zespoły`
+                    ? t("discover.atLimit", { count: MAX_STARTUPS })
                     : null
               }
             />
@@ -578,7 +586,7 @@ function hasActiveFilter(params: DiscoverParams) {
   );
 }
 
-function EmptyNote({
+async function EmptyNote({
   title,
   description,
   resetHref,
@@ -587,6 +595,7 @@ function EmptyNote({
   description: string;
   resetHref: string;
 }) {
+  const t = await getT("social");
   return (
     <div className="rounded-2xl border border-dashed border-white/10 px-6 py-12 text-center">
       <p className="font-heading text-[17px] font-semibold text-white">{title}</p>
@@ -595,7 +604,7 @@ function EmptyNote({
       </p>
       <div className="mt-5 flex justify-center">
         <Button href={resetHref} variant="secondary">
-          Wyczyść filtry
+          {t("discover.clearFilters")}
         </Button>
       </div>
     </div>

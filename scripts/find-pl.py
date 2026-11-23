@@ -16,7 +16,11 @@ DIACRITICS = re.compile(r"[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]")
 WORDS = re.compile(
     r"\b(Dalej|Zapisz|Anuluj|Wróć|Usuń|Zamknij|Dodaj|Edytuj|Szukaj|Wyślij|Zespół|Cele|"
     r"Zadania|Etap|Profil|Konto|Ustawienia|Wyloguj|Zaloguj|Brak|Tak|Nie|albo|oraz|jest|"
-    r"się|tego|przez|żeby|Twój|Twoje|Twoja|Ciebie|nie ma|zobacz|Zobacz|Otwórz|Pomiń)\b"
+    r"się|tego|przez|żeby|Twój|Twoje|Twoja|Ciebie|nie ma|zobacz|Zobacz|Otwórz|Pomiń|tydz|"
+    r"Czeka|Wycofaj|Przyjmij|Napisz|Pokaż|Nowy|Nowa|Nowe|Szukam|Ustaw|Edytuj|Kopiuj|Plik|Pliki|"
+    r"Folder|Zadanie|Termin|Terminy|Dokument|Dokumenty|Wersja|Wersje|Rozpiska|Notatka|Opis|"
+    r"Nazwa|Tytu|Status|Teraz|Dzisiaj|Jutro|Wczoraj|Gotowe|Zrobione|Blokada|Dowod|Dowody|"
+    r"Kontakt|Rozmowa|Rozmowy|Wiadomo|Zaproszenie|Zgłoszenie|Profil|Umiej|Branż|Kategori|projekt\w*|Projekt\w*|Strona|Kogo|Kto|Pasuje|dla|czy|jak|Jak|jeszcze|Ci|zespo\w*|Zespo\w*|Rekrut\w*|Pomoc|Opinie|Program|Kalendarz|Dodano|Zmieniono|Wpisz|Wybierz|Opcjonalnie|minut|godzin|dni|osoba|osoby|osob)\b"
 )
 SKIP_DIRS = {"node_modules", ".next", "i18n"}
 

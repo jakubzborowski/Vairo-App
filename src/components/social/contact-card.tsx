@@ -8,7 +8,8 @@ import { respondToContact } from "@/app/app/social/actions";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CONTACT_STATUS_LABELS, type ContactSignal } from "@/types/social";
+import type { ContactSignal } from "@/types/social";
+import { useT } from "@/i18n/client";
 import { TeamLogo } from "./team-logo";
 
 /**
@@ -26,6 +27,7 @@ export function ContactCard({
   /** Rozmowa, jeśli kontakt został już przyjęty. */
   conversationId?: string | null;
 }) {
+  const t = useT("social");
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [busy, startBusy] = useTransition();
@@ -55,7 +57,7 @@ export function ContactCard({
             href={`/app/social/people/${signal.otherId}`}
             className="text-[14.5px] font-semibold text-white underline-offset-2 hover:underline"
           >
-            {signal.otherName ?? "Ktoś"}
+            {signal.otherName ?? t("inbox.someone")}
           </Link>
           {signal.otherHeadline ? (
             <p className="mt-0.5 text-[13px] text-[var(--text-subtle)]">
@@ -77,7 +79,7 @@ export function ContactCard({
           {signal.status === "pending" ? (
             <Badge tone="warning">
               <Clock className="size-3" />
-              Czeka
+              {t("inbox.waiting")}
             </Badge>
           ) : (
             <Badge
@@ -89,7 +91,7 @@ export function ContactCard({
                     : "neutral"
               }
             >
-              {CONTACT_STATUS_LABELS[signal.status]}
+              {t(`contactStatus.${signal.status}`)}
             </Badge>
           )}
         </div>
@@ -119,7 +121,7 @@ export function ContactCard({
               {signal.contextStartupName}
             </span>
             <span className="block truncate text-[12px] text-[var(--text-subtle)]">
-              {signal.contextStartupTagline ?? "Zobacz publiczną stronę zespołu"}
+              {signal.contextStartupTagline ?? t("inbox.seeTeamPage")}
             </span>
           </span>
         </Link>
@@ -136,7 +138,7 @@ export function ContactCard({
           <>
             <Button size="sm" loading={busy} onClick={() => act("accept")}>
               <Check className="size-4" />
-              Przyjmij i odpisz
+              {t("inbox.acceptReply")}
             </Button>
             <Button
               size="sm"
@@ -145,14 +147,14 @@ export function ContactCard({
               onClick={() => act("decline")}
             >
               <X className="size-4" />
-              Nie teraz
+              {t("deck.notNow")}
             </Button>
           </>
         ) : null}
 
         {signal.canWithdraw ? (
           <Button size="sm" variant="ghost" loading={busy} onClick={() => act("withdraw")}>
-            Wycofaj
+            {t("inbox.withdraw")}
           </Button>
         ) : null}
 
@@ -163,13 +165,13 @@ export function ContactCard({
             href={`/app/social/messages/${conversationId}`}
           >
             <MessageSquare className="size-4" />
-            Otwórz rozmowę
+            {t("deck.openChat")}
           </Button>
         ) : null}
 
         {signal.status === "pending" && !signal.canRespond && !signal.canWithdraw ? (
           <p className="text-[12.5px] text-[var(--text-subtle)]">
-            Czeka na odpowiedź drugiej strony.
+            {t("inbox.waitingOther")}
           </p>
         ) : null}
       </div>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PartyPopper, RotateCcw, Sparkles, Undo2, X } from "lucide-react";
 import type { MatchReason } from "@/lib/match";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 type Props = {
   /** Numer bieżącej karty (od 1) i długość talii. Nie są pokazywane jako
@@ -81,8 +82,9 @@ export function DeckFrame({
   extraAction,
   footer,
   passLabel,
-  primaryLabel = "Zaczep",
+  primaryLabel,
 }: Props) {
+  const t = useT("social");
   const primaryRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const [drag, setDrag] = useState(0);
@@ -220,11 +222,11 @@ export function DeckFrame({
           {canUndo ? (
             <DeckAction
               variant="quiet"
-              label="Cofnij"
+              label={t("deck.undo")}
               icon={<Undo2 className="size-[18px]" />}
               onClick={onUndo}
               disabled={busy}
-              title="Przywróć ostatnio pominiętą kartę"
+              title={t("deck.undoTitle")}
             />
           ) : null}
           <DeckAction
@@ -266,7 +268,7 @@ export function DeckFrame({
           className="mx-auto mt-4 inline-flex min-h-11 items-center gap-1.5 text-[12.5px] text-[var(--text-subtle)] transition-colors hover:text-white"
         >
           <RotateCcw className="size-3.5" />
-          Przywróć pominięte ({passedCount})
+          {t("deck.restore", { count: passedCount })}
         </button>
       ) : null}
     </div>

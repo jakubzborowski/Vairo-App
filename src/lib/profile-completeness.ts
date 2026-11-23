@@ -1,4 +1,6 @@
 import type { LookingFor } from "@/types/social";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
 
 /**
  * Na ile profil nadaje się do pokazania obcym.
@@ -34,59 +36,27 @@ const MIN_SKILLS = 3;
 /** Próg, od którego uznajemy profil za gotowy do pokazania. */
 export const READY_SCORE = 70;
 
-export function scoreProfile(profile: ProfileForScoring) {
+export function scoreProfile(
+  profile: ProfileForScoring,
+  /** Słownik `social` — etykiety braków są w `completeness.<key>.label|why`. */
+  t: Translate<MessageKey<"social">>
+) {
   const missing: MissingPiece[] = [];
 
-  const add = (piece: MissingPiece) => missing.push(piece);
+  const add = (key: MissingPiece["key"], weight: number) =>
+    missing.push({
+      key,
+      label: t(`completeness.${key}.label`, { min: MIN_SKILLS }),
+      why: t(`completeness.${key}.why`),
+      weight,
+    });
 
-  if (!profile.avatar_url) {
-    add({
-      key: "avatar",
-      label: "Dodaj zdjęcie",
-      why: "To pierwsza rzecz, po której ludzie decydują, czy kliknąć w Twój profil.",
-      weight: 25,
-    });
-  }
-  if (!nonEmpty(profile.full_name)) {
-    add({
-      key: "name",
-      label: "Uzupełnij imię i nazwisko",
-      why: "Bez tego nie pojawiasz się w wyszukiwarce.",
-      weight: 15,
-    });
-  }
-  if (!nonEmpty(profile.headline)) {
-    add({
-      key: "headline",
-      label: "Napisz, czym się zajmujesz",
-      why: "Jedno zdanie pod imieniem. Bez niego karta nic nie mówi.",
-      weight: 15,
-    });
-  }
-  if (!profile.looking_for) {
-    add({
-      key: "looking_for",
-      label: "Zaznacz, czego szukasz",
-      why: "Po tym filtrują założyciele, którzy szukają ludzi.",
-      weight: 15,
-    });
-  }
-  if (profile.skillCount < MIN_SKILLS) {
-    add({
-      key: "skills",
-      label: `Dodaj co najmniej ${MIN_SKILLS} umiejętności`,
-      why: "Zespoły szukają po konkretnych umiejętnościach, nie po nazwiskach.",
-      weight: 20,
-    });
-  }
-  if (!nonEmpty(profile.weekly_focus)) {
-    add({
-      key: "focus",
-      label: "Napisz, nad czym teraz pracujesz",
-      why: "Świeży wpis wypycha Cię wyżej w Odkrywaj.",
-      weight: 10,
-    });
-  }
+  if (!profile.avatar_url) add("avatar", 25);
+  if (!nonEmpty(profile.full_name)) add("name", 15);
+  if (!nonEmpty(profile.headline)) add("headline", 15);
+  if (!profile.looking_for) add("looking_for", 15);
+  if (profile.skillCount < MIN_SKILLS) add("skills", 20);
+  if (!nonEmpty(profile.weekly_focus)) add("focus", 10);
 
   const lost = missing.reduce((sum, piece) => sum + piece.weight, 0);
   const score = Math.max(0, 100 - lost);
@@ -123,49 +93,29 @@ export type TeamForScoring = {
  * Otwarte role ważą najwięcej, bo to jedyna informacja, która mówi joinerowi,
  * czego team od niego oczekuje.
  */
-export function scoreTeamProfile(team: TeamForScoring) {
+export function scoreTeamProfile(
+  team: TeamForScoring,
+  /** Słownik `social` — `teamCompleteness.<logo|tagline|description|roles|location>.label|why`. */
+  t: Translate<MessageKey<"social">>
+) {
   const missing: MissingPiece[] = [];
+  const add = (
+    key: MissingPiece["key"],
+    text: "logo" | "tagline" | "description" | "roles" | "location",
+    weight: number
+  ) =>
+    missing.push({
+      key,
+      label: t(`teamCompleteness.${text}.label`),
+      why: t(`teamCompleteness.${text}.why`),
+      weight,
+    });
 
-  if (!team.logo_url) {
-    missing.push({
-      key: "avatar",
-      label: "Dodaj logo",
-      why: "Karta bez logo pokazuje samą literę — wygląda jak konto testowe.",
-      weight: 20,
-    });
-  }
-  if (!nonEmpty(team.public_tagline)) {
-    missing.push({
-      key: "headline",
-      label: "Napisz jedno zdanie o projekcie",
-      why: "To jedyny tekst widoczny na karcie w Odkrywaj.",
-      weight: 20,
-    });
-  }
-  if (!nonEmpty(team.public_description)) {
-    missing.push({
-      key: "focus",
-      label: "Opisz projekt szerzej",
-      why: "Bez opisu strona zespołu nie odpowiada na pytanie „o co tu chodzi”.",
-      weight: 15,
-    });
-  }
-  if (team.openRoleCount === 0) {
-    missing.push({
-      key: "skills",
-      label: "Dodaj co najmniej jedną otwartą rolę",
-      why: "Konkretna rola i liczba godzin działają wielokrotnie lepiej niż sama obecność w wyszukiwarce.",
-      weight: 35,
-    });
-  }
-  if (!nonEmpty(team.location)) {
-    missing.push({
-      key: "name",
-      label: "Dodaj lokalizację",
-      why: "Ludzie filtrują po mieście albo szukają zdalnie.",
-      weight: 10,
-    });
-  }
+  if (!team.logo_url) add("avatar", "logo", 20);
+  if (!nonEmpty(team.public_tagline)) add("headline", "tagline", 20);
+  if (!nonEmpty(team.public_description)) add("focus", "description", 15);
+  if (team.openRoleCount === 0) add("skills", "roles", 35);
+  if (!nonEmpty(team.location)) add("name", "location", 10);
 
   const lost = missing.reduce((sum, piece) => sum + piece.weight, 0);
   const score = Math.max(0, 100 - lost);

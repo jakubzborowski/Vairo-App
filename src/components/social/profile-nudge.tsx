@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { MissingPiece } from "@/lib/profile-completeness";
+import { getT } from "@/i18n/server";
 
 type Props = {
   score: number;
@@ -28,7 +29,7 @@ type Props = {
  * którzy najbardziej jej potrzebują. Zamiast tego mówimy wprost, co jest
  * puste i dlaczego to ma znaczenie, i dajemy jeden przycisk, który to załatwia.
  */
-export function ProfileNudge({
+export async function ProfileNudge({
   score,
   missing,
   variant = "banner",
@@ -37,6 +38,7 @@ export function ProfileNudge({
   subject = "profile",
   className,
 }: Props) {
+  const t = await getT("social");
   const complete = missing.length === 0;
 
   if (complete && variant === "banner") return null;
@@ -63,13 +65,13 @@ export function ProfileNudge({
         <span className="min-w-0 flex-1 truncate text-[13px] text-white">
           {score < 40
             ? subject === "team"
-              ? "Karta zespołu jest prawie pusta"
-              : "Twoja karta jest prawie pusta"
-            : "Do kompletnego profilu jeszcze trochę brakuje"}
+              ? t("nudge.teamEmpty")
+              : t("nudge.cardEmpty")
+            : t("nudge.almost")}
           <span className="tabular ml-2 text-[var(--text-subtle)]">{score}%</span>
         </span>
         <span className="inline-flex shrink-0 items-center gap-1 text-[12.5px] font-medium text-[var(--warning)]">
-          Uzupełnij
+          {t("nudge.fix")}
           <ArrowRight className="size-3.5" />
         </span>
       </Link>
@@ -93,24 +95,24 @@ export function ProfileNudge({
               <>
                 <Check className="size-4 shrink-0 text-[var(--success)]" />
                 {subject === "team"
-                  ? "Profil zespołu jest kompletny"
-                  : "Twój profil jest kompletny"}
+                  ? t("nudge.teamComplete")
+                  : t("nudge.complete")}
               </>
             ) : (
               <>
                 <AlertTriangle className="size-4 shrink-0 text-[var(--warning)]" />
                 {score < 40
                   ? subject === "team"
-                    ? "Karta zespołu jest prawie pusta"
-                    : "Twoja karta jest prawie pusta"
-                  : "Do kompletnego profilu jeszcze trochę brakuje"}
+                    ? t("nudge.teamEmpty")
+                    : t("nudge.cardEmpty")
+                  : t("nudge.almost")}
               </>
             )}
           </p>
           <p className="mt-1 max-w-xl text-[13px] leading-relaxed text-[var(--text-muted)]">
             {complete
-              ? "Nic nie musisz poprawiać. Możesz wrócić tu w każdej chwili."
-              : "Ludzie decydują w kilka sekund, na podstawie tego, co widzą na karcie. Braki poniżej to dokładnie to, czego im zabraknie."}
+              ? t("nudge.completeBody")
+              : t("nudge.incompleteBody")}
           </p>
         </div>
 
@@ -120,7 +122,7 @@ export function ProfileNudge({
           </span>
           {!complete && showFix ? (
             <Button href={fixHref} size="sm">
-              Uzupełnij
+              {t("nudge.fix")}
               <ArrowRight className="size-4" />
             </Button>
           ) : null}

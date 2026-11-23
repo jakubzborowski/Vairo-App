@@ -1,4 +1,6 @@
-import { plural } from "@/lib/utils";
+import { LOCALE_TAGS, type Locale } from "@/i18n/config";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
 import type { PublicProfile, PublicStartup } from "@/types/social";
 
 /**
@@ -58,11 +60,13 @@ function sameLocation(a: string | null, b: string | null): boolean {
   return normalize(a) === normalize(b);
 }
 
-/** Łączy nazwy w listę czytaną po polsku: „React, SQL i Figma". */
-function joinNames(names: string[]): string {
-  if (names.length <= 1) return names[0] ?? "";
-  return `${names.slice(0, -1).join(", ")} i ${names[names.length - 1]}`;
+/** Łączy nazwy w listę w języku interfejsu: „React, SQL i Figma", „React, SQL und Figma". */
+function joinNames(locale: Locale, names: string[]): string {
+  return new Intl.ListFormat(LOCALE_TAGS[locale], { style: "long", type: "conjunction" }).format(names);
 }
+
+/** Słownik `social` i język — powody na kartach są w języku czytającego. */
+export type MatchI18n = { t: Translate<MessageKey<"social">>; locale: Locale };
 
 /**
  * Część wspólna dwóch list umiejętności. Zwraca etykiety w oryginalnej
@@ -82,11 +86,11 @@ function overlap(mine: string[], theirs: string[]): string[] {
   return result;
 }
 
-const LOOKING_FOR_REASON: Record<string, string> = {
-  team: "Szuka zespołu",
-  cofounder: "Szuka współzałożyciela",
-  collaborators: "Szuka ludzi do swojego projektu",
-};
+const LOOKING_FOR_REASON = {
+  team: "reason.lookingTeam",
+  cofounder: "reason.lookingCofounder",
+  collaborators: "reason.lookingCollaborators",
+} as const;
 
 /**
  * Powody, dla których ta OSOBA może Cię zainteresować.
@@ -97,7 +101,8 @@ const LOOKING_FOR_REASON: Record<string, string> = {
  */
 export function reasonsForPerson(
   person: PublicProfile,
-  ctx: MatchContext
+  ctx: MatchContext,
+  { t, locale }: MatchI18n
 ): MatchReason[] {
   const reasons: MatchReason[] = [];
   const personSkills = person.skills.map((skill) => skill.label);
@@ -123,7 +128,7 @@ export function reasonsForPerson(
     if (best) {
       reasons.push({
         key: "role-match",
-        text: `Zna ${joinNames(best.matched.slice(0, 3))} — szukacie tego do roli „${best.roleTitle}”`,
+        text: t("reason.roleMatch", { skills: joinNames(locale, best.matched.slice(0, 3)), role: best.roleTitle }),
       });
     }
   }
@@ -135,18 +140,19 @@ export function reasonsForPerson(
     if (shared.length > 0) {
       reasons.push({
         key: "shared-skills",
-        text: `Wspólne umiejętności: ${joinNames(shared.slice(0, 3))}`,
+        text: t("reason.sharedSkills", { skills: joinNames(locale, shared.slice(0, 3)) }),
       });
     }
   }
 
   // 3. Czego sama szuka. „Na razie nie szukam" celowo pomijamy — to nie jest
   //    powód, żeby kogoś pokazywać.
-  const looking = person.looking_for
-    ? LOOKING_FOR_REASON[person.looking_for]
-    : undefined;
+  const looking =
+    person.looking_for && person.looking_for in LOOKING_FOR_REASON
+      ? LOOKING_FOR_REASON[person.looking_for as keyof typeof LOOKING_FOR_REASON]
+      : undefined;
   if (looking) {
-    reasons.push({ key: "looking-for", text: looking });
+    reasons.push({ key: "looking-for", text: t(looking) });
   }
 
   // 4. Deklarowany czas. Najczęstszy powód, dla którego współpraca się
@@ -154,19 +160,19 @@ export function reasonsForPerson(
   if (person.weekly_hours && person.weekly_hours > 0) {
     reasons.push({
       key: "hours",
-      text: `Deklaruje ${person.weekly_hours} h tygodniowo`,
+      text: t("reason.hours", { hours: person.weekly_hours }),
     });
   }
 
   // 5. Ta sama lokalizacja.
   if (sameLocation(person.location, ctx.myLocation)) {
-    reasons.push({ key: "location", text: `Ta sama lokalizacja: ${person.location}` });
+    reasons.push({ key: "location", text: t("reason.sameLocation", { location: person.location ?? "" }) });
   }
 
   // 6. Zupełnie wolna osoba — dla teamu to informacja, że nie konkuruje
   //    o jej czas z trzema innymi projektami.
   if (person.team_count === 0) {
-    reasons.push({ key: "no-team", text: "Nie należy jeszcze do żadnego zespołu" });
+    reasons.push({ key: "no-team", text: t("reason.noTeam") });
   }
 
   return reasons.slice(0, MAX_REASONS);
@@ -180,7 +186,8 @@ export function reasonsForPerson(
  */
 export function reasonsForTeam(
   team: PublicStartup,
-  ctx: MatchContext
+  ctx: MatchContext,
+  { t, locale }: MatchI18n
 ): MatchReason[] {
   const reasons: MatchReason[] = [];
   const openRoles = team.open_roles ?? [];
@@ -199,19 +206,19 @@ export function reasonsForTeam(
   if (best) {
     reasons.push({
       key: "role-match",
-      text: `Rola „${best.title}” pyta o ${joinNames(best.matched.slice(0, 3))} — masz to w profilu`,
+      text: t("reason.teamRoleMatch", { role: best.title, skills: joinNames(locale, best.matched.slice(0, 3)) }),
     });
   } else if (openRoles.length > 0) {
     // Bez pokrycia mówimy tylko, że w ogóle szukają. To wciąż prawda z bazy,
     // a dla kogoś bez uzupełnionych umiejętności jedyna sensowna przesłanka.
     reasons.push({
       key: "open-roles",
-      text: `${openRoles.length} ${plural(openRoles.length, "otwarta rola", "otwarte role", "otwartych ról")}`,
+      text: t("reason.openRoles", { count: openRoles.length }),
     });
   }
 
   if (sameLocation(team.location, ctx.myLocation)) {
-    reasons.push({ key: "location", text: `Ta sama lokalizacja: ${team.location}` });
+    reasons.push({ key: "location", text: t("reason.sameLocation", { location: team.location ?? "" }) });
   }
 
   // Mały zespół to inna decyzja niż dołączenie do dziesięciu osób — i jedno,
@@ -219,7 +226,7 @@ export function reasonsForTeam(
   if (team.member_count > 0 && team.member_count <= 3) {
     reasons.push({
       key: "small-team",
-      text: `Wczesny zespół: ${team.member_count} ${plural(team.member_count, "osoba", "osoby", "osób")}`,
+      text: t("reason.smallTeam", { count: team.member_count }),
     });
   }
 

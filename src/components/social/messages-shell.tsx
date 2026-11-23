@@ -7,6 +7,11 @@ import { MessageSquare, Search } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { ConversationSummary } from "@/types/social";
+import { useLocale, useT } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
+import { formatDate } from "@/i18n/format";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
 
 /**
  * Skrzynka w układzie dwupanelowym: lista rozmów po lewej, wątek po prawej.
@@ -32,6 +37,8 @@ export function MessagesShell({
   error: string | null;
   children: React.ReactNode;
 }) {
+  const t = useT("social");
+  const locale = useLocale();
   const pathname = usePathname();
   const openId = pathname.split("/app/social/messages/")[1]?.split("/")[0] ?? null;
   const isThread = Boolean(openId);
@@ -51,12 +58,12 @@ export function MessagesShell({
       <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] md:items-start">
         <aside className={cn("min-w-0", isThread && "hidden md:block")}>
           <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
-            Wiadomości
+            {t("messages.title")}
           </h1>
           <p className="mb-3 mt-1 text-[14px] text-[var(--text-muted)]">
             {unread > 0
-              ? `${unread} ${unread === 1 ? "nieprzeczytana rozmowa" : unread % 10 >= 2 && unread % 10 <= 4 && (unread % 100 < 12 || unread % 100 > 14) ? "nieprzeczytane rozmowy" : "nieprzeczytanych rozmów"}.`
-              : "Wszystko przeczytane."}
+              ? `${t("messages.unread", { count: unread })}.`
+              : t("messages.allRead")}
           </p>
           {conversations.length > 3 ? (
             <label className="mb-3 flex h-10 items-center gap-2 rounded-xl border border-white/14 bg-[var(--bg)] px-3 text-[13.5px] text-[var(--text-muted)] focus-within:border-[var(--vairo)]/45">
@@ -64,8 +71,8 @@ export function MessagesShell({
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Szukaj osoby"
-                aria-label="Szukaj w rozmowach"
+                placeholder={t("messages.searchPerson")}
+                aria-label={t("messages.searchAria")}
                 className="min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-[var(--text-subtle)]"
               />
             </label>
@@ -79,7 +86,7 @@ export function MessagesShell({
 
           {!error && conversations.length === 0 ? (
             <p className="rounded-xl border border-dashed border-white/10 px-4 py-6 text-center text-[13px] leading-relaxed text-[var(--text-subtle)]">
-              Rozmowa powstaje, gdy ktoś przyjmie Twoją zaczepkę.
+              {t("messages.emptyHint")}
             </p>
           ) : null}
 
@@ -108,10 +115,10 @@ export function MessagesShell({
                       <span className="min-w-0 flex-1">
                         <span className="flex items-baseline justify-between gap-2">
                           <span className="truncate text-[14px] font-medium text-white">
-                            {conversation.otherName ?? "Bez imienia"}
+                            {conversation.otherName ?? t("card.noName")}
                           </span>
                           <span className="tabular shrink-0 text-[11.5px] text-[var(--text-muted)]">
-                            {formatWhen(conversation.lastMessageAt)}
+                            {formatWhen(conversation.lastMessageAt, t, locale)}
                           </span>
                         </span>
 
@@ -128,8 +135,8 @@ export function MessagesShell({
                               : "text-[var(--text-subtle)]"
                           )}
                         >
-                          {conversation.lastFromMe ? "Ty: " : ""}
-                          {conversation.lastBody ?? "Brak wiadomości"}
+                          {conversation.lastFromMe ? t("messages.you") : ""}
+                          {conversation.lastBody ?? t("messages.noMessages")}
                         </span>
                       </span>
 
@@ -159,14 +166,13 @@ export function MessagesShell({
                 strokeWidth={1.5}
               />
               <p className="mt-3 max-w-xs text-[14px] leading-relaxed text-[var(--text-muted)]">
-                Rozmowa otwiera się, gdy ktoś przyjmie Twoją zaczepkę albo Ty
-                przyjmiesz cudzą.
+                {t("messages.emptyBody")}
               </p>
               <Link
                 href="/app/social/discover"
                 className="mt-4 inline-flex h-10 items-center rounded-xl bg-[var(--vairo-strong)] px-4 text-[13.5px] font-medium text-white transition-opacity hover:opacity-90"
               >
-                Znajdź kogoś w Odkrywaj
+                {t("messages.findSomeone")}
               </Link>
             </div>
           ) : (
@@ -180,29 +186,30 @@ export function MessagesShell({
 
 /** Prawy panel, kiedy rozmowy są, ale żadnej jeszcze nie otwarto. */
 export function NoConversationSelected() {
+  const t = useT("social");
   return (
     <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-white/[0.07] bg-[var(--surface)]/50 px-6 py-12 text-center">
       <p className="inline-flex items-center gap-2 text-[14px] text-[var(--text-subtle)]">
         <MessageSquare className="size-4" strokeWidth={1.5} />
-        Wybierz rozmowę z listy
+        {t("messages.pick")}
       </p>
     </div>
   );
 }
 
 /** „14:32" dla dzisiaj, „wczoraj", potem data — bez bibliotek. */
-function formatWhen(iso: string) {
+function formatWhen(iso: string, t: Translate<MessageKey<"social">>, locale: Locale) {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
 
   const now = new Date();
   if (date.toDateString() === now.toDateString()) {
-    return date.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
+    return formatDate(locale, date, { hour: "2-digit", minute: "2-digit" });
   }
 
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  if (date.toDateString() === yesterday.toDateString()) return "wczoraj";
+  if (date.toDateString() === yesterday.toDateString()) return t("age.yesterday");
 
-  return date.toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
+  return formatDate(locale, date, { day: "numeric", month: "short" });
 }

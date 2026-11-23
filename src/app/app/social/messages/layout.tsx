@@ -2,8 +2,12 @@ import { redirect } from "next/navigation";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { loadConversations } from "@/lib/messages";
 import { MessagesShell } from "@/components/social/messages-shell";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Wiadomości — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("social");
+  return { title: t("messages.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 /**

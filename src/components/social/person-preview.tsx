@@ -4,7 +4,10 @@ import { Pill } from "@/components/ui/pill";
 import { DeckBlock, DeckCover } from "./deck-frame";
 import { initialsOf } from "@/components/ui/avatar";
 import { MAX_STARTUPS } from "@/types/startup";
-import { LOOKING_FOR_LABELS, type PublicProfile } from "@/types/social";
+import type { PublicProfile } from "@/types/social";
+import { getLocale, getT } from "@/i18n/server";
+import { formatDate } from "@/i18n/format";
+import { skillLabel } from "@/lib/localized";
 
 /**
  * Podgląd własnej karty — **dokładnie taki sam obiekt, jaki widzą obcy**.
@@ -19,7 +22,7 @@ import { LOOKING_FOR_LABELS, type PublicProfile } from "@/types/social";
  * do zaczepiania samego siebie. Jeśli karta w Odkrywaj kiedyś się zmieni,
  * zmieni się i tutaj, bo to są te same elementy.
  */
-export function PersonPreviewCard({
+export async function PersonPreviewCard({
   person,
   compact = false,
 }: {
@@ -27,6 +30,9 @@ export function PersonPreviewCard({
   /** W wąskiej kolumnie obok formularza — zdjęcie nad treścią, nie obok. */
   compact?: boolean;
 }) {
+  const t = await getT("social");
+  const tl = await getT("labels");
+  const locale = await getLocale();
   const skills = person.skills ?? [];
 
   return (
@@ -45,7 +51,7 @@ export function PersonPreviewCard({
         }
       >
         <p className="font-heading text-[24px] font-semibold leading-tight text-white">
-          {person.full_name ?? "Bez imienia"}
+          {person.full_name ?? t("card.noName")}
         </p>
         {person.headline ? (
           <p className="mt-1 line-clamp-2 text-[13.5px] leading-snug text-white/80">
@@ -65,21 +71,21 @@ export function PersonPreviewCard({
           {person.weekly_hours ? (
             <span className="inline-flex items-center gap-1.5">
               <Clock className="size-3.5 shrink-0" />
-              {person.weekly_hours} h tygodniowo
+              {t("card.hours", { hours: person.weekly_hours })}
             </span>
           ) : null}
           <span className="inline-flex items-center gap-1.5">
             <Users className="size-3.5 shrink-0" />
             {person.team_count === 0
-              ? "Bez zespołu"
-              : `${person.team_count} z ${MAX_STARTUPS} zespołów`}
+              ? t("card.noTeam")
+              : t("card.teamCount", { count: person.team_count, max: MAX_STARTUPS })}
           </span>
         </div>
 
         {person.looking_for ? (
           <div>
             <Badge tone={person.looking_for === "not_looking" ? "neutral" : "brand"}>
-              {LOOKING_FOR_LABELS[person.looking_for]}
+              {t(`lookingFor.${person.looking_for}`)}
             </Badge>
           </div>
         ) : null}
@@ -88,8 +94,8 @@ export function PersonPreviewCard({
           <DeckBlock
             label={
               person.weekly_focus_updated_at
-                ? `W tym tygodniu · ${new Date(person.weekly_focus_updated_at).toLocaleDateString("pl-PL", { day: "numeric", month: "short" })}`
-                : "Nad czym teraz pracujesz"
+                ? t("card.thisWeek", { date: formatDate(locale, person.weekly_focus_updated_at, { day: "numeric", month: "short" }) })
+                : t("card.focusYours")
             }
           >
             <p className="whitespace-pre-line text-[14px] leading-relaxed text-[var(--text-muted)]">
@@ -99,10 +105,10 @@ export function PersonPreviewCard({
         ) : null}
 
         {skills.length > 0 ? (
-          <DeckBlock label="Umiesz">
+          <DeckBlock label={t("card.skillsYours")}>
             <div className="flex flex-wrap gap-1.5">
               {skills.map((skill) => (
-                <Pill key={skill.id}>{skill.label}</Pill>
+                <Pill key={skill.id}>{skillLabel(tl, skill)}</Pill>
               ))}
             </div>
           </DeckBlock>
@@ -113,8 +119,7 @@ export function PersonPreviewCard({
             jak „tak ma być". */}
         {!person.weekly_focus && skills.length === 0 ? (
           <p className="text-[13px] italic leading-relaxed text-[var(--text-subtle)]">
-            Prawa kolumna jest pusta — obcy zobaczą samo zdjęcie i imię.
-            Uzupełnij „nad czym pracujesz” i umiejętności.
+            {t("card.previewEmpty")}
           </p>
         ) : null}
       </div>

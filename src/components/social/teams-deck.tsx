@@ -15,7 +15,7 @@ import type { PublicStartup } from "@/types/social";
 import { ApplyButton } from "./apply-button";
 import { DeckAction, DeckBlock, DeckCover, DeckEnd, DeckFrame } from "./deck-frame";
 import { useDeckQueue } from "./use-deck-queue";
-import { plural } from "@/lib/utils";
+import { useLocale, useT } from "@/i18n/client";
 
 type Props = {
   teams: PublicStartup[];
@@ -38,6 +38,8 @@ export function TeamsDeck({
   resetHref,
   matchContext,
 }: Props) {
+  const t = useT("social");
+  const locale = useLocale();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [busy, startBusy] = useTransition();
@@ -87,20 +89,18 @@ export function TeamsDeck({
     const passed = passedCount + deck.passedHere;
     return (
       <DeckEnd
-        title="To już wszystkie projekty"
+        title={t("deck.teamsEndTitle")}
         description={`${
-          deck.sentHere > 0
-            ? `Wysłane zgłoszenia: ${deck.sentHere}. Odpowiedzi znajdziesz w Zaproszeniach. `
-            : ""
-        }Widoczne są tylko aktywne startupy z włączonym profilem publicznym.`}
+          deck.sentHere > 0 ? `${t("deck.teamsSent", { count: deck.sentHere })} ` : ""
+        }${t("deck.teamsEndBody")}`}
       >
         {passed > 0 ? (
           <Button variant="secondary" block size="lg" loading={busy} onClick={restoreAll}>
-            Przywróć pominięte ({passed})
+            {t("deck.restore", { count: passed })}
           </Button>
         ) : null}
         <Button href={resetHref} variant="ghost">
-          Poluzuj filtry
+          {t("deck.loosenFilters")}
         </Button>
       </DeckEnd>
     );
@@ -112,21 +112,21 @@ export function TeamsDeck({
         icon={Compass}
         title={
           teams.length === 0
-            ? "Żaden zespół nie pasuje do tych filtrów"
-            : "To już wszystkie projekty"
+            ? t("discover.noTeams")
+            : t("deck.teamsEndTitle")
         }
-        description="Widoczne są tylko aktywne startupy z włączonym profilem publicznym. Możesz też założyć własny."
+        description={t("deck.teamsEmpty")}
         action={
           <>
             {passedCount + deck.passedHere > 0 ? (
               <Button variant="secondary" loading={busy} onClick={restoreAll}>
-                Przywróć pominięte ({passedCount + deck.passedHere})
+                {t("deck.restore", { count: passedCount + deck.passedHere })}
               </Button>
             ) : null}
             <Button href={resetHref} variant="ghost">
-              Wyczyść filtry
+              {t("discover.clearFilters")}
             </Button>
-            <Button href="/app/startups/new">Stwórz startup</Button>
+            <Button href="/app/startups/new">{t("deck.createStartup")}</Button>
           </>
         }
       />
@@ -146,9 +146,9 @@ export function TeamsDeck({
       onPass={pass}
       onUndo={undo}
       onRestoreAll={restoreAll}
-      passLabel="Nie ten projekt"
-      primaryLabel="Zgłoś się"
-      reasons={reasonsForTeam(team, matchContext)}
+      passLabel={t("deck.notThisProject")}
+      primaryLabel={t("deck.apply")}
+      reasons={reasonsForTeam(team, matchContext, { t, locale })}
       cover={
         <DeckCover
           image={team.logo_url}
@@ -170,7 +170,7 @@ export function TeamsDeck({
           <div className="mt-2.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[12.5px] text-white/70">
             <span className="inline-flex items-center gap-1">
               <Users className="size-3.5 shrink-0" />
-              {team.member_count} {plural(team.member_count, "osoba", "osoby", "osób")}
+              {t("card.members", { count: team.member_count })}
             </span>
             {team.stage_label ? (
               <span className="inline-flex items-center gap-1">
@@ -190,7 +190,7 @@ export function TeamsDeck({
             <div className="mt-3">
               <Badge tone="brand">
                 <UserPlus className="size-3" />
-                Szukają {openRoles.length === 1 ? "1 osoby" : `${openRoles.length} osób`}
+                {t("card.lookingFor", { count: openRoles.length })}
               </Badge>
             </div>
           ) : null}
@@ -203,10 +203,10 @@ export function TeamsDeck({
         atTeamLimit ? (
           <DeckAction
             variant="primary"
-            label={`Masz już ${MAX_STARTUPS} zespoły`}
+            label={t("discover.atLimit", { count: MAX_STARTUPS })}
             icon={<Send className="size-6" />}
             disabled
-            title={`Jesteś już w ${MAX_STARTUPS} zespołach`}
+            title={t("deck.youFull", { count: MAX_STARTUPS })}
           />
         ) : (
           <ApplyButton
@@ -217,7 +217,7 @@ export function TeamsDeck({
             trigger={(open) => (
               <DeckAction
                 variant="primary"
-                label="Zgłoś się"
+                label={t("deck.apply")}
                 icon={<Send className="size-6" />}
                 onClick={open}
               />
@@ -230,7 +230,7 @@ export function TeamsDeck({
           {/* Dla kogoś, kto szuka projektu, to jest CAŁA decyzja: czy jest tu
               miejsce dla mnie. Reszta — opis, tagi, skład, opisy ról — czeka
               na profilu teamu, jedno kliknięcie dalej. */}
-          <DeckBlock label={openRoles.length > 0 ? "Szukają" : "Otwarte role"}>
+          <DeckBlock label={openRoles.length > 0 ? t("card.seeking") : t("card.openRoles")}>
             {openRoles.length > 0 ? (
               <ul className="flex flex-col gap-2">
                 {openRoles.slice(0, 3).map((role) => (
@@ -239,7 +239,7 @@ export function TeamsDeck({
                       {role.title}
                       {role.weekly_hours ? (
                         <span className="ml-2 text-[12.5px] font-normal text-[var(--text-subtle)]">
-                          {role.weekly_hours} h/tydz.
+                          {t("card.hoursShort", { hours: role.weekly_hours })}
                         </span>
                       ) : null}
                     </p>
@@ -254,20 +254,19 @@ export function TeamsDeck({
                 ))}
                 {openRoles.length > 3 ? (
                   <li className="text-[12.5px] text-[var(--text-subtle)]">
-                    i jeszcze {openRoles.length - 3}
+                    {t("card.andMore", { count: openRoles.length - 3 })}
                   </li>
                 ) : null}
               </ul>
             ) : (
               <p className="text-[13.5px] leading-relaxed text-[var(--text-subtle)]">
-                Nie mają teraz otwartych ról. Zgłoszenie i tak dotrze do osób,
-                które prowadzą ten projekt.
+                {t("card.noRoles")}
               </p>
             )}
           </DeckBlock>
 
           {team.public_tagline && team.public_description ? (
-            <DeckBlock label="O projekcie">
+            <DeckBlock label={t("card.about")}>
               <p className="line-clamp-3 whitespace-pre-line text-[14px] leading-relaxed text-[var(--text-muted)]">
                 {team.public_description}
               </p>
@@ -280,7 +279,7 @@ export function TeamsDeck({
           href={`/app/social/teams/${team.id}`}
           className="underline-offset-2 transition-colors hover:text-white hover:underline"
         >
-          Zobacz pełny profil zespołu
+          {t("card.fullTeamProfile")}
         </Link>
       }
     />

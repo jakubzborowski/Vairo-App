@@ -8,6 +8,11 @@ import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/types/social";
+import { useLocale, useT } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
+import { formatDate } from "@/i18n/format";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
 
 type Props = {
   conversationId: string;
@@ -57,6 +62,8 @@ export function MessageThread({
   otherFullName,
   otherAvatarUrl,
 }: Props) {
+  const t = useT("social");
+  const locale = useLocale();
   const router = useRouter();
   const endRef = useRef<HTMLDivElement>(null);
   const [local, setLocal] = useState<ChatMessage[]>([]);
@@ -162,7 +169,7 @@ export function MessageThread({
       <div className="flex max-h-[min(58vh,600px)] flex-col gap-0.5 overflow-y-auto rounded-2xl border border-white/[0.07] bg-[var(--surface)] p-4">
         {all.length === 0 ? (
           <p className="py-10 text-center text-[13.5px] text-[var(--text-subtle)]">
-            Tu jeszcze nic nie ma. Napisz pierwszą wiadomość do {otherName}.
+            {t("thread.empty", { name: otherName })}
           </p>
         ) : (
           all.map((message, index) => {
@@ -178,7 +185,7 @@ export function MessageThread({
               <div key={message.id}>
                 {newDay ? (
                   <p className="my-3 text-center text-[11.5px] text-[var(--text-subtle)]">
-                    {dayLabel(message.createdAt)}
+                    {dayLabel(message.createdAt, t, locale)}
                   </p>
                 ) : null}
 
@@ -241,7 +248,7 @@ export function MessageThread({
                       mine ? "pr-1 text-right" : "pl-10"
                     )}
                   >
-                    {new Date(message.createdAt).toLocaleTimeString("pl-PL", {
+                    {formatDate(locale, message.createdAt, {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
@@ -265,7 +272,7 @@ export function MessageThread({
           role="status"
           className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--warning)]/25 bg-[var(--warning)]/[0.07] px-3.5 py-2.5 text-[13px] text-[var(--text-muted)]"
         >
-          <span className="min-w-0 flex-1">Połączenie z rozmową zerwane — nowe wiadomości nie dochodzą same.</span>
+          <span className="min-w-0 flex-1">{t("thread.lost")}</span>
           <button
             type="button"
             onClick={() => {
@@ -275,7 +282,7 @@ export function MessageThread({
             }}
             className="font-medium text-white underline decoration-white/30 underline-offset-4"
           >
-            Połącz ponownie
+            {t("thread.reconnect")}
           </button>
         </div>
       ) : null}
@@ -296,7 +303,7 @@ export function MessageThread({
           }}
           rows={1}
           maxLength={4000}
-          placeholder={`Napisz do ${otherName}…`}
+          placeholder={t("thread.placeholder", { name: otherName })}
           className="max-h-32 min-h-9 flex-1 resize-none self-center bg-transparent py-1.5 text-[14px] leading-relaxed text-white outline-none placeholder:text-[var(--text-faint)]"
         />
 
@@ -304,7 +311,7 @@ export function MessageThread({
           type="button"
           onClick={submit}
           disabled={body.trim().length === 0 || sending}
-          aria-label="Wyślij wiadomość"
+          aria-label={t("thread.sendAria")}
           className={cn(
             "inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors",
             body.trim().length === 0 || sending
@@ -316,7 +323,7 @@ export function MessageThread({
         </button>
       </div>
       <p className="mt-1.5 pl-4 text-[12px] text-[var(--text-subtle)]">
-        Enter wysyła, Shift+Enter robi nową linię. Wiadomości dochodzą same.
+        {t("thread.hint")}
       </p>
     </div>
   );
@@ -327,16 +334,16 @@ function sameDay(a: string, b: string) {
 }
 
 /** „Dzisiaj" / „Wczoraj" / data — bez tego godziny wyglądają jak błąd. */
-function dayLabel(iso: string) {
+function dayLabel(iso: string, t: Translate<MessageKey<"social">>, locale: Locale) {
   const date = new Date(iso);
   const now = new Date();
-  if (date.toDateString() === now.toDateString()) return "Dzisiaj";
+  if (date.toDateString() === now.toDateString()) return t("thread.today");
 
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  if (date.toDateString() === yesterday.toDateString()) return "Wczoraj";
+  if (date.toDateString() === yesterday.toDateString()) return t("thread.yesterday");
 
-  return date.toLocaleDateString("pl-PL", {
+  return formatDate(locale, date, {
     day: "numeric",
     month: "long",
     year: date.getFullYear() === now.getFullYear() ? undefined : "numeric",

@@ -8,6 +8,7 @@ import type {
   PublicStartup,
 } from "@/types/social";
 import type { StartupRole } from "@/types/startup";
+import { missingMigration } from "@/lib/server-errors";
 
 /**
  * Odczyt warstwy Social.
@@ -79,7 +80,7 @@ export async function discoverPeople(
   }
 
   const { data, error } = await query;
-  if (error) return { people: [], error: describeMissing(error.message) };
+  if (error) return { people: [], error: await describeMissing(error.message) };
   return { people: (data ?? []) as unknown as PublicProfile[], error: null };
 }
 
@@ -114,7 +115,7 @@ export async function discoverTeams(
   }
 
   const { data, error } = await query;
-  if (error) return { teams: [], error: describeMissing(error.message) };
+  if (error) return { teams: [], error: await describeMissing(error.message) };
   return { teams: (data ?? []) as unknown as PublicStartup[], error: null };
 }
 
@@ -324,7 +325,7 @@ export async function loadJoinRequests(
   if (status !== "all") query = query.eq("status", status);
 
   const { data, error } = await query;
-  if (error) return { requests: [], error: describeMissing(error.message) };
+  if (error) return { requests: [], error: await describeMissing(error.message) };
 
   const manageable = new Set(manageableStartupIds);
 
@@ -335,7 +336,7 @@ export async function loadJoinRequests(
     return {
       id: row.id,
       startupId: row.startup_id,
-      startupName: row.startups?.name ?? "Zespół",
+      startupName: row.startups?.name ?? "—",
       startupLogoUrl: row.startups?.logo_url ?? null,
       profileId: row.profile_id,
       // Zgłoszenie przychodzi z Odkrywaj, więc podpisujemy je tak, jak ta osoba
@@ -487,16 +488,16 @@ function escapeLike(input: string) {
     .slice(0, 80);
 }
 
-function describeMissing(message: string) {
+async function describeMissing(message: string) {
   if (message.includes("public_name")) {
-    return "Brakuje migracji 033 — odpal ją w Supabase → SQL Editor, a zgłoszenia wrócą.";
+    return missingMigration("033");
   }
   if (
     message.includes("public_profiles") ||
     message.includes("public_startups") ||
     message.includes("startup_join_requests")
   ) {
-    return "Brakuje migracji 009 — odpal ją w Supabase → SQL Editor, a Social zacznie działać.";
+    return missingMigration("009");
   }
   return message;
 }

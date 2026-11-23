@@ -4,7 +4,8 @@ import { Clock, MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { initialsOf } from "@/components/ui/avatar";
 import { MAX_STARTUPS } from "@/types/startup";
-import { LOOKING_FOR_LABELS, type PublicProfile } from "@/types/social";
+import type { PublicProfile } from "@/types/social";
+import { useT } from "@/i18n/client";
 import { DeckCover } from "./deck-frame";
 
 /**
@@ -27,6 +28,7 @@ export function PersonCover({
   person: PublicProfile;
   facts?: boolean;
 }) {
+  const t = useT("social");
   return (
     <DeckCover
       image={person.avatar_url}
@@ -37,7 +39,7 @@ export function PersonCover({
       }
     >
       <p className="font-heading text-[26px] font-semibold leading-tight text-white">
-        {person.full_name ?? "Bez imienia"}
+        {person.full_name ?? t("card.noName")}
       </p>
       {person.headline ? (
         <p className="mt-1 line-clamp-2 text-[14px] leading-snug text-white/80">
@@ -56,14 +58,14 @@ export function PersonCover({
         {person.weekly_hours ? (
           <span className="inline-flex items-center gap-1">
             <Clock className="size-3.5 shrink-0" />
-            {person.weekly_hours} h/tydz.
+            {t("card.hoursShort", { hours: person.weekly_hours })}
           </span>
         ) : null}
         <span className="inline-flex items-center gap-1">
           <Users className="size-3.5 shrink-0" />
           {person.team_count === 0
-            ? "Bez zespołu"
-            : `${person.team_count} z ${MAX_STARTUPS} zespołów`}
+            ? t("card.noTeam")
+            : t("card.teamCount", { count: person.team_count, max: MAX_STARTUPS })}
         </span>
       </div>
       ) : null}
@@ -71,7 +73,7 @@ export function PersonCover({
       {facts && person.looking_for ? (
         <div className="mt-3">
           <Badge tone={person.looking_for === "not_looking" ? "neutral" : "brand"}>
-            {LOOKING_FOR_LABELS[person.looking_for]}
+            {t(`lookingFor.${person.looking_for}`)}
           </Badge>
         </div>
       ) : null}

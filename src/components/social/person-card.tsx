@@ -5,7 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Pill } from "@/components/ui/pill";
 import type { MatchReason } from "@/lib/match";
 import { MAX_STARTUPS } from "@/types/startup";
-import { LOOKING_FOR_LABELS, type PublicProfile } from "@/types/social";
+import type { PublicProfile } from "@/types/social";
+import { skillLabel } from "@/lib/localized";
+import { getLocale, getT } from "@/i18n/server";
 
 const MAX_VISIBLE_SKILLS = 5;
 
@@ -16,7 +18,7 @@ const MAX_VISIBLE_SKILLS = 5;
  * decydują, czy kliknąć. Pod nim idzie to, co naprawdę pomaga dobrać się
  * w zespół: czego szuka, ile ma czasu i co potrafi — a nie sucha lista pól.
  */
-export function PersonCard({
+export async function PersonCard({
   person,
   action,
   highlight,
@@ -26,6 +28,8 @@ export function PersonCard({
   /** Jedno zdanie o pokryciu z moimi rolami albo umiejętnościami. */
   highlight?: MatchReason | null;
 }) {
+  const t = await getT("social");
+  const tl = await getT("labels");
   const full = person.team_count >= MAX_STARTUPS;
   const skills = person.skills ?? [];
 
@@ -38,7 +42,7 @@ export function PersonCard({
             href={`/app/social/people/${person.id}`}
             className="font-heading text-[17px] font-semibold text-white underline-offset-2 hover:underline"
           >
-            {person.full_name ?? "Bez imienia"}
+            {person.full_name ?? t("card.noName")}
           </Link>
           {person.headline ? (
             <p className="mt-0.5 line-clamp-2 text-[13.5px] leading-snug text-[var(--text-muted)]">
@@ -56,14 +60,14 @@ export function PersonCard({
             {person.weekly_hours ? (
               <span className="inline-flex items-center gap-1">
                 <Clock className="size-3.5 shrink-0" />
-                {person.weekly_hours} h/tydz.
+                {t("card.hoursShort", { hours: person.weekly_hours })}
               </span>
             ) : null}
             <span className="inline-flex items-center gap-1">
               <Users className="size-3.5 shrink-0" />
               {person.team_count === 0
-                ? "Bez zespołu"
-                : `${person.team_count} z ${MAX_STARTUPS} zespołów`}
+                ? t("card.noTeam")
+                : t("card.teamCount", { count: person.team_count, max: MAX_STARTUPS })}
             </span>
           </div>
         </div>
@@ -82,7 +86,7 @@ export function PersonCard({
       {person.looking_for ? (
         <div className="mt-3">
           <Badge tone={person.looking_for === "not_looking" ? "neutral" : "brand"}>
-            {LOOKING_FOR_LABELS[person.looking_for]}
+            {t(`lookingFor.${person.looking_for}`)}
           </Badge>
         </div>
       ) : null}
@@ -96,7 +100,7 @@ export function PersonCard({
       {skills.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {skills.slice(0, MAX_VISIBLE_SKILLS).map((skill) => (
-            <Pill key={skill.id}>{skill.label}</Pill>
+            <Pill key={skill.id}>{skillLabel(tl, skill)}</Pill>
           ))}
           {skills.length > MAX_VISIBLE_SKILLS ? (
             <span className="inline-flex h-8 items-center text-[12.5px] text-[var(--text-subtle)]">
@@ -111,13 +115,13 @@ export function PersonCard({
           href={`/app/social/people/${person.id}`}
           className="inline-flex h-9 items-center rounded-lg border border-white/10 px-3.5 text-[13px] font-medium text-[var(--text-muted)] transition-colors hover:border-white/22 hover:text-white"
         >
-          Zobacz profil
+          {t("card.viewProfile")}
         </Link>
         {/* Limit 3 teamów pokazujemy zawczasu, żeby nikt nie wysyłał
             zaproszenia, które baza i tak odrzuci. */}
         {full ? (
           <span className="text-[12px] text-[var(--text-subtle)]">
-            Komplet zespołów
+            {t("deck.fullTeams")}
           </span>
         ) : (
           action

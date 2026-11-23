@@ -6,6 +6,8 @@
  */
 
 import type { ValidationCategory } from "./startup";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
 
 export const LOOKING_FOR = [
   "team",
@@ -16,39 +18,9 @@ export const LOOKING_FOR = [
 
 export type LookingFor = (typeof LOOKING_FOR)[number];
 
-export const LOOKING_FOR_LABELS: Record<LookingFor, string> = {
-  team: "Szukam zespołu",
-  cofounder: "Szukam współzałożyciela",
-  collaborators: "Szukam ludzi do swojego projektu",
-  not_looking: "Na razie nie szukam",
-};
-
-export const LOOKING_FOR_OPTIONS: {
-  value: LookingFor;
-  label: string;
-  description: string;
-}[] = [
-  {
-    value: "team",
-    label: "Szukam zespołu",
-    description: "Chcę dołączyć do istniejącego startupu.",
-  },
-  {
-    value: "cofounder",
-    label: "Szukam współzałożyciela",
-    description: "Mam pomysł i szukam kogoś na równych prawach.",
-  },
-  {
-    value: "collaborators",
-    label: "Szukam ludzi do projektu",
-    description: "Mam już startup i rekrutuję do zespołu.",
-  },
-  {
-    value: "not_looking",
-    label: "Na razie nie szukam",
-    description: "Zostaję widoczny, ale nikt nie zaproponuje mi dołączenia.",
-  },
-];
+// Nazwy i opisy: słownik `social`, klucze `lookingFor.<value>` (krótko, na
+// kartach) oraz `lookingForOption.<value>.label|description` (w formularzach).
+export const LOOKING_FOR_OPTIONS: { value: LookingFor }[] = LOOKING_FOR.map((value) => ({ value }));
 
 /**
  * Podpowiedzi stanowisk. Celowo lista otwarta — „Head of Growth" ma prawo
@@ -124,12 +96,7 @@ export type PublicStartup = {
 export type JoinDirection = "application" | "invite";
 export type JoinStatus = "pending" | "accepted" | "declined" | "withdrawn";
 
-export const JOIN_STATUS_LABELS: Record<JoinStatus, string> = {
-  pending: "Czeka na odpowiedź",
-  accepted: "Zaakceptowana",
-  declined: "Odrzucona",
-  withdrawn: "Wycofana",
-};
+// Nazwy statusów: słownik `social`, `joinStatus.<status>`.
 
 export type JoinRequest = {
   id: string;
@@ -156,6 +123,7 @@ export type JoinRequest = {
 
 /** Komunikaty błędów z triggerów bazy — tłumaczone na ludzki język. */
 export function translateJoinError(
+  t: Translate<MessageKey<"social">>,
   message: string | null | undefined,
   /**
    * Kogo dotyczy limit, gdy ten zadziała. Przy przyjmowaniu ZGŁOSZENIA limit
@@ -167,21 +135,21 @@ export function translateJoinError(
 ) {
   if (!message) return null;
   if (message.includes("already_member")) {
-    return "Ta osoba jest już w tym zespole.";
+    return t("errors.alreadyMember");
   }
   if (message.includes("startup_limit_reached")) {
     return limitSubject === "them"
-      ? "Ta osoba należy już do 3 zespołów — to maksimum na konto i nie da się jej dodać."
-      : "Należysz już do 3 zespołów — to maksimum na konto.";
+      ? t("errors.theirLimit")
+      : t("errors.myLimit");
   }
   if (message.includes("join_requests_one_pending")) {
-    return "Rozmowa z tą osobą już trwa — sprawdź Zaproszenia.";
+    return t("errors.requestPending");
   }
   if (message.includes("request_not_pending")) {
-    return "Ta prośba została już rozpatrzona.";
+    return t("errors.requestHandled");
   }
   if (message.includes("not_allowed")) {
-    return "Nie masz uprawnień do tej operacji.";
+    return t("errors.notAllowed");
   }
   return message;
 }
@@ -192,12 +160,7 @@ export function translateJoinError(
 
 export type ContactStatus = "pending" | "accepted" | "declined" | "withdrawn";
 
-export const CONTACT_STATUS_LABELS: Record<ContactStatus, string> = {
-  pending: "Czeka na odpowiedź",
-  accepted: "Kontakt nawiązany",
-  declined: "Odrzucony",
-  withdrawn: "Wycofany",
-};
+// Nazwy statusów: słownik `social`, `contactStatus.<status>`.
 
 export type ContactSignal = {
   id: string;
@@ -240,29 +203,32 @@ export type ChatMessage = {
   createdAt: string;
 };
 
-export function translateContactError(message: string | null | undefined) {
+export function translateContactError(
+  t: Translate<MessageKey<"social">>,
+  message: string | null | undefined
+) {
   if (!message) return null;
   if (message.includes("contact_signals_one_pending")) {
-    return "Zaczepka do tej osoby już czeka na odpowiedź.";
+    return t("errors.contactPending");
   }
   if (message.includes("not_a_member_of_context")) {
-    return "Możesz pisać w imieniu zespołu, do którego należysz.";
+    return t("errors.notInContextTeam");
   }
   if (message.includes("signal_not_pending")) {
-    return "Ta zaczepka została już rozpatrzona.";
+    return t("errors.contactHandled");
   }
   if (message.includes("contact_signal_not_self")) {
-    return "Nie da się napisać do siebie.";
+    return t("errors.notSelf");
   }
   if (message.includes("not_allowed")) {
-    return "Nie masz uprawnień do tej operacji.";
+    return t("errors.notAllowed");
   }
   if (
     message.includes("contact_signals") ||
     message.includes("respond_contact_signal") ||
     message.includes("conversation")
   ) {
-    return "Brakuje migracji 012 — odpal ją w Supabase → SQL Editor.";
+    return t("errors.migration012");
   }
   return message;
 }

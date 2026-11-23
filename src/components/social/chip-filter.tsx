@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { Check, Search } from "lucide-react";
-import { cn, plural } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useLocale, useT } from "@/i18n/client";
+import { LOCALE_TAGS } from "@/i18n/config";
 
 type Option = { value: string; label: string };
 
@@ -31,6 +33,8 @@ export function ChipFilter({
   searchable?: boolean;
   collapsedCount?: number;
 }) {
+  const t = useT("social");
+  const locale = useLocale();
   const [chosen, setChosen] = useState(() => new Set(selected));
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
@@ -46,9 +50,9 @@ export function ChipFilter({
     ];
   }, [options, selected]);
 
-  const needle = query.trim().toLocaleLowerCase("pl");
+  const needle = query.trim().toLocaleLowerCase(LOCALE_TAGS[locale]);
   const filtered = needle
-    ? ordered.filter((option) => option.label.toLocaleLowerCase("pl").includes(needle))
+    ? ordered.filter((option) => option.label.toLocaleLowerCase(LOCALE_TAGS[locale]).includes(needle))
     : ordered;
   const limit = searchable && !expanded && !needle ? collapsedCount : filtered.length;
   const visible = filtered.slice(0, limit);
@@ -80,7 +84,7 @@ export function ChipFilter({
             onClick={() => setChosen(new Set())}
             className="rounded-md px-1.5 py-0.5 text-[12px] text-[var(--text-subtle)] transition-colors hover:text-white"
           >
-            Wyczyść
+            {t("discover.clear")}
           </button>
         ) : null}
       </div>
@@ -98,8 +102,8 @@ export function ChipFilter({
               // a nie chce jeszcze filtrować wyników.
               if (event.key === "Enter") event.preventDefault();
             }}
-            placeholder={`Szukaj: ${label.toLocaleLowerCase("pl")}`}
-            aria-label={`Szukaj w grupie ${label}`}
+            placeholder={t("chips.searchIn", { label: label.toLocaleLowerCase(LOCALE_TAGS[locale]) })}
+            aria-label={t("chips.searchGroup", { label })}
             className="h-9 w-full bg-transparent text-[13px] text-white outline-none placeholder:text-[var(--text-faint)]"
           />
         </div>
@@ -148,8 +152,8 @@ export function ChipFilter({
           className="mt-2 rounded-md px-1 text-[12.5px] text-[var(--text-subtle)] transition-colors hover:text-white"
         >
           {expanded
-            ? "Zwiń"
-            : `Pokaż wszystkie (${filtered.length} ${plural(filtered.length, "pozycja", "pozycje", "pozycji")})`}
+            ? t("chips.collapse")
+            : t("chips.showAll", { count: filtered.length })}
         </button>
       ) : null}
     </fieldset>

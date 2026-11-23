@@ -19,11 +19,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Pill } from "@/components/ui/pill";
 import {
-  CATEGORY_LABELS,
   MAX_STARTUPS,
   type ValidationCategory,
 } from "@/types/startup";
-import { plural } from "@/lib/utils";
+import { industryLabel } from "@/lib/localized";
+import { getT } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +36,8 @@ export async function generateMetadata({
   const { id } = await params;
   const supabase = await createClient();
   const team = await getPublicStartup(supabase, id);
-  return { title: team?.name ? `${team.name} — Vairo` : "Projekt — Vairo" };
+  const t = await getT("social");
+  return { title: team?.name ? `${team.name} — Vairo` : t("team.metaTitle") };
 }
 
 /**
@@ -49,6 +50,8 @@ export default async function PublicTeamPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getT("social");
+  const tl = await getT("labels");
   const { id } = await params;
   const supabase = await createClient();
   const user = await getCurrentUser();
@@ -75,17 +78,17 @@ export default async function PublicTeamPage({
   const hiddenMembers = Math.max(0, team.member_count - members.length);
 
   const blockedReason = isMember
-    ? "Jesteś w tym zespole"
+    ? t("team.youAreMember")
     : pending
-      ? "Zgłoszenie wysłane"
+      ? t("team.applied")
       : startups.length >= MAX_STARTUPS
-        ? `Masz już ${MAX_STARTUPS} zespoły`
+        ? t("team.atLimit", { max: MAX_STARTUPS })
         : null;
 
   const cta = isMember ? (
     <Button href="/app/team" variant="secondary" size="lg">
       <Users className="size-4" />
-      Otwórz swój zespół
+      {t("team.openOwn")}
     </Button>
   ) : (
     <ApplyButton
@@ -104,7 +107,7 @@ export default async function PublicTeamPage({
         className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white"
       >
         <ArrowLeft className="size-4" />
-        Wróć do Odkrywaj
+        {t("person.back")}
       </Link>
 
       {/* Nagłówek z pasem gradientu: strona teamu ma wyglądać jak wizytówka
@@ -123,7 +126,7 @@ export default async function PublicTeamPage({
             {openRoles.length > 0 ? (
               <Badge tone="brand" className="mb-2">
                 <UserPlus className="size-3" />
-                Rekrutują
+                {t("team.hiring")}
               </Badge>
             ) : null}
           </div>
@@ -140,8 +143,7 @@ export default async function PublicTeamPage({
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-[var(--text-subtle)]">
             <span className="inline-flex items-center gap-1.5">
               <Users className="size-4 shrink-0" />
-              {team.member_count} {plural(team.member_count, "osoba", "osoby", "osób")}
-              {" w zespole"}
+              {t("team.memberCount", { count: team.member_count })}
             </span>
             {team.stage_label ? (
               <span className="inline-flex items-center gap-1.5">
@@ -163,7 +165,7 @@ export default async function PublicTeamPage({
                 className="inline-flex items-center gap-1.5 text-[var(--vairo)] underline-offset-2 hover:underline"
               >
                 <ExternalLink className="size-4 shrink-0" />
-                Strona projektu
+                {t("team.website")}
               </a>
             ) : null}
           </div>
@@ -171,10 +173,10 @@ export default async function PublicTeamPage({
           {categories.length > 0 || (team.tags ?? []).length > 0 ? (
             <div className="mt-4 flex flex-wrap gap-1.5">
               {categories.map((category) => (
-                <Pill key={category}>{CATEGORY_LABELS[category] ?? category}</Pill>
+                <Pill key={category}>{tl.maybe(`category.${category}`, category)}</Pill>
               ))}
               {(team.tags ?? []).map((tag) => (
-                <Pill key={tag.id}>{tag.label}</Pill>
+                <Pill key={tag.id}>{industryLabel(tl, tag)}</Pill>
               ))}
             </div>
           ) : null}
@@ -189,7 +191,7 @@ export default async function PublicTeamPage({
         <CardBody className="pt-5">
           <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--vairo)]">
             <UserPlus className="size-3.5" />
-            Kogo szukają
+            {t("team.seeking")}
           </p>
 
           {openRoles.length > 0 ? (
@@ -203,7 +205,7 @@ export default async function PublicTeamPage({
                     {role.title}
                     {role.weekly_hours ? (
                       <span className="ml-2 text-[12.5px] font-normal text-[var(--text-subtle)]">
-                        około {role.weekly_hours} h tygodniowo
+                        {t("team.roleHours", { hours: role.weekly_hours })}
                       </span>
                     ) : null}
                   </p>
@@ -224,8 +226,7 @@ export default async function PublicTeamPage({
             </ul>
           ) : (
             <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--text-subtle)]">
-              Ten zespół nie ma teraz otwartych ról. Zgłoszenie i tak trafi do osób,
-              które nim zarządzają — czasem to wystarczy.
+              {t("team.noRoles")}
             </p>
           )}
         </CardBody>
@@ -235,7 +236,7 @@ export default async function PublicTeamPage({
         <Card className="mt-4">
           <CardBody className="pt-5">
             <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-              O projekcie
+              {t("team.about")}
             </p>
             <p className="mt-2 whitespace-pre-line text-[14.5px] leading-relaxed text-[var(--text-muted)]">
               {team.public_description}
@@ -247,7 +248,7 @@ export default async function PublicTeamPage({
       <Card className="mt-4">
         <CardBody className="pt-5">
           <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-            Kto już jest w zespole
+            {t("team.members")}
           </p>
 
           {members.length > 0 ? (
@@ -263,7 +264,7 @@ export default async function PublicTeamPage({
                       href={`/app/social/people/${member.id}`}
                       className="block truncate text-[13.5px] font-medium text-white underline-offset-2 hover:underline"
                     >
-                      {member.full_name ?? "Bez imienia"}
+                      {member.full_name ?? t("card.noName")}
                     </Link>
                     {member.job_title ? (
                       <span className="block truncate text-[12px] text-[var(--text-subtle)]">
@@ -280,10 +281,9 @@ export default async function PublicTeamPage({
               pojawiają się z imienia — także na cudzej stronie teamu. */}
           {hiddenMembers > 0 ? (
             <p className="mt-3 text-[12.5px] text-[var(--text-subtle)]">
-              {members.length > 0 ? "oraz " : ""}
-              {hiddenMembers}{" "}
-              {hiddenMembers === 1 ? "osoba, która nie" : "osób, które nie"}{" "}
-              {hiddenMembers === 1 ? "pokazuje" : "pokazują"} się w wyszukiwarce.
+              {members.length > 0
+                ? t("team.hiddenMembersMore", { count: hiddenMembers })
+                : t("team.hiddenMembers", { count: hiddenMembers })}
             </p>
           ) : null}
         </CardBody>
@@ -292,10 +292,10 @@ export default async function PublicTeamPage({
       {!isMember ? (
         <div className="mt-5 rounded-2xl border border-white/[0.07] bg-[var(--surface)] px-5 py-4">
           <p className="text-[14px] font-medium text-white">
-            Pasuje Ci ten projekt?
+            {t("team.fitTitle")}
           </p>
           <p className="mt-0.5 text-[13px] text-[var(--text-subtle)]">
-            Zgłoszenie to jedna wiadomość. Nic nie tracisz, jeśli odpowiedzą „nie”.
+            {t("team.fitBody")}
           </p>
           <div className="mt-4">{cta}</div>
         </div>

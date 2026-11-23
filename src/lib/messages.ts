@@ -5,6 +5,7 @@ import type {
   ContactStatus,
   ConversationSummary,
 } from "@/types/social";
+import { missingMigration } from "@/lib/server-errors";
 
 /**
  * Odczyt kontaktów i rozmów.
@@ -90,7 +91,7 @@ export async function loadContactSignals(
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (error) return { signals: [], error: describeMissing(error.message) };
+  if (error) return { signals: [], error: await describeMissing(error.message) };
 
   const rows = data as unknown as SignalRow[];
   const cards = await loadPartnerCards(
@@ -144,7 +145,7 @@ export async function loadConversations(
     .order("last_message_at", { ascending: false })
     .limit(100);
 
-  if (error) return { conversations: [], error: describeMissing(error.message) };
+  if (error) return { conversations: [], error: await describeMissing(error.message) };
 
   type OverviewRow = {
     conversation_id: string;
@@ -351,13 +352,13 @@ export async function countPendingSignals(
   return count ?? 0;
 }
 
-function describeMissing(message: string) {
+async function describeMissing(message: string) {
   if (
     message.includes("contact_signals") ||
     message.includes("conversation_overview") ||
     message.includes("conversations")
   ) {
-    return "Brakuje migracji 012 — odpal ją w Supabase → SQL Editor, a kontakt i wiadomości zaczną działać.";
+    return missingMigration("012");
   }
   return message;
 }

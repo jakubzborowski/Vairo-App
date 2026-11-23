@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import { Pill } from "@/components/ui/pill";
 import { cn } from "@/lib/utils";
 import { JOB_TITLE_SUGGESTIONS } from "@/types/social";
+import { useT } from "@/i18n/client";
 
 export type InvitableTeam = { id: string; name: string };
 
@@ -56,6 +57,8 @@ export function InviteButton({
   variant = "secondary",
   className,
 }: Props) {
+  const t = useT("social");
+  const tc = useT("common");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [teamId, setTeamId] = useState(teams[0]?.id ?? "");
@@ -90,7 +93,7 @@ export function InviteButton({
   const submit = () => {
     setError(null);
     if (!teamId) {
-      setError("Wybierz zespół.");
+      setError(t("invite.pickTeam"));
       return;
     }
     startSending(async () => {
@@ -105,8 +108,8 @@ export function InviteButton({
         return;
       }
       toast({
-        title: "Zaproszenie wysłane",
-        description: `${profileName} dołączy do zespołu po przyjęciu zaproszenia.`,
+        title: t("discover.inviteSent"),
+        description: t("invite.sentBody", { name: profileName }),
       });
       setOpen(false);
       setMessage("");
@@ -123,22 +126,22 @@ export function InviteButton({
       ) : (
         <Button variant={variant} size={size} className={className} onClick={() => setOpen(true)}>
           <UserPlus className="size-4" />
-          Zaproś do zespołu
+          {t("invite.button")}
         </Button>
       )}
 
       {open ? (
         <Modal
-          title={`Zaproś ${profileName}`}
-          description="Zaproszenie czeka na odpowiedź. Do zespołu dołącza dopiero po akceptacji."
+          title={t("invite.title", { name: profileName })}
+          description={t("invite.description")}
           onClose={() => setOpen(false)}
           footer={
             <>
               <Button variant="ghost" onClick={() => setOpen(false)} disabled={sending}>
-                Anuluj
+                {tc("actions.cancel")}
               </Button>
               <Button onClick={trySubmit} loading={sending}>
-                {showConsequence ? "Wyślij mimo to" : "Wyślij zaproszenie"}
+                {showConsequence ? t("apply.sendAnyway") : t("invite.send")}
               </Button>
             </>
           }
@@ -146,7 +149,7 @@ export function InviteButton({
           {teams.length > 1 ? (
             <div>
               <p className="mb-2 text-[13px] font-medium text-[var(--text-muted)]">
-                Do którego zespołu?
+                {t("invite.whichTeam")}
               </p>
               <div className="flex flex-col gap-1.5">
                 {teams.map((team) => (
@@ -173,8 +176,8 @@ export function InviteButton({
               jest czynnością teamu, nie zapraszanego — i dzieje się teraz po
               dołączeniu, jednym ruchem w menu przy członku. */}
           <Field
-            label="Stanowisko"
-            hint="Wizytówka w składzie zespołu. Nie ma wpływu na uprawnienia."
+            label={t("invite.jobTitle")}
+            hint={t("invite.jobTitleHint")}
           >
             {({ id }) => (
               <div>
@@ -183,7 +186,7 @@ export function InviteButton({
                   value={jobTitle}
                   onChange={(event) => setJobTitle(event.target.value)}
                   maxLength={48}
-                  placeholder="np. CTO"
+                  placeholder={t("invite.jobTitlePlaceholder")}
                 />
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {JOB_TITLE_SUGGESTIONS.slice(0, 8).map((suggestion) => (
@@ -205,8 +208,8 @@ export function InviteButton({
           </Field>
 
           <Field
-            label="Wiadomość"
-            hint="Opcjonalna, ale zaproszenie bez słowa wyjaśnienia rzadko kogoś przekonuje."
+            label={t("invite.message")}
+            hint={t("invite.messageHint")}
             counter={{ value: message.length, max: 600 }}
           >
             {({ id }) => (
@@ -216,7 +219,7 @@ export function InviteButton({
                 onChange={(event) => setMessage(event.target.value)}
                 rows={4}
                 maxLength={600}
-                placeholder="Np. Widzieliśmy Twój profil — szukamy kogoś do frontendu na jakieś 10 h tygodniowo."
+                placeholder={t("invite.messagePlaceholder")}
               />
             )}
           </Field>
@@ -226,9 +229,9 @@ export function InviteButton({
               <AlertCircle className="mt-[2px] size-4 shrink-0" />
               <span>
                 {trimmed.length === 0
-                  ? `${profileName} zobaczy samą nazwę zespołu i nic poza tym — ani czemu akurat ta osoba, ani czym mielibyście się zajmować.`
-                  : "To bardzo krótkie zaproszenie. Jedno zdanie o tym, czemu akurat ta osoba, zmienia je z rozesłanego w skierowane."}{" "}
-                Możesz je rozwinąć albo wysłać tak, jak jest.
+                  ? t("invite.emptyWarning", { name: profileName })
+                  : t("invite.thinWarning")}{" "}
+                {t("apply.expandOrSend")}
               </span>
             </p>
           ) : null}

@@ -2,8 +2,12 @@ import { redirect } from "next/navigation";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { SocialProfileWizard } from "@/components/social/social-profile-wizard";
 import type { LookingFor } from "@/types/social";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Twój profil publiczny — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("social");
+  return { title: t("start.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 /**

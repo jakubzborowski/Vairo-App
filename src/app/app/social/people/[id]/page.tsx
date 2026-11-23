@@ -11,8 +11,10 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
 import { Pill } from "@/components/ui/pill";
-import { LOOKING_FOR_LABELS } from "@/types/social";
 import { MAX_STARTUPS, canManageTeam } from "@/types/startup";
+import { getLocale, getT } from "@/i18n/server";
+import { LOCALE_TAGS } from "@/i18n/config";
+import { skillLabel } from "@/lib/localized";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +34,8 @@ export async function generateMetadata({
   const { id } = await params;
   const supabase = await createClient();
   const profile = await getPublicProfile(supabase, id);
-  return { title: profile?.full_name ? `${profile.full_name} — Vairo` : "Profil — Vairo" };
+  const t = await getT("social");
+  return { title: profile?.full_name ? `${profile.full_name} — Vairo` : t("person.metaTitle") };
 }
 
 export default async function PublicProfilePage({
@@ -40,6 +43,9 @@ export default async function PublicProfilePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getT("social");
+  const tl = await getT("labels");
+  const locale = await getLocale();
   const { id } = await params;
   const supabase = await createClient();
   const user = await getCurrentUser();
@@ -94,7 +100,7 @@ export default async function PublicProfilePage({
         className="mb-5 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white"
       >
         <ArrowLeft className="size-4" />
-        Wróć do Odkrywaj
+        {t("person.back")}
       </Link>
 
       <Card>
@@ -109,7 +115,7 @@ export default async function PublicProfilePage({
 
             <div className="min-w-0 flex-1">
               <h1 className="font-heading text-[1.5rem] font-semibold tracking-tight text-white">
-                {person.full_name ?? "Bez imienia"}
+                {person.full_name ?? t("card.noName")}
               </h1>
               {person.headline ? (
                 <p className="mt-1 text-[14.5px] text-[var(--text-muted)]">
@@ -127,14 +133,14 @@ export default async function PublicProfilePage({
                 {person.weekly_hours ? (
                   <span className="inline-flex items-center gap-1.5">
                     <Clock className="size-4 shrink-0" />
-                    {person.weekly_hours} h tygodniowo
+                    {t("person.hoursPerWeek", { hours: person.weekly_hours })}
                   </span>
                 ) : null}
                 <span className="inline-flex items-center gap-1.5">
                   <Users className="size-4 shrink-0" />
                   {person.team_count === 0
-                    ? "Nie należy do żadnego zespołu"
-                    : `W ${person.team_count} z ${MAX_STARTUPS} zespołów`}
+                    ? t("person.noTeam")
+                    : t("card.teamCount", { count: person.team_count, max: MAX_STARTUPS })}
                 </span>
               </div>
 
@@ -143,7 +149,7 @@ export default async function PublicProfilePage({
                   <Badge
                     tone={person.looking_for === "not_looking" ? "neutral" : "brand"}
                   >
-                    {LOOKING_FOR_LABELS[person.looking_for]}
+                    {t(`lookingFor.${person.looking_for}`)}
                   </Badge>
                 </div>
               ) : null}
@@ -156,7 +162,7 @@ export default async function PublicProfilePage({
           <div className="mt-6 flex flex-wrap items-center gap-2">
             <MessageButton
               recipientId={person.id}
-              recipientName={person.full_name?.trim().split(/\s+/)[0] ?? "tej osoby"}
+              recipientName={person.full_name?.trim().split(/\s+/)[0] ?? t("person.thisPersonGen")}
               contexts={startups.map((startup) => ({
                 id: startup.id,
                 name: startup.name,
@@ -167,7 +173,7 @@ export default async function PublicProfilePage({
             {invitable.length > 0 ? (
               <InviteButton
                 profileId={person.id}
-                profileName={person.full_name ?? "tę osobę"}
+                profileName={person.full_name ?? t("person.thisPersonAcc")}
                 teams={invitable}
               />
             ) : null}
@@ -175,13 +181,13 @@ export default async function PublicProfilePage({
 
           <p className="mt-3 text-[12.5px] text-[var(--text-subtle)]">
             {sharedTeams.length > 0
-              ? `Jesteście razem w: ${sharedTeams.map((t) => t.name).join(", ")}.`
+              ? t("person.sharedTeams", { list: sharedTeams.map((team) => team.name).join(", ") })
               : atLimit
-                ? `Ta osoba jest już w ${MAX_STARTUPS} zespołach — to maksimum na konto, więc zaproszenie nie przejdzie.`
+                ? t("person.atLimit", { max: MAX_STARTUPS })
                 : pendingIn.size > 0 && invitable.length === 0
-                  ? "Zaproszenie do tej osoby już czeka na odpowiedź — sprawdź Zaproszenia."
+                  ? t("person.invitePending")
                   : invitable.length === 0
-                    ? "Do zespołu zapraszają Founder i Admin. Napisać możesz zawsze."
+                    ? t("person.onlyManagersInvite")
                     : ""}
           </p>
         </CardBody>
@@ -191,18 +197,19 @@ export default async function PublicProfilePage({
         <Card className="mt-4">
           <CardBody className="pt-5">
             <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-              Nad czym teraz pracuje
+              {t("person.focus")}
             </p>
             <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-[var(--text-muted)]">
               {person.weekly_focus}
             </p>
             {person.weekly_focus_updated_at ? (
               <p className="mt-3 text-[12px] text-[var(--text-subtle)]">
-                Zaktualizowane{" "}
-                {new Date(person.weekly_focus_updated_at).toLocaleDateString("pl-PL", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
+                {t("person.updated", {
+                  date: new Date(person.weekly_focus_updated_at).toLocaleDateString(LOCALE_TAGS[locale], {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  }),
                 })}
               </p>
             ) : null}
@@ -213,26 +220,25 @@ export default async function PublicProfilePage({
       <Card className="mt-4">
         <CardBody className="pt-5">
           <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-            Umiejętności
+            {t("person.skills")}
           </p>
           {skills.length > 0 ? (
             <div className="mt-2.5 flex flex-wrap gap-1.5">
               {skills.map((skill) => (
-                <Pill key={skill.id}>{skill.label}</Pill>
+                <Pill key={skill.id}>{skillLabel(tl, skill)}</Pill>
               ))}
             </div>
           ) : (
             <p className="mt-2 inline-flex items-center gap-2 text-[13px] text-[var(--text-subtle)]">
               <UserRound className="size-4" />
-              Ta osoba nie dodała jeszcze umiejętności.
+              {t("person.noSkills")}
             </p>
           )}
         </CardBody>
       </Card>
 
       <p className="mt-4 text-[12px] text-[var(--text-subtle)]">
-        Widzisz tylko to, co ta osoba świadomie udostępniła. Adres e-mail
-        pojawia się dopiero wtedy, gdy jesteście w jednym zespole.
+        {t("person.privacyNote")}
       </p>
     </div>
   );

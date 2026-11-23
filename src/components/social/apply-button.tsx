@@ -9,6 +9,7 @@ import { Field, Textarea } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 type OpenRole = { id: string; title: string; weekly_hours?: number | null };
 
@@ -57,6 +58,8 @@ export function ApplyButton({
   onDone,
   className,
 }: Props) {
+  const t = useT("social");
+  const tc = useT("common");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [roleId, setRoleId] = useState<string | null>(null);
@@ -97,8 +100,8 @@ export function ApplyButton({
         return;
       }
       toast({
-        title: "Zgłoszenie wysłane",
-        description: `Osoby prowadzące ${startupName} zobaczą je w Zaproszeniach.`,
+        title: t("discover.applicationSent"),
+        description: t("apply.sentBody", { team: startupName }),
       });
       setOpen(false);
       setMessage("");
@@ -114,22 +117,22 @@ export function ApplyButton({
       ) : (
         <Button size={size} className={className} onClick={() => setOpen(true)}>
           <Send className="size-4" />
-          Zgłoś się
+          {t("deck.apply")}
         </Button>
       )}
 
       {open ? (
         <Modal
-          title={`Zgłoś się do ${startupName}`}
-          description="Zgłoszenie trafi do osób zarządzających zespołem. Zobaczą Twój profil publiczny i to, co tutaj napiszesz."
+          title={t("apply.title", { team: startupName })}
+          description={t("apply.description")}
           onClose={() => setOpen(false)}
           footer={
             <>
               <Button variant="ghost" onClick={() => setOpen(false)} disabled={sending}>
-                Anuluj
+                {tc("actions.cancel")}
               </Button>
               <Button onClick={trySubmit} loading={sending}>
-                {showConsequence ? "Wyślij mimo to" : "Wyślij zgłoszenie"}
+                {showConsequence ? t("apply.sendAnyway") : t("apply.send")}
               </Button>
             </>
           }
@@ -137,7 +140,7 @@ export function ApplyButton({
           {openRoles.length > 0 ? (
             <div>
               <p className="mb-2 text-[13px] font-medium text-[var(--text-muted)]">
-                Na którą rolę? <span className="text-[var(--text-subtle)]">(opcjonalnie)</span>
+                {t("apply.whichRole")} <span className="text-[var(--text-subtle)]">{t("apply.optional")}</span>
               </p>
               <div className="flex flex-col gap-1.5">
                 {openRoles.map((role) => {
@@ -171,7 +174,7 @@ export function ApplyButton({
                         {role.weekly_hours ? (
                           <span className="text-[var(--text-subtle)]">
                             {" "}
-                            · {role.weekly_hours} h/tydz.
+                            · {t("card.hoursShort", { hours: role.weekly_hours })}
                           </span>
                         ) : null}
                       </span>
@@ -183,8 +186,8 @@ export function ApplyButton({
           ) : null}
 
           <Field
-            label="Kilka zdań o sobie"
-            hint="Co potrafisz, ile czasu możesz dać i dlaczego akurat ten projekt."
+            label={t("apply.aboutLabel")}
+            hint={t("apply.aboutHint")}
             counter={{ value: message.length, max: 600 }}
           >
             {({ id }) => (
@@ -194,7 +197,7 @@ export function ApplyButton({
                 onChange={(event) => setMessage(event.target.value)}
                 rows={5}
                 maxLength={600}
-                placeholder="Np. Robię front w Reakcie od trzech lat, mogę dać 10 h tygodniowo. Wasz problem z rezerwacjami znam od strony klienta…"
+                placeholder={t("apply.aboutPlaceholder")}
               />
             )}
           </Field>
@@ -204,9 +207,9 @@ export function ApplyButton({
               <AlertCircle className="mt-[2px] size-4 shrink-0" />
               <span>
                 {trimmed.length === 0
-                  ? `Wysyłasz zgłoszenie bez ani jednego zdania o sobie. ${startupName} zobaczy wtedy sam Twój profil publiczny — najczęściej to za mało, żeby ktoś odpisał.`
-                  : `To bardzo krótkie zgłoszenie. Dopisz, co potrafisz i ile czasu możesz dać — to jedyne, czego ${startupName} nie wyczyta z Twojego profilu.`}{" "}
-                Możesz je rozwinąć albo wysłać tak, jak jest.
+                  ? t("apply.emptyWarning", { team: startupName })
+                  : t("apply.thinWarning", { team: startupName })}{" "}
+                {t("apply.expandOrSend")}
               </span>
             </p>
           ) : null}

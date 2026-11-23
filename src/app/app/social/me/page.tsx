@@ -9,8 +9,12 @@ import { StageReturnBar } from "@/components/stage/stage-return-bar";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import type { LookingFor, PublicProfile } from "@/types/social";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Mój profil publiczny — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("social");
+  return { title: t("me.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function MyPublicProfilePage({
@@ -18,6 +22,7 @@ export default async function MyPublicProfilePage({
 }: {
   searchParams: Promise<{ back?: string }>;
 }) {
+  const t = await getT("social");
   const { back } = await searchParams;
   const supabase = await createClient();
   const user = await getCurrentUser();
@@ -97,7 +102,7 @@ export default async function MyPublicProfilePage({
     weekly_focus: profile?.weekly_focus,
     looking_for: profile?.looking_for,
     skillCount: skills.length,
-  });
+  }, t);
 
   const top = completeness.topMissing;
   // „W tym tygodniu" starzeje się po cichu. Po 14 dniach przypominamy, bo
@@ -113,15 +118,15 @@ export default async function MyPublicProfilePage({
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           <h1 className="font-heading text-[1.65rem] font-semibold tracking-tight text-white">
-            Mój profil publiczny
+            {t("me.title")}
           </h1>
           <p className="mt-1 max-w-2xl text-[14px] leading-relaxed text-[var(--text-muted)]">
-            Tak widzą Cię ludzie, którzy szukają kogoś do zespołu.
+            {t("me.subtitle")}
           </p>
         </div>
         <Button href="/app/settings/profile" variant="secondary">
           <Settings className="size-4" />
-          Edytuj profil
+          {t("me.edit")}
         </Button>
       </header>
 
@@ -136,10 +141,12 @@ export default async function MyPublicProfilePage({
                 <p className="mt-0.5 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
                   {top.why}
                   {completeness.missing.length > 1
-                    ? ` Zostało jeszcze: ${completeness.missing
-                        .filter((piece) => piece.key !== top.key)
-                        .map((piece) => piece.label.toLowerCase())
-                        .join(", ")}.`
+                    ? ` ${t("me.remaining", {
+                        list: completeness.missing
+                          .filter((piece) => piece.key !== top.key)
+                          .map((piece) => piece.label.toLowerCase())
+                          .join(", "),
+                      })}`
                     : ""}
                 </p>
               </div>
@@ -147,17 +154,17 @@ export default async function MyPublicProfilePage({
             </section>
           ) : (
             <p className="rounded-[18px] border border-[var(--success)]/20 bg-[var(--success)]/[0.06] px-5 py-4 text-[14px] text-[var(--success)]">
-              Profil jest kompletny — karta mówi o Tobie wszystko, co powinna.
+              {t("me.complete")}
             </p>
           )}
 
           {focusStale ? (
             <p className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[18px] border border-[var(--warning)]/25 bg-[var(--warning)]/[0.06] px-5 py-3.5 text-[13.5px] text-[var(--text-muted)]">
               <span className="min-w-0 flex-1">
-                „Nad czym teraz pracujesz” ma {focusAge} dni. Odśwież je, jeśli robisz już coś innego.
+                {t("me.focusStale", { days: focusAge ?? 0 })}
               </span>
               <Button size="sm" variant="secondary" href="/app/settings/profile">
-                Odśwież
+                {t("me.refresh")}
               </Button>
             </p>
           ) : null}
@@ -176,14 +183,14 @@ export default async function MyPublicProfilePage({
           {hidden ? (
             <p className="flex items-start gap-2 px-1 text-[13px] leading-relaxed text-[var(--text-muted)]">
               <EyeOff className="mt-0.5 size-4 shrink-0" />
-              Nie pojawiasz się teraz w Szukam ludzi. Zespoły, do których się zgłosisz, nadal Cię widzą.
+              {t("me.hidden")}
             </p>
           ) : null}
         </div>
 
         <aside className="lg:sticky lg:top-6">
           <p className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.05em] text-[var(--text-subtle)]">
-            Tak widzą Cię inni
+            {t("wizard.previewTitle")}
           </p>
           <PersonPreviewCard person={preview} compact />
         </aside>

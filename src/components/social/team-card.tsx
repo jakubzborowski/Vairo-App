@@ -2,11 +2,12 @@ import Link from "next/link";
 import { MapPin, Sparkles, Target, UserPlus, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Pill } from "@/components/ui/pill";
-import { CATEGORY_LABELS, type ValidationCategory } from "@/types/startup";
+import type { ValidationCategory } from "@/types/startup";
+import { industryLabel } from "@/lib/localized";
 import type { PublicStartup } from "@/types/social";
 import { TeamLogo } from "./team-logo";
 import type { MatchReason } from "@/lib/match";
-import { plural } from "@/lib/utils";
+import { getLocale, getT } from "@/i18n/server";
 
 /**
  * Karta teamu w Discover.
@@ -15,7 +16,7 @@ import { plural } from "@/lib/utils";
  * pomysłu zostaje prywatny. Najważniejsza informacja dla joinera to otwarte
  * role, więc idą na wierzch, a nie do stopki.
  */
-export function TeamCard({
+export async function TeamCard({
   team,
   action,
   highlight,
@@ -25,6 +26,8 @@ export function TeamCard({
   /** Jedno zdanie o pokryciu ich otwartych ról z moimi umiejętnościami. */
   highlight?: MatchReason | null;
 }) {
+  const t = await getT("social");
+  const tl = await getT("labels");
   const openRoles = team.open_roles ?? [];
   const categories = (team.categories ?? []) as ValidationCategory[];
 
@@ -45,14 +48,14 @@ export function TeamCard({
             </p>
           ) : (
             <p className="mt-0.5 text-[13px] italic text-[var(--text-subtle)]">
-              Zespół nie dodał jeszcze opisu.
+              {t("card.noDescription")}
             </p>
           )}
 
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[var(--text-subtle)]">
             <span className="inline-flex items-center gap-1">
               <Users className="size-3.5 shrink-0" />
-              {team.member_count} {plural(team.member_count, "osoba", "osoby", "osób")}
+              {t("card.members", { count: team.member_count })}
             </span>
             {team.stage_label ? (
               <span className="inline-flex items-center gap-1">
@@ -84,7 +87,7 @@ export function TeamCard({
         <div className="mt-3.5 rounded-xl border border-[var(--vairo)]/20 bg-[var(--vairo)]/6 px-3.5 py-3">
           <p className="flex items-center gap-1.5 text-[12px] font-semibold text-[var(--vairo)]">
             <UserPlus className="size-3.5" />
-            Szukają {openRoles.length === 1 ? "osoby" : "osób"} na:
+            {t("card.seekingFor", { count: openRoles.length })}
           </p>
           <ul className="mt-1.5 flex flex-col gap-1">
             {openRoles.slice(0, 3).map((role) => (
@@ -93,31 +96,31 @@ export function TeamCard({
                 {role.weekly_hours ? (
                   <span className="text-[var(--text-subtle)]">
                     {" "}
-                    · {role.weekly_hours} h/tydz.
+                    · {t("card.hoursShort", { hours: role.weekly_hours })}
                   </span>
                 ) : null}
               </li>
             ))}
             {openRoles.length > 3 ? (
               <li className="text-[12px] text-[var(--text-subtle)]">
-                i {openRoles.length - 3} więcej
+                {t("card.andMore", { count: openRoles.length - 3 })}
               </li>
             ) : null}
           </ul>
         </div>
       ) : (
         <div className="mt-3.5">
-          <Badge>Nie szuka teraz nikogo</Badge>
+          <Badge>{t("card.notHiring")}</Badge>
         </div>
       )}
 
       {categories.length > 0 || (team.tags ?? []).length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {categories.map((category) => (
-            <Pill key={category}>{CATEGORY_LABELS[category] ?? category}</Pill>
+            <Pill key={category}>{tl.maybe(`category.${category}`, category)}</Pill>
           ))}
           {(team.tags ?? []).slice(0, 3).map((tag) => (
-            <Pill key={tag.id}>{tag.label}</Pill>
+            <Pill key={tag.id}>{industryLabel(tl, tag)}</Pill>
           ))}
         </div>
       ) : null}
@@ -127,7 +130,7 @@ export function TeamCard({
           href={`/app/social/teams/${team.id}`}
           className="inline-flex h-9 items-center rounded-lg border border-white/10 px-3.5 text-[13px] font-medium text-[var(--text-muted)] transition-colors hover:border-white/22 hover:text-white"
         >
-          Zobacz zespół
+          {t("card.viewTeam")}
         </Link>
         {action}
       </div>

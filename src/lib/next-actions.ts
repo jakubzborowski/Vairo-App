@@ -5,6 +5,11 @@ import { scoreProfile } from "@/lib/profile-completeness";
 import { canEditStageData, canManageTeam } from "@/types/startup";
 import type { StartupContext } from "@/types/startup";
 import type { StageTree } from "@/types/stage";
+import { getLocale, getT } from "@/i18n/server";
+import type { Locale } from "@/i18n/config";
+import { formatDate } from "@/i18n/format";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
 
 /**
  * „Co teraz" na dashboardzie.
@@ -31,13 +36,15 @@ export type NextAction = {
   meta?: string;
 };
 
-const DAY = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "short" });
-function dueMeta(dueDate: string | null | undefined) {
-  if (!dueDate) return "Ty · bez terminu";
+type T = Translate<MessageKey<"dashboard">>;
+
+function dueMeta(t: T, locale: Locale, dueDate: string | null | undefined) {
+  if (!dueDate) return t("next.dueNone");
   const date = new Date(`${dueDate}T00:00:00`);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  return date < today ? `Ty · termin minął ${DAY.format(date)}` : `Ty · do ${DAY.format(date)}`;
+  const day = formatDate(locale, date, { day: "numeric", month: "short" });
+  return date < today ? t("next.dueOverdue", { date: day }) : t("next.dueBy", { date: day });
 }
 
 export type Blocker = { title: string; why: string; href?: string } | null;
@@ -55,6 +62,9 @@ export async function loadNextActions(
   }
 ): Promise<{ actions: NextAction[]; blocker: Blocker; tree: StageTree | null }> {
   const { userId, active, current } = params;
+  const t = await getT("dashboard");
+  const ts = await getT("social");
+  const locale = await getLocale();
   const canEdit = canEditStageData(active.role);
   const canManage = canManageTeam(active.role);
 
@@ -115,13 +125,10 @@ export async function loadNextActions(
   if ((pendingInvites ?? 0) > 0) {
     actions.push({
       key: "invites",
-      title:
-        pendingInvites === 1
-          ? "Odpowiedz na zaproszenie do zespołu"
-          : `Odpowiedz na ${pendingInvites} zaproszenia do zespołu`,
-      why: "Ktoś czeka na Twoją decyzję.",
+      title: t("next.invites", { count: pendingInvites ?? 0 }),
+      why: t("next.invitesWhy"),
       href: "/app/social/invites",
-      meta: "Ty · ktoś czeka na odpowiedź",
+      meta: t("next.waitingMeta"),
       tone: "brand",
     });
   }
@@ -129,13 +136,10 @@ export async function loadNextActions(
   if ((pendingApplications ?? 0) > 0) {
     actions.push({
       key: "applications",
-      title:
-        pendingApplications === 1
-          ? "Rozpatrz zgłoszenie do zespołu"
-          : `Rozpatrz ${pendingApplications} zgłoszenia do zespołu`,
-      why: "Dopóki nie odpowiesz, te osoby czekają.",
+      title: t("next.applications", { count: pendingApplications ?? 0 }),
+      why: t("next.applicationsWhy"),
       href: "/app/team",
-      meta: "Ty · ktoś czeka na odpowiedź",
+      meta: t("next.waitingMeta"),
       tone: "brand",
     });
   }
@@ -143,13 +147,10 @@ export async function loadNextActions(
   if ((pendingContacts ?? 0) > 0) {
     actions.push({
       key: "contacts",
-      title:
-        pendingContacts === 1
-          ? "Ktoś chce się z Tobą skontaktować"
-          : `${pendingContacts} osoby chcą się z Tobą skontaktować`,
-      why: "Rozmowa otworzy się, gdy przyjmiesz kontakt.",
+      title: t("next.contacts", { count: pendingContacts ?? 0 }),
+      why: t("next.contactsWhy"),
       href: "/app/social/invites",
-      meta: "Ty · ktoś czeka na odpowiedź",
+      meta: t("next.waitingMeta"),
       tone: "brand",
     });
   }
@@ -159,8 +160,8 @@ export async function loadNextActions(
     if (tree.canFinish) {
       actions.push({
         key: "finish-stage",
-        title: `Domknij ${tree.title}`,
-        why: "Wszystkie wymagane podpunkty są uzupełnione.",
+        title: t("next.finishStage", { stage: tree.title }),
+        why: t("next.finishStageWhy"),
         href: "/app/stage",
         tone: "brand",
       });
@@ -168,11 +169,11 @@ export async function loadNextActions(
       for (const item of findNextSubpoints(tree, MAX_STAGE_ACTIONS)) {
         actions.push({
           key: `subpoint-${item.subpoint.id}`,
-          title: `Uzupełnij: ${item.subpoint.title}`,
+          title: t("next.fill", { title: item.subpoint.title }),
           why: item.point.title,
           href: "/app/stage",
           tone: "neutral",
-          meta: "Founder i Admin",
+          meta: t("next.managersMeta"),
         });
       }
     }
@@ -188,17 +189,17 @@ export async function loadNextActions(
     shownGoalIds.add(goal.id);
     const why =
       goal.status === "awaiting_proof"
-        ? "Wynik jest, brakuje dowodu."
+        ? t("next.goalAwaitingProof")
         : goal.status === "blocked"
-          ? "Ten cel jest zablokowany."
-          : "To Twój najbliższy cel.";
+          ? t("next.goalBlocked")
+          : t("next.goalNearest");
     actions.push({
       key: `goal-${goal.id}`,
       title: goal.title,
       why,
       href: `/app/goals/${goal.id}`,
       tone: goal.status === "blocked" ? "warning" : "neutral",
-      meta: dueMeta(goal.dueDate),
+      meta: dueMeta(t, locale, goal.dueDate),
     });
   }
 
@@ -208,10 +209,10 @@ export async function loadNextActions(
     actions.push({
       key: `task-${task.id}`,
       title: task.title,
-      why: "Zadanie przypisane do Ciebie.",
+      why: t("next.taskWhy"),
       href: `/app/tasks?task=${task.id}`,
       tone: "neutral",
-      meta: dueMeta(task.dueDate),
+      meta: dueMeta(t, locale, task.dueDate),
     });
   }
 
@@ -226,7 +227,7 @@ export async function loadNextActions(
     looking_for: (profileRow as { looking_for?: string | null } | null)
       ?.looking_for,
     skillCount: skillCount ?? 0,
-  });
+  }, ts);
 
   if (!completeness.isReady && completeness.topMissing) {
     actions.push({
@@ -244,8 +245,8 @@ export async function loadNextActions(
     if (!canEdit) {
       actions.push({
         key: "read-stage",
-        title: "Przejrzyj, co zespół już ustalił",
-        why: "Masz pełny wgląd w odpowiedzi z etapów.",
+        title: t("next.readStage"),
+        why: t("next.readStageWhy"),
         href: "/app/stage",
         tone: "neutral",
       });
@@ -253,8 +254,8 @@ export async function loadNextActions(
     if (canManage) {
       actions.push({
         key: "find-people",
-        title: "Znajdź kogoś do zespołu",
-        why: "Dodanie otwartej roli sprawia, że zespół pojawia się wśród rekrutujących.",
+        title: t("next.findPeople"),
+        why: t("next.findPeopleWhy"),
         href: "/app/social/people",
         tone: "neutral",
       });
@@ -263,7 +264,7 @@ export async function loadNextActions(
 
   return {
     actions: actions.slice(0, MAX_ACTIONS),
-    blocker: findBlocker({ active, current, tree, canEdit }),
+    blocker: findBlocker({ active, current, tree, canEdit, t }),
     tree,
   };
 }
@@ -281,34 +282,35 @@ function findBlocker(params: {
   current: StageProgramEntry | null;
   tree: StageTree | null;
   canEdit: boolean;
+  t: T;
 }): Blocker {
-  const { active, current, tree, canEdit } = params;
+  const { active, current, tree, canEdit, t } = params;
 
   if (active.status === "paused") {
     return {
-      title: "Startup jest wstrzymany",
-      why: "Kolejny etap się nie otworzy, dopóki nie wznowisz prac w ustawieniach zespołu.",
+      title: t("blocker.paused"),
+      why: t("blocker.pausedWhy"),
     };
   }
 
   if (active.status === "archived") {
     return {
-      title: "Startup jest w archiwum",
-      why: "Dane zostają dostępne do odczytu. Przywrócić go może Founder w ustawieniach zespołu.",
+      title: t("blocker.archived"),
+      why: t("blocker.archivedWhy"),
     };
   }
 
   if (current && !current.hasContent) {
     return {
-      title: `${current.title} jest w przygotowaniu`,
-      why: "Etap jest już w programie, ale nie ma jeszcze wgranych pytań.",
+      title: t("blocker.preparing", { stage: current.title }),
+      why: t("blocker.preparingWhy"),
     };
   }
 
   if (!canEdit && tree && tree.status !== "completed") {
     return {
-      title: "Czekasz na Foundera albo Admina",
-      why: "Jako Członek czytasz wszystko, ale odpowiedzi w etapach uzupełniają osoby z wyższą rolą.",
+      title: t("blocker.waitingManagers"),
+      why: t("blocker.waitingManagersWhy"),
     };
   }
 

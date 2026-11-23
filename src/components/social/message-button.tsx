@@ -9,6 +9,7 @@ import { Field, Textarea } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 export type ContactContext = { id: string; name: string };
 
@@ -34,11 +35,8 @@ type Props = {
   trigger?: (open: () => void) => React.ReactNode;
 };
 
-const STARTERS = [
-  "Szukamy kogoś do… ",
-  "Na Twoim profilu jest, że pracujesz nad… ",
-  "Masz chwilę na krótką rozmowę o… ",
-];
+// Gotowe początki wiadomości: słownik `social`, `message.starters.0…2`.
+const STARTER_KEYS = ["message.starters.0", "message.starters.1", "message.starters.2"] as const;
 
 /**
  * „Napisz" — pierwszy krok kontaktu w Social.
@@ -64,6 +62,8 @@ export function MessageButton({
   existingConversationId,
   blockedReason,
 }: Props) {
+  const t = useT("social");
+  const tc = useT("common");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [contextId, setContextId] = useState<string | null>(null);
@@ -88,7 +88,7 @@ export function MessageButton({
         className={className}
       >
         <MessageSquare className="size-4" />
-        Otwórz rozmowę
+        {t("deck.openChat")}
       </Button>
     );
   }
@@ -109,8 +109,8 @@ export function MessageButton({
       setMessage("");
       onDone?.();
       toast({
-        title: "Wiadomość wysłana",
-        description: `${recipientName} zobaczy ją w Zaproszeniach. Rozmowa otworzy się po przyjęciu.`,
+        title: t("message.sentTitle"),
+        description: t("message.sentBody", { name: recipientName }),
       });
       if (result.conversationId) {
         router.push(`/app/social/messages/${result.conversationId}`);
@@ -131,19 +131,19 @@ export function MessageButton({
           onClick={() => setOpen(true)}
         >
           <MessageSquare className="size-4" />
-          Napisz
+          {t("deck.write")}
         </Button>
       )}
 
       {open ? (
         <Modal
-          title={`Napisz do ${recipientName}`}
-          description="Wiadomość trafi jako zaczepka. Rozmowa otworzy się, gdy druga strona ją przyjmie."
+          title={t("message.title", { name: recipientName })}
+          description={t("message.description")}
           onClose={() => setOpen(false)}
           footer={
             <>
               <Button variant="ghost" onClick={() => setOpen(false)} disabled={sending}>
-                Anuluj
+                {tc("actions.cancel")}
               </Button>
               {/* Zaczepka bez treści nie ma sensu — to jedyna rzecz, którą
                   odbiorca dostaje do decyzji. Przycisk jest więc wyłączony,
@@ -151,7 +151,7 @@ export function MessageButton({
                   czyta się jak awaria. */}
               {message.trim().length === 0 ? (
                 <span className="text-[12.5px] text-[var(--text-subtle)]">
-                  Napisz wiadomość, żeby wysłać
+                  {t("message.writeToSend")}
                 </span>
               ) : null}
               <Button
@@ -160,11 +160,11 @@ export function MessageButton({
                 disabled={message.trim().length === 0}
                 title={
                   message.trim().length === 0
-                    ? "Wpisz wiadomość — bez niej druga strona nie ma na czym oprzeć decyzji"
+                    ? t("message.writeToSendTitle")
                     : undefined
                 }
               >
-                Wyślij
+                {t("message.send")}
               </Button>
             </>
           }
@@ -172,22 +172,22 @@ export function MessageButton({
           {contexts.length > 0 ? (
             <div>
               <p className="mb-2 text-[13px] font-medium text-[var(--text-muted)]">
-                Piszesz jako
+                {t("message.writingAs")}
               </p>
               <div className="flex flex-col gap-1.5">
                 <ContextChoice
                   selected={contextId === null}
                   onSelect={() => setContextId(null)}
-                  title="Ja, prywatnie"
-                  description="Zwykła wiadomość od osoby do osoby."
+                  title={t("message.asMe")}
+                  description={t("message.asMeHint")}
                 />
                 {contexts.map((context) => (
                   <ContextChoice
                     key={context.id}
                     selected={contextId === context.id}
                     onSelect={() => setContextId(context.id)}
-                    title={`W imieniu ${context.name}`}
-                    description="Odbiorca zobaczy, że piszesz z tego zespołu, i jego publiczną kartę."
+                    title={t("message.asTeam", { team: context.name })}
+                    description={t("message.asTeamHint")}
                   />
                 ))}
               </div>
@@ -195,8 +195,8 @@ export function MessageButton({
           ) : null}
 
           <Field
-            label="Wiadomość"
-            hint="Napisz, dlaczego się odzywasz. Jedno konkretne zdanie działa lepiej niż „cześć”."
+            label={t("invite.message")}
+            hint={t("message.hint")}
             counter={{ value: message.length, max: 600 }}
           >
             {({ id }) => (
@@ -206,7 +206,7 @@ export function MessageButton({
                 onChange={(event) => setMessage(event.target.value)}
                 rows={5}
                 maxLength={600}
-                placeholder="Np. Widzę, że robisz hardware — składam prototyp czujnika i szukam kogoś do elektroniki."
+                placeholder={t("message.placeholder")}
                 autoFocus
               />
             )}
@@ -216,7 +216,7 @@ export function MessageButton({
               wstawia początek, resztę dopisuje się samemu. */}
           {message.trim().length === 0 ? (
             <div className="flex flex-wrap gap-1.5">
-              {STARTERS.map((starter) => (
+              {STARTER_KEYS.map((key) => t(key)).map((starter) => (
                 <button
                   key={starter}
                   type="button"

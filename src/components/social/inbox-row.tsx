@@ -23,6 +23,13 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import type { ContactSignal, JoinRequest } from "@/types/social";
 import { TeamLogo } from "./team-logo";
+import { useLocale, useT } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
+import { formatDate } from "@/i18n/format";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translate } from "@/i18n/translator";
+
+type T = Translate<MessageKey<"social">>;
 
 /**
  * Jeden wiersz skrzynki — zaczepka albo sprawa członkostwa, ten sam kształt.
@@ -53,6 +60,8 @@ type Props =
 type AcceptVariant = "primary" | "secondary";
 
 export function InboxRow(props: Props) {
+  const t = useT("social");
+  const locale = useLocale();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -80,7 +89,7 @@ export function InboxRow(props: Props) {
     });
   };
 
-  const view = props.kind === "signal" ? describeSignal(props) : describeRequest(props);
+  const view = props.kind === "signal" ? describeSignal(props, t) : describeRequest(props, t);
 
   return (
     <li className="px-4 py-3 transition-colors hover:bg-white/[0.02]">
@@ -95,7 +104,7 @@ export function InboxRow(props: Props) {
           {view.avatar}
           <span
             className="absolute -bottom-1 -right-1 inline-flex size-5 items-center justify-center rounded-full border-2 border-[var(--surface)] bg-[var(--surface-3)] text-white"
-            aria-label={props.kind === "signal" ? "Kontakt od osoby" : "Sprawa zespołu"}
+            aria-label={props.kind === "signal" ? t("inbox.fromPerson") : t("inbox.teamMatter")}
           >
             {props.kind === "signal" ? <UserRound className="size-2.5" /> : <Users className="size-2.5" />}
           </span>
@@ -139,7 +148,7 @@ export function InboxRow(props: Props) {
         <div className="flex shrink-0 items-center gap-1.5">
           {view.actions(run, busy, props.quiet ? "secondary" : "primary")}
           <span className="tabular hidden w-16 text-right text-[11.5px] text-[var(--text-subtle)] sm:block">
-            {formatAge(view.createdAt)}
+            {formatAge(view.createdAt, t, locale)}
           </span>
         </div>
       </div>
@@ -177,7 +186,7 @@ function describeSignal({
 }: {
   signal: ContactSignal;
   conversationId?: string | null;
-}): RowView {
+}, t: T): RowView {
   return {
     stateIcon:
       signal.status === "pending"
@@ -187,23 +196,23 @@ function describeSignal({
           : ICON.closed,
     stateLabel:
       signal.status === "pending"
-        ? "Czeka na odpowiedź"
+        ? t("inbox.stateWaiting")
         : signal.status === "accepted"
-          ? "Przyjęte"
-          : "Zamknięte",
+          ? t("inbox.stateAccepted")
+          : t("inbox.stateClosed"),
     avatar: (
       <Avatar src={signal.otherAvatarUrl} name={signal.otherName} size="sm" />
     ),
     href: `/app/social/people/${signal.otherId}`,
-    title: signal.otherName ?? "Ktoś",
+    title: signal.otherName ?? t("inbox.someone"),
     summary: signal.contextStartupName
-      ? `pisze w imieniu ${signal.contextStartupName}`
+      ? t("inbox.writesForTeam", { team: signal.contextStartupName })
       : signal.canRespond
-        ? "chce się odezwać"
-        : "— zaczepka wysłana",
+        ? t("inbox.wantsToTalk")
+        : t("inbox.signalSent"),
     message: signal.message,
     note: signal.contextStartupName
-      ? `Kontakt w imieniu zespołu ${signal.contextStartupName}. Odpowiadasz zespołowi, nie osobie prywatnie.`
+      ? t("inbox.teamContactNote", { team: signal.contextStartupName })
       : null,
     createdAt: signal.createdAt,
     actions: (run, busy, accept) => (
@@ -214,20 +223,20 @@ function describeSignal({
               size="sm"
               variant={accept}
               loading={busy}
-              onClick={() => run(() => respondToContact(signal.id, "accept"), "Kontakt przyjęty — rozmowa otwarta")}
+              onClick={() => run(() => respondToContact(signal.id, "accept"), t("inbox.toastAccepted"))}
             >
               <Check className="size-4" />
-              <span className="hidden sm:inline">Przyjmij</span>
+              <span className="hidden sm:inline">{t("inbox.accept")}</span>
             </Button>
             <Button
               size="icon-sm"
               variant="ghost"
               disabled={busy}
-              title="Nie teraz"
-              onClick={() => run(() => respondToContact(signal.id, "decline"), "Odrzucone")}
+              title={t("deck.notNow")}
+              onClick={() => run(() => respondToContact(signal.id, "decline"), t("inbox.toastDeclined"))}
             >
               <X className="size-4" />
-              <span className="sr-only">Nie teraz</span>
+              <span className="sr-only">{t("deck.notNow")}</span>
             </Button>
           </>
         ) : null}
@@ -237,16 +246,16 @@ function describeSignal({
             size="sm"
             variant="ghost"
             loading={busy}
-            onClick={() => run(() => respondToContact(signal.id, "withdraw"), "Zaczepka wycofana")}
+            onClick={() => run(() => respondToContact(signal.id, "withdraw"), t("inbox.toastSignalWithdrawn"))}
           >
-            Wycofaj
+            {t("inbox.withdraw")}
           </Button>
         ) : null}
 
         {signal.status === "accepted" && conversationId ? (
           <Button size="sm" variant="secondary" href={`/app/social/messages/${conversationId}`}>
             <MessageSquare className="size-4" />
-            <span className="hidden sm:inline">Rozmowa</span>
+            <span className="hidden sm:inline">{t("inbox.conversation")}</span>
           </Button>
         ) : null}
       </>
@@ -254,7 +263,7 @@ function describeSignal({
   };
 }
 
-function describeRequest({ request }: { request: JoinRequest }): RowView {
+function describeRequest({ request }: { request: JoinRequest }, t: T): RowView {
   const isApplication = request.direction === "application";
 
   return {
@@ -266,10 +275,10 @@ function describeRequest({ request }: { request: JoinRequest }): RowView {
           : ICON.closed,
     stateLabel:
       request.status === "pending"
-        ? "Czeka na odpowiedź"
+        ? t("inbox.stateWaiting")
         : request.status === "accepted"
-          ? "Przyjęte"
-          : "Zamknięte",
+          ? t("inbox.stateAccepted")
+          : t("inbox.stateClosed"),
     avatar: isApplication ? (
       <Avatar src={request.profileAvatarUrl} name={request.profileName} size="sm" />
     ) : (
@@ -278,15 +287,15 @@ function describeRequest({ request }: { request: JoinRequest }): RowView {
     href: isApplication
       ? `/app/social/people/${request.profileId}`
       : `/app/social/teams/${request.startupId}`,
-    title: isApplication ? (request.profileName ?? "Ktoś") : request.startupName,
+    title: isApplication ? (request.profileName ?? t("inbox.someone")) : request.startupName,
     summary: isApplication
-      ? `chce dołączyć do ${request.startupName}${request.openRoleTitle ? ` · ${request.openRoleTitle}` : ""}`
-      : "zaprasza Cię do zespołu",
+      ? `${t("inbox.wantsToJoin", { team: request.startupName })}${request.openRoleTitle ? ` · ${request.openRoleTitle}` : ""}`
+      : t("inbox.invitesYou"),
     message: request.message,
     // Po dołączeniu każdy jest Członkiem — i tak to nazywamy, zamiast
     // obiecywać rolę, której przyjęcie zaproszenia i tak nie nadaje.
     note: !isApplication
-      ? "Dołączasz jako Członek: czytasz wszystko, co zespół uzupełnił. Wyższe uprawnienia nadaje później Founder albo Admin."
+      ? t("inbox.joinAsMember")
       : null,
     createdAt: request.createdAt,
     actions: (run, busy, accept) => (
@@ -299,23 +308,23 @@ function describeRequest({ request }: { request: JoinRequest }): RowView {
               loading={busy}
               onClick={() => run(
                   () => respondToJoinRequest(request.id, "accept", request.direction),
-                  isApplication ? "Dodane do zespołu jako Członek" : "Dołączasz do zespołu"
+                  isApplication ? t("inbox.toastAddedMember") : t("inbox.toastJoining")
                 )}
             >
               <UserPlus className="size-4" />
               <span className="hidden sm:inline">
-                {isApplication ? "Przyjmij" : "Dołącz"}
+                {isApplication ? t("inbox.accept") : t("inbox.join")}
               </span>
             </Button>
             <Button
               size="icon-sm"
               variant="ghost"
               disabled={busy}
-              title="Odrzuć"
-              onClick={() => run(() => respondToJoinRequest(request.id, "decline"), "Odrzucone")}
+              title={t("inbox.decline")}
+              onClick={() => run(() => respondToJoinRequest(request.id, "decline"), t("inbox.toastDeclined"))}
             >
               <X className="size-4" />
-              <span className="sr-only">Odrzuć</span>
+              <span className="sr-only">{t("inbox.decline")}</span>
             </Button>
           </>
         ) : null}
@@ -325,16 +334,16 @@ function describeRequest({ request }: { request: JoinRequest }): RowView {
             size="sm"
             variant="ghost"
             loading={busy}
-            onClick={() => run(() => respondToJoinRequest(request.id, "withdraw"), "Wycofane")}
+            onClick={() => run(() => respondToJoinRequest(request.id, "withdraw"), t("inbox.toastWithdrawn"))}
           >
-            Wycofaj
+            {t("inbox.withdraw")}
           </Button>
         ) : null}
 
         {request.status === "accepted" && !isApplication ? (
           <Button size="sm" variant="ghost" href="/app/team">
             <ArrowRight className="size-4" />
-            <span className="hidden sm:inline">Zespół</span>
+            <span className="hidden sm:inline">{t("inbox.team")}</span>
           </Button>
         ) : null}
       </>
@@ -343,20 +352,20 @@ function describeRequest({ request }: { request: JoinRequest }): RowView {
 }
 
 /** Wiek sprawy, nie data — w skrzynce liczy się „jak długo ktoś czeka". */
-function formatAge(iso: string) {
+function formatAge(iso: string, t: T, locale: Locale) {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return "";
 
   const minutes = Math.floor((Date.now() - then) / 60000);
-  if (minutes < 1) return "teraz";
-  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 1) return t("age.now");
+  if (minutes < 60) return t("age.minutes", { count: minutes });
 
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} godz.`;
+  if (hours < 24) return t("age.hours", { count: hours });
 
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days} dni`;
-  return new Date(iso).toLocaleDateString("pl-PL", {
+  if (days < 30) return t("age.days", { count: days });
+  return formatDate(locale, iso, {
     day: "numeric",
     month: "short",
   });

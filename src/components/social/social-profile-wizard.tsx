@@ -17,6 +17,7 @@ import {
 import { AVATAR_MAX_MB } from "@/types/profile";
 import { PersonCover } from "./person-cover";
 import { SkillPicker, type SkillOption } from "./skill-picker";
+import { useT } from "@/i18n/client";
 
 type Props = {
   profileId: string;
@@ -47,6 +48,9 @@ type Props = {
  * pokazuje dokładnie tę kartę, którą zobaczą inni.
  */
 export function SocialProfileWizard({ profileId, initial, skills }: Props) {
+  const t = useT("social");
+  const ts = useT("settings");
+  const tc = useT("common");
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -124,9 +128,9 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
   const steps: WizardStep[] = [
     {
       key: "photo",
-      title: "Zacznijmy od zdjęcia",
+      title: t("wizard.photoTitle"),
       description:
-        "To pierwsza rzecz, którą widzą inni. Nie musi być profesjonalne — ma pokazywać, że jesteś prawdziwą osobą.",
+        t("wizard.photoDescription"),
       // Zdjęcie jest opcjonalne technicznie i nie blokujemy przejścia dalej —
       // blokada wypchnęłaby z aplikacji akurat tych, którzy jej najbardziej
       // potrzebują. Konsekwencję braku widać zresztą na podglądzie karty obok:
@@ -158,10 +162,10 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
               onClick={() => fileRef.current?.click()}
             >
               <ImagePlus className="size-4" />
-              {avatarUrl ? "Zmień zdjęcie" : "Wybierz zdjęcie"}
+              {avatarUrl ? t("wizard.changePhoto") : t("wizard.pickPhoto")}
             </Button>
             <p className="mt-2 text-[12.5px] text-[var(--text-subtle)]">
-              JPG, PNG albo WebP, do {AVATAR_MAX_MB} MB.
+              {ts("profile.photoFormats", { mb: AVATAR_MAX_MB })}
             </p>
           </div>
         </div>
@@ -169,14 +173,14 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
     },
     {
       key: "name",
-      title: "Jak mają Cię widzieć inni?",
+      title: t("wizard.nameTitle"),
       description:
-        "Ta nazwa stoi na Twojej karcie w Odkrywaj, w zaczepkach i rozmowach. Może to być imię i nazwisko albo pseudonim.",
+        t("wizard.nameDescription"),
       // Wcześniej ten krok pytał o imię drugi raz i nadpisywał to z rejestracji.
       // Mówimy wprost, że konto zostaje nietknięte — inaczej ktoś, kto wpisze
       // tu pseudonim, nie wie, jak będzie podpisany w swoim teamie.
       help: initial.fullName
-        ? `Imię i nazwisko z konta (${initial.fullName}) zostaje bez zmian — widzi je Twój zespół.`
+        ? t("wizard.nameHelp", { name: initial.fullName })
         : undefined,
       canContinue: publicName.trim().length >= 2,
       render: () => (
@@ -187,7 +191,7 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
               value={publicName}
               onChange={(event) => setPublicName(event.target.value)}
               maxLength={80}
-              placeholder="np. Anna Kowalska albo annak"
+              placeholder={t("wizard.namePlaceholder")}
               autoFocus
             />
           )}
@@ -196,10 +200,10 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
     },
     {
       key: "headline",
-      title: "Czym się zajmujesz?",
+      title: t("wizard.headlineTitle"),
       description:
-        "Jedno zdanie pod imieniem. Bez niego karta nie mówi o Tobie nic.",
-      help: "Nie musisz mieć tytułu z firmy. „Uczę się programować, robię proste strony” też jest odpowiedzią.",
+        t("wizard.headlineDescription"),
+      help: t("wizard.headlineHelp"),
       canContinue: headline.trim().length > 0,
       render: () => (
         <Field counter={{ value: headline.length, max: 120 }}>
@@ -209,7 +213,7 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
               value={headline}
               onChange={(event) => setHeadline(event.target.value)}
               maxLength={120}
-              placeholder="np. Full-stack developer, wcześniej w fintechu"
+              placeholder={t("wizard.headlinePlaceholder")}
               autoFocus
             />
           )}
@@ -218,8 +222,8 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
     },
     {
       key: "looking",
-      title: "Czego teraz szukasz?",
-      description: "Po tym filtrują osoby, które budują zespoły.",
+      title: t("prefs.lookingFor"),
+      description: t("wizard.lookingDescription"),
       canContinue: lookingFor !== null,
       render: () => (
         <div className="flex flex-col gap-2">
@@ -251,10 +255,10 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[15px] font-medium text-white">
-                    {option.label}
+                    {t(`lookingForOption.${option.value}.label`)}
                   </span>
                   <span className="mt-0.5 block text-[13px] leading-relaxed text-[var(--text-muted)]">
-                    {option.description}
+                    {t(`lookingForOption.${option.value}.description`)}
                   </span>
                 </span>
               </button>
@@ -265,11 +269,11 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
     },
     {
       key: "skills",
-      title: "Co potrafisz?",
+      title: t("wizard.skillsTitle"),
       description:
-        "Wybierz co najmniej trzy rzeczy. Zespoły szukają po umiejętnościach, nie po nazwiskach.",
+        t("wizard.skillsDescription"),
       optional: true,
-      help: "Nie znajdujesz swojej? Wpisz ją i naciśnij Enter — dodamy ją do listy.",
+      help: t("wizard.skillsHelp"),
       render: () => (
         <SkillPicker
           skills={catalogue}
@@ -281,13 +285,13 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
     },
     {
       key: "availability",
-      title: "Ile realnie masz czasu?",
+      title: t("wizard.timeTitle"),
       description:
-        "To najczęstsze źródło rozczarowań w zespołach. Lepiej powiedzieć wprost teraz niż tłumaczyć się za miesiąc.",
+        t("wizard.timeDescription"),
       optional: true,
       render: () => (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Godzin tygodniowo">
+          <Field label={t("wizard.hours")}>
             {({ id }) => (
               <Input
                 id={id}
@@ -296,18 +300,18 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
                 max={80}
                 value={hours}
                 onChange={(event) => setHours(event.target.value)}
-                placeholder="np. 10"
+                placeholder={t("prefs.hoursPlaceholder")}
               />
             )}
           </Field>
-          <Field label="Skąd jesteś" hint="Miasto albo „zdalnie”.">
+          <Field label={t("prefs.location")} hint={t("wizard.locationHint")}>
             {({ id }) => (
               <Input
                 id={id}
                 value={location}
                 onChange={(event) => setLocation(event.target.value)}
                 maxLength={80}
-                placeholder="np. Kraków"
+                placeholder={t("prefs.locationPlaceholder")}
               />
             )}
           </Field>
@@ -316,9 +320,9 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
     },
     {
       key: "focus",
-      title: "Nad czym teraz pracujesz?",
+      title: t("wizard.focusTitle"),
       description:
-        "Kilka zdań o tym, co robisz albo czego szukasz. To jedyne miejsce, w którym możesz brzmieć jak człowiek, a nie jak CV.",
+        t("wizard.focusDescription"),
       optional: true,
       render: () => (
         <Field counter={{ value: weeklyFocus.length, max: 2000 }}>
@@ -329,7 +333,7 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
               onChange={(event) => setWeeklyFocus(event.target.value)}
               rows={6}
               maxLength={2000}
-              placeholder="Np. Szukam projektu, w którym wezmę odpowiedzialność za cały frontend. Ostatnie dwa lata to panele analityczne i integracje płatności."
+              placeholder={t("wizard.focusPlaceholder")}
             />
           )}
         </Field>
@@ -337,9 +341,9 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
     },
     {
       key: "preview",
-      title: "Tak zobaczą Cię inni",
+      title: t("wizard.previewTitle"),
       description:
-        "Dokładnie ta karta pojawia się w Odkrywaj. Możesz jeszcze cofnąć się i coś poprawić.",
+        t("wizard.previewDescription"),
       render: () => (
         <div className="flex flex-col items-center gap-5">
           <div className="w-full max-w-[300px]">
@@ -365,13 +369,13 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
             <span className="min-w-0 flex-1">
               <span className="block text-[14px] font-medium text-white">
                 {discoverable
-                  ? "Chcę być widoczny w Odkrywaj"
-                  : "Na razie zostaję ukryty"}
+                  ? t("wizard.visible")
+                  : t("wizard.hidden")}
               </span>
               <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
                 {discoverable
-                  ? "Inni mogą Cię znaleźć, napisać i zaprosić do zespołu. Twój e-mail zobaczą dopiero osoby z tego samego zespołu."
-                  : "Nie pojawisz się w wyszukiwarce. Nadal możesz samodzielnie pisać i zgłaszać się do projektów."}
+                  ? t("wizard.visibleBody")
+                  : t("wizard.hiddenBody")}
               </span>
             </span>
           </button>
@@ -383,12 +387,12 @@ export function SocialProfileWizard({ profileId, initial, skills }: Props) {
   return (
     <StepWizard
       steps={steps}
-      finishLabel="Gotowe, pokaż mi ludzi"
+      finishLabel={t("wizard.finish")}
       onFinish={finish}
       finishing={saving}
       error={error}
       onExit={() => router.push("/app")}
-      exitLabel="Wróć na start"
+      exitLabel={tc("notFound.backToStart")}
     />
   );
 }
