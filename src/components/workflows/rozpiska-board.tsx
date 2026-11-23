@@ -6,6 +6,7 @@ import { Menu, MenuItem } from "@/components/ui/menu";
 import { cn } from "@/lib/utils";
 import type { RozpiskaEdge, RozpiskaNode } from "@/app/app/workflows/actions";
 
+import { useT } from "@/i18n/client";
 const NODE_W = 140;
 const NODE_H = 40;
 
@@ -39,6 +40,7 @@ export function RozpiskaBoard({
   onRemoveEdge: (edgeId: string) => void;
   onRemoveNode: (nodeId: string) => void;
 }) {
+  const t = useT("workflows");
   const boardRef = useRef<HTMLDivElement>(null);
   const positions = useRef(new Map<string, { x: number; y: number }>());
   const sizes = useRef(new Map<string, { w: number; h: number }>());
@@ -273,7 +275,7 @@ export function RozpiskaBoard({
               strokeWidth="14"
               style={{ pointerEvents: "stroke" }}
             >
-              <title>Usuń strzałkę</title>
+              <title>{t("rozpiskaBoard.usunStrzalke")}</title>
             </line>
             <line
               ref={(element) => {
@@ -318,7 +320,7 @@ export function RozpiskaBoard({
           <input
             className="pointer-events-none w-full bg-transparent text-[13px] text-white outline-none focus:pointer-events-auto"
             value={node.label}
-            aria-label="Nazwa bloczka"
+            aria-label={t("rozpiskaBoard.nazwaBloczka")}
             onChange={(event) => onRename(node.id, event.target.value)}
           />
           {/* Usuwanie jest w menu bloczka, nie jako „×" po lewej — krzyżyk tuż
@@ -329,7 +331,7 @@ export function RozpiskaBoard({
             onPointerDown={(event) => event.stopPropagation()}
           >
             <Menu
-              label={`Akcje bloczka ${node.label || ""}`.trim()}
+              label={t("rozpiskaBoard.blockActions", { label: node.label || "" }).trim()}
               align="left"
               triggerClassName="size-5 justify-center rounded-md text-[var(--text-subtle)] hover:bg-white/[0.08] hover:text-white"
               trigger={<MoreHorizontal className="size-3.5" />}
@@ -343,7 +345,7 @@ export function RozpiskaBoard({
                     onRemoveNode(node.id);
                   }}
                 >
-                  Usuń bloczek
+                  {t("rozpiskaBoard.usunBloczek")}
                 </MenuItem>
               )}
             </Menu>
@@ -351,7 +353,7 @@ export function RozpiskaBoard({
           <button
             type="button"
             data-connect
-            aria-label="Pociągnij strzałkę do innego bloczka"
+            aria-label={t("rozpiskaBoard.pociagnijStrzalkeDoInnego")}
             className="absolute top-1/2 right-0 flex size-6 -translate-y-1/2 cursor-crosshair items-center justify-center"
             onPointerDown={(event) => startConnect(event, node)}
           >

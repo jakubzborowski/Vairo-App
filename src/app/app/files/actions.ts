@@ -7,18 +7,19 @@ import { translateDbError } from "@/lib/db-errors";
 import { getStartupRole } from "@/lib/permissions";
 import { notAMember, sessionExpired } from "@/lib/server-errors";
 
+import { getT } from "@/i18n/server";
 type Result = { error: string | null; id?: string };
 
-const NEEDS_030 = "Foldery i zmiana nazwy potrzebują migracji 030. Odpal ją w Supabase → SQL Editor.";
 
 async function context(startupId: string) {
+  const t = await getT("files");
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false as const, error: await sessionExpired() };
   const active = await getActiveStartupId();
-  if (active && active !== startupId) return { ok: false as const, error: "Przełącz zespół i spróbuj ponownie." };
+  if (active && active !== startupId) return { ok: false as const, error: t("actions.przelaczZespolISprobuj") };
   const role = await getStartupRole(supabase, startupId, user.id);
   if (!role) return { ok: false as const, error: await notAMember() };
   return { ok: true as const, supabase, user, role };
@@ -26,7 +27,7 @@ async function context(startupId: string) {
 
 async function explain(message: string | undefined) {
   if (message && (message.includes("startup_file_folders") || message.includes("folder_id"))) {
-    return NEEDS_030;
+    return (await getT("files"))("actions.needs030");
   }
   return await translateDbError(message);
 }
@@ -40,10 +41,11 @@ export async function createFolder(input: {
   name: string;
   parentId?: string | null;
 }): Promise<Result> {
+  const t = await getT("files");
   const ctx = await context(input.startupId);
   if (!ctx.ok) return { error: ctx.error };
   const name = cleanName(input.name);
-  if (!name) return { error: "Nazwij folder." };
+  if (!name) return { error: t("actions.nazwijFolder") };
 
   const { data, error } = await ctx.supabase
     .from("startup_file_folders")
@@ -61,10 +63,11 @@ export async function createFolder(input: {
 }
 
 export async function renameFolder(startupId: string, folderId: string, name: string): Promise<Result> {
+  const t = await getT("files");
   const ctx = await context(startupId);
   if (!ctx.ok) return { error: ctx.error };
   const clean = cleanName(name);
-  if (!clean) return { error: "Nazwa nie może być pusta." };
+  if (!clean) return { error: t("actions.nazwaNieMozeByc") };
   const { data, error } = await ctx.supabase
     .from("startup_file_folders")
     .update({ name: clean })
@@ -72,13 +75,14 @@ export async function renameFolder(startupId: string, folderId: string, name: st
     .eq("startup_id", startupId)
     .select("id");
   if (error) return { error: await explain(error.message) };
-  if (!data || data.length === 0) return { error: "Ten folder zmienia osoba, która go założyła, albo Founder lub Admin." };
+  if (!data || data.length === 0) return { error: t("actions.tenFolderZmieniaOsoba") };
   revalidatePath("/app/files");
   return { error: null };
 }
 
 /** Usunięcie folderu nie kasuje plików — wracają do „Od zespołu" (030). */
 export async function deleteFolder(startupId: string, folderId: string): Promise<Result> {
+  const t = await getT("files");
   const ctx = await context(startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { data, error } = await ctx.supabase
@@ -88,16 +92,17 @@ export async function deleteFolder(startupId: string, folderId: string): Promise
     .eq("startup_id", startupId)
     .select("id");
   if (error) return { error: await explain(error.message) };
-  if (!data || data.length === 0) return { error: "Ten folder zmienia osoba, która go założyła, albo Founder lub Admin." };
+  if (!data || data.length === 0) return { error: t("actions.tenFolderZmieniaOsoba") };
   revalidatePath("/app/files");
   return { error: null };
 }
 
 export async function renameFile(startupId: string, fileId: string, name: string): Promise<Result> {
+  const t = await getT("files");
   const ctx = await context(startupId);
   if (!ctx.ok) return { error: ctx.error };
   const clean = name.trim().slice(0, 200);
-  if (!clean) return { error: "Nazwa nie może być pusta." };
+  if (!clean) return { error: t("actions.nazwaNieMozeByc") };
   const { data, error } = await ctx.supabase
     .from("startup_files")
     .update({ name: clean })
@@ -107,13 +112,14 @@ export async function renameFile(startupId: string, fileId: string, name: string
   if (error) return { error: await explain(error.message) };
   // RLS bez prawa do zmiany nie zwraca błędu, tylko zero wierszy.
   if (!data || data.length === 0) {
-    return { error: "Zmienić nazwę cudzego pliku może Founder albo Admin." };
+    return { error: t("actions.zmienicNazweCudzegoPliku") };
   }
   revalidatePath("/app/files");
   return { error: null };
 }
 
 export async function moveFile(startupId: string, fileId: string, folderId: string | null): Promise<Result> {
+  const t = await getT("files");
   const ctx = await context(startupId);
   if (!ctx.ok) return { error: ctx.error };
   const { data, error } = await ctx.supabase
@@ -124,7 +130,7 @@ export async function moveFile(startupId: string, fileId: string, folderId: stri
     .select("id");
   if (error) return { error: await explain(error.message) };
   if (!data || data.length === 0) {
-    return { error: "Przenieść cudzy plik może Founder albo Admin." };
+    return { error: t("actions.przeniescCudzyPlikMoze") };
   }
   revalidatePath("/app/files");
   return { error: null };

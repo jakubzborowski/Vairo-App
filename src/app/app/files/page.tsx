@@ -6,8 +6,12 @@ import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { canManageTeam } from "@/types/startup";
 import { StageReturnBar } from "@/components/stage/stage-return-bar";
 import { FilesDrive } from "@/components/files/files-drive";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Pliki — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("files");
+  return { title: t("meta.title") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function FilesPage({

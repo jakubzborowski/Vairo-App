@@ -6,10 +6,15 @@ import { loadRozpiski } from "@/lib/workflows";
 import { GoalsUnavailable } from "@/components/goals/goals-unavailable";
 import { RozpiskaList } from "@/components/workflows/rozpiska-list";
 
-export const metadata = { title: "Rozpiska — Vairo" };
+import { getT } from "@/i18n/server";
+export async function generateMetadata() {
+  const t = await getT("workflows");
+  return { title: t("meta.list") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function WorkflowsPage() {
+  const t = await getT("workflows");
   const supabase = await createClient();
   const user = await getCurrentUser();
   if (!user) redirect("/register?next=/app/workflows");
@@ -28,7 +33,7 @@ export default async function WorkflowsPage() {
 
   if (list.missing || list.error) {
     return (
-      <GoalsUnavailable missingMigration={list.missing} title="Rozpiska" href="/app/workflows" />
+      <GoalsUnavailable missingMigration={list.missing} title={t("page.rozpiska")} href="/app/workflows" />
     );
   }
 

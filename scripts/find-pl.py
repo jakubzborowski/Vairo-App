@@ -24,6 +24,9 @@ Konto Ustawienia Brak Tak Nie Teraz Gotowe Opis Nazwa Nowy Nowa Nowe Pokaż Otw�
 Godziny Dozwolone Wybierz Wpisz Zmień Plik Pliki Folder Termin Dokument Dokumenty Wersja
 Rozpiska Notatka Kalendarz Pomoc Program Zadanie Cel Zobacz Status Data Tytuł Opcjonalne
 """.split())
+# Krótkie słowa, które są też angielskie albo pojawiają się w kodzie (selektory,
+# skróty) — same nie przesądzają, że tekst jest polski.
+WORDS -= {"a", "i", "in", "no", "go", "to", "by", "we", "on", "do", "mi", "ma"}
 SKIP_DIRS = {"node_modules", ".next", "i18n"}
 LIT = re.compile(r'"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`')
 

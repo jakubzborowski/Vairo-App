@@ -3,8 +3,12 @@ import { loadTeamMembers } from "@/lib/goals";
 import { DocSheet } from "@/components/docs/doc-sheet";
 import { canEditStageData } from "@/types/startup";
 import { loadDocsContext, selectDocuments } from "../load";
+import { getT } from "@/i18n/server";
 
-export const metadata = { title: "Dokument — Vairo" };
+export async function generateMetadata() {
+  const t = await getT("docs");
+  return { title: t("meta.doc") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function DocPage({ params }: { params: Promise<{ id: string }> }) {

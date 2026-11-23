@@ -37,7 +37,6 @@ import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { Modal } from "@/components/ui/modal";
 import { ModuleHeader } from "@/components/ui/module-header";
 import { useToast } from "@/components/ui/toast";
-import { formatDay, formatMoment, plural } from "@/components/goals/goal-format";
 import { cn } from "@/lib/utils";
 import type { DriveFile, DriveFolder } from "@/lib/files";
 import { Field, Input } from "@/components/ui/input";
@@ -49,6 +48,8 @@ import {
   renameFolder,
 } from "@/app/app/files/actions";
 
+import { useT } from "@/i18n/client";
+import { useDateFormat } from "@/components/goals/goal-format-hook";
 const MAX_MB = 20;
 const VIEW_KEY = "vairo:files:view";
 
@@ -133,9 +134,9 @@ function iconFor(name: string) {
   return File;
 }
 
-function kindLabel(name: string) {
+function kindLabel(name: string, fallback: string) {
   const ext = name.split(".").pop()?.toUpperCase();
-  return ext && ext.length <= 5 ? ext : "Plik";
+  return ext && ext.length <= 5 ? ext : fallback;
 }
 
 /**
@@ -164,6 +165,8 @@ export function FilesDrive({
   folders?: DriveFolder[];
   foldersAvailable?: boolean;
 }) {
+  const { formatDay, formatMoment } = useDateFormat();
+  const t = useT("files");
   const dbError = useDbError();
   const router = useRouter();
   const { toast } = useToast();
@@ -248,8 +251,8 @@ export function FilesDrive({
     if (error || !data?.signedUrl) {
       toast({
         tone: "error",
-        title: "Nie udało się otworzyć pliku",
-        description: "Odśwież stronę. Jeśli wraca, plik mógł zostać usunięty.",
+        title: t("filesDrive.nieUdaloSieOtworzyc"),
+        description: t("filesDrive.odswiezStroneJesliWraca"),
       });
       return null;
     }
@@ -269,9 +272,9 @@ export function FilesDrive({
     if (!url) return;
     try {
       await navigator.clipboard.writeText(url);
-      toast({ title: "Link skopiowany", description: "Działa przez godzinę — potem trzeba skopiować nowy." });
+      toast({ title: t("filesDrive.linkSkopiowany"), description: t("filesDrive.dzialaPrzezGodzinePotem") });
     } catch {
-      toast({ tone: "error", title: "Nie udało się skopiować linku" });
+      toast({ tone: "error", title: t("filesDrive.nieUdaloSieSkopiowac") });
     }
   };
 
@@ -286,7 +289,7 @@ export function FilesDrive({
             ? {
                 ...item,
                 state: "error",
-                message: `Za duży — limit to ${MAX_MB} MB. Zmniejsz plik albo podziel go na części.`,
+                message: t("filesDrive.zaDuzyLimitTo", { MAX_MB }),
               }
             : item
         )
@@ -345,7 +348,7 @@ export function FilesDrive({
     }
     if (inputRef.current) inputRef.current.value = "";
     if (sent > 0) {
-      toast({ title: sent === 1 ? "Plik dodany" : `Dodano ${sent} ${plural(sent, "plik", "pliki", "plików")}` });
+      toast({ title: sent === 1 ? t("filesDrive.plikDodany") : t("filesDrive.addedMany", { count: sent }) });
       router.refresh();
     }
   };
@@ -363,17 +366,17 @@ export function FilesDrive({
     if (rowError || !removed || removed.length === 0) {
       toast({
         tone: "error",
-        title: "Nie udało się usunąć pliku",
+        title: t("filesDrive.nieUdaloSieUsunac"),
         // RLS przy cudzym pliku nie zwraca błędu, tylko zero usuniętych wierszy.
         description: rowError
           ? (dbError(rowError.message) ?? undefined)
-          : "Plik usuwa osoba, która go dodała, albo Founder lub Admin.",
+          : t("filesDrive.plikUsuwaOsobaKtora"),
       });
       return;
     }
     setDeleting(null);
     if (selectedId === file.id) setSelectedId(null);
-    toast({ title: "Plik usunięty", description: file.name });
+    toast({ title: t("filesDrive.plikUsuniety"), description: file.name });
     router.refresh();
   };
 
@@ -420,9 +423,9 @@ export function FilesDrive({
     return () => window.removeEventListener("keydown", onKey);
   }, [foldersAvailable, place.kind]);
 
-  const crumbs: { label: string; place: Place }[] = [{ label: "Wszystkie pliki", place: { kind: "all" } }];
+  const crumbs: { label: string; place: Place }[] = [{ label: t("filesDrive.wszystkiePliki"), place: { kind: "all" } }];
   if (place.kind === "library" || place.kind === "folder") {
-    crumbs.push({ label: "Od zespołu", place: { kind: "library" } });
+    crumbs.push({ label: t("filesDrive.odZespolu"), place: { kind: "library" } });
   }
   if (place.kind === "folder") {
     const chain: DriveFolder[] = [];
@@ -433,19 +436,19 @@ export function FilesDrive({
     }
     for (const folder of chain) crumbs.push({ label: folder.name, place: { kind: "folder", id: folder.id } });
   }
-  if (place.kind === "stages" || place.kind === "stage") crumbs.push({ label: "Z etapów", place: { kind: "stages" } });
+  if (place.kind === "stages" || place.kind === "stage") crumbs.push({ label: t("filesDrive.zEtapow"), place: { kind: "stages" } });
   if (place.kind === "stage") crumbs.push({ label: place.title, place });
 
   const fileActions = (file: DriveFile, close: () => void) => (
     <>
       <MenuItem icon={ExternalLink} onClick={() => { close(); void open(file); }}>
-        Otwórz
+        {t("filesDrive.otworz")}
       </MenuItem>
       <MenuItem icon={Download} onClick={() => { close(); void download(file); }}>
-        Pobierz
+        {t("filesDrive.download")}
       </MenuItem>
       <MenuItem icon={Copy} onClick={() => { close(); void copyLink(file); }}>
-        Kopiuj link
+        {t("filesDrive.kopiujLink")}
       </MenuItem>
       {foldersAvailable ? (
         <>
@@ -455,28 +458,28 @@ export function FilesDrive({
             disabled={!canDelete(file)}
             hint={
               file.source === "stage"
-                ? "Nazwę ustala odpowiedź w etapie."
+                ? t("filesDrive.nazweUstalaOdpowiedzW")
                 : canDelete(file)
                   ? undefined
-                  : "Zmienić nazwę cudzego pliku może Founder albo Admin."
+                  : t("filesDrive.zmienicNazweCudzegoPliku")
             }
             onClick={() => { close(); setNaming({ kind: "rename-file", file }); }}
           >
-            Zmień nazwę
+            {t("filesDrive.zmienNazwe")}
           </MenuItem>
           <MenuItem
             icon={FolderInput}
             disabled={!canDelete(file)}
             hint={
               file.source === "stage"
-                ? "Należy do odpowiedzi w etapie — zostaje w jego folderze."
+                ? t("filesDrive.nalezyDoOdpowiedziW")
                 : canDelete(file)
                   ? undefined
-                  : "Przenieść cudzy plik może Founder albo Admin."
+                  : t("filesDrive.przeniescCudzyPlikMoze")
             }
             onClick={() => { close(); setMoving(file); }}
           >
-            Przenieś do…
+            {t("filesDrive.przeniesDo")}
           </MenuItem>
         </>
       ) : null}
@@ -487,21 +490,21 @@ export function FilesDrive({
         disabled={!canDelete(file)}
         hint={
           file.source === "stage"
-            ? "Należy do odpowiedzi w etapie. Usuniesz go, zmieniając tę odpowiedź."
+            ? t("filesDrive.nalezyDoOdpowiedziW2")
             : canDelete(file)
               ? undefined
-              : "Usunąć cudzy plik może Founder albo Admin."
+              : t("filesDrive.usunacCudzyPlikMoze")
         }
         onClick={() => { close(); setDeleting(file); }}
       >
-        Usuń
+        {t("filesDrive.usun")}
       </MenuItem>
     </>
   );
 
   const places: { id: string; label: string; count: number; place: Place; icon: typeof Folder; indent?: boolean }[] = [
-    { id: "all", label: "Wszystkie pliki", count: files.length, place: { kind: "all" }, icon: FolderOpen },
-    { id: "library", label: "Od zespołu", count: library.length, place: { kind: "library" }, icon: Folder },
+    { id: "all", label: t("filesDrive.wszystkiePliki"), count: files.length, place: { kind: "all" }, icon: FolderOpen },
+    { id: "library", label: t("filesDrive.odZespolu"), count: library.length, place: { kind: "library" }, icon: Folder },
     ...folders
       .filter((folder) => !folder.parentId)
       .map((folder) => ({
@@ -512,7 +515,7 @@ export function FilesDrive({
         icon: Folder,
         indent: true,
       })),
-    { id: "stages", label: "Z etapów", count: stageCount, place: { kind: "stages" }, icon: Folder },
+    { id: "stages", label: t("filesDrive.zEtapow"), count: stageCount, place: { kind: "stages" }, icon: Folder },
     ...stageFolders.map((folder) => ({
       id: `stage-${folder.title}`,
       label: folder.title,
@@ -546,12 +549,12 @@ export function FilesDrive({
             ? await renameFolder(startupId, naming.folder.id, value)
             : await renameFile(startupId, naming.file.id, value);
       if (result.error) {
-        toast({ tone: "error", title: "Nie udało się zapisać", description: result.error });
+        toast({ tone: "error", title: t("filesDrive.nieUdaloSieZapisac"), description: result.error });
         return;
       }
       toast({
         title:
-          naming.kind === "new-folder" ? "Folder założony" : naming.kind === "rename-folder" ? "Folder przemianowany" : "Nazwa zmieniona",
+          naming.kind === "new-folder" ? t("filesDrive.folderZalozony") : naming.kind === "rename-folder" ? t("filesDrive.folderPrzemianowany") : t("filesDrive.nazwaZmieniona"),
         description: value,
       });
       setNaming(null);
@@ -562,11 +565,11 @@ export function FilesDrive({
   return (
     <div className="page-wide">
       <ModuleHeader
-        title="Pliki"
+        title={t("filesDrive.pliki")}
         subtitle={
           files.length === 0
-            ? "Materiały zespołu i pliki z odpowiedzi w etapach."
-            : `${files.length} ${plural(files.length, "plik", "pliki", "plików")} · ${library.length} od zespołu, ${stageCount} z etapów.`
+            ? t("filesDrive.materialyZespoluIPliki")
+            : t("filesDrive.summary", { count: files.length, library: library.length, stages: stageCount })
         }
         action={
           <div className="flex flex-wrap gap-2">
@@ -574,16 +577,16 @@ export function FilesDrive({
               <Button
                 variant="secondary"
                 disabled={!canCreateFolder}
-                title={canCreateFolder ? "Ctrl+Shift+N" : "Foldery zakładasz w „Od zespołu”. Foldery etapów tworzą się same."}
+                title={canCreateFolder ? "Ctrl+Shift+N" : t("filesDrive.folderyZakladaszWOd")}
                 onClick={() => setNaming({ kind: "new-folder" })}
               >
                 <FolderPlus className="size-4" />
-                Nowy folder
+                {t("filesDrive.nowyFolder")}
               </Button>
             ) : null}
             <Button onClick={() => inputRef.current?.click()}>
               <Upload className="size-4" />
-              Dodaj plik
+              {t("filesDrive.dodajPlik")}
             </Button>
           </div>
         }
@@ -625,7 +628,7 @@ export function FilesDrive({
             );
           })}
           <p className="hidden px-2.5 pt-3 text-[12px] leading-relaxed text-[var(--text-subtle)] lg:block">
-            Do {MAX_MB} MB na plik. Widzą je tylko osoby z tego zespołu.
+            {t("filesDrive.doMaxMbMb", { MAX_MB })}
           </p>
         </nav>
 
@@ -663,8 +666,8 @@ export function FilesDrive({
               <button
                 type="button"
                 onClick={() => setPlace(crumbs[crumbs.length - 2]!.place)}
-                aria-label="Poziom wyżej"
-                title="Poziom wyżej"
+                aria-label={t("filesDrive.poziomWyzej")}
+                title={t("filesDrive.poziomWyzej")}
                 className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[var(--text-muted)] transition-colors hover:border-white/22 hover:text-white sm:size-8"
               >
                 <ArrowUp className="size-4" />
@@ -730,12 +733,12 @@ export function FilesDrive({
                         <Folder className="size-7 text-[var(--text-muted)]" strokeWidth={1.5} />
                         <span className="w-full truncate text-[14px] font-medium text-white">{folder.name}</span>
                         <span className="text-[12px] text-[var(--text-subtle)]">
-                          {count} {plural(count, "plik", "pliki", "plików")}
+                          {t("filesDrive.fileCount", { count })}
                         </span>
                       </button>
                       {mayEdit ? (
                         <div className="absolute right-2 top-2">
-                          <Menu label={`Akcje folderu ${folder.name}`}>
+                          <Menu label={t("filesDrive.akcjeFolderuName", { name: folder.name })}>
                             {(close) => (
                               <>
                                 <MenuItem
@@ -745,27 +748,27 @@ export function FilesDrive({
                                     setNaming({ kind: "rename-folder", folder });
                                   }}
                                 >
-                                  Zmień nazwę
+                                  {t("filesDrive.zmienNazwe")}
                                 </MenuItem>
                                 <MenuSeparator />
                                 <MenuItem
                                   icon={Trash2}
                                   tone="danger"
-                                  hint="Pliki z folderu wrócą do „Od zespołu”. Nic nie zniknie."
+                                  hint={t("filesDrive.plikiZFolderuWroca")}
                                   onClick={() => {
                                     close();
                                     startBusy(async () => {
                                       const result = await deleteFolder(startupId, folder.id);
                                       if (result.error) {
-                                        toast({ tone: "error", title: "Nie udało się usunąć folderu", description: result.error });
+                                        toast({ tone: "error", title: t("filesDrive.nieUdaloSieUsunac2"), description: result.error });
                                         return;
                                       }
-                                      toast({ title: "Folder usunięty", description: "Pliki wróciły do „Od zespołu”." });
+                                      toast({ title: t("filesDrive.folderUsuniety"), description: t("filesDrive.plikiWrocilyDoOd") });
                                       router.refresh();
                                     });
                                   }}
                                 >
-                                  Usuń folder
+                                  {t("filesDrive.usunFolder")}
                                 </MenuItem>
                               </>
                             )}
@@ -779,7 +782,7 @@ export function FilesDrive({
             ) : null}
             {place.kind === "stages" ? (
               stageFolders.length === 0 ? (
-                <EmptyFolder text="Żaden etap nie ma jeszcze plików. Pojawią się tu same, gdy dodacie plik w odpowiedzi na pytanie w etapie." />
+                <EmptyFolder text={t("filesDrive.zadenEtapNieMa")} />
               ) : (
                 <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                   {stageFolders.map((folder) => (
@@ -792,7 +795,7 @@ export function FilesDrive({
                         <Folder className="size-7 text-[var(--text-muted)]" strokeWidth={1.5} />
                         <span className="text-[14px] font-medium text-white">{folder.title}</span>
                         <span className="text-[12px] text-[var(--text-subtle)]">
-                          {folder.count} {plural(folder.count, "plik", "pliki", "plików")}
+                          {t("filesDrive.fileCount", { count: folder.count })}
                         </span>
                       </button>
                     </li>
@@ -807,10 +810,9 @@ export function FilesDrive({
                   className="topo flex w-full flex-col items-center gap-2 rounded-[25px] border border-dashed border-white/12 px-6 py-12 text-center transition-colors hover:border-white/25"
                 >
                   <Upload className="size-7 text-[var(--text-muted)]" strokeWidth={1.5} />
-                  <span className="font-heading text-[17px] font-semibold text-white">Upuść tu pliki albo wybierz z dysku</span>
+                  <span className="font-heading text-[17px] font-semibold text-white">{t("filesDrive.upuscTuPlikiAlbo")}</span>
                   <span className="max-w-md text-[13px] leading-relaxed text-[var(--text-subtle)]">
-                    Opis pomysłu, notatki z rozmów, umowy. Do {MAX_MB} MB na plik. Pliki dodane
-                    w odpowiedziach w etapach też się tu pojawią.
+                    {t("filesDrive.opisPomysluNotatkiZ", { MAX_MB })}
                   </span>
                 </button>
               ) : (
@@ -818,11 +820,11 @@ export function FilesDrive({
                   text={
                     place.kind === "library"
                       ? childFolders.length > 0
-                        ? "Luzem nie ma tu plików — są w folderach wyżej."
-                        : "Zespół nie dodał jeszcze żadnego pliku. Przeciągnij plik tutaj albo użyj „Dodaj plik”."
+                        ? t("filesDrive.luzemNieMaTu")
+                        : t("filesDrive.zespolNieDodalJeszcze")
                       : place.kind === "folder"
-                        ? "Ten folder jest pusty. Przeciągnij tu plik, użyj „Dodaj plik” albo przenieś plik z menu ⋮ „Przenieś do…”."
-                        : "Ten folder jest pusty."
+                        ? t("filesDrive.tenFolderJestPusty")
+                        : t("filesDrive.tenFolderJestPusty2")
                   }
                 />
               )
@@ -865,10 +867,10 @@ export function FilesDrive({
             ) : (
               <div className="overflow-hidden rounded-[18px] border border-white/[0.07] bg-[var(--surface)]">
                 <div className="hidden grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,1fr)_96px_80px] gap-3 border-b border-white/[0.06] px-4 py-2.5 text-[12px] font-medium text-[var(--text-subtle)] md:grid">
-                  <SortHeader label="Nazwa" active={sort.key === "name"} desc={sort.desc} onClick={() => setSort({ key: "name", desc: sort.key === "name" ? !sort.desc : false })} />
-                  <span>Skąd</span>
-                  <span>Kto dodał</span>
-                  <SortHeader label="Data" active={sort.key === "date"} desc={sort.desc} onClick={() => setSort({ key: "date", desc: sort.key === "date" ? !sort.desc : true })} />
+                  <SortHeader label={t("filesDrive.nazwa")} active={sort.key === "name"} desc={sort.desc} onClick={() => setSort({ key: "name", desc: sort.key === "name" ? !sort.desc : false })} />
+                  <span>{t("filesDrive.skad")}</span>
+                  <span>{t("filesDrive.ktoDodal")}</span>
+                  <SortHeader label={t("filesDrive.data")} active={sort.key === "date"} desc={sort.desc} onClick={() => setSort({ key: "date", desc: sort.key === "date" ? !sort.desc : true })} />
                   <SortHeader label="Rozmiar" active={sort.key === "size"} desc={sort.desc} onClick={() => setSort({ key: "size", desc: sort.key === "size" ? !sort.desc : true })} />
                 </div>
                 <ul className="divide-y divide-white/[0.05]">
@@ -902,7 +904,7 @@ export function FilesDrive({
                             </span>
                           </span>
                           <span className="hidden truncate text-[12.5px] text-[var(--text-muted)] md:block">
-                            {file.source === "stage" ? (file.question ?? `Etap ${file.stageTitle}`) : "Dodany tutaj"}
+                            {file.source === "stage" ? (file.question ?? t("filesDrive.etapStagetitle", { stageTitle: file.stageTitle })) : "Dodany tutaj"}
                           </span>
                           <span className="hidden truncate text-[12.5px] text-[var(--text-muted)] md:block">
                             {file.uploaderName ?? "—"}
@@ -926,9 +928,9 @@ export function FilesDrive({
             <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 rounded-[22px] border-2 border-dashed border-[var(--vairo)]/60 bg-[var(--bg)]/85 backdrop-blur-sm">
               <Upload className="size-8 text-[var(--vairo)]" strokeWidth={1.5} />
               <p className="font-heading text-[17px] font-semibold text-white">
-                Upuść, żeby dodać do „{place.kind === "folder" ? (folders.find((folder) => folder.id === place.id)?.name ?? "folderu") : "Od zespołu"}”
+                {t("filesDrive.dropInto", { place: place.kind === "folder" ? (folders.find((folder) => folder.id === place.id)?.name ?? t("filesDrive.folderFallback")) : t("filesDrive.odZespolu") })}
               </p>
-              <p className="text-[13px] text-[var(--text-muted)]">Do {MAX_MB} MB na plik</p>
+              <p className="text-[13px] text-[var(--text-muted)]">{t("filesDrive.doMaxMbMb2", { MAX_MB })}</p>
             </div>
           ) : null}
         </section>
@@ -937,19 +939,19 @@ export function FilesDrive({
       {selected ? (
         <Drawer
           title={selected.name}
-          eyebrow={kindLabel(selected.name)}
+          eyebrow={kindLabel(selected.name, t("filesDrive.plik"))}
           onClose={() => setSelectedId(null)}
           footer={
             <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={() => void open(selected)}>
                 <ExternalLink className="size-3.5" />
-                Otwórz
+                {t("filesDrive.otworz")}
               </Button>
               <Button size="sm" variant="secondary" onClick={() => void download(selected)}>
                 <Download className="size-3.5" />
-                Pobierz
+                {t("filesDrive.download")}
               </Button>
-              <Menu label="Więcej akcji">{(close) => fileActions(selected, close)}</Menu>
+              <Menu label={t("filesDrive.wiecejAkcji")}>{(close) => fileActions(selected, close)}</Menu>
             </div>
           }
         >
@@ -958,38 +960,38 @@ export function FilesDrive({
               {preview?.id === selected.id ? (
                 isImage(selected.name) ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={preview.url} alt={`Podgląd: ${selected.name}`} className="max-h-72 w-full object-contain" />
+                  <img src={preview.url} alt={t("filesDrive.podgladName", { name: selected.name })} className="max-h-72 w-full object-contain" />
                 ) : (
-                  <iframe src={preview.url} title={`Podgląd: ${selected.name}`} className="h-72 w-full" />
+                  <iframe src={preview.url} title={t("filesDrive.podgladName", { name: selected.name })} className="h-72 w-full" />
                 )
               ) : (
                 <div className="flex h-40 items-center justify-center text-[12.5px] text-[var(--text-subtle)]">
-                  <Loader2 className="mr-2 size-4 animate-spin" /> Ładuję podgląd…
+                  <Loader2 className="mr-2 size-4 animate-spin" />{" "}{t("filesDrive.ladujePodglad")}
                 </div>
               )}
             </div>
           ) : null}
           <dl className="flex flex-col gap-4 text-[13.5px]">
             <div>
-              <dt className="text-[12px] text-[var(--text-subtle)]">Skąd</dt>
+              <dt className="text-[12px] text-[var(--text-subtle)]">{t("filesDrive.skad")}</dt>
               <dd className="mt-0.5 text-white">
                 {selected.source === "stage" ? (
                   <>
-                    Odpowiedź w etapie {selected.stageTitle}
+                    {t("filesDrive.odpowiedzWEtapieStagetitle", { stageTitle: selected.stageTitle })}
                     {selected.question ? (
                       <span className="mt-0.5 block text-[13px] text-[var(--text-muted)]">„{selected.question}”</span>
                     ) : null}
                   </>
                 ) : (
-                  "Dodany tutaj, w Plikach"
+                  t("filesDrive.dodanyTutajWPlikach")
                 )}
               </dd>
             </div>
             <div>
-              <dt className="text-[12px] text-[var(--text-subtle)]">Kto dodał</dt>
+              <dt className="text-[12px] text-[var(--text-subtle)]">{t("filesDrive.ktoDodal")}</dt>
               <dd className="mt-1 flex items-center gap-2 text-white">
                 {selected.uploaderName ? <Avatar name={selected.uploaderName} size="xs" /> : null}
-                {selected.uploaderName ?? "Osoba spoza zespołu"}
+                {selected.uploaderName ?? t("filesDrive.osobaSpozaZespolu")}
               </dd>
             </div>
             <div>
@@ -1003,7 +1005,7 @@ export function FilesDrive({
             {selected.source === "stage" ? (
               <p className="flex items-start gap-2 rounded-xl bg-[var(--surface-2)] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-[var(--text-muted)]">
                 <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-                Ten plik należy do odpowiedzi w etapie — usuniesz go, zmieniając tę odpowiedź.
+                {t("filesDrive.tenPlikNalezyDo")}
               </p>
             ) : null}
           </dl>
@@ -1014,7 +1016,7 @@ export function FilesDrive({
         <>
           <button
             type="button"
-            aria-label="Zamknij menu"
+            aria-label={t("filesDrive.zamknijMenu")}
             className="fixed inset-0 z-[54] cursor-default"
             onClick={() => setAreaMenu(null)}
             onContextMenu={(event) => {
@@ -1032,17 +1034,17 @@ export function FilesDrive({
               disabled={!canCreateFolder}
               hint={
                 !foldersAvailable
-                  ? "Foldery potrzebują migracji 030."
+                  ? t("filesDrive.folderyPotrzebujaMigracji030")
                   : canCreateFolder
                     ? undefined
-                    : "Foldery zakładasz w „Od zespołu”."
+                    : t("filesDrive.folderyZakladaszWOd2")
               }
               onClick={() => {
                 setAreaMenu(null);
                 setNaming({ kind: "new-folder" });
               }}
             >
-              Nowy folder
+              {t("filesDrive.nowyFolder")}
             </MenuItem>
             <MenuItem
               icon={Upload}
@@ -1051,7 +1053,7 @@ export function FilesDrive({
                 inputRef.current?.click();
               }}
             >
-              Dodaj plik
+              {t("filesDrive.dodajPlik")}
             </MenuItem>
           </div>
         </>
@@ -1072,10 +1074,10 @@ export function FilesDrive({
         <NameModal
           title={
             naming.kind === "new-folder"
-              ? "Nowy folder"
+              ? t("filesDrive.nowyFolder")
               : naming.kind === "rename-folder"
-                ? "Zmień nazwę folderu"
-                : "Zmień nazwę pliku"
+                ? t("filesDrive.zmienNazweFolderu")
+                : t("filesDrive.zmienNazwePliku")
           }
           initial={
             naming.kind === "new-folder" ? "" : naming.kind === "rename-folder" ? naming.folder.name : naming.file.name
@@ -1087,9 +1089,9 @@ export function FilesDrive({
       ) : null}
 
       {moving ? (
-        <Modal title="Przenieś do…" description={moving.name} onClose={() => setMoving(null)}>
+        <Modal title={t("filesDrive.przeniesDo")} description={moving.name} onClose={() => setMoving(null)}>
           <ul className="flex flex-col gap-1.5">
-            {[{ id: null as string | null, name: "Od zespołu (luzem)", depth: 0 }, ...folderTree(folders)].map((target) => {
+            {[{ id: null as string | null, name: t("filesDrive.odZespoluLuzem"), depth: 0 }, ...folderTree(folders)].map((target) => {
               const here = (moving.folderId ?? null) === target.id;
               return (
                 <li key={target.id ?? "root"}>
@@ -1100,10 +1102,10 @@ export function FilesDrive({
                       startBusy(async () => {
                         const result = await moveFile(startupId, moving.id, target.id);
                         if (result.error) {
-                          toast({ tone: "error", title: "Nie udało się przenieść", description: result.error });
+                          toast({ tone: "error", title: t("filesDrive.nieUdaloSiePrzeniesc"), description: result.error });
                           return;
                         }
-                        toast({ title: "Plik przeniesiony", description: `Do: ${target.name}` });
+                        toast({ title: t("filesDrive.plikPrzeniesiony"), description: t("filesDrive.doName", { name: target.name }) });
                         setMoving(null);
                         router.refresh();
                       })
@@ -1113,7 +1115,7 @@ export function FilesDrive({
                   >
                     <Folder className="size-4 shrink-0 text-[var(--text-muted)]" />
                     <span className="min-w-0 flex-1 truncate">{target.name}</span>
-                    {here ? <span className="text-[12px] text-[var(--text-subtle)]">tu jest teraz</span> : null}
+                    {here ? <span className="text-[12px] text-[var(--text-subtle)]">{t("filesDrive.tuJestTeraz")}</span> : null}
                   </button>
                 </li>
               );
@@ -1126,9 +1128,9 @@ export function FilesDrive({
       <div className="sticky bottom-0 z-20 -mx-4 mt-6 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)] to-transparent px-4 pb-4 pt-6 sm:hidden">
         <Button block size="lg" onClick={() => inputRef.current?.click()}>
           <Upload className="size-4" />
-          Dodaj plik
+          {t("filesDrive.dodajPlik")}
         </Button>
-        <p className="mt-1.5 text-center text-[12px] text-[var(--text-subtle)]">Do {MAX_MB} MB na plik</p>
+        <p className="mt-1.5 text-center text-[12px] text-[var(--text-subtle)]">{t("filesDrive.doMaxMbMb2", { MAX_MB })}</p>
       </div>
 
       {uploads.length > 0 ? (
@@ -1141,16 +1143,16 @@ export function FilesDrive({
 
       {deleting ? (
         <Modal
-          title="Usunąć ten plik?"
-          description="Zniknie z biblioteki dla całego zespołu. Dowody celów, które go użyły, zostają — trzymają kopię opisu."
+          title={t("filesDrive.usunacTenPlik")}
+          description={t("filesDrive.zniknieZBibliotekiDla")}
           onClose={() => setDeleting(null)}
           footer={
             <>
               <Button variant="ghost" onClick={() => setDeleting(null)}>
-                Zostaw
+                {t("filesDrive.keep")}
               </Button>
               <Button variant="danger" loading={deletePending} onClick={() => void remove(deleting)}>
-                Usuń plik
+                {t("filesDrive.usunPlik")}
               </Button>
             </>
           }
@@ -1173,12 +1175,13 @@ function SortHeader({
   desc: boolean;
   onClick: () => void;
 }) {
+  const t = useT("files");
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn("inline-flex items-center gap-1 text-left hover:text-white", active && "text-white")}
-      aria-label={`Sortuj: ${label}${active ? (desc ? ", malejąco" : ", rosnąco") : ""}`}
+      aria-label={active ? t(desc ? "filesDrive.sortDesc" : "filesDrive.sortAsc", { label }) : t("filesDrive.sortBy", { label })}
     >
       {label}
       {active ? <ArrowDownUp className="size-3" aria-hidden="true" /> : null}
@@ -1204,18 +1207,19 @@ function UploadPanel({
   onRetry: (item: Upload) => void;
   onClose: () => void;
 }) {
+  const t = useT("files");
   const sending = uploads.filter((item) => item.state === "sending").length;
   return (
     <div className="fixed inset-x-4 bottom-4 z-40 overflow-hidden rounded-2xl border border-white/10 bg-[var(--surface-2)] lift-3 sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[340px]">
       <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-2.5">
         <p className="flex-1 text-[13px] font-medium text-white">
-          {sending > 0 ? `Wysyłam ${sending} ${plural(sending, "plik", "pliki", "plików")}…` : "Wysyłanie zakończone"}
+          {sending > 0 ? t("filesDrive.sending", { count: sending }) : t("filesDrive.wysylanieZakonczone")}
         </p>
         {sending === 0 ? (
           <button
             type="button"
             onClick={onClose}
-            aria-label="Zamknij"
+            aria-label={t("filesDrive.zamknij")}
             className="inline-flex size-8 items-center justify-center rounded-lg text-[var(--text-subtle)] hover:bg-white/[0.06] hover:text-white"
           >
             <X className="size-4" />
@@ -1235,7 +1239,7 @@ function UploadPanel({
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] text-white">{item.name}</p>
               {item.state === "sending" && typeof item.progress === "number" ? (
-                <span className="mt-1.5 flex items-center gap-2" aria-label={`Wysłano ${item.progress}%`}>
+                <span className="mt-1.5 flex items-center gap-2" aria-label={t("filesDrive.wyslanoProgress", { progress: item.progress })}>
                   <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/10">
                     <span
                       className="block h-full rounded-full bg-[var(--text-muted)] transition-[width] duration-200"
@@ -1249,13 +1253,13 @@ function UploadPanel({
                 <p className="mt-0.5 text-[12px] leading-snug text-[var(--danger-text)]">{item.message}</p>
               ) : null}
             </div>
-            {item.state === "error" && item.message && !item.message.startsWith("Za duży") ? (
+            {item.state === "error" && item.message && !item.message.startsWith(t("filesDrive.zaDuzy")) ? (
               <button
                 type="button"
                 onClick={() => onRetry(item)}
                 className="shrink-0 text-[12px] font-medium text-white underline underline-offset-4"
               >
-                Ponów
+                {t("filesDrive.ponow")}
               </button>
             ) : null}
           </li>
@@ -1298,11 +1302,12 @@ function NameModal({
   onClose: () => void;
   onSubmit: (value: string) => void;
 }) {
+  const t = useT("files");
   const [value, setValue] = useState(initial);
   const [error, setError] = useState<string | null>(null);
   const submit = () => {
     if (!value.trim()) {
-      setError("Nazwa nie może być pusta.");
+      setError(t("filesDrive.nazwaNieMozeByc"));
       return;
     }
     onSubmit(value.trim());
@@ -1314,10 +1319,10 @@ function NameModal({
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Anuluj
+            {t("filesDrive.anuluj")}
           </Button>
           <Button loading={pending} onClick={submit}>
-            Zapisz
+            {t("filesDrive.zapisz")}
           </Button>
         </>
       }
@@ -1327,7 +1332,7 @@ function NameModal({
           <Input
             id={id}
             aria-invalid={invalid}
-            aria-label="Nazwa"
+            aria-label={t("filesDrive.nazwa")}
             autoFocus
             value={value}
             maxLength={200}

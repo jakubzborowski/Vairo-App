@@ -4,10 +4,15 @@ import { GoalsUnavailable } from "@/components/goals/goals-unavailable";
 import type { DocSummary } from "@/types/docs";
 import { loadDocsContext, selectDocuments } from "./load";
 
-export const metadata = { title: "Dokumenty — Vairo" };
+import { getT } from "@/i18n/server";
+export async function generateMetadata() {
+  const t = await getT("docs");
+  return { title: t("meta.list") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function DocsPage() {
+  const t = await getT("docs");
   const { supabase, active } = await loadDocsContext("/app/docs");
 
   const [{ rows, error }, members, { data: proofRows }] = await Promise.all([
@@ -28,7 +33,7 @@ export default async function DocsPage() {
   );
 
   if (error) {
-    return <GoalsUnavailable missingMigration title="Dokumenty" href="/app/docs" />;
+    return <GoalsUnavailable missingMigration title={t("page.dokumenty")} href="/app/docs" />;
   }
 
   const names = new Map(members.map((member) => [member.id, member.name]));
@@ -38,7 +43,7 @@ export default async function DocsPage() {
     body: row.body ?? "",
     createdBy: row.created_by,
     // Na karcie stoi ten, kto zmieniał ostatnio (031); bez migracji — autor.
-    authorName: names.get(row.updated_by ?? row.created_by ?? "") ?? "Była osoba z zespołu",
+    authorName: names.get(row.updated_by ?? row.created_by ?? "") ?? t("page.bylaOsobaZZespolu"),
     updatedAt: row.updated_at,
     usedAsProof: usedAsProof.has(row.id),
   }));

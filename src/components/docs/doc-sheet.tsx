@@ -20,17 +20,19 @@ import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
-import { formatMoment } from "@/components/goals/goal-format";
+
 import { Markdown } from "@/lib/markdown";
 import { cn } from "@/lib/utils";
 
+import { useT } from "@/i18n/client";
+import { useDateFormat } from "@/components/goals/goal-format-hook";
 type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
 
 const SLASH_ITEMS = [
-  { id: "h1", label: "Nagłówek", prefix: "# ", icon: Heading1 },
-  { id: "h2", label: "Podtytuł", prefix: "## ", icon: Heading2 },
-  { id: "ul", label: "Lista", prefix: "- ", icon: List },
-  { id: "todo", label: "Lista do odhaczenia", prefix: "- [ ] ", icon: CheckSquare },
+  { id: "h1", prefix: "# ", icon: Heading1 },
+  { id: "h2", prefix: "## ", icon: Heading2 },
+  { id: "ul", prefix: "- ", icon: List },
+  { id: "todo", prefix: "- [ ] ", icon: CheckSquare },
 ] as const;
 
 /**
@@ -59,6 +61,8 @@ export function DocSheet({
   editorName?: string | null;
   canEdit: boolean;
 }) {
+  const { formatMoment } = useDateFormat();
+  const t = useT("docs");
   const router = useRouter();
   const { toast } = useToast();
   const [docId, setDocId] = useState(initialId);
@@ -102,14 +106,14 @@ export function DocSheet({
     // zapisujemy jeszcze raz najświeższą wersję.
     do {
       again.current = false;
-      const { title: t, body: b, docId: id } = latest.current;
-      if (!id && !t.trim() && !b.trim()) break;
+      const { title: draftTitle, body: b, docId: id } = latest.current;
+      if (!id && !draftTitle.trim() && !b.trim()) break;
       setState("saving");
-      const result = await saveDocument({ id: id ?? undefined, title: t, body: b });
+      const result = await saveDocument({ id: id ?? undefined, title: draftTitle, body: b });
       if (result.error) {
         inFlight.current = false;
         setState("error");
-        toast({ tone: "error", title: "Nie udało się zapisać dokumentu", description: result.error });
+        toast({ tone: "error", title: t("docSheet.nieUdaloSieZapisac"), description: result.error });
         return;
       }
       if (!id && result.id) {
@@ -245,15 +249,15 @@ export function DocSheet({
 
   const stateLabel =
     state === "saving"
-      ? "Zapisuję…"
+      ? t("docSheet.zapisuje")
       : state === "dirty"
-        ? "Zmiany czekają na zapis"
+        ? t("docSheet.zmianyCzekajaNaZapis")
         : state === "error"
-          ? "Nie zapisano"
+          ? t("docSheet.nieZapisano")
           : savedAt
             ? `Zapisano ${formatMoment(savedAt)}`
             : canEdit
-              ? "Zapisze się sam od pierwszego znaku"
+              ? t("docSheet.zapiszeSieSamOd")
               : "";
 
   return (
@@ -264,7 +268,7 @@ export function DocSheet({
           className="inline-flex min-h-11 items-center gap-1.5 text-[13px] text-[var(--text-subtle)] transition-colors hover:text-white sm:min-h-0"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
-          Dokumenty
+          {t("docSheet.dokumenty")}
         </Link>
         <span className="text-[12.5px] text-[var(--text-subtle)]">
           {editorName && editorName !== authorName
@@ -288,7 +292,7 @@ export function DocSheet({
             {(
               [
                 ["write", "Pisanie"],
-                ["read", "Podgląd"],
+                ["read", t("docSheet.podglad")],
               ] as const
             ).map(([id, label]) => (
               <button
@@ -307,7 +311,7 @@ export function DocSheet({
             ))}
           </div>
         ) : null}
-        <Menu label="Więcej">
+        <Menu label={t("docSheet.wiecej")}>
           {(close) => (
             <>
               <MenuItem
@@ -317,10 +321,10 @@ export function DocSheet({
                   close();
                   void navigator.clipboard
                     ?.writeText(window.location.href)
-                    .then(() => toast({ title: "Link do dokumentu skopiowany" }));
+                    .then(() => toast({ title: t("docSheet.linkDoDokumentuSkopiowany") }));
                 }}
               >
-                Kopiuj link
+                {t("docSheet.kopiujLink")}
               </MenuItem>
               {canEdit && docId ? (
                 <>
@@ -333,7 +337,7 @@ export function DocSheet({
                       setDeleting(true);
                     }}
                   >
-                    Usuń dokument
+                    {t("docSheet.usunDokument")}
                   </MenuItem>
                 </>
               ) : null}
@@ -345,12 +349,12 @@ export function DocSheet({
       {!canEdit ? (
         <p className="mt-4 flex items-center gap-2 text-[13px] text-[var(--text-subtle)]">
           <Lock className="size-3.5" aria-hidden="true" />
-          Tylko do odczytu — ten dokument zmienia {authorName ?? "autor"}, Founder albo Admin.
+          {t("docSheet.readOnly", { name: authorName ?? t("docSheet.author") })}
         </p>
       ) : null}
 
       <p className="mt-4 text-[12.5px] text-[var(--text-subtle)]">
-        Dowód celu zapisany z tego tekstu jest osobną kopią — późniejsze zmiany go nie podmienią.
+        {t("docSheet.dowodCeluZapisanyZ")}
       </p>
 
       {mode === "write" ? (
@@ -362,8 +366,8 @@ export function DocSheet({
               schedule();
             }}
             maxLength={140}
-            placeholder="Tytuł"
-            aria-label="Tytuł dokumentu"
+            placeholder={t("docSheet.tytul")}
+            aria-label={t("docSheet.tytulDokumentu")}
             className="mt-5 w-full bg-transparent font-heading text-[2rem] font-semibold leading-tight text-white outline-none placeholder:text-[var(--text-faint)]"
           />
 
@@ -385,26 +389,26 @@ export function DocSheet({
                         )}
                       >
                         <item.icon className="size-4" />
-                        {item.label}
+                        {t(`slash.${item.id}`)}
                       </button>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <>
-                  <ToolButton label="Pogrubienie (Ctrl+B)" onClick={bold}>
+                  <ToolButton label={t("docSheet.pogrubienieCtrlB")} onClick={bold}>
                     <Bold className="size-4" />
                   </ToolButton>
-                  <ToolButton label="Nagłówek" onClick={() => prefixLines("# ")}>
+                  <ToolButton label={t("docSheet.naglowek")} onClick={() => prefixLines("# ")}>
                     <Heading1 className="size-4" />
                   </ToolButton>
-                  <ToolButton label="Podtytuł" onClick={() => prefixLines("## ")}>
+                  <ToolButton label={t("docSheet.podtytul")} onClick={() => prefixLines("## ")}>
                     <Heading2 className="size-4" />
                   </ToolButton>
                   <ToolButton label="Lista" onClick={() => prefixLines("- ")}>
                     <List className="size-4" />
                   </ToolButton>
-                  <ToolButton label="Lista do odhaczenia" onClick={() => prefixLines("- [ ] ")}>
+                  <ToolButton label={t("docSheet.listaDoOdhaczenia")} onClick={() => prefixLines("- [ ] ")}>
                     <CheckSquare className="size-4" />
                   </ToolButton>
                 </>
@@ -429,24 +433,24 @@ export function DocSheet({
                 void flush();
               }
             }}
-            aria-label="Treść dokumentu"
-            placeholder={"Zacznij pisać.\nNa pustej linii wpisz „/”, żeby wstawić nagłówek albo listę."}
+            aria-label={t("docSheet.trescDokumentu")}
+            placeholder={t("docSheet.zacznijPisacNaPustej")}
             className="mt-4 w-full resize-none overflow-hidden bg-transparent text-[16px] leading-[1.75] text-[var(--text-muted)] outline-none placeholder:text-[var(--text-faint)]"
           />
           <p className="mt-6 text-[12px] text-[var(--text-subtle)]">
-            Skróty: „# ” nagłówek · „- ” lista · „- [ ] ” do odhaczenia · **tekst** pogrubienie · Ctrl+B
+            {t("docSheet.skrotyNaglowekListaDo")}
           </p>
         </>
       ) : (
         <article className="mt-5">
           <h1 className="font-heading text-[2rem] font-semibold leading-tight text-white">
-            {title || "Bez tytułu"}
+            {title || t("docSheet.bezTytulu")}
           </h1>
           <div className="mt-5">
             {body.trim() ? (
               <Markdown source={body} />
             ) : (
-              <p className="text-[15px] text-[var(--text-subtle)]">Dokument jest pusty.</p>
+              <p className="text-[15px] text-[var(--text-subtle)]">{t("docSheet.dokumentJestPusty")}</p>
             )}
           </div>
         </article>
@@ -454,13 +458,13 @@ export function DocSheet({
 
       {deleting && docId ? (
         <Modal
-          title="Usunąć ten dokument?"
-          description="Zniknie z półki dla całego zespołu. Dowody celów zapisane z niego zostają, bo są osobnymi kopiami."
+          title={t("docSheet.usunacTenDokument")}
+          description={t("docSheet.zniknieZPolkiDla")}
           onClose={() => setDeleting(false)}
           footer={
             <>
               <Button variant="ghost" onClick={() => setDeleting(false)}>
-                Zostaw
+                {t("docSheet.keep")}
               </Button>
               <Button
                 variant="danger"
@@ -470,21 +474,21 @@ export function DocSheet({
                   const result = await deleteDocument(docId);
                   setDeletePending(false);
                   if (result.error) {
-                    toast({ tone: "error", title: "Nie udało się usunąć", description: result.error });
+                    toast({ tone: "error", title: t("docSheet.nieUdaloSieUsunac"), description: result.error });
                     return;
                   }
                   if (timer.current) window.clearTimeout(timer.current);
                   timer.current = null;
-                  toast({ title: "Dokument usunięty" });
+                  toast({ title: t("docSheet.dokumentUsuniety") });
                   router.push("/app/docs");
                 }}
               >
-                Usuń dokument
+                {t("docSheet.usunDokument")}
               </Button>
             </>
           }
         >
-          <p className="text-[14px] text-white">{title || "Bez tytułu"}</p>
+          <p className="text-[14px] text-white">{title || t("docSheet.bezTytulu")}</p>
         </Modal>
       ) : null}
     </div>

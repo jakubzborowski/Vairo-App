@@ -1,5 +1,6 @@
 import type { RozpiskaEdge, RozpiskaNode } from "@/app/app/workflows/actions";
 
+import { getT } from "@/i18n/server";
 const NODE_W = 140;
 const NODE_H = 40;
 
@@ -7,17 +8,18 @@ const NODE_H = 40;
  * Miniatura planu — mówi „to jest plan z bloczków", zanim cokolwiek się
  * przeczyta. Skaluje cały rysunek do kafelka, zachowując proporcje.
  */
-export function WorkflowThumb({
+export async function WorkflowThumb({
   nodes,
   edges,
 }: {
   nodes: RozpiskaNode[];
   edges: RozpiskaEdge[];
 }) {
+  const t = await getT("workflows");
   if (nodes.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-[12px] text-[var(--text-subtle)]">
-        Puste płótno
+        {t("workflowThumb.pustePlotno")}
       </div>
     );
   }

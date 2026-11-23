@@ -8,18 +8,20 @@ import { titleFromBody } from "@/lib/markdown";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { DOC_TEMPLATES } from "@/types/docs";
 
+import { getT } from "@/i18n/server";
 async function context() {
+  const t = await getT("docs");
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Zaloguj się ponownie." as const };
+  if (!user) return { error: t("actions.zalogujSiePonownie") };
   const [startups, activeTeamId] = await Promise.all([
     getUserStartups(supabase, user.id),
     getActiveStartupId(),
   ]);
   const active = resolveActiveStartup(startups, activeTeamId);
-  if (!active) return { error: "Wybierz startup." as const };
+  if (!active) return { error: t("actions.wybierzStartup") };
   return { supabase, user, active };
 }
 
@@ -62,7 +64,11 @@ export async function createFromTemplate(
 ): Promise<{ error: string | null; id?: string }> {
   const template = DOC_TEMPLATES.find((item) => item.id === templateId);
   if (!template || template.id === "blank") return { error: null };
-  return createDocument({ title: template.title, body: template.body });
+  const t = await getT("docs");
+  return createDocument({
+    title: t.maybe(`template.${template.id}.title`, ""),
+    body: t.maybe(`template.${template.id}.body`, ""),
+  });
 }
 
 export async function saveDocument(input: {
@@ -70,6 +76,7 @@ export async function saveDocument(input: {
   title: string;
   body: string;
 }): Promise<{ error: string | null; id?: string }> {
+  const t = await getT("docs");
   if (!input.id) return createDocument(input);
 
   const ctx = await context();
@@ -85,7 +92,7 @@ export async function saveDocument(input: {
   if (error) return { error: await translateDbError(error.message) };
   // RLS nie zwraca błędu przy cudzym dokumencie — tylko zero wierszy. Bez tej
   // kontroli autozapis pokazywał „Zapisano", a tekst przepadał.
-  if (!data || data.length === 0) return { error: "Ten dokument zmienia jego autor albo Founder lub Admin. Odśwież stronę, jeśli został usunięty." };
+  if (!data || data.length === 0) return { error: t("actions.tenDokumentZmieniaJego") };
 
   // Autozapis leci co kilka sekund pisania — odświeżamy tylko półkę,
   // nie stronę dokumentu, na której ktoś właśnie pisze.
@@ -94,6 +101,7 @@ export async function saveDocument(input: {
 }
 
 export async function deleteDocument(id: string): Promise<{ error: string | null }> {
+  const t = await getT("docs");
   const ctx = await context();
   if ("error" in ctx) return { error: String(ctx.error) };
   const { data, error } = await ctx.supabase
@@ -103,7 +111,7 @@ export async function deleteDocument(id: string): Promise<{ error: string | null
     .eq("startup_id", ctx.active.id)
     .select("id");
   if (error) return { error: await translateDbError(error.message) };
-  if (!data || data.length === 0) return { error: "Ten dokument zmienia jego autor albo Founder lub Admin. Odśwież stronę, jeśli został usunięty." };
+  if (!data || data.length === 0) return { error: t("actions.tenDokumentZmieniaJego") };
   revalidatePath("/app/docs", "layout");
   return { error: null };
 }

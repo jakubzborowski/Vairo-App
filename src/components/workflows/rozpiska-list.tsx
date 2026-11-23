@@ -2,36 +2,39 @@ import Link from "next/link";
 import { Flag, Plus, Waypoints } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModuleHeader } from "@/components/ui/module-header";
-import { formatMoment, plural } from "@/components/goals/goal-format";
+import { makeDateFormat } from "@/components/goals/goal-format";
 import type { RozpiskaRecord } from "@/lib/workflows";
 import { WorkflowThumb } from "./workflow-thumb";
 
+import { getLocale, getT } from "@/i18n/server";
 /**
  * Pierwszy ekran Rozpiski: lista planów z miniaturami, jak pliki w programie
  * do rysowania. Dawniej lista, wersje i karta dowodu walczyły o uwagę obok
  * płótna; teraz płótno ma własną stronę.
  */
-export function RozpiskaList({
+export async function RozpiskaList({
   records,
   goalTitles,
 }: {
   records: RozpiskaRecord[];
   goalTitles: Record<string, string>;
 }) {
+  const t = await getT("workflows");
+  const { formatMoment } = makeDateFormat(await getLocale());
   return (
     <div className="page-wide">
       <ModuleHeader
-        title="Rozpiska"
+        title={t("rozpiskaList.rozpiska")}
         subtitle={
           records.length === 0
-            ? "Plan pracy z bloczków i strzałek."
-            : `${records.length} ${plural(records.length, "plan", "plany", "planów")} zespołu.`
+            ? t("rozpiskaList.planPracyZBloczkow")
+            : t("rozpiskaList.count", { count: records.length })
         }
         action={
           records.length > 0 ? (
             <Button href="/app/workflows/new">
               <Plus className="size-4" />
-              Nowa rozpiska
+              {t("rozpiskaList.nowaRozpiska")}
             </Button>
           ) : null
         }
@@ -43,19 +46,18 @@ export function RozpiskaList({
             <Waypoints className="size-6" strokeWidth={1.5} />
           </span>
           <h2 className="mt-4 font-heading text-[17px] font-semibold text-white">
-            Rozpisz pracę na kroki
+            {t("rozpiskaList.rozpiszPraceNaKroki")}
           </h2>
           <div className="mt-3 flex max-w-xl flex-col gap-2 text-[14px] leading-relaxed text-[var(--text-muted)]">
-            <p>Bloczki to kroki, strzałki mówią, co po czym następuje.</p>
+            <p>{t("rozpiskaList.bloczkiToKrokiStrzalki")}</p>
             <p>
-              Strzałka niczego nie zmienia w celach i zadaniach — to plan do patrzenia
-              i rozmowy, nie automat.
+              {t("rozpiskaList.strzalkaNiczegoNieZmienia")}
             </p>
-            <p>Zapisana wersja może być dowodem, jeśli cel właśnie jej oczekuje.</p>
+            <p>{t("rozpiskaList.zapisanaWersjaMozeByc")}</p>
           </div>
           <Button className="mt-6" href="/app/workflows/new">
             <Plus className="size-4" />
-            Nowa rozpiska
+            {t("rozpiskaList.nowaRozpiska")}
           </Button>
         </section>
       ) : (
@@ -78,7 +80,7 @@ export function RozpiskaList({
                       : "Bez celu"}
                   </p>
                   <p className="mt-1 text-[12px] text-[var(--text-subtle)]">
-                    Wersja {record.version} · zapisana {formatMoment(record.updatedAt)}
+                    {t("rozpiskaList.wersjaVersionZapisanaUpdatedat", { version: record.version, updatedAt: formatMoment(record.updatedAt) })}
                   </p>
                 </div>
               </Link>
@@ -90,7 +92,7 @@ export function RozpiskaList({
               className="flex h-full min-h-[220px] flex-col items-center justify-center gap-2 rounded-[20px] border border-dashed border-white/12 text-[13.5px] text-[var(--text-muted)] transition-colors hover:border-white/25 hover:text-white"
             >
               <Plus className="size-5" aria-hidden="true" />
-              Nowa rozpiska
+              {t("rozpiskaList.nowaRozpiska")}
             </Link>
           </li>
         </ul>

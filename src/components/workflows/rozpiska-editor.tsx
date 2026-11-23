@@ -26,12 +26,14 @@ import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
-import { formatMoment } from "@/components/goals/goal-format";
+
 import { cn } from "@/lib/utils";
 import { orderedSteps, type RozpiskaRecord, type RozpiskaVersion } from "@/lib/workflows";
 import type { GoalItem } from "@/types/goals";
 import { RozpiskaBoard } from "./rozpiska-board";
 
+import { useT } from "@/i18n/client";
+import { useDateFormat } from "@/components/goals/goal-format-hook";
 type Draft = {
   title: string;
   goalId: string;
@@ -66,6 +68,8 @@ export function RozpiskaEditor({
   /** Autor, Founder albo Admin. */
   canDelete?: boolean;
 }) {
+  const { formatMoment } = useDateFormat();
+  const t = useT("workflows");
   const router = useRouter();
   const { toast } = useToast();
   const [pending, start] = useTransition();
@@ -76,7 +80,7 @@ export function RozpiskaEditor({
       record
         ? { title: record.title, goalId: record.goalId ?? "", nodes: record.nodes, edges: record.edges }
         : {
-            title: "Nowa rozpiska",
+            title: t("rozpiskaEditor.nowaRozpiska"),
             goalId: "",
             nodes: [{ id: crypto.randomUUID(), x: 48, y: 48, label: "" }],
             edges: [],
@@ -110,11 +114,11 @@ export function RozpiskaEditor({
       !goal.archivedAt
   );
   const proofBlockedReason = !goal
-    ? "Wybierz cel, który oczekuje Rozpiski jako dowodu."
+    ? t("rozpiskaEditor.wybierzCelKtoryOczekuje")
     : goal.status === "completed"
-      ? "Ten cel jest już ukończony."
+      ? t("rozpiskaEditor.tenCelJestJuz")
       : goal.proofRequirement.kind !== "module_result"
-        ? "Ten cel oczekuje innego dowodu. Zmienisz to w szczególe celu."
+        ? t("rozpiskaEditor.tenCelOczekujeInnego")
         : null;
 
   const set = (patch: Partial<Draft>) => setDraft((current) => ({ ...current, ...patch }));
@@ -131,8 +135,8 @@ export function RozpiskaEditor({
         edges: draft.edges,
       });
       if (result.error || !result.id) {
-        setError(result.error ?? "Nie udało się zapisać.");
-        toast({ tone: "error", title: "Nie udało się zapisać wersji", description: result.error ?? undefined });
+        setError(result.error ?? t("rozpiskaEditor.nieUdaloSieZapisac"));
+        toast({ tone: "error", title: t("rozpiskaEditor.nieUdaloSieZapisac2"), description: result.error ?? undefined });
         return;
       }
       setBaseline(snapshotOf(draft));
@@ -140,12 +144,12 @@ export function RozpiskaEditor({
       if (then) {
         const followError = await then(id);
         if (followError) {
-          toast({ tone: "error", title: "Wersja zapisana, ale dowód nie przeszedł", description: followError });
+          toast({ tone: "error", title: t("rozpiskaEditor.wersjaZapisanaAleDowod"), description: followError });
         }
       } else {
         toast({
-          title: isNew ? "Rozpiska zapisana" : "Nowa wersja zapisana",
-          action: goalAwaits && goal ? { label: "Użyj jako dowód", onClick: () => applyAsProof(id) } : undefined,
+          title: isNew ? t("rozpiskaEditor.rozpiskaZapisana") : t("rozpiskaEditor.nowaWersjaZapisana"),
+          action: goalAwaits && goal ? { label: t("rozpiskaEditor.uzyjJakoDowod"), onClick: () => applyAsProof(id) } : undefined,
         });
       }
       if (isNew) router.replace(`/app/workflows/${id}`);
@@ -161,7 +165,7 @@ export function RozpiskaEditor({
         proof: { kind: "module_result", workflowId: id },
       });
       if (result.error) return result.error;
-      toast({ title: "Cel ukończony", description: `Rozpiska jest dowodem celu „${goal.title}”.` });
+      toast({ title: t("rozpiskaEditor.celUkonczony"), description: t("rozpiskaEditor.rozpiskaJestDowodemCelu", { title: goal.title }) });
       return null;
     };
     if (dirty || !savedId) {
@@ -170,7 +174,7 @@ export function RozpiskaEditor({
     }
     start(async () => {
       const problem = await finish(savedId);
-      if (problem) toast({ tone: "error", title: "Dowód nie przeszedł", description: problem });
+      if (problem) toast({ tone: "error", title: t("rozpiskaEditor.dowodNiePrzeszedl"), description: problem });
     });
   };
 
@@ -184,7 +188,7 @@ export function RozpiskaEditor({
     if (node) {
       toast({
         tone: "info",
-        title: "Bloczek usunięty",
+        title: t("rozpiskaEditor.bloczekUsuniety"),
         description: node.label || undefined,
         action: {
           label: "Cofnij",
@@ -232,14 +236,14 @@ export function RozpiskaEditor({
   };
 
   const starter = [
-    { done: draft.nodes.some((node) => node.label.trim().length > 0), label: "Nazwij pierwszy krok" },
-    { done: draft.nodes.length >= 2, label: "Dodaj kolejny bloczek" },
-    { done: draft.edges.length >= 1, label: "Pociągnij kropkę z prawej strony bloczka na następny" },
+    { done: draft.nodes.some((node) => node.label.trim().length > 0), label: t("rozpiskaEditor.nazwijPierwszyKrok") },
+    { done: draft.nodes.length >= 2, label: t("rozpiskaEditor.dodajKolejnyBloczek") },
+    { done: draft.edges.length >= 1, label: t("rozpiskaEditor.pociagnijKropkeZPrawej") },
   ];
   const showStarter = !starterClosed && draft.edges.length < 2;
 
   const state = pending
-    ? "Zapisuję…"
+    ? t("rozpiskaEditor.zapisuje")
     : dirty
       ? isNew
         ? "Jeszcze niezapisana"
@@ -254,7 +258,7 @@ export function RozpiskaEditor({
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <Link
           href="/app/workflows"
-          aria-label="Wróć do listy rozpisek"
+          aria-label={t("rozpiskaEditor.wrocDoListyRozpisek")}
           className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[var(--text-subtle)] transition-colors hover:border-white/22 hover:text-white"
         >
           <ArrowLeft className="size-4" />
@@ -262,7 +266,7 @@ export function RozpiskaEditor({
         <input
           value={draft.title}
           onChange={(event) => set({ title: event.target.value })}
-          aria-label="Nazwa rozpiski"
+          aria-label={t("rozpiskaEditor.nazwaRozpiski")}
           maxLength={140}
           className="min-w-0 flex-1 rounded-lg bg-transparent px-1.5 py-1 font-heading text-[1.35rem] font-semibold text-white outline-none hover:bg-white/[0.04] focus:bg-white/[0.06]"
         />
@@ -276,11 +280,11 @@ export function RozpiskaEditor({
           {state}
         </span>
         <Menu
-          label="Wersje i dowód"
+          label={t("rozpiskaEditor.wersjeIDowod")}
           trigger={
             <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/10 px-2.5 text-[13px] text-[var(--text-muted)] hover:text-white sm:h-8">
               <History className="size-3.5" />
-              Wersje
+              {t("rozpiskaEditor.versions")}
             </span>
           }
         >
@@ -288,7 +292,7 @@ export function RozpiskaEditor({
             <>
               {versions.length === 0 ? (
                 <p className="px-3.5 py-2.5 text-[12.5px] text-[var(--text-subtle)]">
-                  Pierwsza wersja powstanie po zapisaniu.
+                  {t("rozpiskaEditor.pierwszaWersjaPowstaniePo")}
                 </p>
               ) : (
                 versions.map((snapshot) => (
@@ -300,7 +304,7 @@ export function RozpiskaEditor({
                     }}
                     hint={formatMoment(snapshot.createdAt)}
                   >
-                    Wersja {snapshot.version}
+                    {t("rozpiskaEditor.wersjaVersion", { version: snapshot.version })}
                     {snapshot.version === record?.version ? " · aktualna" : ""}
                   </MenuItem>
                 ))
@@ -309,23 +313,23 @@ export function RozpiskaEditor({
               <MenuItem
                 icon={ShieldCheck}
                 disabled={!goalAwaits || pending}
-                hint={proofBlockedReason ?? `Zapisze wersję i ukończy cel „${goal?.title ?? ""}”.`}
+                hint={proofBlockedReason ?? t("rozpiskaEditor.proofHint", { title: goal?.title ?? "" })}
                 onClick={() => {
                   close();
                   applyAsProof(record?.id);
                 }}
               >
-                Użyj jako dowód
+                {t("rozpiskaEditor.uzyjJakoDowod")}
               </MenuItem>
               {goal && !goalAwaits && goal.status !== "completed" ? (
                 <MenuItem
-                  hint="Cel oczekuje dziś innego dowodu. Zmienisz to w jego edycji."
+                  hint={t("rozpiskaEditor.celOczekujeDzisInnego")}
                   onClick={() => {
                     close();
                     router.push(`/app/goals/${goal.id}`);
                   }}
                 >
-                  Zmień oczekiwany dowód w celu
+                  {t("rozpiskaEditor.zmienOczekiwanyDowodW")}
                 </MenuItem>
               ) : null}
               {record && canDelete ? (
@@ -339,7 +343,7 @@ export function RozpiskaEditor({
                       setDeleting(true);
                     }}
                   >
-                    Usuń rozpiskę
+                    {t("rozpiskaEditor.usunRozpiske")}
                   </MenuItem>
                 </>
               ) : null}
@@ -351,37 +355,37 @@ export function RozpiskaEditor({
           size="sm"
           loading={pending}
           disabled={!dirty}
-          title={dirty ? undefined : "Nie ma zmian od ostatniej wersji."}
+          title={dirty ? undefined : t("rozpiskaEditor.nieMaZmianOd")}
           onClick={() => persist()}
         >
           {dirty ? <Check className="size-3.5" /> : <Lock className="size-3.5" />}
-          Zapisz wersję
+          {t("rozpiskaEditor.zapiszWersje")}
         </Button>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 pl-0 sm:pl-12">
-        <span className="text-[13px] text-[var(--text-subtle)]">Dla celu</span>
+        <span className="text-[13px] text-[var(--text-subtle)]">{t("rozpiskaEditor.dlaCelu")}</span>
         <MenuSelect
           size="sm"
           className="w-auto min-w-[200px] max-w-[320px]"
-          ariaLabel="Dla celu"
+          ariaLabel={t("rozpiskaEditor.dlaCelu")}
           value={draft.goalId}
           onChange={(goalId) => set({ goalId })}
           options={[
-            { value: "", label: "Bez celu" },
+            { value: "", label: t("rozpiskaEditor.bezCelu") },
             ...goals
               .filter((item) => !item.archivedAt)
               .map((item) => ({ value: item.id, label: item.title })),
           ]}
         />
         <span className="text-[12.5px] text-[var(--text-subtle)]">
-          Zapisana wersja może być dowodem, jeśli cel jej oczekuje.
+          {t("rozpiskaEditor.zapisanaWersjaMozeByc")}
         </span>
       </div>
 
       {viewingVersion !== null ? (
         <p className="mt-3 rounded-xl border border-white/[0.08] bg-[var(--surface)] px-4 py-2.5 text-[13px] text-[var(--text-muted)]">
-          Oglądasz wersję {viewingVersion}. Zapisanie zrobi z niej nową, aktualną wersję.{" "}
+          {t("rozpiskaEditor.ogladaszWersjeViewingversionZapisanie", { viewingVersion })}
           <button
             type="button"
             className="font-medium text-white underline decoration-white/30 underline-offset-4"
@@ -390,7 +394,7 @@ export function RozpiskaEditor({
               setViewingVersion(null);
             }}
           >
-            Wróć do aktualnej
+            {t("rozpiskaEditor.wrocDoAktualnej")}
           </button>
         </p>
       ) : null}
@@ -398,12 +402,11 @@ export function RozpiskaEditor({
       {goalAwaits && goal ? (
         <section className="edge-accent mt-3 flex flex-wrap items-center gap-3 rounded-[18px] border border-[var(--vairo)]/25 bg-[var(--vairo)]/[0.06] px-4 py-3">
           <p className="min-w-0 flex-1 text-[13.5px] text-[var(--text-muted)]">
-            <span className="font-medium text-white">Ta rozpiska może zamknąć cel „{goal.title}”.</span>{" "}
-            Cel oczekuje zapisanej wersji Rozpiski jako dowodu.
+            <span className="font-medium text-white">{t("rozpiskaEditor.taRozpiskaMozeZamknac", { title: goal.title })}</span>{t("rozpiskaEditor.celOczekujeZapisanejWersji")}
           </p>
           <Button size="sm" loading={pending} onClick={() => applyAsProof(record?.id)}>
             <ShieldCheck className="size-3.5" />
-            Użyj jako dowód
+            {t("rozpiskaEditor.uzyjJakoDowod")}
           </Button>
         </section>
       ) : null}
@@ -433,7 +436,7 @@ export function RozpiskaEditor({
           onAdd={addNode}
         />
         <Button variant="ghost" size="sm" className="mt-3" onClick={() => setShowCanvasOnPhone(true)}>
-          Pokaż płótno
+          {t("rozpiskaEditor.pokazPlotno")}
         </Button>
       </div>
 
@@ -463,24 +466,24 @@ export function RozpiskaEditor({
           <div className="absolute bottom-3 left-3 z-10 flex flex-wrap items-center gap-2">
             <Button size="sm" variant="secondary" onClick={addNode}>
               <Plus className="size-3.5" />
-              Dodaj bloczek
+              {t("rozpiskaEditor.dodajBloczek")}
             </Button>
             <span className="hidden items-center gap-1.5 rounded-lg bg-[var(--bg)]/70 px-2.5 py-1.5 text-[12px] text-[var(--text-subtle)] backdrop-blur sm:inline-flex">
               <MousePointerClick className="size-3.5" aria-hidden="true" />
-              Kropka z prawej łączy bloczki · klik w strzałkę ją usuwa · strzałki nie zmieniają celów ani zadań
+              {t("rozpiskaEditor.kropkaZPrawejLaczy")}
             </span>
           </div>
 
           {showStarter ? (
             <div className="absolute right-3 top-3 z-10 w-[260px] rounded-2xl border border-white/10 bg-[var(--surface-2)]/95 p-4 backdrop-blur lift-2">
               <div className="flex items-start justify-between gap-2">
-                <p className="text-[13.5px] font-medium text-white">Jak zacząć</p>
+                <p className="text-[13.5px] font-medium text-white">{t("rozpiskaEditor.jakZaczac")}</p>
                 <button
                   type="button"
                   onClick={() => setStarterClosed(true)}
                   className="text-[12px] text-[var(--text-subtle)] hover:text-white"
                 >
-                  Ukryj
+                  {t("rozpiskaEditor.hide")}
                 </button>
               </div>
               <ol className="mt-2.5 flex flex-col gap-2">
@@ -508,13 +511,13 @@ export function RozpiskaEditor({
       </div>
       {deleting && record ? (
         <Modal
-          title="Usunąć tę rozpiskę?"
-          description="Zniknie razem ze wszystkimi wersjami. Cele, które użyły jej jako dowodu, zachowują swoją kopię."
+          title={t("rozpiskaEditor.usunacTeRozpiske")}
+          description={t("rozpiskaEditor.zniknieRazemZeWszystkimi")}
           onClose={() => setDeleting(false)}
           footer={
             <>
               <Button variant="ghost" onClick={() => setDeleting(false)}>
-                Zostaw
+                {t("rozpiskaEditor.keep")}
               </Button>
               <Button
                 variant="danger"
@@ -523,15 +526,15 @@ export function RozpiskaEditor({
                   start(async () => {
                     const result = await deleteWorkflow(startupId, record.id);
                     if (result.error) {
-                      toast({ tone: "error", title: "Nie udało się usunąć", description: result.error });
+                      toast({ tone: "error", title: t("rozpiskaEditor.nieUdaloSieUsunac"), description: result.error });
                       return;
                     }
-                    toast({ title: "Rozpiska usunięta", description: record.title });
+                    toast({ title: t("rozpiskaEditor.rozpiskaUsunieta"), description: record.title });
                     router.push("/app/workflows");
                   })
                 }
               >
-                Usuń rozpiskę
+                {t("rozpiskaEditor.usunRozpiske")}
               </Button>
             </>
           }
@@ -583,6 +586,7 @@ function StepList({
   onRemove: (id: string) => void;
   onAdd: () => void;
 }) {
+  const t = useT("workflows");
   const steps = orderedSteps(nodes, edges);
   return (
     <div>
@@ -598,16 +602,16 @@ function StepList({
                   {index + 1}
                 </span>
                 <Input
-                  aria-label="Nazwa kroku"
+                  aria-label={t("rozpiskaEditor.nazwaKroku")}
                   value={node.label}
-                  placeholder="Nazwij krok"
+                  placeholder={t("rozpiskaEditor.nazwijKrok")}
                   onChange={(event) => onRename(node.id, event.target.value)}
                   className="h-10"
                 />
-                <Menu label={`Akcje kroku ${node.label}`}>
+                <Menu label={t("rozpiskaEditor.akcjeKrokuLabel", { label: node.label })}>
                   {(close) => (
                     <>
-                      <p className="px-3.5 pb-1 pt-2 text-[12px] text-[var(--text-subtle)]">Prowadzi do…</p>
+                      <p className="px-3.5 pb-1 pt-2 text-[12px] text-[var(--text-subtle)]">{t("rozpiskaEditor.prowadziDo")}</p>
                       {nodes
                         .filter((item) => item.id !== node.id)
                         .map((item) => {
@@ -633,7 +637,7 @@ function StepList({
                           onRemove(node.id);
                         }}
                       >
-                        Usuń krok
+                        {t("rozpiskaEditor.usunKrok")}
                       </MenuItem>
                     </>
                   )}
@@ -650,7 +654,7 @@ function StepList({
       </ol>
       <Button variant="secondary" size="sm" className="mt-3" onClick={onAdd}>
         <Plus className="size-3.5" />
-        Dodaj krok
+        {t("rozpiskaEditor.dodajKrok")}
       </Button>
     </div>
   );

@@ -9,10 +9,11 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ModuleHeader, SectionLabel } from "@/components/ui/module-header";
 import { useToast } from "@/components/ui/toast";
-import { formatDay, plural } from "@/components/goals/goal-format";
 import { plainPreview } from "@/lib/markdown";
 import { DOC_TEMPLATES, type DocSummary } from "@/types/docs";
 
+import { useT } from "@/i18n/client";
+import { useDateFormat } from "@/components/goals/goal-format-hook";
 /**
  * Półka z notatkami. Karta wygląda jak mała kartka: tytuł, pierwsze linijki
  * treści, kto i kiedy — notatkę rozpoznaje się po tym, co w niej jest.
@@ -20,6 +21,8 @@ import { DOC_TEMPLATES, type DocSummary } from "@/types/docs";
  * pełna i to ona ma być widoczna, nie szablony.
  */
 export function DocsShelf({ documents }: { documents: DocSummary[] }) {
+  const { formatDay } = useDateFormat();
+  const t = useT("docs");
   const router = useRouter();
   const { toast } = useToast();
   const [pending, start] = useTransition();
@@ -34,7 +37,7 @@ export function DocsShelf({ documents }: { documents: DocSummary[] }) {
       if (result.error || !("id" in result) || !result.id) {
         toast({
           tone: "error",
-          title: "Nie udało się założyć dokumentu",
+          title: t("docsShelf.nieUdaloSieZalozyc"),
           description: result.error ?? undefined,
         });
         return;
@@ -46,22 +49,22 @@ export function DocsShelf({ documents }: { documents: DocSummary[] }) {
   return (
     <div className="page-wide">
       <ModuleHeader
-        title="Dokumenty"
+        title={t("docsShelf.dokumenty")}
         subtitle={
           documents.length === 0
-            ? "Wspólne notatki zespołu."
-            : `${documents.length} ${plural(documents.length, "dokument", "dokumenty", "dokumentów")} zespołu.`
+            ? t("docsShelf.wspolneNotatkiZespolu")
+            : t("docsShelf.count", { count: documents.length })
         }
         action={
           <Button href="/app/docs/new">
             <Plus className="size-4" />
-            Nowy dokument
+            {t("docsShelf.nowyDokument")}
           </Button>
         }
       />
 
       <section className="mt-6">
-        <SectionLabel>Gotowe początki</SectionLabel>
+        <SectionLabel>{t("docsShelf.gotowePoczatki")}</SectionLabel>
         <div className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
           {DOC_TEMPLATES.map((template) => (
             <button
@@ -73,9 +76,9 @@ export function DocsShelf({ documents }: { documents: DocSummary[] }) {
             >
               <FilePlus2 className="mt-0.5 size-4 shrink-0 text-[var(--text-subtle)]" aria-hidden="true" />
               <span>
-                <span className="block text-[13.5px] font-medium text-white">{template.label}</span>
+                <span className="block text-[13.5px] font-medium text-white">{t(`template.${template.id}.label`)}</span>
                 <span className="mt-0.5 block text-[12px] leading-snug text-[var(--text-subtle)]">
-                  {template.description}
+                  {t(`template.${template.id}.description`)}
                 </span>
               </span>
             </button>
@@ -88,10 +91,9 @@ export function DocsShelf({ documents }: { documents: DocSummary[] }) {
           <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-[var(--surface-2)] text-[var(--text-subtle)]">
             <FileText className="size-6" strokeWidth={1.5} />
           </span>
-          <h2 className="mt-4 font-heading text-[17px] font-semibold text-white">Półka jest pusta</h2>
+          <h2 className="mt-4 font-heading text-[17px] font-semibold text-white">{t("docsShelf.polkaJestPusta")}</h2>
           <p className="mx-auto mt-1.5 max-w-md text-[13.5px] leading-relaxed text-[var(--text-subtle)]">
-            Notatki ze spotkań, wyniki rozmów, decyzje — wszystko, co zespół chce mieć w jednym
-            miejscu. Zacznij od pustej kartki albo od jednego z początków wyżej.
+            {t("docsShelf.notatkiZeSpotkanWyniki")}
           </p>
         </section>
       ) : (
@@ -115,7 +117,7 @@ export function DocsShelf({ documents }: { documents: DocSummary[] }) {
                         </p>
                       ))
                     ) : (
-                      <p>Pusty dokument</p>
+                      <p>{t("docsShelf.pustyDokument")}</p>
                     )}
                   </div>
                   <p className="mt-4 flex items-center gap-2 text-[12px] text-[var(--text-subtle)]">
@@ -126,10 +128,10 @@ export function DocsShelf({ documents }: { documents: DocSummary[] }) {
                     {doc.usedAsProof ? (
                       <span
                         className="ml-auto inline-flex shrink-0 items-center gap-1 text-[var(--success)]"
-                        title="Ten dokument jest dowodem ukończonego celu"
+                        title={t("docsShelf.tenDokumentJestDowodem")}
                       >
                         <ShieldCheck className="size-3.5" aria-hidden="true" />
-                        Dowód
+                        {t("docsShelf.dowod")}
                       </span>
                     ) : null}
                   </p>

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadTeamMembers } from "@/lib/goals";
 
+import { getT } from "@/i18n/server";
 /**
  * Pliki startupu z dwóch źródeł: biblioteka (`startup_files`) i odpowiedzi
  * w etapach (`stage_answers` z polem typu „files"). Każdy plik pamięta, skąd
@@ -91,6 +92,7 @@ export async function loadDriveFiles(
   supabase: SupabaseClient,
   startupId: string
 ): Promise<DriveFile[]> {
+  const t = await getT("files");
   const [library, { data: stages }, members] = await Promise.all([
     loadLibrary(supabase, startupId),
     supabase
@@ -145,7 +147,7 @@ export async function loadDriveFiles(
           uploadedBy: (answer.answered_by as string | null) ?? null,
           uploaderName: names.get(answer.answered_by as string) ?? null,
           createdAt: (answer.updated_at as string | null) ?? null,
-          stageTitle: stage?.title ?? "Etap",
+          stageTitle: stage?.title ?? t("files.etap"),
           stagePosition: stage?.position ?? 0,
           question: questions.get(answer.answer_key as string) ?? null,
           folderId: null,

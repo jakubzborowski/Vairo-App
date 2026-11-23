@@ -9,6 +9,7 @@ import { getStartupRole } from "@/lib/permissions";
 import type { StartupRole } from "@/types/startup";
 import { notAMember, sessionExpired } from "@/lib/server-errors";
 
+import { getT } from "@/i18n/server";
 export type RozpiskaNode = { id: string; x: number; y: number; label: string };
 export type RozpiskaEdge = { id: string; from: string; to: string };
 
@@ -19,6 +20,7 @@ type Gate =
   | { ok: true; supabase: SupabaseClient; user: User; role: StartupRole };
 
 async function context(startupId: string): Promise<Gate> {
+  const t = await getT("workflows");
   const supabase = await createClient();
   const {
     data: { user },
@@ -26,7 +28,7 @@ async function context(startupId: string): Promise<Gate> {
   if (!user) return { ok: false, error: await sessionExpired() };
   const active = await getActiveStartupId();
   if (active && active !== startupId) {
-    return { ok: false, error: "Przełącz zespół i spróbuj ponownie." };
+    return { ok: false, error: t("actions.przelaczZespolISprobuj") };
   }
   const role = await getStartupRole(supabase, startupId, user.id);
   if (!role) return { ok: false, error: await notAMember() };
@@ -41,11 +43,12 @@ export async function saveWorkflow(input: {
   nodes: RozpiskaNode[];
   edges: RozpiskaEdge[];
 }): Promise<Result> {
+  const t = await getT("workflows");
   const ctx = await context(input.startupId);
   if (!ctx.ok) return { error: ctx.error };
 
   const title = input.title.trim();
-  if (title.length < 2) return { error: "Nazwij rozpiskę, żeby dało się do niej wrócić." };
+  if (title.length < 2) return { error: t("actions.nazwijRozpiskeZebyDalo") };
 
   const nodes = input.nodes
     .filter((node) => node.label.trim())
@@ -104,6 +107,7 @@ export async function saveWorkflow(input: {
  * pracy.
  */
 export async function deleteWorkflow(startupId: string, id: string): Promise<Result> {
+  const t = await getT("workflows");
   const ctx = await context(startupId);
   if (!ctx.ok) return { error: ctx.error };
 
@@ -113,9 +117,9 @@ export async function deleteWorkflow(startupId: string, id: string): Promise<Res
     .eq("id", id)
     .eq("startup_id", startupId)
     .maybeSingle();
-  if (!row) return { error: "Nie ma takiej rozpiski." };
+  if (!row) return { error: t("actions.nieMaTakiejRozpiski") };
   if (ctx.role === "member" && row.created_by !== ctx.user.id) {
-    return { error: "Usunąć cudzą rozpiskę może jej autor, Founder albo Admin." };
+    return { error: t("actions.usunacCudzaRozpiskeMoze") };
   }
 
   const { error } = await ctx.supabase.from("workflows").delete().eq("id", id);
