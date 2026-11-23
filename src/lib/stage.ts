@@ -11,12 +11,19 @@ import {
   type StageTree,
 } from "@/types/stage";
 import {
-  CATEGORY_LABELS,
   canEditStageData,
   type StartupRole,
   type ValidationCategory,
 } from "@/types/startup";
 import { loadSubpointGoalConditions } from "@/lib/goals";
+import { getLocale, getT } from "@/i18n/server";
+import {
+  isMissingTranslations,
+  localizeRow,
+  localizeTree,
+  selectTranslations,
+  type Translations,
+} from "@/lib/stage-i18n";
 
 type RawField = {
   id: string;
@@ -145,6 +152,9 @@ export async function loadStageTree(
     role: StartupRole | null;
   }
 ): Promise<StageTree | null> {
+  const locale = await getLocale();
+  const tl = await getT("labels");
+  const tStage = await getT("stage");
   type StageRow = {
     id: string;
     startup_id: string;
@@ -157,21 +167,31 @@ export async function loadStageTree(
       subtitle: string | null;
       intro: string | null;
       finish_label: string | null;
+      translations?: Translations;
     } | null;
   };
 
   // Odpowiedzi zależą tylko od id instancji, więc jadą razem z jej wierszem.
   // Reszta potrzebuje `startup_id` i `template_id` — idzie w jednej fali
   // zaraz potem, zamiast w dwóch kolejnych.
-  const [{ data: stageRow }, { data: answerRows }] = await Promise.all([
+  const stageSelect = (withTr: boolean) =>
     supabase
       .from("startup_stages")
       .select(
         "id, startup_id, status, last_subpoint_id, template_id, " +
-          "stage_templates(key, title, subtitle, intro, finish_label)"
+          `stage_templates(${withTr ? selectTranslations(locale) : ""}key, title, subtitle, intro, finish_label)`
       )
       .eq("id", params.startupStageId)
-      .maybeSingle(),
+      .maybeSingle();
+  // Bez migracji 049 kolumny `translations` nie ma — etap ma się otworzyć
+  // po polsku, a nie wcale.
+  const withFallback = async () => {
+    const first = await stageSelect(true);
+    return isMissingTranslations(first.error?.message) ? stageSelect(false) : first;
+  };
+
+  const [{ data: stageRow }, { data: answerRows }] = await Promise.all([
+    withFallback(),
     supabase
       .from("stage_answers")
       .select("answer_key, value")
@@ -181,29 +201,31 @@ export async function loadStageTree(
   const stage = stageRow as unknown as StageRow | null;
   if (!stage) return null;
 
-  const template = stage.stage_templates;
+  const template = stage.stage_templates ? localizeRow(stage.stage_templates, locale) : null;
 
-  const treeSelect = (withSkip: boolean, withDepends = withSkip) =>
-    supabase
+  const treeSelect = (withSkip: boolean, withDepends = withSkip, withTr = true) => {
+    const tr = withTr ? selectTranslations(locale) : "";
+    return supabase
       .from("stage_categories")
       .select(
-        `id, key, title, intro, position,
+        `id, key, title, intro, ${tr}position,
          points:stage_points(
            id, key, title, description, duration_hint,
-           guide_body, guide_sources, guide_source_label, position,
+           guide_body, guide_sources, guide_source_label, ${tr}position,
            subpoints:stage_subpoints(
              id, key, title, description, is_optional, shared_key, ${
                withSkip ? `skip_when, ${withDepends ? "depends_on, " : ""}` : ""
-             }position,
+             }${tr}position,
              fields:stage_fields(
                id, key, kind, question, help, example,
-               is_required, shared_key, answer_key, config, position
+               is_required, shared_key, answer_key, config, ${tr}position
              )
            )
          )`
       )
       .eq("template_id", stage.template_id)
       .in("key", params.activeCategories);
+  };
 
   const [goalConditions, { data: progressRows }, categoryResult] = await Promise.all([
     loadSubpointGoalConditions(supabase, stage.startup_id, stage.id),
@@ -219,16 +241,18 @@ export async function loadStageTree(
 
   // Kolumna skip_when powstaje w migracji 021. Zanim ktoś ją odpali,
   // etapy Ambition i Idea mają się dalej otwierać.
-  const categoryRows = categoryResult.error?.message.includes("depends_on")
-    ? (await treeSelect(true, false)).data
-    : categoryResult.error?.message.includes("skip_when")
-      ? (await treeSelect(false)).data
-      : categoryResult.data;
+  const categoryRows = isMissingTranslations(categoryResult.error?.message)
+    ? (await treeSelect(true, true, false)).data
+    : categoryResult.error?.message.includes("depends_on")
+      ? (await treeSelect(true, false)).data
+      : categoryResult.error?.message.includes("skip_when")
+        ? (await treeSelect(false)).data
+        : categoryResult.data;
 
   const answers: Record<string, unknown> = {};
   for (const row of answerRows ?? []) answers[row.answer_key] = row.value;
 
-  const raw = ((categoryRows ?? []) as unknown as RawCategory[]).sort(byPosition);
+  const raw = localizeTree((categoryRows ?? []) as unknown as RawCategory[], locale).sort(byPosition);
 
   // Zwijanie duplikatów: pierwsza kategoria w kolejności wygrywa,
   // pozostałe tylko dopisują się do etykiety „dotyczy też".
@@ -244,7 +268,7 @@ export async function loadStageTree(
           if (rawSubpoint.shared_key) {
             const existing = seenSubpoints.get(rawSubpoint.shared_key);
             if (existing) {
-              const label = CATEGORY_LABELS[rawCategory.key as ValidationCategory];
+              const label = tl.maybe(`category.${rawCategory.key}`, rawCategory.title);
               if (label && !existing.alsoIn.includes(label)) {
                 existing.alsoIn.push(label);
               }
@@ -367,7 +391,7 @@ export async function loadStageTree(
         changed = true;
       }
       subpoint.waitingOn =
-        waiting.length > 0 ? "Czeka na wcześniejszy wynik" : null;
+        waiting.length > 0 ? tStage("tree.waitingOn") : null;
       void ref;
     }
     if (!changed) break;
@@ -401,7 +425,7 @@ export async function loadStageTree(
   return {
     startupStageId: stage.id,
     templateKey: template?.key ?? "",
-    title: template?.title ?? "Etap",
+    title: template?.title ?? tStage("tree.fallbackTitle"),
     subtitle: template?.subtitle ?? null,
     intro: template?.intro ?? null,
     finishLabel: template?.finish_label ?? null,
@@ -457,13 +481,23 @@ export async function loadStageProgram(
   /** null = sam program, bez postępu. Ktoś bez teamu też ma prawo go zobaczyć. */
   startupId: string | null
 ): Promise<StageProgramEntry[]> {
-  const [{ data: templateRows }, { data: stageRows }] = await Promise.all([
+  const locale = await getLocale();
+  const templateSelect = (withTr: boolean) =>
     supabase
       .from("stage_templates")
       .select(
-        "id, key, version, title, subtitle, intro, finish_label, position, published_at"
+        `id, key, version, title, subtitle, intro, finish_label, ${
+          withTr ? selectTranslations(locale) : ""
+        }position, published_at`
       )
-      .order("position", { ascending: true }),
+      .order("position", { ascending: true });
+  const templatesWithFallback = async () => {
+    const first = await templateSelect(true);
+    return isMissingTranslations(first.error?.message) ? templateSelect(false) : first;
+  };
+
+  const [{ data: rawTemplateRows }, { data: stageRows }] = await Promise.all([
+    templatesWithFallback(),
     startupId
       ? supabase
           .from("startup_stages")
@@ -474,6 +508,9 @@ export async function loadStageProgram(
         }),
   ]);
 
+  const templateRows = (rawTemplateRows ?? []).map((row) =>
+    localizeRow(row as typeof row & { translations?: Translations }, locale)
+  );
   const byTemplate = new Map(
     (stageRows ?? []).map((row) => [row.template_id as string, row])
   );
