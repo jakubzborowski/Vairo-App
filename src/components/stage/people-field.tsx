@@ -47,7 +47,7 @@ export function PeopleInput({ value, onChange, disabled }: FieldInputProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const toggle = (id: string) => {
     if (disabled) return;

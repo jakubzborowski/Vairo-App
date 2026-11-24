@@ -32,7 +32,6 @@ export function AnswerView({
   answerHref?: string | null;
 }) {
   const t = useT("stage");
-  const locale = useLocale();
   return (
     <div className="border-t border-white/[0.06] pt-5 first:border-t-0 first:pt-0">
       <p className="text-[15px] font-medium leading-snug text-white">

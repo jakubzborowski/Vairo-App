@@ -24,7 +24,6 @@ import {
   type TaskStatus,
   type TeamMemberOption,
 } from "@/types/goals";
-import { plural } from "./goal-format";
 import { StatusIcon } from "./status";
 import { TaskCard, isTaskOverdue, type BoardTask } from "./task-card";
 

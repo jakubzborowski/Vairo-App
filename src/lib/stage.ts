@@ -508,8 +508,22 @@ export async function loadStageProgram(
         }),
   ]);
 
-  const templateRows = (rawTemplateRows ?? []).map((row) =>
-    localizeRow(row as typeof row & { translations?: Translations }, locale)
+  // Lista kolumn sklejana w locie (z tłumaczeniami albo bez) — parser typów
+  // Supabase nie umie jej odczytać, więc kształt wiersza podajemy jawnie.
+  type TemplateDbRow = {
+    id: string;
+    key: string;
+    version: number;
+    title: string;
+    subtitle: string | null;
+    intro: string | null;
+    finish_label: string | null;
+    position: number;
+    published_at: string | null;
+    translations?: Translations;
+  };
+  const templateRows = ((rawTemplateRows ?? []) as unknown as TemplateDbRow[]).map(
+    (row) => localizeRow(row, locale)
   );
   const byTemplate = new Map(
     (stageRows ?? []).map((row) => [row.template_id as string, row])

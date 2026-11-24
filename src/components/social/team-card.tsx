@@ -7,7 +7,7 @@ import { industryLabel } from "@/lib/localized";
 import type { PublicStartup } from "@/types/social";
 import { TeamLogo } from "./team-logo";
 import type { MatchReason } from "@/lib/match";
-import { getLocale, getT } from "@/i18n/server";
+import { getT } from "@/i18n/server";
 
 /**
  * Karta teamu w Discover.

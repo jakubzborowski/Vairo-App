@@ -126,7 +126,7 @@ export function DocSheet({
     } while (again.current);
     inFlight.current = false;
     setState("saved");
-  }, [toast]);
+  }, [toast, t]);
 
   const schedule = () => {
     setState("dirty");

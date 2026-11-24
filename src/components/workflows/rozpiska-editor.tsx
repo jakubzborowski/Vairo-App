@@ -85,7 +85,7 @@ export function RozpiskaEditor({
             nodes: [{ id: crypto.randomUUID(), x: 48, y: 48, label: "" }],
             edges: [],
           },
-    [record]
+    [record, t]
   );
   const [draft, setDraft] = useState<Draft>(initial);
   const [baseline, setBaseline] = useState(() => snapshotOf(initial));

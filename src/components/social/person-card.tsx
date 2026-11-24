@@ -7,7 +7,7 @@ import type { MatchReason } from "@/lib/match";
 import { MAX_STARTUPS } from "@/types/startup";
 import type { PublicProfile } from "@/types/social";
 import { skillLabel } from "@/lib/localized";
-import { getLocale, getT } from "@/i18n/server";
+import { getT } from "@/i18n/server";
 
 const MAX_VISIBLE_SKILLS = 5;
 
