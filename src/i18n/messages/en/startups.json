@@ -1,0 +1,23 @@
+{
+  "metaTitle": "New startup — Vairo",
+  "limitTitle": "You already have {count} teams",
+  "limitBody": "That's the maximum for one account. To create another project, leave one of your current teams or hand over the Founder role in it to someone else.",
+  "backToDashboard": "Back to dashboard",
+  "name.title": "What shall we call your project?",
+  "name.description": "A working name is perfectly fine — you can change it any time.",
+  "hasIdea.title": "Do you already know what you want to build?",
+  "hasIdea.description": "Your answer decides where we start.",
+  "hasIdea.yes": "Yes, I have an idea",
+  "hasIdea.yesDescription": "You'll describe it now and we'll go straight to checking whether it makes sense.",
+  "hasIdea.no": "Not yet",
+  "hasIdea.noDescription": "We'll take you through about fifteen minutes of questions, after which you'll have a first outline.",
+  "idea.title": "Tell us what it's about",
+  "idea.help": "It doesn't have to be perfect. In the next steps Vairo will help you sharpen it.",
+  "categoriesHelp": "This decides what Vairo will ask about during validation. General validation is always on — the rest only adds to it.",
+  "tagsDescription": "Select all that apply. This helps others find you in Social.",
+  "finishWithIdea": "Create and start validation",
+  "finishWithoutIdea": "Create and start from scratch",
+  "errors.name": "Project name: 2–80 characters.",
+  "errors.idea": "Idea description: at least a few sentences, or leave it empty.",
+  "errors.limit": "You already have {count} teams — that's the maximum for one account. Leave one to create a new one."
+}

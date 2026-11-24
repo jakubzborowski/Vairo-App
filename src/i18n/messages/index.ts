@@ -1,5 +1,6 @@
 import type { Locale } from "@/i18n/config";
 import pl from "./pl";
+import en from "./en";
 import de from "./de";
 import uk from "./uk";
 import es from "./es";
@@ -7,7 +8,7 @@ import es from "./es";
 /**
  * Wszystkie słowniki. Importuje to WYŁĄCZNIE serwer (`server.ts`, layout) —
  * klient dostaje jeden scalony słownik przez `I18nProvider`, więc do
- * przeglądarki nie trafiają cztery języki naraz.
+ * przeglądarki nie trafia pięć języków naraz.
  */
 export type Messages = typeof pl;
 export type Namespace = keyof Messages;
@@ -18,6 +19,7 @@ export type Dictionary = { [N in Namespace]: Record<string, string> };
 
 const ALL: Record<Locale, Partial<Record<Namespace, Record<string, string>>>> = {
   pl,
+  en,
   de,
   uk,
   es,

@@ -97,5 +97,6 @@
   "scoreControls.wynikSkali": "Значення шкали:",
   "scoreControls.zadanie": "Завдання",
   "scoreControls.zapisanyDowod": "Збережений доказ",
-  "scoreControls.zespolDoRecenzjiScore": "Команда на перевірку SCORE"
+  "scoreControls.zespolDoRecenzjiScore": "Команда на перевірку SCORE",
+  "page.pointsReputation": "репутації"
 }

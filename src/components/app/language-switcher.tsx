@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 /**
  * Wybór języka interfejsu — w Ustawieniach konta.
  *
- * Cztery wiersze zamiast listy rozwijanej: przy czterech opcjach lista tylko
+ * Pięć wierszy zamiast listy rozwijanej: przy tak krótkiej liście lista tylko
  * chowa wybór o jedno kliknięcie głębiej. Nazwy języków są we własnym języku
  * („Deutsch”, nie „Niemiecki”), bo tak szuka ich ktoś, kto nie czyta
  * bieżącego interfejsu. Toast potwierdza zmianę już w nowym języku.

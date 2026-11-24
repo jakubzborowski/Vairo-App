@@ -3,7 +3,7 @@
  * Tłumaczenia treści etapów (pytania, podpowiedzi, przewodniki).
  *
  *   node scripts/content-i18n.mjs extract [etap]   tekst źródłowy (pl) → supabase/content/i18n/pl/
- *   node scripts/content-i18n.mjs check            kompletność de/uk/es względem pl
+ *   node scripts/content-i18n.mjs check            kompletność en/de/uk/es względem pl
  *   node scripts/content-i18n.mjs build [numer]    migracja <numer>_content_translations.sql (domyślnie 050)
  *
  * Model: polski JSON w `supabase/content/*.json` zostaje jedynym źródłem
@@ -47,7 +47,7 @@ function migrationPath(number = "050") {
   return path.join(ROOT, `supabase/migrations/${number}_content_translations.sql`);
 }
 const STAGES = ["ambition", "idea", "preparation", "execution", "mvp"];
-const TARGETS = ["de", "uk", "es"];
+const TARGETS = ["en", "de", "uk", "es"];
 
 // ── Teksty z pliku treści ──────────────────────────────────────────────────
 
@@ -262,9 +262,9 @@ function configTranslation(tr, f, config) {
   return Object.keys(out).length ? out : null;
 }
 
-function build(number) {
+function build(number = "050") {
   const lines = [
-    "-- 050 · Tłumaczenia treści etapów (de, uk, es)",
+    `-- ${number} · Tłumaczenia treści etapów (${TARGETS.join(", ")})`,
     "--",
     "-- WYGENEROWANE: node scripts/content-i18n.mjs build — nie edytować ręcznie.",
     "-- Źródło: supabase/content/i18n/<język>/<etap>-v1.json. Wymaga 049.",

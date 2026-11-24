@@ -6,10 +6,17 @@
  * importuje niczego z serwera — czyta go i proxy, i klient.
  */
 
-export const LOCALES = ["pl", "de", "uk", "es"] as const;
+export const LOCALES = ["pl", "en", "de", "uk", "es"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "pl";
+
+/**
+ * Język dla przeglądarki ustawionej na język spoza listy (np. francuski,
+ * rosyjski). Angielski rozumie najwięcej takich osób; polski zostaje
+ * językiem źródłowym i domyślnym, gdy przeglądarka nie podaje żadnego.
+ */
+export const FOREIGN_FALLBACK_LOCALE: Locale = "en";
 
 /** Ciasteczko z językiem. Czyta je proxy, layout i każda akcja serwerowa. */
 export const LOCALE_COOKIE = "vairo-locale";
@@ -17,6 +24,7 @@ export const LOCALE_COOKIE = "vairo-locale";
 /** Nazwy języków zawsze we własnym języku — tak człowiek szuka swojego. */
 export const LOCALE_NAMES: Record<Locale, string> = {
   pl: "Polski",
+  en: "English",
   de: "Deutsch",
   uk: "Українська",
   es: "Español",
@@ -25,6 +33,7 @@ export const LOCALE_NAMES: Record<Locale, string> = {
 /** Tag BCP-47 do `Intl`, Web Speech API i atrybutu `lang`. */
 export const LOCALE_TAGS: Record<Locale, string> = {
   pl: "pl-PL",
+  en: "en-GB",
   de: "de-DE",
   uk: "uk-UA",
   es: "es-ES",
@@ -33,6 +42,7 @@ export const LOCALE_TAGS: Record<Locale, string> = {
 /** Nazwa języka po angielsku — dla instrukcji modelu AI i Whispera. */
 export const LOCALE_ENGLISH_NAMES: Record<Locale, string> = {
   pl: "Polish",
+  en: "English",
   de: "German",
   uk: "Ukrainian",
   es: "Spanish",
@@ -45,8 +55,8 @@ export function isLocale(value: unknown): value is Locale {
 /**
  * Wybór języka z nagłówka `Accept-Language` przy pierwszym wejściu.
  * Nie zgadujemy narodowości z pokrewnego języka przeglądarki (np. rosyjski →
- * ukraiński) — język spoza listy dostaje domyślny polski, a przełącznik jest
- * w Ustawieniach.
+ * ukraiński) — język spoza listy dostaje angielski, a przełącznik jest
+ * w Ustawieniach. Bez nagłówka: polski.
  */
 export function negotiateLocale(acceptLanguage: string | null | undefined): Locale {
   if (!acceptLanguage) return DEFAULT_LOCALE;
@@ -65,5 +75,5 @@ export function negotiateLocale(acceptLanguage: string | null | undefined): Loca
     const base = tag.split("-")[0];
     if (isLocale(base)) return base;
   }
-  return DEFAULT_LOCALE;
+  return ranked.length ? FOREIGN_FALLBACK_LOCALE : DEFAULT_LOCALE;
 }

@@ -17,7 +17,7 @@ tam zajrzeć, bez otwierania go.
 | [docs/ux.md](docs/ux.md) | dokładanie nowej funkcji — jak prowadzić kogoś, kto się na tym nie zna |
 | [docs/deletion.md](docs/deletion.md) | nowy trigger `DELETE`, nowy bucket, cokolwiek kasującego |
 | [docs/content.md](docs/content.md) | zmiana pytań w etapach, importer treści, `answer_key` |
-| [docs/i18n.md](docs/i18n.md) | każdy nowy albo zmieniony tekst — interfejs i treść etapów są w 4 językach |
+| [docs/i18n.md](docs/i18n.md) | każdy nowy albo zmieniony tekst — interfejs i treść etapów są w 5 językach |
 | [supabase/README.md](supabase/README.md) | kolejność odpalania migracji na świeżej bazie |
 
 > Plany, audyty i rozpiski są w `_plan/` — katalog lokalny, w `.gitignore`.
@@ -339,9 +339,9 @@ przed oczami.
 
 Jedna reguła stąd wiąże każdą nową akcję serwerową:
 
-**Żaden tekst nie trafia do JSX na sztywno.** Interfejs jest w czterech
-językach (PL, DE, UK, ES): tekst idzie do `src/i18n/messages/pl/*.json`
-i od razu do pozostałych trzech; `npm run i18n:check` musi być czysty.
+**Żaden tekst nie trafia do JSX na sztywno.** Interfejs jest w pięciu
+językach (PL, EN, DE, UK, ES): tekst idzie do `src/i18n/messages/pl/*.json`
+i od razu do pozostałych czterech; `npm run i18n:check` musi być czysty.
 → [docs/i18n.md](docs/i18n.md).
 
 **Żaden komunikat błędu nie wychodzi surowy.** `translateDbError()`
@@ -469,11 +469,13 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `048_score_deletion_and_privacy` | SCORE nie blokuje `delete_own_account()` (klucze do profili `set null`, `score_freeze` milczy w kaskadzie) + w „Doceń wiadomość” nazwa publiczna nadawcy |
 | `049_i18n` | `profiles.locale` (pl/de/uk/es) + `translations jsonb` w tabelach `stage_*` |
 | `050_content_translations` | tłumaczenia treści etapów (generowane: `node scripts/content-i18n.mjs build`); kolejne wersje pod nowymi numerami |
+| `051_locale_en` | angielski jako piąty język: `profiles_locale_check` przyjmuje `en` |
+| `052_content_translations` | tłumaczenia treści etapów w EN, DE, UK, ES (generowane) — obowiązuje zamiast 050 |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`050`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`052`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 
@@ -557,6 +559,6 @@ klientem zalogowanej osoby — RLS wpuszcza tylko członków teamu. Limity na
 osobę w pamięci instancji (`src/lib/rate-limit.ts`). Modele przez
 `AI_MODEL_FAST` / `AI_MODEL_SMART` (domyślnie `claude-haiku-5-5` /
 `claude-sonnet-5-5`); stała część instrukcji z cache promptów. Śledzenie kosztów
-w bazie (gdy będzie potrzebne) — pierwszy wolny numer po `050`.
+w bazie (gdy będzie potrzebne) — pierwszy wolny numer po `052`.
 
 Ścieżka Partner — dopiero w alfie.

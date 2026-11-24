@@ -12,7 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScoreRefresh } from "@/components/score/score-refresh";
 
-import { getT } from "@/i18n/server";
+import { getLocale, getT } from "@/i18n/server";
+import { LOCALE_TAGS } from "@/i18n/config";
 export async function generateMetadata() {
   const t = await getT("score");
   return { title: t("page.metaTitle") };
@@ -33,6 +34,7 @@ export default async function ScorePage({
   searchParams: Promise<{ reviewTeam?: string }>;
 }) {
   const t = await getT("score");
+  const locale = await getLocale();
   const params = await searchParams;
   const supabase = await createClient();
   const {
@@ -293,14 +295,14 @@ export default async function ScorePage({
                 <div>
                   <p className="text-white">{event.label}</p>
                   <p className="mt-1 text-xs text-[var(--text-subtle)]">
-                    {new Date(event.created_at).toLocaleString("pl-PL", {
+                    {new Date(event.created_at).toLocaleString(LOCALE_TAGS[locale], {
                       timeZone: "Europe/Warsaw",
                     })}
                   </p>
                 </div>
                 <strong className="shrink-0 text-[var(--vairo)]">
                   +{event.points}{" "}
-                  {event.track === "work" ? "SCORE" : "reputacji"}
+                  {event.track === "work" ? "SCORE" : t("page.pointsReputation")}
                 </strong>
               </li>
             ))}

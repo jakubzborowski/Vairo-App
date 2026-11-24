@@ -67,7 +67,9 @@ tabeli. Każdy plik jest idempotentny, więc ponowne odpalenie niczego nie psuje
 | 51 | `migrations/047_score_cron.sql` | SCORE: `pg_cron` co 5 min rozlicza kolejkę. Wymaga włączonego `pg_cron` (Database → Extensions) |
 | 52 | `migrations/048_score_deletion_and_privacy.sql` | SCORE nie blokuje usuwania konta (klucze do profili `set null`, trigger bez zapisu w kaskadzie) + pseudonim w „Doceń wiadomość” |
 | 53 | `migrations/049_i18n.sql` | wersje językowe: `profiles.locale`, kolumny `translations` w `stage_*` |
-| 54 | `migrations/050_content_translations.sql` | tłumaczenia treści etapów (DE/UK/ES), generowane |
+| 54 | `migrations/050_content_translations.sql` | tłumaczenia treści etapów (DE/UK/ES), generowane — można pominąć, 052 ustawia wszystko od nowa |
+| 55 | `migrations/051_locale_en.sql` | angielski jako piąty język (`profiles.locale = 'en'`) |
+| 56 | `migrations/052_content_translations.sql` | tłumaczenia treści etapów (EN/DE/UK/ES), generowane |
 
 > **022 i 023 to wcześniejsze wygenerowania tej samej treści co 024.** Każde
 > jest idempotentne i usuwa to, czego nie ma w swoim JSON-ie, więc odpalenie

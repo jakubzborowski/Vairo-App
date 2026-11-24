@@ -26,7 +26,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DIR = path.join(ROOT, "src/i18n/messages");
 const SOURCE = "pl";
-const LOCALES = ["pl", "de", "uk", "es"];
+const LOCALES = ["pl", "en", "de", "uk", "es"];
 
 function namespaces(locale) {
   const dir = path.join(DIR, locale);
@@ -165,7 +165,7 @@ function check() {
     }
   }
   if (stale.length) {
-    console.log(`\nZmieniony polski tekst — sprawdź tłumaczenia (de, uk, es), potem \`npm run i18n:sync\`:`);
+    console.log(`\nZmieniony polski tekst — sprawdź tłumaczenia (en, de, uk, es), potem \`npm run i18n:sync\`:`);
     for (const id of stale) console.log(`  ${id}`);
     problems += stale.length;
   }
