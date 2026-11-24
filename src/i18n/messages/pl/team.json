@@ -203,5 +203,13 @@
   "editor.irreversible": "Nieodwracalne",
   "errors.hours": "Godziny tygodniowo: liczba od 1 do 80.",
   "preview.taglinePlaceholder": "Tu wejdzie jedno zdanie o Was",
-  "errors.logoFormat": "Dozwolone formaty: JPG, PNG, WebP."
+  "errors.logoFormat": "Dozwolone formaty: JPG, PNG, WebP.",
+  "rename.menu": "Zmień nazwę",
+  "rename.title": "Zmień nazwę zespołu",
+  "rename.body": "Nowa nazwa pojawi się wszędzie: w menu, u wszystkich osób w zespole i na karcie w Odkrywaj.",
+  "rename.label": "Nazwa zespołu",
+  "rename.save": "Zapisz nazwę",
+  "rename.done": "Nazwa zmieniona",
+  "errors.name": "Nazwa zespołu: 2–80 znaków.",
+  "page.sentInvites": "Wysłane zaproszenia"
 }

@@ -48,5 +48,9 @@
   "page.today": "Today",
   "page.yesterday": "Yesterday",
   "page.earlier": "Earlier",
-  "page.markAllRead": "Mark all as read"
+  "page.markAllRead": "Mark all as read",
+  "describe.invite_accepted": "{who} accepted the invitation to {team}",
+  "describe.invite_declined": "{who} declined the invitation to {team}",
+  "live.invite_accepted": "Invitation accepted — new person on the team",
+  "live.invite_declined": "Team invitation declined"
 }

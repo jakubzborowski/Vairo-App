@@ -203,5 +203,13 @@
   "status.archived.description": "Idee abgeschlossen. Die Daten bleiben, das Team verschwindet aus der Suche.",
   "status.archived.label": "Im Archiv",
   "status.paused.description": "Auf später verschoben. Erscheint nicht in „Entdecken“, aber alles bleibt erhalten.",
-  "status.paused.label": "Pausiert"
+  "status.paused.label": "Pausiert",
+  "rename.menu": "Umbenennen",
+  "rename.title": "Team umbenennen",
+  "rename.body": "Der neue Name erscheint überall: im Menü, bei allen im Team und auf der Karte in „Entdecken“.",
+  "rename.label": "Teamname",
+  "rename.save": "Namen speichern",
+  "rename.done": "Name geändert",
+  "errors.name": "Teamname: 2–80 Zeichen.",
+  "page.sentInvites": "Gesendete Einladungen"
 }

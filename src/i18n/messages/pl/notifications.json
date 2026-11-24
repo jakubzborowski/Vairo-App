@@ -48,5 +48,9 @@
   "page.today": "Dziś",
   "page.yesterday": "Wczoraj",
   "page.earlier": "Wcześniej",
-  "page.markAllRead": "Oznacz wszystkie jako przeczytane"
+  "page.markAllRead": "Oznacz wszystkie jako przeczytane",
+  "describe.invite_accepted": "{who} dołącza do {team} — zaproszenie przyjęte",
+  "describe.invite_declined": "{who} nie przyjmuje zaproszenia do {team}",
+  "live.invite_accepted": "Zaproszenie przyjęte — nowa osoba w zespole",
+  "live.invite_declined": "Zaproszenie do zespołu odrzucone"
 }

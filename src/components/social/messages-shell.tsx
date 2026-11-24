@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { usePathname } from "next/navigation";
-import { MessageSquare, Search } from "lucide-react";
+import { useState, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { MessageSquare, Search, X } from "lucide-react";
+import { respondToContact } from "@/app/app/social/actions";
 import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
-import type { ConversationSummary } from "@/types/social";
+import type { ContactSignal, ConversationSummary } from "@/types/social";
 import { useLocale, useT } from "@/i18n/client";
 import type { Locale } from "@/i18n/config";
 import { formatDate } from "@/i18n/format";
@@ -27,13 +30,20 @@ import type { Translate } from "@/i18n/translator";
  * ekranów: lista ALBO wątek, zależnie od adresu. Decyduje o tym `usePathname`,
  * bo layout w App Routerze nie dostaje informacji o tym, co renderuje pod
  * sobą — a bez tego na telefonie lista wisiałaby nad każdą rozmową.
+ *
+ * Pod rozmowami stoją wysłane zaczepki, na które nikt jeszcze nie odpowiedział.
+ * Dla wysyłającego to pierwsza wiadomość do kogoś — szukał jej tutaj, a nie
+ * w Zaproszeniach, gdzie stała wcześniej obok spraw członkostwa w zespołach.
  */
 export function MessagesShell({
   conversations,
+  pending = [],
   error,
   children,
 }: {
   conversations: ConversationSummary[];
+  /** Wysłane zaczepki czekające na odpowiedź drugiej strony. */
+  pending?: ContactSignal[];
   error: string | null;
   children: React.ReactNode;
 }) {
@@ -84,7 +94,7 @@ export function MessagesShell({
             </p>
           ) : null}
 
-          {!error && conversations.length === 0 ? (
+          {!error && conversations.length === 0 && pending.length === 0 ? (
             <p className="rounded-xl border border-dashed border-white/10 px-4 py-6 text-center text-[13px] leading-relaxed text-[var(--text-subtle)]">
               {t("messages.emptyHint")}
             </p>
@@ -154,6 +164,23 @@ export function MessagesShell({
               })}
             </ul>
           ) : null}
+
+          {pending.length > 0 ? (
+            <section className={cn(conversations.length > 0 || error ? "mt-5" : "mt-4")}>
+              <h2 className="flex items-baseline gap-2 px-3 text-[12px] font-semibold uppercase tracking-[0.05em] text-[var(--text-subtle)]">
+                {t("messages.pendingTitle")}
+                <span className="tabular font-normal">{pending.length}</span>
+              </h2>
+              <p className="mt-1 px-3 text-[12.5px] leading-relaxed text-[var(--text-subtle)]">
+                {t("messages.pendingHint")}
+              </p>
+              <ul className="mt-1.5 flex flex-col gap-1">
+                {pending.map((signal) => (
+                  <PendingRow key={signal.id} signal={signal} />
+                ))}
+              </ul>
+            </section>
+          ) : null}
         </aside>
 
         <section className={cn("min-w-0", !isThread && "hidden md:block")}>
@@ -181,6 +208,80 @@ export function MessagesShell({
         </section>
       </div>
     </div>
+  );
+}
+
+/**
+ * Wysłana zaczepka bez odpowiedzi. Wygląda jak rozmowa, bo dla wysyłającego
+ * nią jest — tylko jeszcze jednostronną. Prowadzi do profilu odbiorcy, bo
+ * wątku jeszcze nie ma; obok da się ją wycofać.
+ */
+function PendingRow({ signal }: { signal: ContactSignal }) {
+  const t = useT("social");
+  const locale = useLocale();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
+  const [busy, startBusy] = useTransition();
+
+  const withdraw = () => {
+    setError(null);
+    startBusy(async () => {
+      const result = await respondToContact(signal.id, "withdraw");
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      toast({ title: t("inbox.toastSignalWithdrawn") });
+      router.refresh();
+    });
+  };
+
+  return (
+    <li>
+      <div className="flex items-center gap-1 rounded-xl transition-colors hover:bg-white/[0.04]">
+        <Link
+          href={`/app/social/people/${signal.otherId}`}
+          className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-3"
+        >
+          <Avatar src={signal.otherAvatarUrl} name={signal.otherName} size="md" />
+          <span className="min-w-0 flex-1">
+            <span className="flex items-baseline justify-between gap-2">
+              <span className="truncate text-[14px] font-medium text-white">
+                {signal.otherName ?? t("card.noName")}
+              </span>
+              <span className="tabular shrink-0 text-[11.5px] text-[var(--text-muted)]">
+                {formatWhen(signal.createdAt, t, locale)}
+              </span>
+            </span>
+            {signal.contextStartupName ? (
+              <span className="mt-0.5 block truncate text-[12px] text-[var(--text-muted)]">
+                {signal.contextStartupName}
+              </span>
+            ) : null}
+            <span className="mt-0.5 block truncate text-[12.5px] text-[var(--text-subtle)]">
+              {signal.message
+                ? `${t("messages.you")}${signal.message}`
+                : t("messages.pendingNoMessage")}
+            </span>
+          </span>
+        </Link>
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          loading={busy}
+          title={t("inbox.withdraw")}
+          onClick={withdraw}
+          className="mr-1.5"
+        >
+          <X className="size-4" />
+          <span className="sr-only">{t("inbox.withdraw")}</span>
+        </Button>
+      </div>
+      {error ? (
+        <p className="px-3 pb-1 text-[12.5px] text-[var(--danger)]">{error}</p>
+      ) : null}
+    </li>
   );
 }
 

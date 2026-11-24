@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Compass, Inbox } from "lucide-react";
+import { ArrowRight, Compass, Inbox } from "lucide-react";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getUserStartups } from "@/lib/startup";
 import { loadJoinRequests } from "@/lib/social";
@@ -70,14 +70,17 @@ export default async function InvitesPage({
     ...signals.filter((item) => item.canRespond),
     ...requests.filter((item) => item.canRespond),
   ];
-  const sent = [
-    ...signals.filter((item) => item.canWithdraw),
-    ...requests.filter((item) => item.status === "pending" && item.canWithdraw),
-  ];
+  // Wysłane zaczepki mieszkają w Wiadomościach („Czekają na odpowiedź").
+  // Tu zostają wyłącznie sprawy członkostwa — zaczepka nie jest zaproszeniem,
+  // a szukało się jej tutaj jak zaproszenia.
+  const sentSignals = signals.filter((item) => item.canWithdraw);
+  const sent = requests.filter((item) => item.status === "pending" && item.canWithdraw);
+  // Same sprawy zamknięte — żadna z nich nie jest już „pending", więc nie
+  // pokrywa się ani z „Czeka na Ciebie", ani z „Wysłane".
   const closed = [
     ...signals.filter((item) => item.status === "accepted" || item.status === "declined" || item.status === "withdrawn"),
     ...requests.filter((item) => item.status !== "pending"),
-  ].filter((item) => !waiting.includes(item) && !sent.includes(item));
+  ];
 
   // Domyślnie otwieramy zakładkę, w której coś jest — wejście na pustą listę
   // wygląda jak awaria, nawet gdy obok świeci licznik.
@@ -128,9 +131,14 @@ export default async function InvitesPage({
           <nav className="flex items-center gap-1 border-b border-white/[0.07] px-2 py-2">
             {/* Na telefonie „Czeka na Ciebie" łamało się na dwie linijki
                 i rozpychało cały pasek zakładek. Druga część etykiety znika
-                poniżej `sm` — „Czeka" niesie to samo. */}
+                poniżej `sm` — „Czeka" niesie to samo. Cała etykieta siedzi
+                w jednym elemencie: osobno dostawała `gap` zakładki i między
+                „Czeka" a „na" robiła się dziura. */}
             <TabLink href="/app/social/invites?stan=waiting" active={tab === "waiting"}>
-              {t("inbox.waiting")}<span className="hidden sm:inline">&nbsp;{t("invites.forYou")}</span>
+              <span>
+                {t("inbox.waiting")}
+                <span className="hidden sm:inline">&nbsp;{t("invites.forYou")}</span>
+              </span>
               <Count value={waiting.length} highlight />
             </TabLink>
             <TabLink href="/app/social/invites?stan=sent" active={tab === "sent"}>
@@ -142,6 +150,18 @@ export default async function InvitesPage({
               <Count value={closed.length} />
             </TabLink>
           </nav>
+
+          {tab === "sent" && sentSignals.length > 0 ? (
+            <Link
+              href="/app/social/messages"
+              className="flex items-center gap-2 border-b border-white/[0.06] px-4 py-3 text-[13px] text-[var(--text-muted)] transition-colors hover:text-white"
+            >
+              <span className="min-w-0 flex-1">
+                {t("invites.signalsInMessages", { count: sentSignals.length })}
+              </span>
+              <ArrowRight className="size-4 shrink-0" />
+            </Link>
+          ) : null}
 
           {rows.length === 0 ? (
             <p className="px-4 py-8 text-center text-[13px] text-[var(--text-subtle)]">

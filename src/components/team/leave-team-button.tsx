@@ -2,12 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, LogOut } from "lucide-react";
+import { Globe, LogOut, Pencil } from "lucide-react";
 import { leaveTeam } from "@/app/app/team/actions";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { Modal } from "@/components/ui/modal";
 import { MAX_STARTUPS } from "@/types/startup";
+import { RenameTeamDialog } from "./rename-team-dialog";
 import { useT } from "@/i18n/client";
 
 /**
@@ -23,8 +24,8 @@ export function LeaveTeamButton({
   startupId: string;
   teamName: string;
   /**
-   * Menu ⋮ w nagłówku teamu: „Profil publiczny" (dla Foundera i Admina)
-   * i „Opuść team" na końcu, oddzielone kreską. Okno potwierdzenia żyje
+   * Menu ⋮ w nagłówku teamu: „Zmień nazwę" i „Profil publiczny" (dla
+   * Foundera i Admina) i „Opuść team" na końcu, oddzielone kreską. Okno potwierdzenia żyje
    * tutaj, nie w menu — inaczej zniknęłoby razem z nim.
    */
   asMenu?: boolean;
@@ -33,6 +34,7 @@ export function LeaveTeamButton({
   const t = useT("team");
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [renaming, setRenaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, startBusy] = useTransition();
 
@@ -56,6 +58,17 @@ export function LeaveTeamButton({
         <Menu label={t("leave.menu")}>
           {(close) => (
             <>
+              {canManage ? (
+                <MenuItem
+                  icon={Pencil}
+                  onClick={() => {
+                    close();
+                    setRenaming(true);
+                  }}
+                >
+                  {t("rename.menu")}
+                </MenuItem>
+              ) : null}
               {canManage ? (
                 <MenuItem
                   icon={Globe}
@@ -87,6 +100,14 @@ export function LeaveTeamButton({
           {t("leave.button")}
         </Button>
       )}
+
+      {renaming ? (
+        <RenameTeamDialog
+          startupId={startupId}
+          name={teamName}
+          onClose={() => setRenaming(false)}
+        />
+      ) : null}
 
       {open ? (
         <Modal

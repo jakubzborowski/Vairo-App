@@ -38,6 +38,8 @@ const KIND_ICON: Record<NotificationKind, LucideIcon> = {
   join_invite: Mail,
   join_accepted: MailCheck,
   join_declined: MailCheck,
+  invite_accepted: UserPlus,
+  invite_declined: MailCheck,
   goal_assigned: Flag,
   task_assigned: ListTodo,
   goal_blocked: OctagonAlert,
@@ -161,8 +163,11 @@ export default async function NotificationsPage({
         </section>
       ) : null}
 
+      {/* Promień podświetlenia = promień ramki minus odstęp (jak w pozostałych
+          przełącznikach). Przy 9 px w ramce ~20 px podświetlenie wyglądało
+          na kwadratowe w owalnej ramce. */}
       {notifications.length > 0 ? (
-        <nav aria-label={t("page.filter")} className="mt-6 inline-flex rounded-xl border border-white/10 bg-[var(--surface)] p-[3px]">
+        <nav aria-label={t("page.filter")} className="mt-6 inline-flex rounded-xl border border-white/10 bg-[var(--surface)] p-1">
           {[
             [false, t("page.all"), "/app/notifications"],
             [true, t("page.unread"), "/app/notifications?tylko=nowe"],
@@ -172,7 +177,7 @@ export default async function NotificationsPage({
               href={href as string}
               aria-current={onlyUnread === value ? "page" : undefined}
               className={cn(
-                "inline-flex h-11 items-center gap-1.5 rounded-[9px] px-3.5 text-[13.5px] transition-colors sm:h-8",
+                "inline-flex h-11 items-center gap-1.5 rounded-lg px-3.5 text-[13.5px] transition-colors sm:h-8",
                 onlyUnread === value ? "bg-[var(--surface-3)] font-medium text-white lift-1" : "text-[var(--text-muted)] hover:text-white"
               )}
             >
@@ -217,7 +222,10 @@ export default async function NotificationsPage({
             <h2 className="px-1 text-[12px] font-semibold uppercase tracking-[0.05em] text-[var(--text-subtle)]">
               {t(name)}
             </h2>
-            <ul className="mt-2 overflow-hidden rounded-[22px] bg-[var(--surface)] py-1 lift-1">
+            {/* Wiersze mają własne zaokrąglenie (22 − 4 px odstępu), żeby
+                podświetlenie po najechaniu szło za kształtem karty, a nie
+                było prostokątem przyciętym przez jej narożniki. */}
+            <ul className="mt-2 flex flex-col overflow-hidden rounded-[22px] bg-[var(--surface)] p-1 lift-1">
               {items.map((item) => {
                 const Icon = KIND_ICON[item.kind] ?? Bell;
                 return (
@@ -227,7 +235,7 @@ export default async function NotificationsPage({
                       // jako przeczytane, zanim otworzy cel czy zadanie.
                       href={`/app/notifications/open?id=${item.id}`}
                       prefetch={false}
-                      className="flex min-h-16 items-center gap-3 py-2.5 pl-3 pr-4 transition-colors hover:bg-white/[0.03] sm:pr-[18px]"
+                      className="flex min-h-16 items-center gap-3 rounded-[18px] py-2.5 pl-2 pr-3 transition-colors hover:bg-white/[0.04] sm:pr-[14px]"
                     >
                       <span
                         aria-label={item.isRead ? undefined : t("page.unread")}

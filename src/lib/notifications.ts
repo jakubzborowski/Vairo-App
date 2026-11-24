@@ -3,6 +3,7 @@ import type { Locale } from "@/i18n/config";
 import { formatDate } from "@/i18n/format";
 import type { MessageKey } from "@/i18n/messages";
 import type { Translate } from "@/i18n/translator";
+import { loadPartnerCards } from "@/lib/contact-cards";
 
 /**
  * Powiadomienia — minimum z guidelines 10.7.
@@ -20,6 +21,10 @@ export const NOTIFICATION_KINDS = [
   "join_invite",
   "join_accepted",
   "join_declined",
+  // Odpowiedź na zaproszenie wysłane przez zespół (migracja 054). Odbiorcą
+  // jest zapraszający, więc zdanie mówi o osobie zaproszonej.
+  "invite_accepted",
+  "invite_declined",
   "goal_assigned",
   "task_assigned",
   "goal_blocked",
@@ -71,6 +76,7 @@ const SOCIAL_KINDS = new Set<NotificationKind>([
   "message_received",
   "join_application",
   "join_invite",
+  "invite_declined",
 ]);
 
 export async function loadNotifications(
@@ -107,12 +113,54 @@ export async function loadNotifications(
     return { notifications: [], error: error.message };
   }
 
-  const notifications = (data as unknown as Row[]).map((row) => {
+  const rows = data as unknown as Row[];
+
+  // Sprawca zdarzenia z Social to zwykle ktoś spoza zespołu, a polityka RLS
+  // na `profiles` takich osób nie wpuszcza — embed zwracał NULL i powiadomienie
+  // brzmiało „Nowa wiadomość od Ktoś". Wizytówka z `contact_profiles`
+  // (migracja 019) niesie nazwę publiczną każdemu, z kim łączy nas zaczepka
+  // albo rozmowa — tak samo jak w skrzynce i na czacie.
+  const cards = await loadPartnerCards(
+    supabase,
+    rows
+      .filter((row) => SOCIAL_KINDS.has(row.kind) && row.actor_id)
+      .map((row) => row.actor_id as string)
+  );
+
+  // Zaproszenie do zespołu: odbiorca nie jest jeszcze jego członkiem, więc
+  // RLS nie oddaje mu ani nazwy zespołu, ani zapraszającego. Te dwie nazwy
+  // daje funkcja z migracji 054 — tylko dla próśb, które go dotyczą.
+  const invites = rows.filter((row) => row.kind === "join_invite");
+  const parties = new Map<string, { startup: string | null; inviter: string | null }>();
+  if (invites.some((row) => !row.startups?.name || !row.profiles)) {
+    const { data: partyRows, error: partyError } = await supabase.rpc("my_join_request_parties");
+    if (!partyError) {
+      for (const party of (partyRows ?? []) as {
+        startup_id: string;
+        startup_name: string | null;
+        inviter_id: string | null;
+        inviter_name: string | null;
+      }[]) {
+        if (!party.inviter_id) continue;
+        parties.set(`${party.startup_id}:${party.inviter_id}`, {
+          startup: party.startup_name,
+          inviter: party.inviter_name?.trim() || null,
+        });
+      }
+    }
+  }
+
+  const notifications = rows.map((row) => {
+    const card = row.actor_id && SOCIAL_KINDS.has(row.kind) ? cards.get(row.actor_id) : undefined;
+    const party =
+      row.kind === "join_invite" ? parties.get(`${row.startup_id}:${row.actor_id}`) : undefined;
     const actorName =
+      card?.full_name?.trim() ||
       (SOCIAL_KINDS.has(row.kind) ? row.profiles?.public_name?.trim() : null) ||
       row.profiles?.full_name ||
+      party?.inviter ||
       null;
-    const startupName = row.startups?.name ?? null;
+    const startupName = row.startups?.name ?? party?.startup ?? null;
 
     return {
       id: row.id,
@@ -122,7 +170,7 @@ export async function loadNotifications(
       createdAt: row.created_at,
       isRead: row.read_at !== null,
       actorName,
-      actorAvatarUrl: row.profiles?.avatar_url ?? null,
+      actorAvatarUrl: card?.avatar_url ?? row.profiles?.avatar_url ?? null,
       startupName,
       title: describe(t, row.kind, actorName, startupName),
     } satisfies AppNotification;

@@ -265,6 +265,33 @@ function describeSignal({
 
 function describeRequest({ request }: { request: JoinRequest }, t: T): RowView {
   const isApplication = request.direction === "application";
+  // Wiersz pokazuje DRUGĄ stronę sprawy. Wcześniej zależało to tylko od
+  // kierunku: zaproszenie zawsze miało logo zespołu i „zaprasza Cię", więc
+  // Founder widział własne zaproszenie tak, jakby to jego ktoś zapraszał.
+  const showTeam = request.viewerIsCandidate;
+  const pending = request.status === "pending";
+  const roleSuffix = request.openRoleTitle ? ` · ${request.openRoleTitle}` : "";
+
+  const summary = isApplication
+    ? showTeam
+      ? `${t("inbox.yourApplication")}${roleSuffix}`
+      : `${t("inbox.wantsToJoin", { team: request.startupName })}${roleSuffix}`
+    : showTeam
+      ? request.inviterName
+        ? t("inbox.invitesYouFrom", { name: request.inviterName })
+        : t("inbox.invitesYou")
+      : t("inbox.invitedTo", { team: request.startupName });
+
+  // Po dołączeniu każdy jest Członkiem — i tak to nazywamy, zamiast
+  // obiecywać rolę, której przyjęcie zaproszenia i tak nie nadaje.
+  const note =
+    !isApplication && showTeam
+      ? t("inbox.joinAsMember")
+      : pending && !request.canRespond
+        ? isApplication
+          ? t("inbox.waitingManagers")
+          : t("inbox.waitingInvitee")
+        : null;
 
   return {
     stateIcon:
@@ -279,24 +306,18 @@ function describeRequest({ request }: { request: JoinRequest }, t: T): RowView {
         : request.status === "accepted"
           ? t("inbox.stateAccepted")
           : t("inbox.stateClosed"),
-    avatar: isApplication ? (
-      <Avatar src={request.profileAvatarUrl} name={request.profileName} size="sm" />
-    ) : (
+    avatar: showTeam ? (
       <TeamLogo src={request.startupLogoUrl} name={request.startupName} size="sm" />
+    ) : (
+      <Avatar src={request.profileAvatarUrl} name={request.profileName} size="sm" />
     ),
-    href: isApplication
-      ? `/app/social/people/${request.profileId}`
-      : `/app/social/teams/${request.startupId}`,
-    title: isApplication ? (request.profileName ?? t("inbox.someone")) : request.startupName,
-    summary: isApplication
-      ? `${t("inbox.wantsToJoin", { team: request.startupName })}${request.openRoleTitle ? ` · ${request.openRoleTitle}` : ""}`
-      : t("inbox.invitesYou"),
+    href: showTeam
+      ? `/app/social/teams/${request.startupId}`
+      : `/app/social/people/${request.profileId}`,
+    title: showTeam ? request.startupName : (request.profileName ?? t("inbox.someone")),
+    summary,
     message: request.message,
-    // Po dołączeniu każdy jest Członkiem — i tak to nazywamy, zamiast
-    // obiecywać rolę, której przyjęcie zaproszenia i tak nie nadaje.
-    note: !isApplication
-      ? t("inbox.joinAsMember")
-      : null,
+    note,
     createdAt: request.createdAt,
     actions: (run, busy, accept) => (
       <>
@@ -340,7 +361,7 @@ function describeRequest({ request }: { request: JoinRequest }, t: T): RowView {
           </Button>
         ) : null}
 
-        {request.status === "accepted" && !isApplication ? (
+        {request.status === "accepted" && showTeam ? (
           <Button size="sm" variant="ghost" href="/app/team">
             <ArrowRight className="size-4" />
             <span className="hidden sm:inline">{t("inbox.team")}</span>

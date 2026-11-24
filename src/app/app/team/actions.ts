@@ -501,6 +501,41 @@ export async function saveTeamProfile(input: {
 }
 
 /**
+ * Zmiana nazwy zespołu.
+ *
+ * Nazwę nadawał wyłącznie onboarding albo punkt „Nadaj projektowi roboczą
+ * nazwę" w Ambition — kto zaczął od Idei albo chciał zmienić nazwę później,
+ * nie miał na to żadnego miejsca. Zakres 2–80 znaków to ten sam, którego
+ * pilnuje ograniczenie `startups_name_len` w bazie.
+ */
+export async function renameStartup(input: {
+  startupId: string;
+  name: string;
+}): Promise<Result> {
+  const { supabase, user } = await requireUser();
+  if (!user) return { error: await sessionExpired() };
+
+  const { error: denied } = await guardManage(supabase, input.startupId, user.id);
+  if (denied) return { error: denied };
+
+  const name = input.name.trim().replace(/\s+/g, " ");
+  if (name.length < 2 || name.length > 80) {
+    return { error: (await getT("team"))("errors.name") };
+  }
+
+  const { error } = await supabase
+    .from("startups")
+    .update({ name })
+    .eq("id", input.startupId);
+
+  if (error) return { error: await translate(error.message) };
+
+  revalidateTeam();
+  revalidatePath("/app/team/profile");
+  return { error: null };
+}
+
+/**
  * Same przełączniki widoczności — bez tekstów profilu.
  *
  * Wcześniej „Team widoczny w Odkrywaj" był częścią formularza i wchodził

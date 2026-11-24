@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Compass, Eye, Inbox, UserPlus, Users } from "lucide-react";
+import { Compass, Eye, Inbox, Send, UserPlus, Users } from "lucide-react";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getActiveStartupId } from "@/lib/active-team";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
@@ -120,6 +120,14 @@ export default async function TeamPage() {
   const teamRequests = requests.filter(
     (request) => request.startupId === active.id
   );
+  // „Czeka na Twoją decyzję" to wyłącznie sprawy, na które odpowiada zespół,
+  // czyli zgłoszenia. Zaproszenie wysłane przez zespół czeka na drugą osobę —
+  // wcześniej stało w tej samej sekcji z napisem „zaprasza Cię do zespołu"
+  // i wyglądało, jakby Founder dostał zaproszenie do własnego teamu.
+  const awaiting = teamRequests.filter((request) => request.canRespond);
+  const sentInvites = teamRequests.filter(
+    (request) => request.direction === "invite" && !request.canRespond
+  );
   const founderCount = members.filter((m) => m.role === "founder").length;
   const seatsLeft = MAX_STARTUPS - startups.length;
 
@@ -139,8 +147,8 @@ export default async function TeamPage() {
             </h1>
             <p className="mt-1 text-[14px] text-[var(--text-muted)]">
               {t("page.memberCount", { count: members.length })}
-              {canManage && teamRequests.length > 0
-                ? ` ${t("page.wantToJoin", { count: teamRequests.length })}`
+              {canManage && awaiting.length > 0
+                ? ` ${t("page.wantToJoin", { count: awaiting.length })}`
                 : ""}
               {openCount > 0
                 ? ` ${t("page.seeking", {
@@ -179,18 +187,37 @@ export default async function TeamPage() {
           rzecz na tym ekranie, na którą ktoś czeka po drugiej stronie.
           Ten sam wiersz co w skrzynce Zaproszeń: dwie różne karty na tę samą
           sprawę to dwa razy ta sama decyzja podejmowana od nowa. */}
-      {canManage && teamRequests.length > 0 ? (
+      {canManage && awaiting.length > 0 ? (
         <section className="edge-accent mt-5 overflow-hidden rounded-[22px] border border-[var(--vairo)]/25 bg-[var(--vairo)]/[0.05]">
           <h2 className="flex items-center gap-2 border-b border-white/[0.06] px-4 py-3 text-[13px] font-semibold text-white">
             <Inbox className="size-4 text-[var(--text-subtle)]" />
             {t("page.awaitingDecision")}
             <span className="tabular ml-auto text-[12px] font-normal text-[var(--text-subtle)]">
-              {teamRequests.length}
+              {awaiting.length}
             </span>
           </h2>
           <ul className="divide-y divide-white/[0.06]">
-            {teamRequests.map((request) => (
-              <InboxRow key={request.id} kind="request" request={request} />
+            {awaiting.map((request, index) => (
+              <InboxRow key={request.id} kind="request" request={request} quiet={index > 0} />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {/* Wysłane zaproszenia — bez akcentu: tu nikt nie czeka na nas, tylko
+          my na kogoś. Zostają widoczne, żeby dało się je wycofać. */}
+      {canManage && sentInvites.length > 0 ? (
+        <section className="mt-5 overflow-hidden rounded-[22px] border border-white/[0.07] bg-[var(--surface)]">
+          <h2 className="flex items-center gap-2 border-b border-white/[0.06] px-4 py-3 text-[13px] font-semibold text-white">
+            <Send className="size-4 text-[var(--text-subtle)]" />
+            {t("page.sentInvites")}
+            <span className="tabular ml-auto text-[12px] font-normal text-[var(--text-subtle)]">
+              {sentInvites.length}
+            </span>
+          </h2>
+          <ul className="divide-y divide-white/[0.06]">
+            {sentInvites.map((request) => (
+              <InboxRow key={request.id} kind="request" request={request} quiet />
             ))}
           </ul>
         </section>
@@ -212,7 +239,7 @@ export default async function TeamPage() {
       {/* Ciepła karta tylko wtedy, gdy jest co zrobić: nikt nie czeka na
           decyzję, a team nikogo nie szuka — czyli nie pojawia się wśród
           rekrutujących w Odkrywaj. */}
-      {canManage && teamRequests.length === 0 && openCount === 0 ? (
+      {canManage && awaiting.length === 0 && openCount === 0 ? (
         <section className="edge-accent mt-5 flex flex-wrap items-center gap-4 rounded-[22px] border border-[var(--vairo)]/25 bg-[var(--vairo)]/[0.05] px-5 py-4">
           <div className="min-w-0 flex-1">
             <p className="text-[15px] font-medium text-white">{t("page.notHiringTitle")}</p>

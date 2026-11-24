@@ -479,11 +479,12 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `051_locale_en` | angielski jako piąty język: `profiles_locale_check` przyjmuje `en` |
 | `052_content_translations` | tłumaczenia treści etapów w EN, DE, UK, ES (generowane) — obowiązuje zamiast 050 |
 | `053_tester_panel` | Panel testowy: `platform_testers` (bez polityk RLS, dopisywanie tylko w SQL), `is_platform_tester()`, `tester_startups()`, `tester_jump_to_stage()` — przeskok etapów w dowolnym startupie |
+| `054_invite_responses_and_names` | Odpowiedź na zaproszenie od zespołu to `invite_accepted` / `invite_declined` (zapraszający dostawał „Jesteś w {team}"), nowa wersja `notify_join_request()`; `my_join_request_parties()` — nazwa i logo zespołu oraz nazwa zapraszającego dla osoby, której prośba dotyczy (RLS odcinał jej embed) |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`053`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`054`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 
@@ -567,6 +568,6 @@ klientem zalogowanej osoby — RLS wpuszcza tylko członków teamu. Limity na
 osobę w pamięci instancji (`src/lib/rate-limit.ts`). Modele przez
 `AI_MODEL_FAST` / `AI_MODEL_SMART` (domyślnie `claude-haiku-5-5` /
 `claude-sonnet-5-5`); stała część instrukcji z cache promptów. Śledzenie kosztów
-w bazie (gdy będzie potrzebne) — pierwszy wolny numer po `053`.
+w bazie (gdy będzie potrzebne) — pierwszy wolny numer po `054`.
 
 Ścieżka Partner — dopiero w alfie.

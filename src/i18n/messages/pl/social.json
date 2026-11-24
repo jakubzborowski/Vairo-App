@@ -382,5 +382,12 @@
   "chips.noMatch": "Nic nie pasuje do „{query}”.",
   "inbox.writesOnBehalf": "Pisze w imieniu {team}",
   "inbox.writtenOnBehalf": "Napisane w imieniu {team}",
-  "messages.allConversations": "Wszystkie rozmowy"
+  "messages.allConversations": "Wszystkie rozmowy",
+  "inbox.yourApplication": "— Twoje zgłoszenie",
+  "inbox.invitedTo": "— zaproszenie do zespołu {team}",
+  "invites.signalsInMessages": "{count, plural, one {# wysłana zaczepka czeka na odpowiedź} few {# wysłane zaczepki czekają na odpowiedź} other {# wysłanych zaczepek czeka na odpowiedź}} — są w Wiadomościach",
+  "messages.pendingTitle": "Czekają na odpowiedź",
+  "messages.pendingHint": "Wysłane zaczepki. Rozmowa otworzy się, gdy druga osoba przyjmie zaczepkę.",
+  "messages.pendingNoMessage": "Zaczepka bez wiadomości",
+  "inbox.invitesYouFrom": "— {name} zaprasza Cię do zespołu"
 }

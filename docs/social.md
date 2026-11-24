@@ -199,6 +199,20 @@ całą tę regułę trzyma funkcja `respond_join_request()` — wpis do
 `startup_members` powstaje w tej samej transakcji co zmiana statusu, więc nie
 ma stanu „zaakceptowane, ale nie dodane do teamu".
 
+**Wiersz prośby pokazuje drugą stronę, nie kierunek.** Zaproszenie wysłane
+przez zespół jego Founder widzi jako „Kasia — zaproszenie do zespołu X"
+w sekcji „Wysłane zaproszenia" na stronie Zespół, a nie w „Czeka na Twoją
+decyzję" z napisem „zaprasza Cię". Decyduje `JoinRequest.viewerIsCandidate`.
+Osoba zaproszona nie jest jeszcze w zespole, więc RLS nie oddaje jej nazwy
+zespołu ani zapraszającego — daje je `my_join_request_parties()` (migracja
+054). O odpowiedzi na zaproszenie zapraszający dowiaduje się z
+`invite_accepted` / `invite_declined`; `join_accepted` („Jesteś w {team}")
+dostaje wyłącznie kandydat.
+
+**Wysłane zaczepki są w Wiadomościach**, pod rozmowami, jako „Czekają na
+odpowiedź" — dla wysyłającego to pierwsza wiadomość do kogoś. W Zaproszeniach
+„Wysłane" zostały tylko sprawy członkostwa.
+
 ---
 
 ## Nawigacja — w menu jest tylko to, co działa

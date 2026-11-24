@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
-import { loadConversations } from "@/lib/messages";
+import { loadContactSignals, loadConversations } from "@/lib/messages";
 import { MessagesShell } from "@/components/social/messages-shell";
 import { getT } from "@/i18n/server";
 
@@ -26,10 +26,17 @@ export default async function MessagesLayout({
 
   if (!user) redirect("/register?next=/app/social/messages");
 
-  const { conversations, error } = await loadConversations(supabase, user.id);
+  // Wysłane zaczepki, na które nikt jeszcze nie odpowiedział. To pierwsza
+  // wiadomość do kogoś, więc jej miejsce jest tutaj, a nie w Zaproszeniach —
+  // tam szukało się jej jak zaproszenia, którym nie jest.
+  const [{ conversations, error }, { signals }] = await Promise.all([
+    loadConversations(supabase, user.id),
+    loadContactSignals(supabase, user.id),
+  ]);
+  const pending = signals.filter((signal) => signal.canWithdraw);
 
   return (
-    <MessagesShell conversations={conversations} error={error}>
+    <MessagesShell conversations={conversations} pending={pending} error={error}>
       {children}
     </MessagesShell>
   );

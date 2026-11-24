@@ -119,6 +119,15 @@ export type JoinRequest = {
   canRespond: boolean;
   /** Czy zalogowany user może wycofać tę prośbę. */
   canWithdraw: boolean;
+  /**
+   * Czy zalogowany user jest osobą, której sprawa dotyczy (kandydat albo
+   * zaproszony), a nie stroną zespołu. Od tego zależy, czyje imię stoi
+   * w wierszu i jak brzmi zdanie: zaproszenie wysłane przez zespół jego
+   * Founder widzi jako „zaproszenie do Kasi", nie „zaprasza Cię".
+   */
+  viewerIsCandidate: boolean;
+  /** Kto z zespołu wysłał zaproszenie (nazwa publiczna). Tylko przy `invite`. */
+  inviterName: string | null;
 };
 
 /** Komunikaty błędów z triggerów bazy — tłumaczone na ludzki język. */
