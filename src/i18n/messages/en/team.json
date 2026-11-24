@@ -203,5 +203,13 @@
   "editor.irreversible": "Irreversible",
   "errors.hours": "Hours per week: a number from 1 to 80.",
   "preview.taglinePlaceholder": "One sentence about you goes here",
-  "errors.logoFormat": "Allowed formats: JPG, PNG, WebP."
+  "errors.logoFormat": "Allowed formats: JPG, PNG, WebP.",
+  "rename.menu": "Rename",
+  "rename.title": "Rename team",
+  "rename.body": "The new name shows up everywhere: in the menu, for everyone on the team and on the card in Discover.",
+  "rename.label": "Team name",
+  "rename.save": "Save name",
+  "rename.done": "Name changed",
+  "errors.name": "Team name: 2–80 characters.",
+  "page.sentInvites": "Sent invitations"
 }

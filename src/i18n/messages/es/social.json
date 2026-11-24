@@ -382,5 +382,12 @@
   "chips.noMatch": "Nada coincide con «{query}».",
   "inbox.writesOnBehalf": "Escribe en nombre de {team}",
   "inbox.writtenOnBehalf": "Escrito en nombre de {team}",
-  "messages.allConversations": "Todas las conversaciones"
+  "messages.allConversations": "Todas las conversaciones",
+  "inbox.yourApplication": "— tu solicitud",
+  "inbox.invitedTo": "— invitación a {team}",
+  "invites.signalsInMessages": "{count, plural, one {# contacto enviado espera respuesta} other {# contactos enviados esperan respuesta}} — están en Mensajes",
+  "messages.pendingTitle": "Esperando respuesta",
+  "messages.pendingHint": "Contactos enviados. La conversación se abre cuando la otra persona acepta.",
+  "messages.pendingNoMessage": "Contacto sin mensaje",
+  "inbox.invitesYouFrom": "— {name} te invita al equipo"
 }

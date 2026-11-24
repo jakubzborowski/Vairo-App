@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, EyeOff, ImagePlus, Pause, Play } from "lucide-react";
+import { ChevronDown, EyeOff, ImagePlus, Pause, Pencil, Play } from "lucide-react";
 import {
   saveTeamProfile,
   setStartupStatus,
@@ -11,6 +11,7 @@ import {
 } from "@/app/app/team/actions";
 import { TeamPreviewCard } from "./team-preview";
 import { DeleteStartupButton } from "./delete-startup-button";
+import { RenameTeamDialog } from "./rename-team-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Field, Input, Textarea } from "@/components/ui/input";
@@ -113,6 +114,7 @@ export function TeamProfileEditor({
 
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
+  const [renaming, setRenaming] = useState(false);
   const [busy, startBusy] = useTransition();
 
   const dirty =
@@ -355,6 +357,10 @@ export function TeamProfileEditor({
                   <ImagePlus className="size-4" />
                   {logo ? t("editor.changeLogo") : t("editor.addLogo")}
                 </Button>
+                <Button variant="secondary" size="sm" disabled={busy} onClick={() => setRenaming(true)}>
+                  <Pencil className="size-4" />
+                  {t("rename.menu")}
+                </Button>
                 <p className="text-[12.5px] text-[var(--text-subtle)]">
                   {t("editor.logoHint")}
                 </p>
@@ -520,6 +526,10 @@ export function TeamProfileEditor({
           {preview}
         </aside>
       </div>
+
+      {renaming ? (
+        <RenameTeamDialog startupId={startupId} name={name} onClose={() => setRenaming(false)} />
+      ) : null}
 
       <SaveBar
         dirty={dirty}

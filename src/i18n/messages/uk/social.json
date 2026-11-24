@@ -382,5 +382,12 @@
   "chips.noMatch": "Нічого не відповідає «{query}».",
   "inbox.writesOnBehalf": "Пише від імені {team}",
   "inbox.writtenOnBehalf": "Написано від імені {team}",
-  "messages.allConversations": "Усі розмови"
+  "messages.allConversations": "Усі розмови",
+  "inbox.yourApplication": "— твоя заявка",
+  "inbox.invitedTo": "— запрошення до команди {team}",
+  "invites.signalsInMessages": "{count, plural, one {# надіслане звернення чекає на відповідь} few {# надіслані звернення чекають на відповідь} other {# надісланих звернень чекають на відповідь}} — вони в Повідомленнях",
+  "messages.pendingTitle": "Чекають на відповідь",
+  "messages.pendingHint": "Надіслані звернення. Розмова відкриється, коли інша людина прийме звернення.",
+  "messages.pendingNoMessage": "Звернення без повідомлення",
+  "inbox.invitesYouFrom": "— {name} запрошує тебе до команди"
 }

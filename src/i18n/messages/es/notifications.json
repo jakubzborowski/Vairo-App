@@ -48,5 +48,9 @@
   "page.today": "Hoy",
   "page.yesterday": "Ayer",
   "page.earlier": "Antes",
-  "page.markAllRead": "Marcar todas como leídas"
+  "page.markAllRead": "Marcar todas como leídas",
+  "describe.invite_accepted": "{who} ha aceptado la invitación a {team}",
+  "describe.invite_declined": "{who} ha rechazado la invitación a {team}",
+  "live.invite_accepted": "Invitación aceptada — nueva persona en el equipo",
+  "live.invite_declined": "Invitación al equipo rechazada"
 }

@@ -203,5 +203,13 @@
   "status.archived.description": "Idea cerrada. Los datos se quedan, el equipo desaparece de la búsqueda.",
   "status.archived.label": "En el archivo",
   "status.paused.description": "Aplazada. No aparece en Descubrir, pero todo sigue en su sitio.",
-  "status.paused.label": "En pausa"
+  "status.paused.label": "En pausa",
+  "rename.menu": "Cambiar nombre",
+  "rename.title": "Cambiar el nombre del equipo",
+  "rename.body": "El nuevo nombre aparecerá en todas partes: en el menú, para todo el equipo y en la tarjeta de Descubrir.",
+  "rename.label": "Nombre del equipo",
+  "rename.save": "Guardar nombre",
+  "rename.done": "Nombre cambiado",
+  "errors.name": "Nombre del equipo: 2–80 caracteres.",
+  "page.sentInvites": "Invitaciones enviadas"
 }

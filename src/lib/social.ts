@@ -324,20 +324,41 @@ export async function loadJoinRequests(
 
   if (status !== "all") query = query.eq("status", status);
 
-  const { data, error } = await query;
+  // Osoba zaproszona nie jest jeszcze w zespole, więc RLS odcina jej embed
+  // `startups(...)` i profil zapraszającego — wiersz pokazywał „— zaprasza Cię
+  // do zespołu". Funkcja z migracji 054 oddaje te dwie nazwy wyłącznie
+  // osobie, której prośba dotyczy. Bez migracji zostaje dawne zachowanie.
+  const [{ data, error }, parties] = await Promise.all([
+    query,
+    supabase.rpc("my_join_request_parties"),
+  ]);
   if (error) return { requests: [], error: await describeMissing(error.message) };
+
+  type PartyRow = {
+    request_id: string;
+    startup_name: string | null;
+    startup_logo_url: string | null;
+    inviter_name: string | null;
+  };
+  const partyByRequest = new Map(
+    ((parties.error ? [] : (parties.data ?? [])) as PartyRow[]).map((row) => [
+      row.request_id,
+      row,
+    ])
+  );
 
   const manageable = new Set(manageableStartupIds);
 
   const requests = (data as unknown as RequestRow[]).map((row) => {
     const isManager = manageable.has(row.startup_id);
     const isPending = row.status === "pending";
+    const party = partyByRequest.get(row.id);
 
     return {
       id: row.id,
       startupId: row.startup_id,
-      startupName: row.startups?.name ?? "—",
-      startupLogoUrl: row.startups?.logo_url ?? null,
+      startupName: row.startups?.name ?? party?.startup_name ?? "—",
+      startupLogoUrl: row.startups?.logo_url ?? party?.startup_logo_url ?? null,
       profileId: row.profile_id,
       // Zgłoszenie przychodzi z Odkrywaj, więc podpisujemy je tak, jak ta osoba
       // przedstawiła się na karcie. Imię z konta widać po dołączeniu do teamu.
@@ -360,6 +381,9 @@ export async function loadJoinRequests(
           ? isManager
           : row.profile_id === userId),
       canWithdraw: isPending && row.created_by === userId,
+      viewerIsCandidate: row.profile_id === userId,
+      inviterName:
+        row.direction === "invite" ? (party?.inviter_name?.trim() || null) : null,
     } satisfies JoinRequest;
   });
 

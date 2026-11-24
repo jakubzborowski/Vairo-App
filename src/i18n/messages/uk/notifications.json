@@ -48,5 +48,9 @@
   "page.today": "Сьогодні",
   "page.yesterday": "Учора",
   "page.earlier": "Раніше",
-  "page.markAllRead": "Позначити все як прочитане"
+  "page.markAllRead": "Позначити все як прочитане",
+  "describe.invite_accepted": "{who} приєднується до {team} — запрошення прийнято",
+  "describe.invite_declined": "{who} не приймає запрошення до {team}",
+  "live.invite_accepted": "Запрошення прийнято — нова людина в команді",
+  "live.invite_declined": "Запрошення до команди відхилено"
 }
