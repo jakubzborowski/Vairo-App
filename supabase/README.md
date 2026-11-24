@@ -70,6 +70,7 @@ tabeli. Każdy plik jest idempotentny, więc ponowne odpalenie niczego nie psuje
 | 54 | `migrations/050_content_translations.sql` | tłumaczenia treści etapów (DE/UK/ES), generowane — można pominąć, 052 ustawia wszystko od nowa |
 | 55 | `migrations/051_locale_en.sql` | angielski jako piąty język (`profiles.locale = 'en'`) |
 | 56 | `migrations/052_content_translations.sql` | tłumaczenia treści etapów (EN/DE/UK/ES), generowane |
+| 57 | `migrations/053_tester_panel.sql` | Panel testowy: lista testerów i przeskok etapów. Tester dopisywany ręcznie: `insert into public.platform_testers (email) values ('ktos@example.com');` |
 
 > **022 i 023 to wcześniejsze wygenerowania tej samej treści co 024.** Każde
 > jest idempotentne i usuwa to, czego nie ma w swoim JSON-ie, więc odpalenie

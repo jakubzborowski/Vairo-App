@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { INVITE_COOKIE, INVITE_TOKEN_RE } from "@/lib/invites";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { AppShell } from "@/components/app/app-shell";
+import { isPlatformTester } from "@/lib/tester";
 import { getUserStartups, resolveActiveStartup } from "@/lib/startup";
 import { getActiveStartupId } from "@/lib/active-team";
 import { countPendingSignals, countUnreadMessages } from "@/lib/messages";
@@ -105,6 +106,7 @@ export default async function AppLayout({
     { count: pendingInvites },
     [unreadMessages, pendingContacts, unreadNotifications],
     executionUnlocked,
+    isTester,
   ] = await Promise.all([
     supabase
       .from("startup_join_requests")
@@ -113,6 +115,7 @@ export default async function AppLayout({
       .or(orFilter),
     countersPromise,
     active ? isExecutionUnlocked(supabase, active.id) : Promise.resolve(false),
+    isPlatformTester(supabase),
   ]);
 
   return (
@@ -133,6 +136,7 @@ export default async function AppLayout({
         notifications: unreadNotifications,
       }}
       executionUnlocked={executionUnlocked}
+      isTester={isTester}
     >
       <ToastProvider>
         <PosthogIdentify userId={user.id} />

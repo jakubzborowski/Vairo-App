@@ -179,6 +179,12 @@ kogoś CTO nie może po cichu dać mu prawa do zmiany walidacji pomysłu.
 prywatnych danych.** Ukrycie przycisku to nie zabezpieczenie — to tylko uprzejmość
 wobec usera. W bazie pilnują tego polityki RLS oparte na `startup_role()`.
 
+**Tester to nie Admin.** Panel testowy (`/app/test-panel`, migracja 053) jest dla osób
+z tabeli `platform_testers` — listy na poziomie całej platformy, niezwiązanej
+z żadnym startupem. W interfejsie nazywa się „Panel testowy”, nigdy „admin”,
+bo Admin to rola w zespole. Testerów dopisuje się wyłącznie w SQL Editorze;
+każda funkcja panelu sama sprawdza `is_platform_tester()`.
+
 **„Co-founder" nie jest rolą.** Dokument wymienia dokładnie trzy: Founder,
 Admin, Member. Współzałożyciel to `job_title` — wizytówka bez uprawnień. Kto
 ma faktycznie współdecydować, dostaje rolę Admina.
@@ -265,6 +271,7 @@ src/
       program/              jak działa Vairo — pięć etapów, z bazy
       stage/summary/        wszystko, co zespół ustalił w jednym etapie
       stage/complete/       koniec programu po MVP: wyniki i kontakt (bez płatności)
+      test-panel/           Panel testowy: przeskok etapów w dowolnym startupie (tylko `platform_testers`, reszta dostaje 404)
       goals/ tasks/         tracker Execution: cele z dowodem i zadania pod nimi
       goals/[id] goals/new  szczegół celu (strona, nie modal) i kreator w 5 krokach
       workflows/            Rozpiska — schemat pracy z wersjami
@@ -471,11 +478,12 @@ Migracje w `supabase/migrations/`, odpalane ręcznie w Supabase → SQL Editor,
 | `050_content_translations` | tłumaczenia treści etapów (generowane: `node scripts/content-i18n.mjs build`); kolejne wersje pod nowymi numerami |
 | `051_locale_en` | angielski jako piąty język: `profiles_locale_check` przyjmuje `en` |
 | `052_content_translations` | tłumaczenia treści etapów w EN, DE, UK, ES (generowane) — obowiązuje zamiast 050 |
+| `053_tester_panel` | Panel testowy: `platform_testers` (bez polityk RLS, dopisywanie tylko w SQL), `is_platform_tester()`, `tester_startups()`, `tester_jump_to_stage()` — przeskok etapów w dowolnym startupie |
 
 **Schemat bazowy leży POZA `migrations/`.** Tabela `profiles` i onboarding
 powstały przed wprowadzeniem numeracji, więc na świeżej bazie kolejność jest
 taka: `supabase/profiles.sql` → `supabase/fix_ensure_profile.sql` → dopiero
-`migrations/002`…`052`. Zaczęcie od `002` kończy się błędem „relation does not
+`migrations/002`…`053`. Zaczęcie od `002` kończy się błędem „relation does not
 exist", bo ta migracja robi `alter table public.profiles`. Pełna tabela
 kolejności: [supabase/README.md](supabase/README.md).
 
@@ -559,6 +567,6 @@ klientem zalogowanej osoby — RLS wpuszcza tylko członków teamu. Limity na
 osobę w pamięci instancji (`src/lib/rate-limit.ts`). Modele przez
 `AI_MODEL_FAST` / `AI_MODEL_SMART` (domyślnie `claude-haiku-5-5` /
 `claude-sonnet-5-5`); stała część instrukcji z cache promptów. Śledzenie kosztów
-w bazie (gdy będzie potrzebne) — pierwszy wolny numer po `052`.
+w bazie (gdy będzie potrzebne) — pierwszy wolny numer po `053`.
 
 Ścieżka Partner — dopiero w alfie.

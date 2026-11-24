@@ -53,6 +53,15 @@ const RULES: [test: (message: string) => boolean, key: DbErrorKey][] = [
       m.includes("revoke_invite_links"),
     "db.inviteMissingMigration",
   ],
+  [(m) => m.includes("not_tester"), "db.notTester"],
+  [(m) => m.includes("tester_stage_not_found"), "db.testerStageNotFound"],
+  [(m) => m.includes("tester_startup_not_found"), "db.testerStartupNotFound"],
+  [
+    (m) =>
+      (m.includes("tester_jump_to_stage") || m.includes("tester_startups")) &&
+      (m.includes("does not exist") || m.includes("Could not find")),
+    "db.testerMissingMigration",
+  ],
   [(m) => m.includes("startup_limit_reached"), "db.startupLimit"],
   [(m) => m.includes("cannot_remove_last_founder"), "db.lastFounder"],
   [(m) => m.includes("general_category_required"), "db.generalCategoryRequired"],

@@ -21,6 +21,7 @@ import social from "./social.json";
 import stage from "./stage.json";
 import startups from "./startups.json";
 import team from "./team.json";
+import tester from "./tester.json";
 import workflows from "./workflows.json";
 
 const messages = {
@@ -45,6 +46,7 @@ const messages = {
   "stage": stage,
   "startups": startups,
   "team": team,
+  "tester": tester,
   "workflows": workflows,
 };
 

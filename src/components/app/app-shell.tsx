@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronDown, GraduationCap, HelpCircle, LifeBuoy, LogOut, Menu as MenuIcon, Settings, Trophy } from "lucide-react";
+import { Bell, ChevronDown, FlaskConical, GraduationCap, HelpCircle, LifeBuoy, LogOut, Menu as MenuIcon, Settings, Trophy } from "lucide-react";
 import { signOut } from "@/app/app/actions";
 import { Avatar } from "@/components/ui/avatar";
 import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu";
@@ -52,6 +52,8 @@ type AppShellProps = {
   badges?: Partial<Record<NonNullable<NavItem["badgeKey"]>, number>>;
   /** Po domknięciu Preparation. Wcześniej Cele, Taski i Rozpiska nie są w menu. */
   executionUnlocked?: boolean;
+  /** Osoba z listy testerów (migracja 053) — w menu konta pojawia się Panel testowy. */
+  isTester?: boolean;
   children: React.ReactNode;
 };
 
@@ -63,6 +65,7 @@ export function AppShell({
   activeRole = null,
   badges,
   executionUnlocked = false,
+  isTester = false,
   children,
 }: AppShellProps) {
   const pathname = usePathname();
@@ -305,6 +308,18 @@ export function AppShell({
                 >
                   {t("settings")}
                 </MenuItem>
+                {isTester ? (
+                  <MenuItem
+                    icon={FlaskConical}
+                    onClick={() => {
+                      close();
+                      setMobileOpen(false);
+                      router.push("/app/test-panel");
+                    }}
+                  >
+                    {t("testPanel")}
+                  </MenuItem>
+                ) : null}
                 <MenuSeparator />
                 <MenuItem
                   icon={LogOut}
